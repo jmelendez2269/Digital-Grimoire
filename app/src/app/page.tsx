@@ -1,7 +1,11 @@
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
-      <main className="flex flex-col items-center justify-center px-8 py-16 text-center">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex flex-1 flex-col items-center justify-center px-8 py-16 text-center">
         {/* Mystical Symbol */}
         <div className="mb-8 h-32 w-32 animate-pulse">
           <svg
@@ -38,10 +42,10 @@ export default function Home() {
         </div>
 
         {/* Status Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-6 py-3 text-amber-300">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-6 py-3 text-green-300">
+          <div className="h-2 w-2 rounded-full bg-green-500" />
           <span className="text-sm font-medium">
-            Sprint 1: Infrastructure Setup — In Progress
+            Sprint 1: Complete ✓ — Ready for Sprint 2
           </span>
         </div>
 
@@ -50,6 +54,7 @@ export default function Home() {
           Phase 1: MVP Foundation • Built with AI-assisted development
         </p>
       </main>
+      <Footer />
     </div>
   );
 }
