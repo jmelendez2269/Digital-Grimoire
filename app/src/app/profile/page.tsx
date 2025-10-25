@@ -71,13 +71,16 @@ export default function ProfilePage() {
       const filePath = fileName; // Upload directly to bucket root
 
       // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, file);
 
       if (uploadError) {
+        console.error("Upload error details:", uploadError);
         throw uploadError;
       }
+
+      console.log("Upload successful:", uploadData);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
