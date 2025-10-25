@@ -34,6 +34,53 @@ This repository contains comprehensive planning and development documentation fo
 
 ---
 
+## 🚀 Getting Started
+
+### Quick Start (Development)
+
+```bash
+# Navigate to the app directory
+cd app
+
+# Install dependencies (if not already done)
+pnpm install
+
+# Set up environment variables
+# Copy .env.example to .env.local and fill in your credentials:
+# - Supabase URL and keys
+# - AWS credentials
+# - API keys for Claude and OpenAI
+
+# Run the development server
+pnpm dev
+
+# Open http://localhost:3000 in your browser
+```
+
+**Current Status:** Sprint 1 (Infrastructure & Setup) - In Progress  
+**See:** [SPRINT_1_PROGRESS.md](SPRINT_1_PROGRESS.md) for detailed progress tracking
+
+### Project Structure
+
+```
+Digital-Grimoire/
+├── app/                         # Next.js 14 application
+│   ├── src/
+│   │   ├── app/                # App Router pages and API routes
+│   │   ├── components/         # React components
+│   │   ├── lib/                # Utilities and configurations
+│   │   └── middleware.ts       # Auth middleware
+│   ├── public/                 # Static assets
+│   └── package.json            # Dependencies
+├── docs/
+│   ├── planning/               # Planning documents
+│   └── source/                 # Source documents
+├── supabase-schema.sql         # Database schema
+└── README.md                   # This file
+```
+
+---
+
 ## 🎯 Project Vision
 
 ### Mission
