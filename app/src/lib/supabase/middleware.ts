@@ -51,6 +51,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Check if user's email is verified (except for auth routes and public routes)
+  if (user && !isPublicRoute && !user.email_confirmed_at) {
+    // User is authenticated but email not verified
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/verify-email";
+    url.searchParams.set("email", user.email || "");
+    return NextResponse.redirect(url);
+  }
+
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so:

@@ -99,7 +99,7 @@
 - [x] P0: Create protected route middleware
 - [ ] P1: Add social auth (Google OAuth)
 - [ ] P1: Implement password reset flow
-- [ ] P2: Add email verification
+- [x] P2: Add email verification
 
 **Core Layout Components**
 - [x] P0: Design Header with navigation
