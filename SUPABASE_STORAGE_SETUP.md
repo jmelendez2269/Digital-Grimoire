@@ -15,55 +15,79 @@
 
 ### 2. Set Up RLS (Row Level Security) Policies
 
-By default, Supabase Storage buckets are protected. You need to add policies:
+By default, Supabase Storage buckets are protected. You need to add 4 policies using the Supabase UI:
 
 1. In **Storage** → Click on **avatars** bucket
 2. Go to **Policies** tab
-3. Add these policies:
+3. Click **"New Policy"** for each policy below
 
-#### Policy 1: Allow Public Read Access
-```sql
-CREATE POLICY "Avatar images are publicly accessible"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'avatars');
-```
+---
 
-#### Policy 2: Allow Authenticated Users to Upload
-```sql
-CREATE POLICY "Users can upload their own avatar"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (
-  bucket_id = 'avatars' 
-  AND (storage.foldername(name))[1] = 'avatars'
-);
-```
+#### Policy 1: Allow Public Read Access ✅
 
-#### Policy 3: Allow Users to Update Their Own Avatar
-```sql
-CREATE POLICY "Users can update their own avatar"
-ON storage.objects FOR UPDATE
-TO authenticated
-USING (
+**What to enter in the Supabase UI:**
+- **Policy name:** `Allow Public Read Access`
+- **Allowed operation:** ✅ SELECT only (uncheck INSERT, UPDATE, DELETE)
+- **Target roles:** Defaults to all (public) roles
+- **Policy definition:** 
+  ```
   bucket_id = 'avatars'
-  AND owner = auth.uid()
-)
-WITH CHECK (
-  bucket_id = 'avatars'
-);
-```
+  ```
 
-#### Policy 4: Allow Users to Delete Their Own Avatar
-```sql
-CREATE POLICY "Users can delete their own avatar"
-ON storage.objects FOR DELETE
-TO authenticated
-USING (
+**What this does:** Anyone can view/download avatar images (needed for public profiles)
+
+---
+
+#### Policy 2: Allow Authenticated Users to Upload 📤
+
+**What to enter in the Supabase UI:**
+- **Policy name:** `Allow Authenticated Users to Upload`
+- **Allowed operation:** ✅ INSERT only (uncheck SELECT, UPDATE, DELETE)
+- **Target roles:** authenticated
+- **Policy definition:** 
+  ```
+  bucket_id = 'avatars' AND (storage.foldername(name))[1] = 'avatars'
+  ```
+
+**What this does:** Logged-in users can upload new avatar images
+
+---
+
+#### Policy 3: Allow Users to Update Their Own Avatar 🔄
+
+**What to enter in the Supabase UI:**
+- **Policy name:** `Allow Users to Update Their Own Avatar`
+- **Allowed operation:** ✅ UPDATE only (uncheck SELECT, INSERT, DELETE)
+- **Target roles:** authenticated
+- **Policy definition (USING clause):** 
+  ```
+  bucket_id = 'avatars' AND owner = auth.uid()
+  ```
+- **WITH CHECK clause (if shown):**
+  ```
   bucket_id = 'avatars'
-  AND owner = auth.uid()
-);
-```
+  ```
+
+**What this does:** Users can replace their own avatar (not others')
+
+---
+
+#### Policy 4: Allow Users to Delete Their Own Avatar 🗑️
+
+**What to enter in the Supabase UI:**
+- **Policy name:** `Allow Users to Delete Their Own Avatar`
+- **Allowed operation:** ✅ DELETE only (uncheck SELECT, INSERT, UPDATE)
+- **Target roles:** authenticated
+- **Policy definition:** 
+  ```
+  bucket_id = 'avatars' AND owner = auth.uid()
+  ```
+
+**What this does:** Users can remove their own avatar (not others')
+
+---
+
+**⚠️ Important Note:** The Supabase UI only wants the **condition expression** in "Policy definition", NOT the full `CREATE POLICY` statement!
 
 ### 3. Test the Upload
 
