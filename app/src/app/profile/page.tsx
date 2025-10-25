@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AvatarCropModal from "@/components/AvatarCropModal";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,6 +17,8 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -108,7 +111,7 @@ export default function ProfilePage() {
       return;
     }
 
-    let file = e.target.files[0];
+    const file = e.target.files[0];
     
     // Validate file type
     if (!file.type.startsWith("image/")) {
@@ -116,34 +119,36 @@ export default function ProfilePage() {
       return;
     }
 
-    // Validate file size (max 2MB before compression)
+    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setMessage("Image must be less than 5MB");
       return;
     }
 
+    // Convert to data URL for cropper
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    e.target.value = "";
+  };
+
+  const uploadCroppedAvatar = async (croppedBlob: Blob) => {
+    if (!user) return;
+
+    setCropModalOpen(false);
     setUploading(true);
     setMessage("");
 
     try {
       const supabase = createClient();
 
-      // Validate image dimensions
-      const img = new Image();
-      const imageUrl = URL.createObjectURL(file);
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = imageUrl;
-      });
-      URL.revokeObjectURL(imageUrl);
-
-      // Check dimensions and aspect ratio
-      const aspectRatio = img.width / img.height;
-      if (aspectRatio < 0.8 || aspectRatio > 1.2) {
-        setMessage("⚠️ Image should be square or close to square for best results");
-        // Continue anyway, just warn
-      }
+      // Convert blob to File
+      let file = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
 
       // Compress image
       file = await compressImage(file);
@@ -158,7 +163,7 @@ export default function ProfilePage() {
       }
 
       // Create unique filename
-      const fileExt = "jpg"; // Always use jpg after compression
+      const fileExt = "jpg";
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = fileName;
 
@@ -187,7 +192,7 @@ export default function ProfilePage() {
       });
 
       if (updateError) {
-        throw uploadError;
+        throw updateError;
       }
 
       setAvatarUrl(publicUrl);
@@ -196,6 +201,7 @@ export default function ProfilePage() {
       setMessage("Error uploading avatar: " + (err.message || "Unknown error"));
     } finally {
       setUploading(false);
+      setImageToCrop(null);
     }
   };
 
@@ -494,6 +500,18 @@ export default function ProfilePage() {
         </div>
       </main>
       <Footer />
+
+      {/* Crop Modal */}
+      {cropModalOpen && imageToCrop && (
+        <AvatarCropModal
+          imageSrc={imageToCrop}
+          onComplete={uploadCroppedAvatar}
+          onCancel={() => {
+            setCropModalOpen(false);
+            setImageToCrop(null);
+          }}
+        />
+      )}
     </div>
   );
 }
