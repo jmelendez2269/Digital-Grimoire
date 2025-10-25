@@ -40,12 +40,75 @@ export default function ProfilePage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Helper: Compress image before upload
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // Resize if too large (max 1024px)
+          const maxSize = 1024;
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error("Compression failed"));
+              }
+            },
+            "image/jpeg",
+            0.85
+          );
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+    });
+  };
+
+  // Helper: Extract old avatar filename from URL
+  const getAvatarFileName = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split("/");
+      return pathParts[pathParts.length - 1];
+    } catch {
+      return null;
+    }
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
     }
 
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     
     // Validate file type
     if (!file.type.startsWith("image/")) {
@@ -53,9 +116,9 @@ export default function ProfilePage() {
       return;
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setMessage("Image must be less than 2MB");
+    // Validate file size (max 2MB before compression)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage("Image must be less than 5MB");
       return;
     }
 
@@ -64,11 +127,40 @@ export default function ProfilePage() {
 
     try {
       const supabase = createClient();
+
+      // Validate image dimensions
+      const img = new Image();
+      const imageUrl = URL.createObjectURL(file);
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imageUrl;
+      });
+      URL.revokeObjectURL(imageUrl);
+
+      // Check dimensions and aspect ratio
+      const aspectRatio = img.width / img.height;
+      if (aspectRatio < 0.8 || aspectRatio > 1.2) {
+        setMessage("⚠️ Image should be square or close to square for best results");
+        // Continue anyway, just warn
+      }
+
+      // Compress image
+      file = await compressImage(file);
       
+      // Delete old avatar if exists
+      if (avatarUrl) {
+        const oldFileName = getAvatarFileName(avatarUrl);
+        if (oldFileName) {
+          await supabase.storage.from("avatars").remove([oldFileName]);
+          console.log("Deleted old avatar:", oldFileName);
+        }
+      }
+
       // Create unique filename
-      const fileExt = file.name.split(".").pop();
+      const fileExt = "jpg"; // Always use jpg after compression
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = fileName; // Upload directly to bucket root
+      const filePath = fileName;
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -95,13 +187,55 @@ export default function ProfilePage() {
       });
 
       if (updateError) {
-        throw updateError;
+        throw uploadError;
       }
 
       setAvatarUrl(publicUrl);
-      setMessage("Avatar updated successfully!");
+      setMessage("✅ Avatar updated successfully!");
     } catch (err: any) {
       setMessage("Error uploading avatar: " + (err.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user || !avatarUrl) return;
+
+    setUploading(true);
+    setMessage("");
+
+    try {
+      const supabase = createClient();
+
+      // Delete from storage
+      const fileName = getAvatarFileName(avatarUrl);
+      if (fileName) {
+        const { error: deleteError } = await supabase.storage
+          .from("avatars")
+          .remove([fileName]);
+
+        if (deleteError) {
+          console.error("Delete error:", deleteError);
+          // Continue anyway - maybe file doesn't exist
+        }
+      }
+
+      // Remove from user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: null,
+        },
+      });
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl("");
+      setMessage("✅ Avatar removed successfully!");
+    } catch (err: any) {
+      setMessage("Error removing avatar: " + (err.message || "Unknown error"));
     } finally {
       setUploading(false);
     }
@@ -221,6 +355,15 @@ export default function ProfilePage() {
                   <p className="text-xs text-zinc-500">
                     Click camera icon to upload
                   </p>
+                  {avatarUrl && (
+                    <button
+                      onClick={handleRemoveAvatar}
+                      disabled={uploading}
+                      className="mt-3 text-xs text-red-400 transition-colors hover:text-red-300 disabled:opacity-50"
+                    >
+                      Remove Avatar
+                    </button>
+                  )}
                 </div>
 
                 {/* Stats */}
