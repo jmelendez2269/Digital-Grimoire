@@ -14,6 +14,8 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [message, setMessage] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -24,6 +26,7 @@ export default function ProfilePage() {
         setUsername(session.user.user_metadata?.username || "");
         setDisplayName(session.user.user_metadata?.display_name || "");
         setBio(session.user.user_metadata?.bio || "");
+        setAvatarUrl(session.user.user_metadata?.avatar_url || "");
       }
       setLoading(false);
     });
@@ -36,6 +39,70 @@ export default function ProfilePage() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !user) {
+      return;
+    }
+
+    const file = e.target.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setMessage("Please upload an image file");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage("Image must be less than 2MB");
+      return;
+    }
+
+    setUploading(true);
+    setMessage("");
+
+    try {
+      const supabase = createClient();
+      
+      // Create unique filename
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Update user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          avatar_url: publicUrl,
+        },
+      });
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAvatarUrl(publicUrl);
+      setMessage("Avatar updated successfully!");
+    } catch (err: any) {
+      setMessage("Error uploading avatar: " + (err.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -50,6 +117,7 @@ export default function ProfilePage() {
           username,
           display_name: displayName,
           bio,
+          avatar_url: avatarUrl,
         },
       });
 
@@ -95,10 +163,61 @@ export default function ProfilePage() {
             <div className="lg:col-span-1">
               <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
                 {/* Avatar */}
-                <div className="mb-6 flex justify-center">
-                  <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-4xl font-bold text-zinc-950">
-                    {username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+                <div className="mb-6 flex flex-col items-center">
+                  <div className="relative mb-4">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Avatar"
+                        className="h-32 w-32 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-4xl font-bold text-zinc-950">
+                        {username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+                      </div>
+                    )}
+                    
+                    {/* Upload Button Overlay */}
+                    <label
+                      htmlFor="avatar-upload"
+                      className="absolute bottom-0 right-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-amber-500 text-zinc-950 transition-colors hover:bg-amber-400"
+                    >
+                      {uploading ? (
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-950 border-t-transparent" />
+                      ) : (
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                      )}
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
                   </div>
+                  <p className="text-xs text-zinc-500">
+                    Click camera icon to upload
+                  </p>
                 </div>
 
                 {/* Stats */}
