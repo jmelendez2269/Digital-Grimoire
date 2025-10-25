@@ -41,13 +41,13 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Status Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-6 py-3 text-green-300">
-          <div className="h-2 w-2 rounded-full bg-green-500" />
-          <span className="text-sm font-medium">
-            Sprint 1: Complete ✓ — Ready for Sprint 2
-          </span>
-        </div>
+              {/* Status Badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-6 py-3 text-amber-300">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                <span className="text-sm font-medium">
+                  Sprint 2: Complete ✓ — Ready for Sprint 3
+                </span>
+              </div>
 
         {/* Footer Note */}
         <p className="mt-16 text-sm text-zinc-600">
