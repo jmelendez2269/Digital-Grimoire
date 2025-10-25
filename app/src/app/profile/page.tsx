@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AvatarCropModal from "@/components/AvatarCropModal";
@@ -14,7 +15,6 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
-  const [message, setMessage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -115,13 +115,13 @@ export default function ProfilePage() {
     
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setMessage("Please upload an image file");
+      toast.error("Please upload an image file");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setMessage("Image must be less than 5MB");
+      toast.error("Image must be less than 5MB");
       return;
     }
 
@@ -142,7 +142,6 @@ export default function ProfilePage() {
 
     setCropModalOpen(false);
     setUploading(true);
-    setMessage("");
 
     try {
       const supabase = createClient();
@@ -196,9 +195,9 @@ export default function ProfilePage() {
       }
 
       setAvatarUrl(publicUrl);
-      setMessage("✅ Avatar updated successfully!");
+      toast.success("Avatar updated successfully!");
     } catch (err: any) {
-      setMessage("Error uploading avatar: " + (err.message || "Unknown error"));
+      toast.error("Error uploading avatar: " + (err.message || "Unknown error"));
     } finally {
       setUploading(false);
       setImageToCrop(null);
@@ -209,7 +208,6 @@ export default function ProfilePage() {
     if (!user || !avatarUrl) return;
 
     setUploading(true);
-    setMessage("");
 
     try {
       const supabase = createClient();
@@ -239,9 +237,9 @@ export default function ProfilePage() {
       }
 
       setAvatarUrl("");
-      setMessage("✅ Avatar removed successfully!");
+      toast.success("Avatar removed successfully!");
     } catch (err: any) {
-      setMessage("Error removing avatar: " + (err.message || "Unknown error"));
+      toast.error("Error removing avatar: " + (err.message || "Unknown error"));
     } finally {
       setUploading(false);
     }
@@ -251,7 +249,6 @@ export default function ProfilePage() {
     if (!user) return;
 
     setSaving(true);
-    setMessage("");
 
     try {
       const supabase = createClient();
@@ -265,12 +262,12 @@ export default function ProfilePage() {
       });
 
       if (error) {
-        setMessage("Error updating profile: " + error.message);
+        toast.error("Error updating profile: " + error.message);
       } else {
-        setMessage("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
       }
     } catch (err) {
-      setMessage("An unexpected error occurred");
+      toast.error("An unexpected error occurred");
     } finally {
       setSaving(false);
     }
@@ -473,17 +470,6 @@ export default function ProfilePage() {
                       placeholder="Share a bit about your esoteric journey..."
                     />
                   </div>
-
-                  {/* Message */}
-                  {message && (
-                    <div className={`rounded-md border px-4 py-3 text-sm ${
-                      message.includes("Error")
-                        ? "border-red-500/20 bg-red-500/10 text-red-400"
-                        : "border-green-500/20 bg-green-500/10 text-green-400"
-                    }`}>
-                      {message}
-                    </div>
-                  )}
 
                   {/* Save Button */}
                   <button
