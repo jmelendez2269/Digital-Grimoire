@@ -1,22 +1,25 @@
-# DIGITAL GRIMOIRE LIBRARY - MASTER DEVELOPMENT PLAN
+# CONVERGENCE - MASTER DEVELOPMENT PLAN
 
-**Version:** 1.0  
-**Last Updated:** October 24, 2025  
+**Version:** 2.0  
+**Last Updated:** October 25, 2025  
 **Status:** Active Development Planning  
 
 ---
 
 ## EXECUTIVE SUMMARY
 
-The Digital Grimoire Library is an ambitious platform that bridges ancient esoteric wisdom with modern technology. This master plan synthesizes technical architecture, business strategy, UI/UX design, and operational workflows into a unified development roadmap.
+**Convergence** is an ambitious platform that bridges hidden wisdom from all traditions with modern technology. We honor esoteric traditions, religious texts, philosophical works, and consciousness-exploring sciences, showing how all paths converge to reveal our fundamental unity. This master plan synthesizes technical architecture, business strategy, UI/UX design, and operational workflows into a unified development roadmap.
+
+**Our Mission:** To make hidden wisdom accessible while maintaining scholarly rigor - serving everyone from bedroom researchers to professional scholars in their quest to understand themselves, their world, and their universe.
 
 ### Project Pillars
 
-1. **Public Library** - Searchable repository of esoteric texts with full OCR
-2. **Correspondence Tables** - Interactive knowledge graph of symbolic relationships
-3. **Personal Grimoire** - Private Notion-like workspace for users
-4. **Multi-Lens AI System** - Six-perspective knowledge synthesis (Premium)
-5. **Community Token Economy** - Reward-driven contribution system
+1. **The Convergence Library** - Searchable repository of esoteric, religious, philosophical, and wisdom texts with full OCR
+2. **Correspondence Tables** - Interactive knowledge graph of traditional esoteric symbolic relationships
+3. **The Convergence Graph** - Cross-tradition unity visualization showing conceptual parallels
+4. **Study Journal** - Private Notion-like workspace for personal research and synthesis
+5. **The Convergence Machine** - Seven-perspective AI reasoning system with adjustable lens weighting (Premium)
+6. **Community Token Economy** - Reward-driven contribution system
 
 ### Key Success Metrics
 
@@ -50,10 +53,12 @@ The Digital Grimoire Library is an ambitious platform that bridges ancient esote
 **Core Tables:**
 - `users` - Authentication & roles
 - `texts` - Main library documents with embeddings
-- `correspondences` - Symbolic entities (planets, elements, etc.)
-- `correspondence_relationships` - Graph edges
+- `correspondences` - Traditional esoteric symbolic entities (planets, elements, deities, etc.)
+- `correspondence_relationships` - Graph edges for traditional correspondences
+- `convergence_concepts` - Cross-tradition concepts showing unity (NEW)
+- `convergence_relationships` - Relationships between concepts across traditions (NEW)
 - `text_correspondences` - Document-symbol links
-- `user_grimoires` - Personal workspaces (JSONB blocks)
+- `journal_entries` - Personal study journals (formerly grimoires, JSONB blocks)
 - `user_bookmarks` - Saved passages
 - `user_annotations` - User notes on texts
 - `agent_logs` - Automated workflow tracking
@@ -178,9 +183,9 @@ associated_names: Related figures
 
 ---
 
-### Phase 3: Correspondence Tables (Weeks 15-20)
+### Phase 3A: Correspondence Tables (Weeks 15-18)
 
-**Goal:** Interactive knowledge graph
+**Goal:** Traditional esoteric symbolic relationships knowledge graph
 
 #### Week 15-16: Neptune Graph Database
 - [ ] Amazon Neptune cluster setup
@@ -197,7 +202,7 @@ associated_names: Related figures
 - [ ] Click to open entity details
 - [ ] Pan and zoom controls
 
-#### Week 19-20: CRUD Interface
+#### Week 17-18: CRUD Interface
 - [ ] Table view of correspondences
 - [ ] Add/edit entity modal
 - [ ] Create relationship form
@@ -206,21 +211,47 @@ associated_names: Related figures
 - [ ] Export graph as JSON
 
 **Deliverables:**
-- Working knowledge graph with 50+ entities
+- Working traditional correspondence graph with 50+ entities
 - Visual and tabular interfaces
 - User-contributed correspondences
 - Pre-configured thematic "lenses"
 
 ---
 
-### Phase 4: Multi-Lens AI System (Weeks 21-28)
+### Phase 3B: The Convergence Graph (Weeks 19-20)
 
-**Goal:** Premium AI-powered answer engine
+**Goal:** Cross-tradition conceptual unity visualization
+
+#### Week 19-20: Convergence Concepts System
+- [ ] Create `convergence_concepts` table
+- [ ] Create `convergence_relationships` table
+- [ ] Seed cross-tradition concepts:
+  - Buddhist Emptiness ↔ Quantum Zero-point ↔ Christian Void ↔ Taoist Wu
+  - Divine Unity across traditions
+  - Consciousness concepts
+  - Enlightenment/Awakening parallels
+- [ ] Build comparative table view
+- [ ] Create convergence network graph visualization
+- [ ] Implement similarity strength indicators
+- [ ] Add source citation for each connection
+- [ ] Search across traditions interface
+
+**Deliverables:**
+- Convergence concepts database with 30+ concepts
+- Cross-tradition relationship mapping
+- Dual interface: comparative table + convergence network
+- Shows how all wisdom paths converge
+
+---
+
+### Phase 4: The Convergence Machine (Weeks 21-28)
+
+**Goal:** Premium 7-lens AI reasoning system with adjustable perspective weighting
 
 #### Week 21-22: AI Infrastructure
 - [ ] Claude API integration
 - [ ] GPT-4 API integration
-- [ ] Prompt engineering for six lenses
+- [ ] Prompt engineering for seven lenses (including Mathematical)
 - [ ] Response streaming setup
 - [ ] AI response caching (hash-based)
 
@@ -231,29 +262,35 @@ associated_names: Related figures
 - [ ] Citation extraction
 - [ ] Confidence scoring
 
-#### Week 25-26: Lens Orchestration
-- [ ] Six lens system prompts
+#### Week 25-26: Lens Orchestration (The Convergence Machine)
+- [ ] Seven lens system prompts
   - Scientific (physics, cosmology, biology)
-  - Psychological (Jungian, cognitive science)
-  - Philosophical (metaphysics, ethics)
-  - Religious/Spiritual (comparative theology)
-  - Historical/Anthropological (cultural evolution)
-  - Symbolic/Occult (correspondences, astrology)
+  - Psychological (Jungian, cognitive science, archetypes)
+  - Philosophical (metaphysics, ethics, epistemology)
+  - Religious/Spiritual (comparative theology, mysticism, sacred texts)
+  - Historical/Anthropological (cultural evolution, mythology)
+  - Symbolic/Occult (correspondences, alchemy, astrology)
+  - **Mathematical (NEW)** (sacred geometry, numerology, patterns, ratios)
 - [ ] Per-lens retrieval strategies
+- [ ] Lens weighting algorithm (for adjustable emphasis)
 - [ ] Answer composition and merging
 - [ ] Source citation formatting
 
 #### Week 27-28: Premium Features UI
 - [ ] AI query interface
-- [ ] Lens selector (toggle active lenses)
+- [ ] **Lens weight sliders (7 sliders, 0-100% each)**
+- [ ] Lens on/off toggles
+- [ ] Default lens preset (equal weights)
+- [ ] Save custom lens presets
 - [ ] Streaming response display
 - [ ] Source links to library
 - [ ] Conversation history
 - [ ] Rate limiting (free vs. premium)
 
 **Deliverables:**
-- Working AI answer system
-- Six-lens perspective synthesis
+- Working AI answer system (The Convergence Machine)
+- Seven-lens perspective synthesis with adjustable weighting
+- Lens weight sliders and preset system
 - Premium subscription paywall
 - Query history and bookmarks
 

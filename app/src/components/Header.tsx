@@ -12,21 +12,47 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
+      
+      // Check if user is admin
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        setIsAdmin(profile?.role === 'admin');
+      }
+      
       setLoading(false);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      
+      // Update admin status
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        setIsAdmin(profile?.role === 'admin');
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -160,6 +186,18 @@ export default function Header() {
                     >
                       ⚙️ Settings
                     </Link>
+                    {isAdmin && (
+                      <>
+                        <hr className="my-1 border-zinc-700" />
+                        <Link
+                          href="/admin/upload"
+                          className="block px-4 py-2 text-sm text-amber-400 hover:bg-zinc-800"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          🔐 Admin Upload
+                        </Link>
+                      </>
+                    )}
                     <hr className="my-1 border-zinc-700" />
                     <button
                       onClick={() => {

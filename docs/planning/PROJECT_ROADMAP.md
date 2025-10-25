@@ -1,4 +1,4 @@
-# DIGITAL GRIMOIRE - DETAILED PROJECT ROADMAP
+# CONVERGENCE - DETAILED PROJECT ROADMAP
 
 **Sprint Duration:** 2 weeks  
 **Total Timeline:** 48 weeks (12 months)  
@@ -565,7 +565,7 @@
 
 ---
 
-## PHASE 4: MULTI-LENS AI (Sprints 11-14, Weeks 21-28)
+## PHASE 4: THE CONVERGENCE MACHINE (Sprints 11-14, Weeks 21-28)
 
 ### Sprint 11: AI Infrastructure (Weeks 21-22)
 
@@ -653,23 +653,23 @@
 
 ---
 
-### Sprint 13: Lens System (Weeks 25-26)
+### Sprint 13: The Convergence Machine - Lens System (Weeks 25-26)
 
 #### Tasks
 
-**Lens Definitions**
-- [ ] P0: Define 6 lens system prompts
+**7-Lens System Definitions**
+- [ ] P0: Define 7 lens system prompts (6 + Mathematical)
 - [ ] P0: **Scientific Lens**:
   - Focus: Physics, biology, cosmology
   - Keywords: empirical, measurable, natural laws
 - [ ] P0: **Psychological Lens**:
-  - Focus: Jung, archetypes, shadow work
+  - Focus: Jung, archetypes, shadow work, cognitive science
   - Keywords: unconscious, individuation, symbols
 - [ ] P0: **Philosophical Lens**:
-  - Focus: Metaphysics, ethics, ontology
-  - Keywords: being, truth, virtue
+  - Focus: Metaphysics, ethics, ontology, epistemology
+  - Keywords: being, truth, virtue, knowledge
 - [ ] P0: **Religious/Spiritual Lens**:
-  - Focus: Comparative religion, mysticism
+  - Focus: Comparative theology, mysticism, sacred texts
   - Keywords: sacred, divine, transcendent
 - [ ] P0: **Historical/Anthropological Lens**:
   - Focus: Cultural evolution, mythology
@@ -677,13 +677,21 @@
 - [ ] P0: **Symbolic/Occult Lens**:
   - Focus: Correspondences, alchemy, astrology
   - Keywords: as above so below, transmutation
+- [ ] P0: **Mathematical Lens (NEW)**:
+  - Focus: Sacred geometry, numerology, patterns, ratios
+  - Keywords: golden ratio, fibonacci, platonic solids, universal principles
 
 **Retrieval Strategies**
 - [ ] P0: Map each lens to retrieval type:
   - Scientific → Vector search (academic papers)
-  - Psychological → Vector + keyword (Jung, Freud)
+  - Psychological → Vector + keyword (Jung, Freud, archetypes)
+  - Philosophical → Vector search (philosophical texts)
+  - Religious/Spiritual → Vector + keyword (sacred texts, theology)
+  - Historical/Anthropological → Vector + temporal context
   - Symbolic → Graph traversal (correspondences)
+  - Mathematical → Pattern matching + graph (sacred geometry, ratios)
 - [ ] P0: Adjust search parameters per lens
+- [ ] P0: Lens weighting algorithm implementation
 - [ ] P1: Confidence scoring per lens
 
 **Answer Composition**
@@ -695,24 +703,38 @@
 - [ ] P2: Visual comparison (radar chart)
 
 **Deliverables:**
-- ✅ 6 lens prompts defined
+- ✅ 7 lens prompts defined (including Mathematical)
 - ✅ Per-lens retrieval strategies
+- ✅ Lens weighting algorithm
 - ✅ Multi-perspective answer composition
 
-**Time Estimate:** 50 hours
+**Time Estimate:** 55 hours
 
 ---
 
-### Sprint 14: Premium UI (Weeks 27-28)
+### Sprint 14: The Convergence Machine - Premium UI (Weeks 27-28)
 
 #### Tasks
 
 **AI Query Interface**
-- [ ] P0: Create `/ai` page (premium-gated)
+- [ ] P0: Create `/convergence-machine` page (premium-gated)
 - [ ] P0: Build query input (textarea)
-- [ ] P0: Add lens selector (checkboxes)
+- [ ] P0: **Add 7 lens weight sliders (0-100% each)**
+  - Scientific slider
+  - Psychological slider
+  - Philosophical slider
+  - Religious/Spiritual slider
+  - Historical/Anthropological slider
+  - Symbolic/Occult slider
+  - Mathematical slider
+- [ ] P0: Add lens on/off toggles
+- [ ] P0: Default preset (equal weights at ≈14% each)
 - [ ] P0: Display streaming response
 - [ ] P0: Show source citations
+- [ ] P0: Lens weight visualization (bar chart or pie chart)
+- [ ] P1: Save custom lens presets
+- [ ] P1: Load saved presets
+- [ ] P1: Preset templates (Scholar, Practitioner, Seeker)
 - [ ] P1: Add example queries
 - [ ] P1: Query refinement suggestions
 
@@ -740,12 +762,13 @@
 - [ ] P2: Pay-per-query option
 
 **Deliverables:**
-- ✅ AI query interface
-- ✅ Lens selection
+- ✅ The Convergence Machine query interface
+- ✅ 7 lens weight sliders with visual feedback
+- ✅ Lens preset system (default + custom + templates)
 - ✅ Conversation history
 - ✅ Premium paywall
 
-**Time Estimate:** 50 hours
+**Time Estimate:** 60 hours
 
 ---
 

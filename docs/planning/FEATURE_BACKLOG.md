@@ -118,7 +118,7 @@
 | Community graph editing | P3 | XL | Year 2 | ⬜ Planned | Collaborative |
 | VR graph exploration | P3 | XL | Year 3 | ⬜ Planned | WebXR |
 
-### 4. MULTI-LENS AI SYSTEM
+### 4. THE CONVERGENCE MACHINE (7-Lens AI System)
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
@@ -130,20 +130,41 @@
 | Graph-based retrieval | P0 | M | 12 | ⬜ Planned | Neptune queries |
 | Hybrid ranking | P0 | L | 12 | ⬜ Planned | Combine signals |
 | Citation extraction | P0 | M | 12 | ⬜ Planned | Source passages |
-| 6 lens prompts | P0 | L | 13 | ⬜ Planned | Perspectives |
+| 7 lens prompts (6+Mathematical) | P0 | L | 13 | ⬜ Planned | All perspectives |
 | Per-lens retrieval | P0 | M | 13 | ⬜ Planned | Custom strategies |
 | Answer composition | P0 | M | 13 | ⬜ Planned | Merge lenses |
 | AI query UI | P0 | M | 14 | ⬜ Planned | Input + display |
-| Lens selector | P0 | S | 14 | ⬜ Planned | Checkboxes |
+| **Lens weight sliders (7 sliders)** | P0 | M | 14 | ⬜ Planned | **Adjust perspective emphasis** |
+| Lens on/off toggles | P0 | S | 14 | ⬜ Planned | Enable/disable lenses |
 | Conversation history | P0 | M | 14 | ⬜ Planned | Past queries |
 | Premium paywall | P0 | M | 14 | ⬜ Planned | Stripe |
 | Rate limiting | P0 | M | 14 | ⬜ Planned | Free: 5/mo |
+| Save lens presets | P1 | S | 14 | ⬜ Planned | Custom lens configs |
 | Confidence scoring | P1 | M | 13 | ⬜ Planned | Per-answer |
 | Query refinement | P1 | M | Post | ⬜ Planned | Suggestions |
 | Export conversation | P1 | S | Post | ⬜ Planned | Markdown |
+| Lens comparison view | P1 | M | Post | ⬜ Planned | Side-by-side answers |
 | Image generation | P2 | L | Post | ⬜ Planned | DALL-E/Midjourney |
 | Voice input | P2 | M | Post | ⬜ Planned | Whisper API |
 | Custom AI training | P3 | XL | Year 2 | ⬜ Planned | Pro tier |
+
+**The 7 Lenses:**
+1. **Scientific** - Physics, biology, cosmology
+2. **Psychological** - Jungian, cognitive science, archetypes  
+3. **Philosophical** - Metaphysics, ethics, epistemology
+4. **Religious/Spiritual** - Comparative theology, mysticism, sacred texts
+5. **Historical/Anthropological** - Cultural evolution, mythology
+6. **Symbolic/Occult** - Correspondences, alchemy, astrology
+7. **Mathematical** - Sacred geometry, numerology, universal patterns
+
+**Lens Weight Sliders Feature (NEW):**
+- Each lens gets a slider control (0-100%)
+- Default: All lenses at equal weight (≈14% each)
+- Users adjust to emphasize perspectives relevant to their query
+- Example: Scholar researching historical context → boost Historical/Anthropological to 40%, reduce others
+- Example: Practitioner planning ritual → boost Symbolic/Occult to 50%, Religious/Spiritual to 30%
+- Weights determine: retrieval strategy emphasis, token allocation in prompt, answer section prominence
+- Saved presets available for common research patterns
 
 ### 5. COMMUNITY & TOKENOMICS
 

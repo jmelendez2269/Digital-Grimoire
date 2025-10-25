@@ -1,4 +1,4 @@
-# DIGITAL GRIMOIRE - QUICK START GUIDE
+# CONVERGENCE - QUICK START GUIDE
 
 **Goal:** Get your development environment running in 2 hours  
 **Prerequisites:** Basic knowledge of Next.js, React, PostgreSQL  
@@ -321,14 +321,17 @@ export default function Home() {
       <header className="border-b border-grimoire-accent-gold/20 p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-3xl font-serif text-grimoire-accent-gold">
-            Digital Grimoire Library
+            Convergence
           </h1>
           <nav className="space-x-4">
             <Link href="/library" className="hover:text-grimoire-accent-gold transition">
               Library
             </Link>
-            <Link href="/grimoire" className="hover:text-grimoire-accent-gold transition">
-              My Grimoire
+            <Link href="/journal" className="hover:text-grimoire-accent-gold transition">
+              Study Journal
+            </Link>
+            <Link href="/convergence-machine" className="hover:text-grimoire-accent-gold transition">
+              The Machine
             </Link>
             <Link href="/login" className="hover:text-grimoire-accent-gold transition">
               Login
@@ -341,17 +344,17 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center space-y-6">
           <h2 className="text-6xl font-serif text-grimoire-accent-gold">
-            The Library of Alexandria
+            Where Hidden Wisdom
             <br />
             <span className="text-4xl text-grimoire-text-secondary">
-              for Esoteric Wisdom
+              Reveals Our Unity
             </span>
           </h2>
           
           <p className="text-xl text-grimoire-text-secondary max-w-2xl mx-auto">
-            A living, evolving collective grimoire bridging ancient wisdom and modern technology.
-            Explore thousands of digitized texts, build your personal practice, and contribute to
-            the world's most comprehensive esoteric library.
+            Explore esoteric traditions, religious texts, philosophical works, and consciousness-exploring sciences.
+            See how all wisdom paths converge to reveal fundamental truths about ourselves, our world, and our universe.
+            From bedroom researchers to professional scholars - accessible wisdom for all.
           </p>
 
           <div className="flex gap-4 justify-center pt-8">
@@ -371,31 +374,40 @@ export default function Home() {
         </div>
 
         {/* Features */}
-        <div className="grid md:grid-cols-3 gap-8 mt-20">
+        <div className="grid md:grid-cols-4 gap-6 mt-20">
           <div className="bg-grimoire-bg-card p-6 rounded-lg border border-grimoire-accent-gold/20">
             <h3 className="text-xl font-serif text-grimoire-accent-gold mb-2">
-              Public Library
+              The Convergence Library
             </h3>
-            <p className="text-grimoire-text-secondary">
-              Access thousands of digitized esoteric texts with full OCR and semantic search.
+            <p className="text-grimoire-text-secondary text-sm">
+              Esoteric texts, religious scriptures, philosophical works, and sciences exploring consciousness.
             </p>
           </div>
 
           <div className="bg-grimoire-bg-card p-6 rounded-lg border border-grimoire-accent-gold/20">
             <h3 className="text-xl font-serif text-grimoire-accent-gold mb-2">
-              Personal Grimoire
+              Study Journal
             </h3>
-            <p className="text-grimoire-text-secondary">
-              Build your digital book of shadows with a Notion-like editor and wikilinks.
+            <p className="text-grimoire-text-secondary text-sm">
+              Your private research notebook with Notion-like editor and wikilinks for synthesis.
             </p>
           </div>
 
           <div className="bg-grimoire-bg-card p-6 rounded-lg border border-grimoire-accent-gold/20">
             <h3 className="text-xl font-serif text-grimoire-accent-gold mb-2">
-              Knowledge Graph
+              Correspondence Tables
             </h3>
-            <p className="text-grimoire-text-secondary">
-              Explore interactive correspondences between symbols, planets, and traditions.
+            <p className="text-grimoire-text-secondary text-sm">
+              Traditional esoteric correspondences - planets, elements, deities - in interactive graph + table views.
+            </p>
+          </div>
+
+          <div className="bg-grimoire-bg-card p-6 rounded-lg border border-grimoire-accent-gold/20">
+            <h3 className="text-xl font-serif text-grimoire-accent-gold mb-2">
+              The Convergence Machine
+            </h3>
+            <p className="text-grimoire-text-secondary text-sm">
+              7-lens AI reasoning with adjustable weights - see truth from Scientific, Religious, Philosophical perspectives & more.
             </p>
           </div>
         </div>

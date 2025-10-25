@@ -1,8 +1,8 @@
-# Digital Grimoire Library - Development Documentation
+# Convergence - Development Documentation
 
-**The Library of Alexandria for Esoteric Wisdom**
+**Where Hidden Wisdom Reveals Our Unity**
 
-A living, evolving collective grimoire that bridges ancient wisdom and modern technology through AI-powered knowledge synthesis, interactive correspondence graphs, and community-driven curation.
+Convergence bridges esoteric traditions, religious texts, philosophical works, and consciousness-exploring sciences to show how all wisdom paths converge. From bedroom researchers to professional scholars - accessible wisdom for all, synthesized through our 7-lens AI reasoning system.
 
 ---
 
@@ -84,39 +84,57 @@ Digital-Grimoire/
 ## 🎯 Project Vision
 
 ### Mission
-Build the world's most comprehensive and interactive digital esoteric library, bridging the gap between ancient wisdom and modern technology through community-driven research and AI-powered discovery.
+**Convergence presents knowledge for exploration, not as authoritative truth.** We make hidden wisdom accessible while maintaining scholarly rigor, showing how all wisdom paths converge to reveal our fundamental unity.
 
-### Three Pillars
+### What We Include
+- **Esoteric & Occult Texts** - Mystery traditions, hidden knowledge, alchemical works
+- **Religious Scriptures** - Sacred texts from all major and minor world religions
+- **Mystical & Spiritual Traditions** - Contemplative practices, spiritual philosophies
+- **Philosophical Works** - Metaphysics, ethics, epistemology
+- **Consciousness Sciences** - Quantum physics, psychology, neuroscience
+- **Mathematical Patterns** - Sacred geometry, numerology, universal principles
+- **Systems & Practices** - Astrology, human design, tarot, I Ching (regardless of scientific validation)
 
-1. **Public Library**
-   - Searchable repository of esoteric texts
-   - Full OCR with semantic search
+**Religion has been fundamental to human experience.** We honor this by treating religious texts as essential to synthesis.
+
+### The Six Core Components
+
+1. **The Convergence Library** (Free)
+   - Esoteric, religious, philosophical, and wisdom texts
+   - Full OCR with AI-powered semantic search
    - 20 document type classifications
-   - Free public access
+   - Free public access to all
 
-2. **Personal Grimoire**
-   - Private Notion-like workspace
-   - Block-based editor with wikilinks
+2. **Study Journal** (Freemium)
+   - Private research notebook
+   - Notion-like editor with wikilinks
    - Clip passages from library
-   - Export to multiple formats
+   - Export to Markdown, HTML, PDF, Notion
 
-3. **Correspondence Tables**
-   - Interactive knowledge graph
-   - Neptune graph database
-   - D3.js force-directed visualization
-   - Pre-configured "lenses" for different traditions
+3. **Correspondence Tables** (Premium)
+   - Traditional esoteric symbolic relationships
+   - Planets → Elements → Deities → Metals → Crystals
+   - Dual interface: sortable table + visual graph
+   - Neptune graph database + D3.js visualization
 
-4. **Multi-Lens AI (Premium)**
-   - Six-perspective knowledge synthesis
+4. **The Convergence Graph** (Premium)
+   - Cross-tradition conceptual unity
+   - Shows how all traditions express same truths
+   - Example: Buddhist Emptiness ↔ Quantum Zero-point ↔ Christian Void
+   - Comparative table + convergence network views
+
+5. **The Convergence Machine** (Premium)
+   - **7-lens AI reasoning with adjustable weighting**
    - Scientific, Psychological, Philosophical
-   - Religious, Historical, Symbolic
-   - Context-aware retrieval
+   - Religious/Spiritual, Historical/Anthropological
+   - Symbolic/Occult, **Mathematical** (NEW)
+   - Sliders adjust perspective emphasis (0-100% each)
 
-5. **Community Token Economy**
-   - Reward-driven contribution system
+6. **Community Token Economy**
+   - Ethical reward system ("Create Coin")
    - Points, badges, and ranks
    - Governance via utility token
-   - Ethical, non-speculative design
+   - Non-speculative, mission-driven design
 
 ---
 
@@ -194,12 +212,14 @@ Build the world's most comprehensive and interactive digital esoteric library, b
 
 ### Database Schema
 
-**10+ Tables:**
+**12+ Tables:**
 - `users` - Authentication & roles
-- `texts` - Main library documents
-- `correspondences` - Symbolic entities
-- `correspondence_relationships` - Graph edges
-- `user_grimoires` - Personal notebooks
+- `texts` - Main library documents with embeddings
+- `correspondences` - Traditional esoteric symbolic entities
+- `correspondence_relationships` - Traditional correspondence graph edges
+- `convergence_concepts` - Cross-tradition concepts (NEW)
+- `convergence_relationships` - Cross-tradition relationships (NEW)
+- `journal_entries` - Personal study journals (formerly grimoires)
 - `user_bookmarks` - Saved passages
 - `user_annotations` - Notes on texts
 - `badges`, `agent_logs`, etc.
@@ -280,16 +300,24 @@ Build the world's most comprehensive and interactive digital esoteric library, b
 - ✅ Note management
 - ✅ Clip & export system
 
-### Phase 3: Correspondence Tables (Weeks 15-20)
+### Phase 3A: Correspondence Tables (Weeks 15-18)
 - ✅ Neptune graph database
-- ✅ D3.js visualization
+- ✅ Traditional esoteric correspondences
+- ✅ D3.js visualization + table view
 - ✅ CRUD interface
 
-### Phase 4: Multi-Lens AI (Weeks 21-28)
+### Phase 3B: The Convergence Graph (Weeks 19-20)
+- ✅ Convergence concepts database
+- ✅ Cross-tradition relationship mapping
+- ✅ Comparative table + network graph
+- ✅ Unity visualization
+
+### Phase 4: The Convergence Machine (Weeks 21-28)
 - ✅ AI infrastructure
 - ✅ Retrieval system
-- ✅ Six-lens orchestration
-- ✅ Premium UI
+- ✅ **7-lens orchestration** (including Mathematical)
+- ✅ **Lens weight sliders**
+- ✅ Premium UI with preset system
 
 ### Phase 5: Community & Token (Weeks 29-36)
 - ✅ Points and badges
@@ -392,18 +420,21 @@ Build the world's most comprehensive and interactive digital esoteric library, b
 
 **Unique Value Proposition:**
 
-The Digital Grimoire Library is the **only platform** that combines:
+**Convergence** is the **only platform** that combines:
 
-1. **Academic rigor** (scholarly metadata, citations)
-2. **Modern UX** (Notion-like simplicity)
-3. **Advanced AI** (six-lens reasoning)
-4. **Community ownership** (ethical tokenomics)
-5. **Interactive graphs** (Neptune + D3.js)
+1. **Academic rigor** (scholarly metadata, citations) with **accessibility** (bedroom researchers to professional scholars)
+2. **Modern UX** (Notion-like simplicity for Study Journal)
+3. **7-lens AI reasoning** with **adjustable weighting** (Scientific, Psychological, Philosophical, Religious/Spiritual, Historical/Anthropological, Symbolic/Occult, Mathematical)
+4. **Dual graph systems** (Traditional correspondences + Cross-tradition unity)
+5. **Inclusive content** (Esoteric + Religious + Philosophical + Consciousness sciences)
+6. **Community ownership** (ethical tokenomics, non-exploitative)
+7. **Educational positioning** (presents knowledge for exploration, not as truth)
 
 **Market Position:**
 - Fills gap between static archives and superficial consumer apps
-- Serves scholars, practitioners, and newcomers
-- Addresses $173B+ spiritual products market
+- Honors religious traditions as essential to human understanding
+- Serves independent researchers, academic scholars, and active practitioners
+- Addresses $173B+ spiritual products market with integrity
 
 ---
 
@@ -447,9 +478,11 @@ The Digital Grimoire Library is the **only platform** that combines:
 ### Planning Documents
 - [Master Development Plan](docs/planning/MASTER_DEVELOPMENT_PLAN.md) - Complete roadmap
 - [Project Roadmap](docs/planning/PROJECT_ROADMAP.md) - Sprint-by-sprint tasks
-- [Feature Backlog](docs/planning/FEATURE_BACKLOG.md) - Prioritized features
+- [Feature Backlog](docs/planning/FEATURE_BACKLOG.md) - Prioritized features (with 7-lens slider feature)
 - [Quick Start Guide](docs/planning/QUICK_START_GUIDE.md) - Developer setup
 - [Executive Summary](docs/planning/EXECUTIVE_SUMMARY.md) - Investor overview
+- [**BRANDING.md**](docs/BRANDING.md) - **Brand guidelines, 7-lens system, voice & tone** (NEW)
+- [**LEGAL_DISCLAIMERS.md**](docs/LEGAL_DISCLAIMERS.md) - **Legal positioning, disclaimers, user responsibility** (NEW)
 
 ### Source Documents
 - [Complete Technical Implementation Plan](docs/source/Complete_Technical_Implementation_Plan.md)
@@ -494,11 +527,13 @@ This project synthesizes insights from:
 
 ---
 
-**Built with ❤️ for the seekers, scholars, and practitioners of esoteric wisdom**
+**Built with ❤️ for everyone seeking to understand themselves, their world, and their universe**
+
+*"Where Hidden Wisdom Reveals Our Unity"*
 
 ---
 
-**Last Updated:** October 24, 2025  
-**Version:** 1.0  
+**Last Updated:** October 25, 2025  
+**Version:** 2.0 (Convergence Rebrand)  
 **Status:** Planning Complete → Development Beginning
 
