@@ -58,9 +58,8 @@ export default function RegisterPage() {
       }
 
       if (data.user) {
-        // Success! Redirect to dashboard or show verification message
-        router.push("/dashboard");
-        router.refresh();
+        // Redirect to email verification page
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err) {
       setError("An unexpected error occurred");

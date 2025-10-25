@@ -296,6 +296,115 @@ After testing, you should be able to:
 
 ---
 
+## 🔑 Testing Password Reset Flow
+
+### Test 1: Request Password Reset
+
+1. **Navigate to** http://localhost:3000/login
+2. **Click** "Forgot your password?" link
+3. **Verify:**
+   - ✅ Redirected to `/forgot-password`
+   - ✅ Page loads with email input form
+   - ✅ Consistent dark theme styling
+
+4. **Enter an email** (use a real email you can access)
+5. **Click** "Send Reset Link"
+6. **Verify:**
+   - ✅ Loading state shows "Sending..."
+   - ✅ Success message appears with email icon
+   - ✅ Shows your entered email
+   - ✅ Helpful tips displayed
+
+### Test 2: Receive Reset Email
+
+1. **Check your email inbox** (may take 1-2 minutes)
+2. **Verify:**
+   - ✅ Email received from Supabase
+   - ✅ Email has correct subject line
+   - ✅ Reset link is present and clickable
+   - ✅ Email template is formatted properly
+
+> **Note:** If using Supabase's default email service, you're limited to 3 emails per hour during development.
+
+### Test 3: Click Reset Link
+
+1. **Click the reset link** in the email
+2. **Verify:**
+   - ✅ Redirected to `/reset-password`
+   - ✅ Page shows "Create New Password" heading
+   - ✅ Token is validated (no error message)
+   - ✅ Password input fields visible
+
+### Test 4: Reset Password
+
+1. **Enter a new password** (at least 8 characters)
+2. **Confirm the password** (enter same password)
+3. **Verify real-time feedback:**
+   - ✅ "At least 8 characters" shows green checkmark when met
+   - ✅ "Passwords match" shows green checkmark when they match
+   - ✅ Submit button is enabled
+
+4. **Click** "Update Password"
+5. **Verify:**
+   - ✅ Loading state shows "Updating password..."
+   - ✅ Success screen appears with green checkmark
+   - ✅ Message: "Password Updated!"
+   - ✅ Auto-redirects to login after 3 seconds
+
+### Test 5: Login with New Password
+
+1. **Enter your email** and **new password**
+2. **Click** "Sign In"
+3. **Verify:**
+   - ✅ Login successful
+   - ✅ Redirected to `/dashboard`
+   - ✅ Old password no longer works (test this too!)
+
+### Test 6: Invalid Scenarios
+
+#### Expired/Invalid Token
+1. **Request a password reset** but wait for the link to expire (default: 1 hour)
+2. **Or use the same link twice**
+3. **Verify:**
+   - ✅ Shows error: "Invalid or expired reset link"
+   - ✅ Red warning icon displayed
+   - ✅ Button to "Request New Reset Link" appears
+
+#### Password Mismatch
+1. **Enter different passwords** in the two fields
+2. **Try to submit**
+3. **Verify:**
+   - ✅ Error message: "Passwords do not match"
+   - ✅ Form doesn't submit
+
+#### Password Too Short
+1. **Enter a password** with less than 8 characters
+2. **Try to submit**
+3. **Verify:**
+   - ✅ Error message: "Password must be at least 8 characters"
+   - ✅ Requirements indicator shows it's not met
+
+#### Non-existent Email
+1. **Enter an email** that doesn't exist in the system
+2. **Request reset**
+3. **Verify:**
+   - ✅ Same success message shown (security by design)
+   - ✅ No email actually sent
+   - ✅ Doesn't reveal if email exists
+
+### Test 7: UI/UX Elements
+
+**Check all pages have:**
+- ✅ Consistent amber/zinc color scheme
+- ✅ Mystical circular logo
+- ✅ Responsive design (test on mobile)
+- ✅ Proper focus states on inputs
+- ✅ Clear error/success messaging
+- ✅ "Back to home" links
+- ✅ Loading states during async operations
+
+---
+
 ## 🔮 Next Steps
 
 Once testing is complete:
@@ -304,7 +413,8 @@ Once testing is complete:
 2. **Configure S3 notifications** to trigger Lambda
 3. **Set up SNS topic** for Textract completion
 4. **Test full OCR pipeline** end-to-end
-5. **Start Sprint 4** - Document viewer & advanced search!
+5. **Configure Supabase email settings** for production (see `docs/SUPABASE_PASSWORD_RESET_SETUP.md`)
+6. **Start Sprint 4** - Document viewer & advanced search!
 
 ---
 
