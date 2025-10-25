@@ -23,13 +23,23 @@ export default function Header() {
       
       // Check if user is admin
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        setIsAdmin(profile?.role === 'admin');
+        try {
+          const { data: profile, error } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) {
+            console.warn('Could not fetch user profile:', error.message);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(profile?.role === 'admin');
+          }
+        } catch (err) {
+          console.error('Error checking admin status:', err);
+          setIsAdmin(false);
+        }
       }
       
       setLoading(false);
@@ -43,13 +53,23 @@ export default function Header() {
       
       // Update admin status
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        setIsAdmin(profile?.role === 'admin');
+        try {
+          const { data: profile, error } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) {
+            console.warn('Could not fetch user profile:', error.message);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(profile?.role === 'admin');
+          }
+        } catch (err) {
+          console.error('Error checking admin status:', err);
+          setIsAdmin(false);
+        }
       } else {
         setIsAdmin(false);
       }
