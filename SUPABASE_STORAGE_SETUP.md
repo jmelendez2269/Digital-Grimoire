@@ -46,7 +46,7 @@ By default, Supabase Storage buckets are protected. You need to add 4 policies u
 - **Target roles:** authenticated
 - **Policy definition:** 
   ```
-  bucket_id = 'avatars' AND (storage.foldername(name))[1] = 'avatars'
+  bucket_id = 'avatars'
   ```
 
 **What this does:** Logged-in users can upload new avatar images

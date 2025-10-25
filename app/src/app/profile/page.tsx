@@ -68,7 +68,7 @@ export default function ProfilePage() {
       // Create unique filename
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = fileName; // Upload directly to bucket root
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
