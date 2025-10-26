@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -16,11 +17,20 @@ import {
   Highlighter
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import PDFViewer from '@/components/PDFViewer';
 import BookmarkButton from '@/components/BookmarkButton';
 import ReadingProgress, { useReadingProgressTracker } from '@/components/ReadingProgress';
 import AnnotationPanel from '@/components/AnnotationPanel';
 import CollectionsPanel from '@/components/CollectionsPanel';
+
+// Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
+const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+      <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+    </div>
+  ),
+});
 
 interface TextDocument {
   id: string;
