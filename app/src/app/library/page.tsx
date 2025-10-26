@@ -35,6 +35,8 @@ export default function LibraryPage() {
   const [texts, setTexts] = useState<Text[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,12 +60,44 @@ export default function LibraryPage() {
   const [allLenses, setAllLenses] = useState<string[]>([]);
 
   useEffect(() => {
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
     fetchFilterOptions();
   }, []);
 
   useEffect(() => {
-    fetchTexts();
-  }, [currentPage, searchQuery, filterValues]);
+    if (isAuthenticated) {
+      fetchTexts();
+    }
+  }, [currentPage, searchQuery, filterValues, isAuthenticated]);
+
+  const checkAuth = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Auth error:', error);
+        setError('Authentication error. Please try logging in again.');
+        setIsAuthenticated(false);
+        return;
+      }
+
+      if (!session) {
+        setError('You must be logged in to view the library.');
+        setIsAuthenticated(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error('Error checking auth:', err);
+      setError('Failed to verify authentication.');
+      setIsAuthenticated(false);
+    }
+  };
 
   const fetchFilterOptions = async () => {
     try {
@@ -126,6 +160,7 @@ export default function LibraryPage() {
   const fetchTexts = async () => {
     try {
       setLoading(true);
+      setError(null);
       const supabase = createClient();
 
       // Start building the query
@@ -178,12 +213,21 @@ export default function LibraryPage() {
 
       const { data, error, count } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        setError(`Failed to load library: ${error.message}`);
+        setTexts([]);
+        setTotalCount(0);
+        return;
+      }
       
       setTexts(data || []);
       setTotalCount(count || 0);
     } catch (error) {
       console.error('Error fetching texts:', error);
+      setError('An unexpected error occurred while loading the library.');
+      setTexts([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -252,6 +296,29 @@ export default function LibraryPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-red-400 mb-1">Error Loading Library</h3>
+                <p className="text-sm text-red-300/80">{error}</p>
+                {!isAuthenticated && (
+                  <Link
+                    href="/login"
+                    className="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Go to Login
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative max-w-2xl">
@@ -286,7 +353,7 @@ export default function LibraryPage() {
         </div>
 
         {/* Loading State */}
-        {loading ? (
+        {!isAuthenticated ? null : loading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div
@@ -295,7 +362,7 @@ export default function LibraryPage() {
               />
             ))}
           </div>
-        ) : texts.length === 0 ? (
+        ) : error ? null : texts.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16">
             <FileText className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
