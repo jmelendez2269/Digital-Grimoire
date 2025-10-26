@@ -3,16 +3,19 @@
 ## Issue Summary
 The PDF viewer was throwing console errors:
 - **Error**: `Uncaught TypeError: Object.defineProperty called on non-object`
-- **Root Cause**: Improper PDF.js worker configuration with protocol-relative URLs
+- **Root Cause**: Version incompatibility between `react-pdf` v10.2.0 and `pdfjs-dist` v5.4.296
+- **Solution**: Downgraded `pdfjs-dist` to v4.4.168 (compatible with react-pdf v10.x)
 - **Warning**: CSS preload warnings due to unoptimized resource loading
 
 ## Errors Fixed
 
-### 1. PDF.js Worker Configuration Error
-**Problem**: The worker was configured with a protocol-relative URL (`//unpkg.com/...`) which can cause initialization issues and the "Object.defineProperty called on non-object" error.
+### 1. Version Incompatibility Error
+**Problem**: `react-pdf` v10.2.0 was incompatible with `pdfjs-dist` v5.4.296, causing the "Object.defineProperty called on non-object" error during PDF.js initialization.
 
 **Solution**: 
-- Changed to full HTTPS URL: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+- **Downgraded `pdfjs-dist`** from v5.4.296 to v4.4.168 (stable, compatible version)
+- Changed worker file extension from `.mjs` to `.js` (v4.x uses JavaScript instead of ES modules)
+- Updated worker URL: `https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.js`
 - Added proper worker initialization check with `useEffect` hook
 - Added `workerReady` state to prevent rendering before worker is initialized
 - Added proper error handling for worker configuration failures
@@ -85,9 +88,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 ```
 
 ## Commit Details
-- **Commit**: `79b234b`
-- **Message**: "Fix PDF viewer initialization and worker configuration errors"
+- **Initial Fix Attempt**: `79b234b` - "Fix PDF viewer initialization and worker configuration errors"
+- **Final Fix**: `7ce523f` - "Fix PDF viewer by downgrading pdfjs-dist to compatible version 4.4.168"
 - **Date**: October 26, 2025
+- **Key Change**: Downgraded `pdfjs-dist` from v5.4.296 to v4.4.168 for compatibility
 
 ## Related Documentation
 - [React-PDF Documentation](https://github.com/wojtekmaj/react-pdf)
