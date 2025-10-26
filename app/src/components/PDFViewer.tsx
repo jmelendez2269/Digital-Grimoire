@@ -22,9 +22,9 @@ export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
   // Initialize PDF.js worker
   useEffect(() => {
     try {
-      // Configure PDF.js worker with full HTTPS URL
+      // Configure PDF.js worker with full HTTPS URL for v4.x
       if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+        pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
       }
       setWorkerReady(true);
     } catch (err) {
@@ -183,9 +183,9 @@ export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
               loading=""
               className="shadow-2xl"
               options={{
-                cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                cMapUrl: 'https://unpkg.com/pdfjs-dist@4.4.168/cmaps/',
                 cMapPacked: true,
-                standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+                standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@4.4.168/standard_fonts/',
               }}
             >
               <Page
