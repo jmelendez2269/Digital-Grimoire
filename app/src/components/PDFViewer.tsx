@@ -1,13 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Download, Loader2 } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PDFViewerProps {
   fileUrl: string;
@@ -20,6 +17,22 @@ export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [workerReady, setWorkerReady] = useState<boolean>(false);
+
+  // Initialize PDF.js worker
+  useEffect(() => {
+    try {
+      // Configure PDF.js worker with full HTTPS URL
+      if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+        pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+      }
+      setWorkerReady(true);
+    } catch (err) {
+      console.error('Error configuring PDF.js worker:', err);
+      setError('Failed to initialize PDF viewer');
+      setLoading(false);
+    }
+  }, []);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -135,10 +148,12 @@ export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
       {/* PDF Display */}
       <div className="flex-1 overflow-auto bg-zinc-800/30 p-4">
         <div className="flex justify-center">
-          {loading && (
+          {(loading || !workerReady) && (
             <div className="flex flex-col items-center justify-center py-16">
               <Loader2 className="w-12 h-12 text-amber-400 animate-spin mb-4" />
-              <p className="text-amber-100/60">Loading document...</p>
+              <p className="text-amber-100/60">
+                {!workerReady ? 'Initializing PDF viewer...' : 'Loading document...'}
+              </p>
             </div>
           )}
 
@@ -160,13 +175,18 @@ export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
             </div>
           )}
 
-          {!error && (
+          {!error && workerReady && (
             <Document
               file={fileUrl}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               loading=""
               className="shadow-2xl"
+              options={{
+                cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                cMapPacked: true,
+                standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+              }}
             >
               <Page
                 pageNumber={pageNumber}
