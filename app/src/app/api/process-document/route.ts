@@ -28,9 +28,10 @@ export async function POST(request: NextRequest) {
     const ocrResult = await performOCR(fileUrl);
     console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
 
-    // Step 2: Extract metadata with Claude
-    console.log('Step 2: Extracting metadata with Claude...');
-    const metadata = await extractMetadata(ocrResult.text);
+    // Step 2: Extract metadata with Claude (or fallback to basic extraction)
+    console.log('Step 2: Extracting metadata...');
+    const filename = key.split('/').pop() || 'document';
+    const metadata = await extractMetadata(ocrResult.text, filename);
     console.log('Metadata extracted:', metadata.title);
 
     // Step 3: Save to Supabase
