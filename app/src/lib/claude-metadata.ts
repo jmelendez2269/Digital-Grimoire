@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 interface DocumentMetadata {
   title: string;
+  standardizedId: string;
   author?: string;
   year?: number;
   publisher?: string;
@@ -31,7 +32,14 @@ anthropology, reference_table, historical, mythology, medical_overview, commenta
 webpage, dictionary, astrology, ritual_guide, diagram, transcript, summary, speculative, misc
 
 Return JSON with:
-- title (string, required)
+- title (string, required): Full title of the document
+- standardizedId (string, required): Generate a unique ID in format: type_shortname_author_year
+  * Use the document type (e.g., book_esoteric)
+  * Add shortened document name (2-3 key words from title, no articles)
+  * Add author's last name if available
+  * Add year if available
+  * All lowercase, separated by underscores
+  * Example: "book_esoteric_secret_doctrine_blavatsky_1888"
 - author (string, optional)
 - year (number, optional)
 - publisher (string, optional)

@@ -53,6 +53,11 @@ export async function POST(request: NextRequest) {
         tags: metadata.tags,
         status: 'ready',
         uploaded_by: user?.id,
+        metadata: {
+          standardizedId: metadata.standardizedId,
+          pageCount: ocrResult.pageCount,
+          lineCount: ocrResult.lineCount,
+        },
       })
       .select()
       .single();
