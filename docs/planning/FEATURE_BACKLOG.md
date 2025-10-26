@@ -64,10 +64,10 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Document upload (admin) | P0 | M | 3 | ⬜ Planned | **Cloudflare R2** (migrated from AWS) |
-| Manual metadata entry | P0 | M | 3 | ⬜ Planned | **MVP approach** - form-based |
-| OCR processing | P1 | L | Post | ⬜ Deferred | **Phase 2** - OCR.space or Tesseract |
-| Document classification (20 types) | P0 | S | 3 | ⬜ Planned | Manual dropdown selection |
+| Document upload (admin) | P0 | M | 3 | ✅ Complete | **Cloudflare R2** (migrated from AWS) |
+| Manual metadata entry | P0 | M | 3 | ✅ Complete | **AI-powered with Claude** |
+| OCR processing | P1 | L | 4 | ✅ Complete | **Azure Computer Vision** |
+| Document classification (20 types) | P0 | S | 3 | ✅ Complete | **AI-powered classification** |
 | Full-text search | P0 | M | 4 | ⬜ Planned | PostgreSQL FTS |
 | Document viewer (PDF) | P0 | M | 4 | ⬜ Planned | react-pdf |
 | Filter by type/domain/year | P0 | S | 4 | ⬜ Planned | Query params |
@@ -135,7 +135,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Claude API integration | P0 | M | 11 | ⬜ Planned | Primary AI |
+| Claude API integration | P0 | M | 4 | ✅ Complete | Primary AI - Metadata extraction |
 | OpenAI API integration | P0 | M | 11 | ⬜ Planned | Fallback |
 | Response streaming (SSE) | P0 | M | 11 | ⬜ Planned | Real-time tokens |
 | AI response caching | P0 | M | 11 | ⬜ Planned | Hash-based |
@@ -232,12 +232,12 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Cloudflare R2 setup | P0 | S | 3 | ⬜ In Progress | **Migrated from AWS S3** |
-| R2 API token generation | P0 | XS | 3 | ⬜ Planned | Read/write access |
-| CORS configuration | P0 | XS | 3 | ⬜ Planned | Web uploads |
-| Presigned URL generation | P0 | M | 3 | ⬜ Planned | S3-compatible API |
+| Cloudflare R2 setup | P0 | S | 3 | ✅ Complete | **Migrated from AWS S3** |
+| R2 API token generation | P0 | XS | 3 | ✅ Complete | Read/write access |
+| CORS configuration | P0 | XS | 3 | ✅ Complete | Web uploads |
+| Presigned URL generation | P0 | M | 3 | ✅ Complete | S3-compatible API |
 | File versioning | P1 | S | Post | ⬜ Planned | Backup strategy |
-| OCR service integration | P1 | L | Post | ⬜ Deferred | Phase 2 - when $750+ MRR |
+| OCR service integration | P1 | L | 4 | ✅ Complete | **Azure Computer Vision** |
 
 ### Authentication & Security
 

@@ -39,20 +39,21 @@
 |-------|-----------|---------|-----------|--------|
 | **Frontend** | Next.js 14 + TailwindCSS | React SSR/ISR framework | ✅ Vercel | ✅ Active |
 | **Database** | Supabase PostgreSQL | Primary data store + Auth | ✅ 500MB | ✅ Active |
-| **File Storage** | Cloudflare R2 | Document storage (S3-compatible) | ✅ 10GB | ✅ **Migrated Oct 2025** |
+| **File Storage** | Cloudflare R2 | Document storage (S3-compatible) | ✅ 10GB | ✅ Active |
 | **Vector Search** | pgvector | Semantic similarity | ✅ Included | ✅ Active |
 | **Graph DB** | Amazon Neptune | Correspondence graph | ✅ 750hrs | ⏳ Phase 3 |
-| **OCR** | Manual → OCR.space API | Document processing (Phase 2) | ✅ 500/mo | ⏳ Deferred |
-| **Serverless** | Cloudflare Workers | Event processing | ✅ 100K/day | 🔄 In Progress |
+| **OCR** | Azure Computer Vision | Document processing | ✅ 5K/mo free | ✅ Active |
+| **Serverless** | Cloudflare Workers | Event processing | ✅ 100K/day | ✅ Active |
 | **Editor** | Tiptap | Rich text editing | ✅ Open source | ⏳ Phase 2 |
 | **Graph Viz** | D3.js | Force-directed layouts | ✅ Open source | ⏳ Phase 3 |
-| **AI** | Claude API / GPT-4 | Multi-lens reasoning | 💰 Pay-per-use | ⏳ Phase 4 |
+| **AI** | Claude API / GPT-4 | Metadata extraction & Multi-lens | 💰 Pay-per-use | 🔄 Partial (Metadata ✅) |
 
 **🔄 Infrastructure Migration Note (Oct 26, 2025):**
-- **AWS → Cloudflare R2:** Migrated due to AWS support paywall ($29-100/month minimum)
+- **AWS → Cloudflare R2:** ✅ Migrated due to AWS support paywall ($29-100/month minimum)
 - **Benefits:** No egress fees, better bootstrap economics, free community support
 - **S3 Compatibility:** Minimal code changes required
-- **OCR Strategy:** Start with manual metadata, add automated OCR when revenue supports it
+- **OCR Strategy:** ✅ Implemented with Azure Computer Vision (5K pages/month free)
+- **Metadata Extraction:** ✅ Automated with Claude API
 
 ### Database Schema (Implemented in supabase-schema.sql)
 
@@ -122,11 +123,11 @@ associated_names: Related figures
 - [ ] GitHub repository + CI/CD pipeline
 
 #### Week 3-4: Document Ingestion Pipeline
-- [ ] S3 upload API endpoint
-- [ ] Lambda trigger for new documents
-- [ ] AWS Textract OCR integration
-- [ ] Metadata extraction with Claude Vision API
-- [ ] Document classification (20 types)
+- [x] S3 upload API endpoint (Cloudflare R2)
+- [x] Lambda trigger for new documents (Cloudflare Workers)
+- [x] Azure Computer Vision OCR integration
+- [x] Metadata extraction with Claude API
+- [x] Document classification (20 types)
 - [ ] Vector embedding generation
 
 #### Week 5-6: Public Library Frontend
@@ -255,9 +256,9 @@ associated_names: Related figures
 **Goal:** Premium 7-lens AI reasoning system with adjustable perspective weighting
 
 #### Week 21-22: AI Infrastructure
-- [ ] Claude API integration
+- [x] Claude API integration (for metadata extraction)
 - [ ] GPT-4 API integration
-- [ ] Prompt engineering for seven lenses (including Mathematical)
+- [x] Prompt engineering for metadata classification
 - [ ] Response streaming setup
 - [ ] AI response caching (hash-based)
 
