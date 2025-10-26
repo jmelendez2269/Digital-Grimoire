@@ -13,17 +13,23 @@ This document describes the newly implemented library features including documen
 - `/library/[id]/page.tsx` - Document detail page
 
 **Features:**
-- Full PDF rendering using react-pdf
-- Page navigation (prev/next, first/last)
-- Zoom controls (50% - 300%)
+- Full PDF rendering with @react-pdf-viewer
+- Page navigation (prev/next/jump to page)
+- Zoom controls (zoom in/out/fit/custom percentage)
 - Download functionality
+- Print support
+- Search within PDF
+- Thumbnail sidebar
+- Bookmarks panel
+- Full-screen mode
+- Dark theme integration
 - Responsive toolbar with controls
 - Loading and error states
-- Keyboard navigation hints
 
 **Technologies:**
-- react-pdf v10.2.0
-- pdfjs-dist v5.4.296
+- @react-pdf-viewer/core v3.12.0
+- @react-pdf-viewer/default-layout v3.12.0
+- pdfjs-dist v3.11.174
 
 **Usage:**
 1. Navigate to `/library` page

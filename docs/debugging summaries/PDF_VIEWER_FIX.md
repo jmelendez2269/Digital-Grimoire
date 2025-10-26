@@ -3,48 +3,74 @@
 ## Issue Summary
 The PDF viewer was throwing console errors:
 - **Error**: `Uncaught TypeError: Object.defineProperty called on non-object`
-- **Root Cause**: Version incompatibility between `react-pdf` v10.2.0 and `pdfjs-dist` v5.4.296
-- **Solution**: Downgraded `pdfjs-dist` to v4.4.168 (compatible with react-pdf v10.x)
-- **Warning**: CSS preload warnings due to unoptimized resource loading
+- **Root Cause**: Version incompatibility between `react-pdf` and `pdfjs-dist`, and poor Next.js 16 compatibility
+- **Solution**: Switched to `@react-pdf-viewer/core` v3.12.0 (modern, actively maintained, better Next.js compatibility)
+- **Status**: ✅ Fixed and production-ready
 
-## Errors Fixed
+## Solution Implemented
 
-### 1. Version Incompatibility Error
-**Problem**: `react-pdf` v10.2.0 was incompatible with `pdfjs-dist` v5.4.296, causing the "Object.defineProperty called on non-object" error during PDF.js initialization.
+### 1. Replaced PDF Library
+**Old Stack**: `react-pdf` v10.2.0 + `pdfjs-dist` v5.4.296  
+**New Stack**: `@react-pdf-viewer/core` v3.12.0 + `pdfjs-dist` v3.11.174
 
-**Solution**: 
-- **Downgraded `pdfjs-dist`** from v5.4.296 to v4.4.168 (stable, compatible version)
-- Changed worker file extension from `.mjs` to `.js` (v4.x uses JavaScript instead of ES modules)
-- Updated worker URL: `https://unpkg.com/pdfjs-dist@4.4.168/build/pdf.worker.min.js`
-- Added proper worker initialization check with `useEffect` hook
-- Added `workerReady` state to prevent rendering before worker is initialized
-- Added proper error handling for worker configuration failures
+**Why This Fix Works**:
+- `@react-pdf-viewer` is specifically designed for modern React and Next.js
+- Better maintained with frequent updates
+- No version conflicts or worker initialization issues
+- Built-in dark theme support
+- More stable and reliable
 
-### 2. Enhanced PDF.js Configuration
+### 2. Component Rewrite
+**File**: `app/src/components/PDFViewer.tsx`
+
 **Changes**:
-- Added character map URLs (cMapUrl) for proper font rendering
-- Added standard font data URL for better text rendering
-- Improved loading states to show "Initializing PDF viewer..." vs "Loading document..."
+- Replaced `Document` and `Page` components with `Worker` and `Viewer`
+- Used `defaultLayoutPlugin` for built-in toolbar controls
+- Simplified error handling (no complex state management needed)
+- Added custom dark theme styles matching amber/zinc aesthetic
+- Removed complex worker initialization logic (handled by library)
 
-### 3. Next.js Configuration Optimization
-**Changes to `next.config.ts`**:
-- Added package import optimization for `react-pdf` and `lucide-react`
-- Added transpilation for `react-pdf` and `pdfjs-dist` packages
-- Added webpack configuration to handle `.mjs` files properly
-- Disabled canvas on client-side (not needed for PDF.js)
+**Features Retained**:
+- Page navigation (prev/next)
+- Zoom controls (in/out/fit)
+- Download functionality
+- Print support
+- Search within PDF
+- Thumbnail sidebar
+- Bookmarks panel
+- Full-screen mode
+
+### 3. Simplified Next.js Configuration
+**File**: `app/next.config.ts`
+
+**Changes**:
+- Removed complex webpack configuration
+- Removed transpilePackages directives
+- Simplified to just package optimization
+- No special handling needed for `.mjs` files
 
 ## Files Modified
 
-### 1. `app/src/components/PDFViewer.tsx`
-- Moved worker configuration into `useEffect` hook
-- Added `workerReady` state management
-- Enhanced error handling and loading states
-- Added proper PDF.js options (cMapUrl, standardFontDataUrl)
+### 1. `app/package.json`
+**Removed**:
+- `react-pdf` v10.2.0
+- `pdfjs-dist` v5.4.296 (or v4.4.168)
 
-### 2. `app/next.config.ts`
-- Added experimental package optimization
-- Added transpilePackages configuration
-- Added webpack rules for PDF.js worker files
+**Added**:
+- `@react-pdf-viewer/core` v3.12.0
+- `@react-pdf-viewer/default-layout` v3.12.0
+- `pdfjs-dist` v3.11.174
+
+### 2. `app/src/components/PDFViewer.tsx`
+- Complete rewrite using new library
+- Simplified component structure
+- Custom dark theme styles
+- Built-in toolbar and controls
+
+### 3. `app/next.config.ts`
+- Simplified configuration
+- Removed webpack customizations
+- Updated package optimization list
 
 ## Testing Instructions
 
@@ -88,13 +114,17 @@ pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 ```
 
 ## Commit Details
-- **Initial Fix Attempt**: `79b234b` - "Fix PDF viewer initialization and worker configuration errors"
-- **Final Fix**: `7ce523f` - "Fix PDF viewer by downgrading pdfjs-dist to compatible version 4.4.168"
+- **Previous Attempts**: 
+  - `79b234b` - Worker configuration fixes
+  - `7ce523f` - Version downgrade attempt
+  - `11842f8` - Documentation updates
+- **Final Solution**: Switched to `@react-pdf-viewer/core` library
 - **Date**: October 26, 2025
-- **Key Change**: Downgraded `pdfjs-dist` from v5.4.296 to v4.4.168 for compatibility
+- **Key Change**: Replaced `react-pdf` with `@react-pdf-viewer` for better Next.js 16 compatibility
 
 ## Related Documentation
-- [React-PDF Documentation](https://github.com/wojtekmaj/react-pdf)
+- [@react-pdf-viewer Documentation](https://react-pdf-viewer.dev/)
+- [@react-pdf-viewer Examples](https://react-pdf-viewer.dev/examples/)
 - [PDF.js Documentation](https://mozilla.github.io/pdf.js/)
-- [Next.js Webpack Configuration](https://nextjs.org/docs/app/api-reference/next-config-js/webpack)
+- [Next.js Configuration](https://nextjs.org/docs/app/api-reference/next-config-js)
 
