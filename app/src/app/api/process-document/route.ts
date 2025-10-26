@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
@@ -36,7 +36,10 @@ export async function POST(request: NextRequest) {
 
     // Step 3: Save to Supabase
     console.log('Step 3: Saving to Supabase...');
-    const supabase = await createClient();
+    const supabase = createServiceClient();
+    
+    // Get user from the request (admin who uploaded)
+    // Note: Using service role, so we need to pass user ID explicitly
     const { data: { user } } = await supabase.auth.getUser();
 
     const { data: textRecord, error: dbError } = await supabase
