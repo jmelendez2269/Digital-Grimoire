@@ -37,6 +37,12 @@ interface TextDocument {
   file_size: number | null;
   status: string;
   created_at: string;
+  metadata?: {
+    standardizedId?: string;
+    pageCount?: number;
+    lineCount?: number;
+    metadataFileKey?: string;
+  };
 }
 
 export default function DocumentDetailPage() {
@@ -322,6 +328,18 @@ export default function DocumentDetailPage() {
                         </span>
                       ))}
                     </dd>
+                  </div>
+                )}
+                {document.metadata?.pageCount && (
+                  <div>
+                    <dt className="text-sm text-amber-100/60 mb-1">Pages</dt>
+                    <dd className="text-amber-100">{document.metadata.pageCount} pages</dd>
+                  </div>
+                )}
+                {document.metadata?.lineCount && (
+                  <div>
+                    <dt className="text-sm text-amber-100/60 mb-1">Lines</dt>
+                    <dd className="text-amber-100">{document.metadata.lineCount.toLocaleString()} lines</dd>
                   </div>
                 )}
                 <div>

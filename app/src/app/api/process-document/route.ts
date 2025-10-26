@@ -15,7 +15,31 @@ const s3Client = new S3Client({
 });
 
 export async function POST(request: NextRequest) {
-  const { key, userId } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch (error) {
+    return NextResponse.json(
+      { 
+        error: 'Invalid JSON in request body',
+        details: 'The request body must be valid JSON'
+      },
+      { status: 400 }
+    );
+  }
+
+  const { key, userId } = body;
+  
+  if (!key) {
+    return NextResponse.json(
+      { 
+        error: 'Missing required parameter: key',
+        details: 'The file key is required to process the document'
+      },
+      { status: 400 }
+    );
+  }
+
   let newKey: string | null = null; // Track the renamed file for cleanup
   let metadataKey: string | null = null; // Track the metadata file for cleanup
   let rawAiOutput: string = ''; // Store raw AI response
@@ -28,15 +52,28 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Perform OCR
     console.log('Step 1: Running Azure OCR...');
-    const ocrResult = await performOCR(fileUrl);
-    console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
+    let ocrResult;
+    try {
+      ocrResult = await performOCR(fileUrl);
+      console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
+    } catch (ocrError) {
+      console.error('OCR failed:', ocrError);
+      throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+    }
 
-    // Step 2: Extract metadata with Claude (or fallback to basic extraction)
+    // Step 2: Extract metadata with OpenAI
     console.log('Step 2: Extracting metadata...');
     const filename = key.split('/').pop() || 'document';
-    const { metadata, rawOutput } = await extractMetadata(ocrResult.text, filename);
-    rawAiOutput = rawOutput; // Store for response
-    console.log('Metadata extracted:', metadata.title);
+    let metadata;
+    try {
+      const result = await extractMetadata(ocrResult.text, filename);
+      metadata = result.metadata;
+      rawAiOutput = result.rawOutput; // Store for response
+      console.log('Metadata extracted:', metadata.title);
+    } catch (metadataError) {
+      console.error('Metadata extraction failed:', metadataError);
+      throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
+    }
 
     // Step 3: Rename file in R2 based on metadata
     console.log('Step 3: Renaming file in R2 based on metadata...');
@@ -44,32 +81,37 @@ export async function POST(request: NextRequest) {
     newKey = `library/${metadata.standardizedId}.${fileExtension}`;
     console.log(`Renaming: ${key} -> ${newKey}`);
 
-    // Copy to new location with custom metadata attached
-    const copyCommand = new CopyObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
-      CopySource: `${process.env.R2_BUCKET_NAME || 'convergence-library'}/${key}`,
-      Key: newKey,
-      Metadata: {
-        'title': metadata.title,
-        'author': metadata.author || '',
-        'year': metadata.year?.toString() || '',
-        'type': metadata.type,
-        'domain': metadata.domain || '',
-        'tags': metadata.tags.join(','),
-        'confidence': metadata.confidence,
-        'standardized-id': metadata.standardizedId,
-      },
-      MetadataDirective: 'REPLACE',
-    });
-    await s3Client.send(copyCommand);
+    try {
+      // Copy to new location with custom metadata attached
+      const copyCommand = new CopyObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+        CopySource: `${process.env.R2_BUCKET_NAME || 'convergence-library'}/${key}`,
+        Key: newKey,
+        Metadata: {
+          'title': metadata.title,
+          'author': metadata.author || '',
+          'year': metadata.year?.toString() || '',
+          'type': metadata.type,
+          'domain': metadata.domain || '',
+          'tags': metadata.tags.join(','),
+          'confidence': metadata.confidence,
+          'standardized-id': metadata.standardizedId,
+        },
+        MetadataDirective: 'REPLACE',
+      });
+      await s3Client.send(copyCommand);
 
-    // Delete old file
-    const deleteOldCommand = new DeleteObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
-      Key: key,
-    });
-    await s3Client.send(deleteOldCommand);
-    console.log('✅ File renamed successfully');
+      // Delete old file
+      const deleteOldCommand = new DeleteObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+        Key: key,
+      });
+      await s3Client.send(deleteOldCommand);
+      console.log('✅ File renamed successfully');
+    } catch (r2Error) {
+      console.error('R2 file operations failed:', r2Error);
+      throw new Error(`Failed to rename file in storage: ${r2Error instanceof Error ? r2Error.message : 'Unknown error'}`);
+    }
 
     // Step 4: Upload metadata JSON to R2
     console.log('Step 4: Uploading metadata to R2...');
@@ -84,14 +126,19 @@ export async function POST(request: NextRequest) {
     };
 
     metadataKey = `library/${metadata.standardizedId}.metadata.json`;
-    const putMetadataCommand = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
-      Key: metadataKey,
-      Body: JSON.stringify(metadataObject, null, 2),
-      ContentType: 'application/json',
-    });
-    await s3Client.send(putMetadataCommand);
-    console.log(`✅ Metadata uploaded to: ${metadataKey}`);
+    try {
+      const putMetadataCommand = new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+        Key: metadataKey,
+        Body: JSON.stringify(metadataObject, null, 2),
+        ContentType: 'application/json',
+      });
+      await s3Client.send(putMetadataCommand);
+      console.log(`✅ Metadata uploaded to: ${metadataKey}`);
+    } catch (metadataUploadError) {
+      console.error('Metadata upload to R2 failed:', metadataUploadError);
+      throw new Error(`Failed to upload metadata file: ${metadataUploadError instanceof Error ? metadataUploadError.message : 'Unknown error'}`);
+    }
 
     // Step 5: Save to Supabase (using regular authenticated client)
     console.log('Step 5: Saving to Supabase...');

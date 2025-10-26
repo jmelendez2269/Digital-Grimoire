@@ -2,9 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, Eye, Trash2 } from 'lucide-react';
+import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, Eye, Trash2, Home, Library, LayoutDashboard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { DocumentMetadata } from '@/lib/claude-metadata';
+import Link from 'next/link';
+import Header from '@/components/Header';
 
 interface UploadFile {
   id: string;
@@ -154,8 +156,15 @@ export default function AdminUploadPage() {
       });
 
       if (!presignedResponse.ok) {
-        const error = await presignedResponse.json();
-        throw new Error(error.error || 'Failed to get upload URL');
+        let errorMessage = 'Failed to get upload URL';
+        try {
+          const error = await presignedResponse.json();
+          errorMessage = error.error || errorMessage;
+        } catch (e) {
+          // Response wasn't JSON, use status text
+          errorMessage = `${errorMessage}: ${presignedResponse.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const { presignedUrl, key } = await presignedResponse.json();
@@ -202,8 +211,15 @@ export default function AdminUploadPage() {
       });
 
       if (!processResponse.ok) {
-        const error = await processResponse.json();
-        throw new Error(error.error || 'Failed to process document');
+        let errorMessage = 'Failed to process document';
+        try {
+          const error = await processResponse.json();
+          errorMessage = error.error || errorMessage;
+        } catch (e) {
+          // Response wasn't JSON, use status text
+          errorMessage = `${errorMessage}: ${processResponse.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const processData = await processResponse.json();
@@ -274,7 +290,52 @@ export default function AdminUploadPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-amber-50">
-      {/* Header */}
+      {/* Main Header */}
+      <Header />
+      
+      {/* Admin Navigation Bar */}
+      <div className="border-b border-amber-900/20 bg-zinc-900/50">
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
+            {/* Breadcrumb Navigation */}
+            <div className="flex items-center gap-2 text-sm">
+              <Link 
+                href="/"
+                className="text-amber-100/60 hover:text-amber-100 transition-colors flex items-center gap-1.5"
+              >
+                <Home className="w-4 h-4" />
+                Home
+              </Link>
+              <span className="text-amber-900">/</span>
+              <Link 
+                href="/dashboard"
+                className="text-amber-100/60 hover:text-amber-100 transition-colors flex items-center gap-1.5"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Link>
+              <span className="text-amber-900">/</span>
+              <span className="text-amber-100 flex items-center gap-1.5 font-medium">
+                <Upload className="w-4 h-4" />
+                Admin Upload
+              </span>
+            </div>
+
+            {/* Quick Links */}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/library"
+                className="px-3 py-1.5 text-xs font-medium text-amber-100/60 hover:text-amber-100 transition-colors flex items-center gap-1.5"
+              >
+                <Library className="w-3.5 h-3.5" />
+                View Library
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Page Header */}
       <div className="border-b border-amber-900/20 bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <h1 className="text-2xl font-semibold text-amber-100">
