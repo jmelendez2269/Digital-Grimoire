@@ -104,16 +104,29 @@ export default function AdminUploadPage() {
       );
 
       // Upload to S3
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
+      let uploadResponse;
+      try {
+        uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+      } catch (fetchError) {
+        console.error('Network error uploading to S3:', fetchError);
+        console.error('This is likely a CORS configuration issue. Check AWS_S3_SETUP.md for instructions.');
+        throw new Error('Network error: Cannot connect to S3. Check CORS configuration and AWS_S3_SETUP.md');
+      }
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file');
+        const errorText = await uploadResponse.text();
+        console.error('S3 upload failed:', {
+          status: uploadResponse.status,
+          statusText: uploadResponse.statusText,
+          error: errorText,
+        });
+        throw new Error(`Failed to upload file to S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
       }
 
       // Update progress
