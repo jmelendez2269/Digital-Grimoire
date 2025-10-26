@@ -6,6 +6,11 @@
  */
 
 import axios from 'axios';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables from app/.env.local
+config({ path: resolve(__dirname, 'app', '.env.local') });
 
 const endpoint = process.env.AZURE_VISION_ENDPOINT;
 const key = process.env.AZURE_VISION_KEY;

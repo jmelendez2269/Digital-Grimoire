@@ -1,0 +1,15 @@
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env*.local
+
+# Node modules
+node_modules/
+
+# Test outputs
+test-output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
