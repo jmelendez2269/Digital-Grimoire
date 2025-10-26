@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
   const { key, userId } = await request.json();
   let newKey: string | null = null; // Track the renamed file for cleanup
   let metadataKey: string | null = null; // Track the metadata file for cleanup
+  let rawAiOutput: string = ''; // Store raw AI response
   
   try {
     // Build file URL for Azure OCR
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
     // Step 2: Extract metadata with Claude (or fallback to basic extraction)
     console.log('Step 2: Extracting metadata...');
     const filename = key.split('/').pop() || 'document';
-    const metadata = await extractMetadata(ocrResult.text, filename);
+    const { metadata, rawOutput } = await extractMetadata(ocrResult.text, filename);
+    rawAiOutput = rawOutput; // Store for response
     console.log('Metadata extracted:', metadata.title);
 
     // Step 3: Rename file in R2 based on metadata
@@ -42,11 +44,22 @@ export async function POST(request: NextRequest) {
     newKey = `library/${metadata.standardizedId}.${fileExtension}`;
     console.log(`Renaming: ${key} -> ${newKey}`);
 
-    // Copy to new location
+    // Copy to new location with custom metadata attached
     const copyCommand = new CopyObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
       CopySource: `${process.env.R2_BUCKET_NAME || 'convergence-library'}/${key}`,
       Key: newKey,
+      Metadata: {
+        'title': metadata.title,
+        'author': metadata.author || '',
+        'year': metadata.year?.toString() || '',
+        'type': metadata.type,
+        'domain': metadata.domain || '',
+        'tags': metadata.tags.join(','),
+        'confidence': metadata.confidence,
+        'standardized-id': metadata.standardizedId,
+      },
+      MetadataDirective: 'REPLACE',
     });
     await s3Client.send(copyCommand);
 
@@ -89,6 +102,9 @@ export async function POST(request: NextRequest) {
       .insert({
         title: metadata.title,
         content: ocrResult.text,
+        summary: metadata.longSummary,
+        short_summary: metadata.shortSummary,
+        long_summary: metadata.longSummary,
         s3_key: newKey, // Use the new renamed key
         type: metadata.type,
         author: metadata.author,
@@ -121,6 +137,21 @@ export async function POST(request: NextRequest) {
       title: metadata.title,
       type: metadata.type,
       pageCount: ocrResult.pageCount,
+      lineCount: ocrResult.lineCount,
+      metadata: {
+        title: metadata.title,
+        author: metadata.author,
+        year: metadata.year,
+        publisher: metadata.publisher,
+        type: metadata.type,
+        domain: metadata.domain,
+        tags: metadata.tags,
+        confidence: metadata.confidence,
+        standardizedId: metadata.standardizedId,
+      },
+      shortSummary: metadata.shortSummary,
+      longSummary: metadata.longSummary,
+      rawAiOutput: rawAiOutput,
     });
 
   } catch (error) {

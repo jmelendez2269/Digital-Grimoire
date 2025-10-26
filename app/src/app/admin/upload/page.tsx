@@ -2,8 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, X, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { DocumentMetadata } from '@/lib/claude-metadata';
 
 interface UploadFile {
   id: string;
@@ -11,12 +12,19 @@ interface UploadFile {
   progress: number;
   status: 'pending' | 'uploading' | 'processing' | 'success' | 'error';
   error?: string;
+  metadata?: DocumentMetadata;
+  shortSummary?: string;
+  longSummary?: string;
+  rawAiOutput?: string;
+  pageCount?: number;
+  lineCount?: number;
 }
 
 export default function AdminUploadPage() {
   const supabase = createClient();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
 
   // File validation
   const validateFile = (file: File): string | null => {
@@ -68,6 +76,19 @@ export default function AdminUploadPage() {
   // Remove file from queue
   const removeFile = (id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  // Toggle file details expansion
+  const toggleExpanded = (id: string) => {
+    setExpandedFiles((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   // Upload single file
@@ -145,15 +166,29 @@ export default function AdminUploadPage() {
         throw new Error(error.error || 'Failed to process document');
       }
 
+      const processData = await processResponse.json();
+
       // Update progress
       setFiles((prev) =>
         prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: 90 } : f))
       );
 
-      // Success!
+      // Success! Store all the metadata
       setFiles((prev) =>
         prev.map((f) =>
-          f.id === uploadFile.id ? { ...f, status: 'success', progress: 100 } : f
+          f.id === uploadFile.id
+            ? {
+                ...f,
+                status: 'success',
+                progress: 100,
+                metadata: processData.metadata,
+                shortSummary: processData.shortSummary,
+                longSummary: processData.longSummary,
+                rawAiOutput: processData.rawAiOutput,
+                pageCount: processData.pageCount,
+                lineCount: processData.lineCount,
+              }
+            : f
         )
       );
     } catch (error) {
@@ -330,6 +365,130 @@ export default function AdminUploadPage() {
                       <p className="text-xs text-amber-100/60 mt-1">
                         {uploadFile.status === 'uploading' ? 'Uploading...' : 'Processing with OCR...'}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Expandable Details Section for Success */}
+                  {uploadFile.status === 'success' && uploadFile.metadata && (
+                    <div className="mt-3 border-t border-amber-900/20 pt-3">
+                      <button
+                        onClick={() => toggleExpanded(uploadFile.id)}
+                        className="flex items-center gap-2 text-sm text-amber-100 hover:text-amber-50 transition-colors"
+                      >
+                        {expandedFiles.has(uploadFile.id) ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                        <span className="font-medium">
+                          {expandedFiles.has(uploadFile.id) ? 'Hide Details' : 'View Details'}
+                        </span>
+                      </button>
+
+                      {expandedFiles.has(uploadFile.id) && (
+                        <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                          {/* Short Summary */}
+                          {uploadFile.shortSummary && (
+                            <div className="bg-amber-950/30 border border-amber-900/30 rounded-md p-4">
+                              <h4 className="text-sm font-semibold text-amber-100 mb-2">Summary</h4>
+                              <p className="text-sm text-amber-100/80 leading-relaxed">
+                                {uploadFile.shortSummary}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Metadata Grid */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-zinc-900/50 rounded-md p-3">
+                              <p className="text-xs text-amber-100/60 mb-1">Title</p>
+                              <p className="text-sm text-amber-100 font-medium">
+                                {uploadFile.metadata.title}
+                              </p>
+                            </div>
+                            {uploadFile.metadata.author && (
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Author</p>
+                                <p className="text-sm text-amber-100 font-medium">
+                                  {uploadFile.metadata.author}
+                                </p>
+                              </div>
+                            )}
+                            <div className="bg-zinc-900/50 rounded-md p-3">
+                              <p className="text-xs text-amber-100/60 mb-1">Type</p>
+                              <p className="text-sm text-amber-100 font-medium">
+                                {uploadFile.metadata.type}
+                              </p>
+                            </div>
+                            {uploadFile.metadata.year && (
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Year</p>
+                                <p className="text-sm text-amber-100 font-medium">
+                                  {uploadFile.metadata.year}
+                                </p>
+                              </div>
+                            )}
+                            {uploadFile.metadata.domain && (
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Domain</p>
+                                <p className="text-sm text-amber-100 font-medium">
+                                  {uploadFile.metadata.domain}
+                                </p>
+                              </div>
+                            )}
+                            <div className="bg-zinc-900/50 rounded-md p-3">
+                              <p className="text-xs text-amber-100/60 mb-1">Confidence</p>
+                              <p className="text-sm text-amber-100 font-medium capitalize">
+                                {uploadFile.metadata.confidence}
+                              </p>
+                            </div>
+                            {uploadFile.pageCount && (
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Pages</p>
+                                <p className="text-sm text-amber-100 font-medium">
+                                  {uploadFile.pageCount}
+                                </p>
+                              </div>
+                            )}
+                            {uploadFile.lineCount && (
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Lines</p>
+                                <p className="text-sm text-amber-100 font-medium">
+                                  {uploadFile.lineCount}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Tags */}
+                          {uploadFile.metadata.tags && uploadFile.metadata.tags.length > 0 && (
+                            <div>
+                              <p className="text-xs text-amber-100/60 mb-2">Tags</p>
+                              <div className="flex flex-wrap gap-2">
+                                {uploadFile.metadata.tags.map((tag, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-1 bg-amber-900/20 border border-amber-900/30 rounded text-xs text-amber-100"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Raw AI Output */}
+                          {uploadFile.rawAiOutput && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-amber-100 mb-2">
+                                Raw AI Output
+                              </h4>
+                              <pre className="bg-zinc-950 border border-amber-900/20 rounded-md p-3 text-xs text-amber-100/70 overflow-x-auto max-h-64 overflow-y-auto">
+                                {JSON.stringify(JSON.parse(uploadFile.rawAiOutput), null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

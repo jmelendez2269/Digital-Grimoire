@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 
-interface DocumentMetadata {
+export interface DocumentMetadata {
   title: string;
   standardizedId: string;
   author?: string;
@@ -10,12 +10,14 @@ interface DocumentMetadata {
   domain?: string;
   tags: string[];
   confidence: 'established' | 'interpretive' | 'speculative' | 'tradition';
+  shortSummary: string;
+  longSummary: string;
 }
 
 export async function extractMetadata(
   ocrText: string, 
   filename: string = 'document'
-): Promise<DocumentMetadata> {
+): Promise<{ metadata: DocumentMetadata; rawOutput: string }> {
   const apiKey = process.env.OPENAI_API_KEY;
   
   if (!apiKey) {
@@ -56,6 +58,8 @@ Always respond with valid JSON only.`
 - domain (string, optional: e.g., "astrology", "psychology", "anthropology")
 - tags (array of strings, required, 3-5 relevant tags)
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
+- shortSummary (string, required): A concise 2-3 sentence description of what this document is about
+- longSummary (string, required): A detailed 1-2 paragraph summary covering the document's main themes, content, and significance
 
 OCR Text (first 3000 chars):
 ${ocrText.substring(0, 3000)}
@@ -64,7 +68,7 @@ Respond with valid JSON only, no markdown code blocks.`
       }
     ],
     temperature: 0.3,
-    max_tokens: 1000,
+    max_tokens: 2000,
     response_format: { type: "json_object" }
   });
 
@@ -82,6 +86,6 @@ Respond with valid JSON only, no markdown code blocks.`
   const metadata = JSON.parse(responseText);
   console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
   
-  return metadata;
+  return { metadata, rawOutput: responseText };
 }
 
