@@ -9,6 +9,7 @@ export interface DocumentMetadata {
   type: string;
   domain?: string;
   tags: string[];
+  lenses: string[]; // The 7 Convergence Machine lenses that apply to this document
   confidence: 'established' | 'interpretive' | 'speculative' | 'tradition';
   shortSummary: string;
   longSummary: string;
@@ -38,6 +39,17 @@ book_esoteric, book_spiritual, book_psychology, book_science, article_scholarly,
 anthropology, reference_table, historical, mythology, medical_overview, commentary, 
 webpage, dictionary, astrology, ritual_guide, diagram, transcript, summary, speculative, misc
 
+The 7 Convergence Machine Lenses represent different perspectives for understanding knowledge:
+1. scientific - Physics, biology, cosmology, empirical evidence, natural sciences
+2. psychological - Jungian archetypes, cognitive science, shadow work, depth psychology
+3. philosophical - Metaphysics, ethics, epistemology, ontology, philosophical inquiry
+4. religious_spiritual - Comparative theology, mysticism, sacred texts, spiritual practices
+5. historical_anthropological - Cultural evolution, mythology, ritual context, human history
+6. symbolic_occult - Correspondences, alchemy, astrology, esoteric symbolism
+7. mathematical - Sacred geometry, numerology, patterns, universal ratios, mathematical principles
+
+Documents can (and often should) relate to multiple lenses.
+
 Always respond with valid JSON only.`
       },
       {
@@ -57,6 +69,14 @@ Always respond with valid JSON only.`
 - type (one of the 20 types above, required)
 - domain (string, optional: e.g., "astrology", "psychology", "anthropology")
 - tags (array of strings, required, 3-5 relevant tags)
+- lenses (array of strings, required): Which of the 7 Convergence Machine lenses apply to this document?
+  * Choose from: scientific, psychological, philosophical, religious_spiritual, historical_anthropological, symbolic_occult, mathematical
+  * Most documents should have 2-4 lenses
+  * Select based on the document's primary perspectives and approaches
+  * Examples:
+    - A book on alchemy: ["symbolic_occult", "philosophical", "historical_anthropological"]
+    - A psychology text on archetypes: ["psychological", "philosophical", "symbolic_occult"]
+    - A sacred geometry guide: ["mathematical", "symbolic_occult", "philosophical"]
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
 - shortSummary (string, required): A concise 2-3 sentence description of what this document is about
 - longSummary (string, required): A detailed 1-2 paragraph summary covering the document's main themes, content, and significance

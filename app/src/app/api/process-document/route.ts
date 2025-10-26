@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
         domain: metadata.domain,
         confidence: metadata.confidence,
         tags: metadata.tags,
+        lenses: metadata.lenses, // The 7 Convergence Machine lenses
         status: 'ready',
         uploaded_by: userId || null,
         metadata: {
@@ -146,6 +147,7 @@ export async function POST(request: NextRequest) {
         type: metadata.type,
         domain: metadata.domain,
         tags: metadata.tags,
+        lenses: metadata.lenses,
         confidence: metadata.confidence,
         standardizedId: metadata.standardizedId,
       },

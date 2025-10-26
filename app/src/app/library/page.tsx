@@ -15,6 +15,7 @@ interface Text {
   type: string | null;
   domain: string | null;
   tags: string[] | null;
+  lenses: string[] | null;
   file_size: number | null;
   status: string;
   created_at: string;
@@ -26,6 +27,7 @@ interface FilterValues {
   yearMin: number | null;
   yearMax: number | null;
   tags: string[];
+  lenses: string[];
 }
 
 export default function LibraryPage() {
@@ -45,12 +47,14 @@ export default function LibraryPage() {
     yearMin: null,
     yearMax: null,
     tags: [],
+    lenses: [],
   });
 
   // Filter options
   const [allDomains, setAllDomains] = useState<string[]>([]);
   const [allTypes, setAllTypes] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [allLenses, setAllLenses] = useState<string[]>([]);
 
   useEffect(() => {
     fetchFilterOptions();
@@ -67,7 +71,7 @@ export default function LibraryPage() {
       // Fetch all documents to extract unique values
       const { data, error } = await supabase
         .from('texts')
-        .select('domain, type, tags');
+        .select('domain, type, tags, lenses');
 
       if (error) throw error;
 
@@ -92,6 +96,26 @@ export default function LibraryPage() {
           }
         });
         setAllTags(Array.from(tagsSet).sort());
+
+        // Extract unique lenses (use all 7 lenses by default)
+        const lensesSet = new Set<string>();
+        data.forEach((t) => {
+          if (t.lenses && Array.isArray(t.lenses)) {
+            t.lenses.forEach((lens) => lensesSet.add(lens));
+          }
+        });
+        
+        // Always show all 7 lenses in a specific order
+        const allSevenLenses = [
+          'scientific',
+          'psychological',
+          'philosophical',
+          'religious_spiritual',
+          'historical_anthropological',
+          'symbolic_occult',
+          'mathematical'
+        ];
+        setAllLenses(allSevenLenses);
       }
     } catch (error) {
       console.error('Error fetching filter options:', error);
@@ -135,6 +159,12 @@ export default function LibraryPage() {
       if (filterValues.tags.length > 0) {
         // Use overlaps operator to match any of the selected tags
         query = query.overlaps('tags', filterValues.tags);
+      }
+
+      // Apply lenses filter
+      if (filterValues.lenses.length > 0) {
+        // Use overlaps operator to match any of the selected lenses
+        query = query.overlaps('lenses', filterValues.lenses);
       }
 
       // Apply pagination
@@ -242,6 +272,7 @@ export default function LibraryPage() {
               domains: allDomains,
               types: allTypes,
               allTags: allTags,
+              allLenses: allLenses,
             }}
             values={filterValues}
             onChange={handleFilterChange}

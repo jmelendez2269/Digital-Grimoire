@@ -7,6 +7,7 @@ interface FilterOptions {
   domains: string[];
   types: string[];
   allTags: string[];
+  allLenses: string[];
 }
 
 interface FilterValues {
@@ -15,6 +16,7 @@ interface FilterValues {
   yearMin: number | null;
   yearMax: number | null;
   tags: string[];
+  lenses: string[];
 }
 
 interface AdvancedFiltersProps {
@@ -26,6 +28,7 @@ interface AdvancedFiltersProps {
 export default function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [showLensDropdown, setShowLensDropdown] = useState(false);
 
   const currentYear = new Date().getFullYear();
 
@@ -54,6 +57,13 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
     onChange({ ...values, tags: newTags });
   };
 
+  const handleLensToggle = (lens: string) => {
+    const newLenses = values.lenses.includes(lens)
+      ? values.lenses.filter((l) => l !== lens)
+      : [...values.lenses, lens];
+    onChange({ ...values, lenses: newLenses });
+  };
+
   const clearFilters = () => {
     onChange({
       domain: 'all',
@@ -61,6 +71,7 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
       yearMin: null,
       yearMax: null,
       tags: [],
+      lenses: [],
     });
   };
 
@@ -69,7 +80,8 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
     (values.type !== 'all' ? 1 : 0) +
     (values.yearMin !== null ? 1 : 0) +
     (values.yearMax !== null ? 1 : 0) +
-    values.tags.length;
+    values.tags.length +
+    values.lenses.length;
 
   return (
     <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg overflow-hidden">
@@ -252,6 +264,109 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
                     </button>
                   </span>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Lenses Filter */}
+          <div>
+            <label className="block text-sm font-medium text-amber-100 mb-2">
+              Convergence Lenses
+              <span className="ml-2 text-xs text-amber-100/60 font-normal">
+                (The 7 perspectives)
+              </span>
+            </label>
+            <div className="relative">
+              <button
+                onClick={() => setShowLensDropdown(!showLensDropdown)}
+                className="w-full px-3 py-2 bg-zinc-800/50 border border-amber-900/20 rounded-lg text-amber-100 text-left flex items-center justify-between hover:bg-zinc-800 transition-colors"
+              >
+                <span className="text-amber-100/60">
+                  {values.lenses.length > 0
+                    ? `${values.lenses.length} lens${values.lenses.length > 1 ? 'es' : ''} selected`
+                    : 'Select lenses...'}
+                </span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              {showLensDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowLensDropdown(false)}
+                  />
+                  <div className="absolute z-20 w-full mt-1 max-h-80 overflow-y-auto bg-zinc-800 border border-amber-900/20 rounded-lg shadow-xl">
+                    {options.allLenses.length > 0 ? (
+                      options.allLenses.map((lens) => {
+                        // Format lens name for display
+                        const lensDisplay = lens
+                          .split('_')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' / ');
+                        
+                        // Get lens description
+                        const lensDescriptions: Record<string, string> = {
+                          'scientific': 'Physics, biology, cosmology, empirical evidence',
+                          'psychological': 'Jungian archetypes, cognitive science, shadow work',
+                          'philosophical': 'Metaphysics, ethics, epistemology, ontology',
+                          'religious_spiritual': 'Comparative theology, mysticism, sacred texts',
+                          'historical_anthropological': 'Cultural evolution, mythology, ritual context',
+                          'symbolic_occult': 'Correspondences, alchemy, astrology, esoteric systems',
+                          'mathematical': 'Sacred geometry, numerology, patterns, universal ratios'
+                        };
+
+                        return (
+                          <label
+                            key={lens}
+                            className="flex items-start gap-3 px-3 py-3 hover:bg-zinc-700/50 cursor-pointer transition-colors border-b border-amber-900/10 last:border-0"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={values.lenses.includes(lens)}
+                              onChange={() => handleLensToggle(lens)}
+                              className="w-4 h-4 mt-0.5 rounded border-amber-900/20 bg-zinc-700 text-amber-600 focus:ring-amber-600 focus:ring-offset-0"
+                            />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-amber-100">{lensDisplay}</div>
+                              <div className="text-xs text-amber-100/50 mt-0.5">{lensDescriptions[lens]}</div>
+                            </div>
+                          </label>
+                        );
+                      })
+                    ) : (
+                      <div className="px-3 py-4 text-sm text-amber-100/60 text-center">
+                        No lenses available
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Selected Lenses */}
+            {values.lenses.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {values.lenses.map((lens) => {
+                  const lensDisplay = lens
+                    .split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' / ');
+                  
+                  return (
+                    <span
+                      key={lens}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-amber-600/10 text-amber-400 rounded-full text-xs font-medium border border-amber-600/20"
+                    >
+                      {lensDisplay}
+                      <button
+                        onClick={() => handleLensToggle(lens)}
+                        className="hover:bg-amber-600/20 rounded-full p-0.5 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  );
+                })}
               </div>
             )}
           </div>
