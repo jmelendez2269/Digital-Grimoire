@@ -223,8 +223,9 @@
 | Protected routes | P0 | S | 2 | ✅ Complete | Middleware |
 | Role-based access (RBAC) | P0 | M | 2 | ✅ Complete | Admin, user, contributor |
 | RLS policies | P0 | M | 2 | ✅ Complete | Database-level + Storage |
-| Password reset | P1 | M | 2 | ⬜ Planned | Email link |
+| Password reset | P1 | M | 2 | ✅ Complete | Email link |
 | Email verification | P1 | S | 2 | ✅ Complete | Required + resend |
+| **Configure SendGrid SMTP** | **P0** | **S** | **Pre-Prod** | **⬜ Required** | **Production email delivery** |
 | Social auth (Google) | P1 | M | Post | ⬜ Planned | OAuth |
 | Two-factor auth (2FA) | P2 | L | Post | ⬜ Planned | TOTP |
 | Magic link login | P2 | M | Post | ⬜ Planned | Passwordless |

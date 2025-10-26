@@ -30,6 +30,54 @@
 
 ---
 
+## PRE-PRODUCTION DEPLOYMENT CHECKLIST
+
+### Email Infrastructure Setup
+**Priority:** P0 (Blocking production launch)  
+**Time Estimate:** 4-6 hours  
+**Documentation:** See `docs/SUPABASE_PASSWORD_RESET_SETUP.md`
+
+**Tasks:**
+- [ ] **P0: Create SendGrid Account**
+  - Sign up at sendgrid.com
+  - Verify domain for email sending (SPF/DKIM/DMARC)
+  - Generate API key (save securely)
+
+- [ ] **P0: Configure SendGrid SMTP in Supabase**
+  - Navigate to: Project Settings → Auth → SMTP Settings
+  - Enable custom SMTP
+  - Configure SendGrid credentials:
+    - SMTP Host: `smtp.sendgrid.net`
+    - SMTP Port: `587`
+    - SMTP Username: `apikey`
+    - SMTP Password: `[SendGrid API Key]`
+    - Sender Email: `noreply@yourdomain.com`
+    - Sender Name: `Convergence`
+
+- [ ] **P0: Test Email Delivery**
+  - Test password reset flow
+  - Test email verification flow
+  - Verify emails arrive in inbox (not spam)
+  - Test on multiple providers (Gmail, Outlook, Yahoo)
+
+- [ ] **P1: Customize Email Templates**
+  - Update welcome email with branding
+  - Customize password reset email (see SUPABASE_PASSWORD_RESET_SETUP.md)
+  - Update verification email with theme
+  - Add Convergence dark academia aesthetic
+
+- [ ] **P1: Set Up Email Monitoring**
+  - Configure SendGrid webhooks for events
+  - Monitor bounce rates in dashboard
+  - Monitor delivery rates
+  - Set up alerts for delivery failures
+
+**Note:** Supabase default email service is limited to 3 emails/hour - NOT suitable for production. This must be completed before public launch.
+
+**Cost:** SendGrid Free tier (100 emails/day) → Essentials ($19.95/mo for 50K emails/month)
+
+---
+
 ## PHASE 1: MVP FOUNDATION (Sprints 1-4, Weeks 1-8)
 
 ### Sprint 1: Infrastructure & Setup (Weeks 1-2)

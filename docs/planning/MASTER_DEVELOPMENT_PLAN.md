@@ -671,6 +671,54 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 - Uptime monitors
 ```
 
+### Email Infrastructure (Required for Production)
+
+**⚠️ CRITICAL: SendGrid SMTP Configuration**
+
+Supabase's default email service is limited to 3 emails/hour during development - this is **NOT suitable for production**.
+
+**Setup Requirements:**
+```bash
+# Required before production deployment
+
+1. Create SendGrid account and verify domain
+   - Sign up at sendgrid.com
+   - Add domain verification (SPF/DKIM/DMARC records)
+   - Generate API key
+
+2. Configure in Supabase Dashboard:
+   - Project Settings → Auth → SMTP Settings
+   - Enable custom SMTP
+   - SMTP Host: smtp.sendgrid.net
+   - SMTP Port: 587
+   - Username: apikey
+   - Password: [SendGrid API Key]
+   - Sender Email: noreply@yourdomain.com
+   - Sender Name: Convergence
+
+3. Test all email flows:
+   - User registration & verification
+   - Password reset
+   - Account notifications
+   - Test across multiple email providers
+
+4. Customize email templates (optional but recommended):
+   - Authentication → Email Templates in Supabase
+   - Apply Convergence branding
+   - See docs/SUPABASE_PASSWORD_RESET_SETUP.md for templates
+```
+
+**Cost Structure:**
+- **Free Tier:** 100 emails/day (3,000/month) - Good for initial launch
+- **Essentials:** $19.95/month for 50,000 emails
+- **Pro:** $89.95/month for 100,000 emails
+
+**Priority:** P0 - Blocking production deployment  
+**Time Estimate:** 4-6 hours  
+**Documentation:** `docs/SUPABASE_PASSWORD_RESET_SETUP.md`
+
+---
+
 ### CI/CD Pipeline (GitHub Actions)
 
 **Workflow:**
