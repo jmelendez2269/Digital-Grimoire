@@ -1,26 +1,12 @@
 [
   {
-    "AllowedOrigins": [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "https://yourdomain.com"
-    ],
-    "AllowedMethods": [
-      "GET",
-      "PUT",
-      "POST",
-      "DELETE",
-      "HEAD"
-    ],
-    "AllowedHeaders": [
-      "*"
-    ],
-    "ExposeHeaders": [
-      "ETag",
-      "Content-Length",
-      "Content-Type"
-    ],
-    "MaxAgeSeconds": 3600
+    "allowed": {
+      "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "https://yourdomain.com"],
+      "methods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+      "headers": ["*"]
+    },
+    "exposeHeaders": ["ETag"],
+    "maxAgeSeconds": 3600
   }
 ]
 
