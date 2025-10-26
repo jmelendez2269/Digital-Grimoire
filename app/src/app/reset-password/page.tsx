@@ -39,32 +39,46 @@ export default function ResetPasswordPage() {
     setError("");
     setSuccess(false);
 
+    console.log("🔄 Password reset form submitted");
+
     // Validation
     if (password !== confirmPassword) {
+      console.warn("⚠️ Passwords do not match");
       setError("Passwords do not match");
       return;
     }
 
     if (password.length < 8) {
+      console.warn("⚠️ Password too short");
       setError("Password must be at least 8 characters");
       return;
     }
 
     setLoading(true);
+    console.log("🔐 Updating password...");
 
     try {
       const supabase = createClient();
+      
+      if (!supabase) {
+        console.error("❌ Supabase client failed to initialize");
+        setError("Configuration error. Please contact support.");
+        setLoading(false);
+        return;
+      }
       
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (updateError) {
+        console.error("❌ Password update error:", updateError);
         setError(updateError.message);
         setLoading(false);
         return;
       }
 
+      console.log("✅ Password updated successfully");
       setSuccess(true);
       setLoading(false);
 
@@ -73,6 +87,7 @@ export default function ResetPasswordPage() {
         router.push("/login");
       }, 3000);
     } catch (err) {
+      console.error("❌ Unexpected error during password reset:", err);
       setError("An unexpected error occurred");
       setLoading(false);
     }
@@ -252,6 +267,7 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
+                onClick={() => console.log("🖱️ Update password button clicked")}
                 className="w-full rounded-md bg-amber-500 px-4 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Updating password..." : "Update Password"}

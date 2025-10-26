@@ -1,12 +1,25 @@
-# DIGITAL GRIMOIRE - FEATURE BACKLOG & PRIORITIES
+# CONVERGENCE - FEATURE BACKLOG & PRIORITIES
 
-**Last Updated:** October 25, 2025  
-**Version:** 1.1  
+**Last Updated:** October 26, 2025  
+**Version:** 1.2  
+
+## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
+
+**AWS → Cloudflare R2:**  
+- **Reason:** AWS requires paid support ($29-100/month) to troubleshoot issues
+- **Benefits:** No egress fees, free community support, simpler pricing
+- **Impact:** OCR deferred to Phase 2, manual metadata entry for MVP
+- **Status:** Migration in progress (Sprint 3)
+
+See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
+
+---
 
 ## 🎉 RECENT ACHIEVEMENTS
 
 **Sprint 1 Complete (1h 53m):** Infrastructure, AWS, Supabase, Next.js setup  
-**Sprint 2 Complete (2.5 hours):** Authentication, Core UI, Avatar System, Dashboard, Toast Notifications
+**Sprint 2 Complete (2.5 hours):** Authentication, Core UI, Avatar System, Dashboard, Toast Notifications  
+**Sprint 3 In Progress:** Document Ingestion (Cloudflare R2 migration)
 
 ### Standout Features Delivered:
 - ✅ **Production-Ready Avatar System** (crop/zoom/compress/delete)
@@ -51,10 +64,10 @@
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Document upload (admin) | P0 | M | 3 | ⬜ Planned | S3 integration |
-| OCR processing (Textract) | P0 | L | 3 | ⬜ Planned | Lambda triggers |
-| Metadata extraction (AI) | P0 | M | 3 | ⬜ Planned | Claude Vision |
-| Document classification (20 types) | P0 | S | 3 | ⬜ Planned | From taxonomy |
+| Document upload (admin) | P0 | M | 3 | ⬜ Planned | **Cloudflare R2** (migrated from AWS) |
+| Manual metadata entry | P0 | M | 3 | ⬜ Planned | **MVP approach** - form-based |
+| OCR processing | P1 | L | Post | ⬜ Deferred | **Phase 2** - OCR.space or Tesseract |
+| Document classification (20 types) | P0 | S | 3 | ⬜ Planned | Manual dropdown selection |
 | Full-text search | P0 | M | 4 | ⬜ Planned | PostgreSQL FTS |
 | Document viewer (PDF) | P0 | M | 4 | ⬜ Planned | react-pdf |
 | Filter by type/domain/year | P0 | S | 4 | ⬜ Planned | Query params |
@@ -214,6 +227,17 @@
 ---
 
 ## TECHNICAL INFRASTRUCTURE
+
+### File Storage & Processing
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| Cloudflare R2 setup | P0 | S | 3 | ⬜ In Progress | **Migrated from AWS S3** |
+| R2 API token generation | P0 | XS | 3 | ⬜ Planned | Read/write access |
+| CORS configuration | P0 | XS | 3 | ⬜ Planned | Web uploads |
+| Presigned URL generation | P0 | M | 3 | ⬜ Planned | S3-compatible API |
+| File versioning | P1 | S | Post | ⬜ Planned | Backup strategy |
+| OCR service integration | P1 | L | Post | ⬜ Deferred | Phase 2 - when $750+ MRR |
 
 ### Authentication & Security
 

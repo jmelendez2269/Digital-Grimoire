@@ -35,18 +35,24 @@
 
 ### Tech Stack Overview
 
-| Layer | Technology | Purpose | Free Tier |
-|-------|-----------|---------|-----------|
-| **Frontend** | Next.js 14 + TailwindCSS | React SSR/ISR framework | ✅ Vercel |
-| **Database** | Supabase PostgreSQL | Primary data store + Auth | ✅ 500MB |
-| **File Storage** | AWS S3 | Document storage | ✅ 5GB |
-| **Vector Search** | pgvector | Semantic similarity | ✅ Included |
-| **Graph DB** | Amazon Neptune | Correspondence graph | ✅ 750hrs |
-| **OCR** | AWS Textract | Document processing | ✅ 1K pages/3mo |
-| **Serverless** | AWS Lambda | Event processing | ✅ 1M invokes |
-| **Editor** | Tiptap | Rich text editing | ✅ Open source |
-| **Graph Viz** | D3.js | Force-directed layouts | ✅ Open source |
-| **AI** | Claude API / GPT-4 | Multi-lens reasoning | 💰 Pay-per-use |
+| Layer | Technology | Purpose | Free Tier | Status |
+|-------|-----------|---------|-----------|--------|
+| **Frontend** | Next.js 14 + TailwindCSS | React SSR/ISR framework | ✅ Vercel | ✅ Active |
+| **Database** | Supabase PostgreSQL | Primary data store + Auth | ✅ 500MB | ✅ Active |
+| **File Storage** | Cloudflare R2 | Document storage (S3-compatible) | ✅ 10GB | ✅ **Migrated Oct 2025** |
+| **Vector Search** | pgvector | Semantic similarity | ✅ Included | ✅ Active |
+| **Graph DB** | Amazon Neptune | Correspondence graph | ✅ 750hrs | ⏳ Phase 3 |
+| **OCR** | Manual → OCR.space API | Document processing (Phase 2) | ✅ 500/mo | ⏳ Deferred |
+| **Serverless** | Cloudflare Workers | Event processing | ✅ 100K/day | 🔄 In Progress |
+| **Editor** | Tiptap | Rich text editing | ✅ Open source | ⏳ Phase 2 |
+| **Graph Viz** | D3.js | Force-directed layouts | ✅ Open source | ⏳ Phase 3 |
+| **AI** | Claude API / GPT-4 | Multi-lens reasoning | 💰 Pay-per-use | ⏳ Phase 4 |
+
+**🔄 Infrastructure Migration Note (Oct 26, 2025):**
+- **AWS → Cloudflare R2:** Migrated due to AWS support paywall ($29-100/month minimum)
+- **Benefits:** No egress fees, better bootstrap economics, free community support
+- **S3 Compatibility:** Minimal code changes required
+- **OCR Strategy:** Start with manual metadata, add automated OCR when revenue supports it
 
 ### Database Schema (Implemented in supabase-schema.sql)
 

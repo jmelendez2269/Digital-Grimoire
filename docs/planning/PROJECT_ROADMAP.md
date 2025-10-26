@@ -186,57 +186,73 @@
 
 ---
 
-### Sprint 3: Document Ingestion (Weeks 5-6)
+### Sprint 3: Document Ingestion (Weeks 5-6) 🔄 **REVISED Oct 26, 2025**
 
-#### Tasks
+#### ⚠️ Infrastructure Pivot: AWS → Cloudflare R2
+
+**Decision Rationale:**
+- AWS Textract encountered permission issues requiring paid support ($29-100/month)
+- Cloudflare R2 offers better bootstrap economics (no egress fees)
+- S3-compatible API means minimal code changes
+- Automated OCR deferred to Phase 2 (start with manual metadata)
+
+#### Tasks (Revised)
 
 **File Upload UI**
 - [ ] P0: Create `/admin/upload` page
 - [ ] P0: Build drag-and-drop upload component (react-dropzone)
-- [ ] P0: Add file validation (PDF, DOCX, size limits)
+- [ ] P0: Add file validation (PDF, DOCX, size limits: 50MB)
 - [ ] P0: Show upload progress bar
 - [ ] P1: Support batch uploads (multiple files)
 - [ ] P1: Add upload queue with status
 - [ ] P2: Implement resume for failed uploads
 
-**S3 Upload Pipeline**
-- [ ] P0: Create API route: `POST /api/upload`
-- [ ] P0: Generate presigned S3 URLs
-- [ ] P0: Upload files to S3 from browser
-- [ ] P0: Store metadata in `texts` table
-- [ ] P1: Generate thumbnails for PDFs
-- [ ] P1: Add virus scanning (ClamAV or AWS)
-- [ ] P2: Implement S3 lifecycle rules
+**Cloudflare R2 Upload Pipeline** (NEW)
+- [ ] P0: Set up Cloudflare account and R2 bucket: `convergence-library`
+- [ ] P0: Generate R2 API tokens (read/write)
+- [ ] P0: Configure CORS for web uploads
+- [ ] P0: Create API route: `POST /api/upload/presigned`
+- [ ] P0: Generate presigned R2 URLs (S3-compatible)
+- [ ] P0: Upload files to R2 from browser
+- [ ] P0: Store file metadata and R2 URL in `texts` table
+- [ ] P1: Generate thumbnails for PDFs (client-side or Worker)
+- [ ] P1: Add file versioning
+- [ ] P2: Implement lifecycle policies for old versions
 
-**AWS Lambda Functions**
-- [ ] P0: Create Lambda: `textract-trigger`
-  - Triggered by S3 upload
-  - Start Textract job
-  - Log to Supabase
-- [ ] P0: Create Lambda: `textract-completion`
-  - Triggered by SNS
-  - Retrieve OCR text
-  - Update `texts.content`
-- [ ] P1: Add error handling and retries
-- [ ] P1: Implement dead-letter queue (DLQ)
-- [ ] P2: Add CloudWatch metrics
+**Manual Metadata Entry** (MVP Approach)
+- [ ] P0: Create metadata entry form:
+  - Title (required)
+  - Author(s) (required)
+  - Year (required)
+  - Publisher
+  - Document type dropdown (20 classifications)
+  - Domain/tradition
+  - Tags (comma-separated or tag input)
+  - License type (public-domain, cc-by, all-rights-reserved)
+  - Source URL (if applicable)
+  - Confidence level (established, interpretive, speculative, tradition)
+- [ ] P0: Form validation (Zod schema)
+- [ ] P0: Save metadata to `texts` table
+- [ ] P0: Link to R2 file URL
+- [ ] P1: Metadata editing after upload
+- [ ] P1: Duplicate detection (by title + author)
+- [ ] P2: Bulk metadata import (CSV)
 
-**Metadata Extraction**
-- [ ] P0: Create Claude Vision API integration
-- [ ] P0: Extract: title, author, year, type
-- [ ] P0: Classify into 20 document types
-- [ ] P0: Update database with extracted metadata
-- [ ] P1: Add human review UI for low-confidence
-- [ ] P1: Implement metadata correction workflow
-- [ ] P2: Train custom classifier
+**OCR Pipeline - Phase 2** (DEFERRED)
+- [ ] Research OCR.space API (free tier: 500 requests/month)
+- [ ] Or evaluate Google Cloud Vision API
+- [ ] Or set up self-hosted Tesseract on VPS
+- [ ] Implement when we have 50+ paying customers
+- [ ] **Gate:** Don't implement until $750+ MRR
 
 **Deliverables:**
 - ✅ File upload interface
-- ✅ S3 storage pipeline
-- ✅ OCR processing with Textract
-- ✅ Metadata extraction with AI
+- ✅ Cloudflare R2 storage pipeline
+- ✅ Manual metadata entry system
+- ⏳ OCR processing (deferred to Phase 2 when revenue supports it)
 
-**Time Estimate:** 60 hours
+**Time Estimate:** 40 hours (revised from 60 - simpler without automated OCR)
+**Rationale:** Manual metadata is faster to implement and gets us to MVP sooner
 
 ---
 

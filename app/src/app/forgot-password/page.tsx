@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
+  console.log("✅ Forgot Password page loaded successfully!");
+  
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -16,25 +18,40 @@ export default function ForgotPasswordPage() {
     setSuccess(false);
     setLoading(true);
 
+    // Add console log for debugging
+    console.log("🔄 Password reset request started for:", email);
+
     try {
       const supabase = createClient();
       
+      // Validate Supabase client
+      if (!supabase) {
+        console.error("❌ Supabase client failed to initialize");
+        setError("Configuration error. Please contact support.");
+        setLoading(false);
+        return;
+      }
+      
       // Get the current URL origin for the redirect
       const redirectUrl = `${window.location.origin}/reset-password`;
+      console.log("📧 Sending reset email to:", email, "with redirect:", redirectUrl);
       
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
 
       if (resetError) {
+        console.error("❌ Reset password error:", resetError);
         setError(resetError.message);
         setLoading(false);
         return;
       }
 
+      console.log("✅ Password reset email sent successfully");
       setSuccess(true);
       setLoading(false);
     } catch (err) {
+      console.error("❌ Unexpected error during password reset:", err);
       setError("An unexpected error occurred");
       setLoading(false);
     }
@@ -97,6 +114,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
+                onClick={() => console.log("🖱️ Reset button clicked")}
                 className="w-full rounded-md bg-amber-500 px-4 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? "Sending..." : "Send Reset Link"}

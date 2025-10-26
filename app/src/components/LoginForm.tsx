@@ -26,16 +26,29 @@ export function LoginForm() {
     setError("");
     setLoading(true);
 
+    console.log("🔐 Login attempt started for:", email);
+
     try {
       const supabase = createClient();
+      
+      if (!supabase) {
+        console.error("❌ Supabase client failed to initialize");
+        setError("Configuration error. Please contact support.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("📡 Calling Supabase signInWithPassword...");
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (signInError) {
+        console.error("❌ Login error:", signInError);
         // Check if error is related to email confirmation
         if (signInError.message.includes("Email not confirmed")) {
+          console.log("⚠️ Email not confirmed, redirecting to verification page");
           router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
           return;
         }
@@ -44,16 +57,21 @@ export function LoginForm() {
         return;
       }
 
+      console.log("✅ Login successful, user data:", data.user?.id);
+
       if (data.user) {
         // Check if email is verified
         if (!data.user.email_confirmed_at) {
+          console.log("⚠️ Email not verified, redirecting to verification page");
           router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
           return;
         }
+        console.log("✅ Redirecting to dashboard");
         router.push("/dashboard");
         router.refresh();
       }
     } catch (err) {
+      console.error("❌ Unexpected error during login:", err);
       setError("An unexpected error occurred");
       setLoading(false);
     }
@@ -105,19 +123,40 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
+          onClick={() => console.log("🖱️ Sign In button clicked")}
           className="w-full rounded-md bg-amber-500 px-4 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>
 
         {/* Forgot Password */}
-        <div className="text-center">
-          <Link
-            href="/forgot-password"
-            className="text-sm text-amber-400 hover:text-amber-300"
+        <div className="relative z-10 text-center">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              console.log("🔗 Forgot password button clicked!");
+              console.log("🚀 Attempting router.push navigation...");
+              
+              try {
+                router.push("/forgot-password");
+                console.log("✅ router.push executed");
+                
+                // Force hard navigation as last resort
+                setTimeout(() => {
+                  console.log("⚠️ Router navigation timeout - trying window.location");
+                  window.location.href = "/forgot-password";
+                }, 1000);
+              } catch (err) {
+                console.error("❌ Router push failed:", err);
+                console.log("🔄 Falling back to window.location");
+                window.location.href = "/forgot-password";
+              }
+            }}
+            className="relative cursor-pointer text-sm text-amber-400 transition-colors hover:text-amber-300 hover:underline focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 bg-transparent border-none p-0"
           >
             Forgot your password?
-          </Link>
+          </button>
         </div>
       </form>
 
