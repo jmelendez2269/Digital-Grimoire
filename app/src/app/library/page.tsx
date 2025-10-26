@@ -6,6 +6,7 @@ import { FileText, Search, Calendar, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import AdvancedFilters from '@/components/AdvancedFilters';
 import Pagination from '@/components/Pagination';
+import BookmarkButton from '@/components/BookmarkButton';
 
 interface Text {
   id: string;
@@ -329,13 +330,16 @@ export default function LibraryPage() {
                 {/* Document Icon & Status */}
                 <div className="flex items-start justify-between mb-4">
                   <FileText className="w-8 h-8 text-amber-600" />
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded border ${getStatusColor(
-                      text.status
-                    )}`}
-                  >
-                    {text.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <BookmarkButton textId={text.id} size="sm" />
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded border ${getStatusColor(
+                        text.status
+                      )}`}
+                    >
+                      {text.status}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Title */}

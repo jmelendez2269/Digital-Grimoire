@@ -12,10 +12,15 @@ import {
   Globe, 
   FileText,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Highlighter
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import PDFViewer from '@/components/PDFViewer';
+import BookmarkButton from '@/components/BookmarkButton';
+import ReadingProgress, { useReadingProgressTracker } from '@/components/ReadingProgress';
+import AnnotationPanel from '@/components/AnnotationPanel';
+import CollectionsPanel from '@/components/CollectionsPanel';
 
 interface TextDocument {
   id: string;
@@ -43,7 +48,8 @@ export default function DocumentDetailPage() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content'>('viewer');
+  const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content' | 'notes'>('viewer');
+  const [numPages, setNumPages] = useState<number | null>(null);
 
   useEffect(() => {
     if (documentId) {
@@ -152,7 +158,8 @@ export default function DocumentDetailPage() {
               <span>Back to Library</span>
             </Link>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <BookmarkButton textId={documentId} size="md" showLabel />
               <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                 document.status === 'ready' 
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
@@ -204,36 +211,50 @@ export default function DocumentDetailPage() {
               <Globe className="w-4 h-4 inline mr-2" />
               Content
             </button>
+            <button
+              onClick={() => setActiveTab('notes')}
+              className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                activeTab === 'notes'
+                  ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
+                  : 'text-amber-100/60 hover:text-amber-100'
+              }`}
+            >
+              <Highlighter className="w-4 h-4 inline mr-2" />
+              Notes
+            </button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {activeTab === 'viewer' && (
-          <div className="h-[calc(100vh-250px)]">
-            {pdfUrl && document.status === 'ready' ? (
-              <PDFViewer fileUrl={pdfUrl} fileName={document.title} />
-            ) : (
-              <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
-                <div className="text-center">
-                  <FileText className="w-16 h-16 text-amber-100/20 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-amber-100 mb-2">
-                    {document.status === 'processing' ? 'Document Processing' : 'Document Not Available'}
-                  </h3>
-                  <p className="text-sm text-amber-100/60">
-                    {document.status === 'processing' 
-                      ? 'This document is currently being processed. Please check back later.'
-                      : 'The PDF viewer is not available for this document.'}
-                  </p>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2">
+            {activeTab === 'viewer' && (
+              <div className="h-[calc(100vh-250px)]">
+                {pdfUrl && document.status === 'ready' ? (
+                  <PDFViewer fileUrl={pdfUrl} fileName={document.title} />
+                ) : (
+                  <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+                    <div className="text-center">
+                      <FileText className="w-16 h-16 text-amber-100/20 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-amber-100 mb-2">
+                        {document.status === 'processing' ? 'Document Processing' : 'Document Not Available'}
+                      </h3>
+                      <p className="text-sm text-amber-100/60">
+                        {document.status === 'processing' 
+                          ? 'This document is currently being processed. Please check back later.'
+                          : 'The PDF viewer is not available for this document.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
-        {activeTab === 'metadata' && (
-          <div className="grid gap-6 md:grid-cols-2">
+            {activeTab === 'metadata' && (
+              <div className="grid gap-6 md:grid-cols-2">
             <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
               <h2 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-amber-600" />
@@ -318,27 +339,41 @@ export default function DocumentDetailPage() {
               <div className="md:col-span-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-amber-100 mb-4">Summary</h2>
                 <p className="text-amber-100/80 leading-relaxed">{document.summary}</p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
-        {activeTab === 'content' && (
-          <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-amber-100 mb-4">Full Text Content</h2>
-            {document.content ? (
-              <div className="prose prose-invert prose-amber max-w-none">
-                <pre className="whitespace-pre-wrap text-sm text-amber-100/80 leading-relaxed font-sans">
-                  {document.content}
-                </pre>
+            {activeTab === 'content' && (
+              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-amber-100 mb-4">Full Text Content</h2>
+                {document.content ? (
+                  <div className="prose prose-invert prose-amber max-w-none">
+                    <pre className="whitespace-pre-wrap text-sm text-amber-100/80 leading-relaxed font-sans">
+                      {document.content}
+                    </pre>
+                  </div>
+                ) : (
+                  <p className="text-amber-100/60 text-center py-8">
+                    No extracted text content available for this document.
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="text-amber-100/60 text-center py-8">
-                No extracted text content available for this document.
-              </p>
+            )}
+
+            {activeTab === 'notes' && (
+              <div className="space-y-6">
+                <AnnotationPanel textId={documentId} />
+              </div>
             )}
           </div>
-        )}
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            <ReadingProgress textId={documentId} totalPages={numPages || undefined} />
+            <CollectionsPanel textId={documentId} />
+          </div>
+        </div>
       </div>
     </div>
   );

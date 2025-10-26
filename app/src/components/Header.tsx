@@ -200,6 +200,13 @@ export default function Header() {
                       📊 Dashboard
                     </Link>
                     <Link
+                      href="/library/my-library"
+                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      📖 My Library
+                    </Link>
+                    <Link
                       href="/settings"
                       className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
                       onClick={() => setMenuOpen(false)}
