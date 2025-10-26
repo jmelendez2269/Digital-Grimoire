@@ -104,17 +104,23 @@ POST {endpoint}/formrecognizer/documentModels/prebuilt-read:analyze?api-version=
 
 ### Error: "404 Not Found" or "Resource not found"
 
-Your Azure region might not support the latest API version. Try:
+**✅ FIXED:** The code now uses the stable API version `2023-07-31` instead of the preview version.
 
-1. Update to stable API version in `azure-ocr.ts`:
-   ```typescript
-   const analyzeUrl = `${endpoint}/formrecognizer/documentModels/prebuilt-read:analyze?api-version=2023-07-31`;
+If you still get 404 errors:
+
+1. Verify your Azure endpoint URL ends with a trailing slash:
+   ```
+   AZURE_VISION_ENDPOINT=https://your-resource.cognitiveservices.azure.com/
    ```
 
-2. Or create a new Form Recognizer resource in a supported region:
+2. Check that your Azure resource is in a supported region:
    - East US
    - West Europe
    - West US 2
+
+3. Ensure your Azure resource supports Document Intelligence (Form Recognizer):
+   - Most Computer Vision resources from 2023+ support this
+   - If not, create a new "Document Intelligence" resource in Azure Portal
 
 ### Error: "401 Unauthorized"
 

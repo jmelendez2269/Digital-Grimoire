@@ -15,21 +15,37 @@ export async function performOCR(fileUrl: string): Promise<OCRResult> {
   }
 
   console.log(`Starting OCR for URL: ${fileUrl}`);
+  console.log(`Azure endpoint: ${endpoint}`);
 
   // Submit OCR request using Azure Document Intelligence Read API v4.0
   // This API is better for large documents (supports up to 2000 pages)
-  const analyzeUrl = `${endpoint}/formrecognizer/documentModels/prebuilt-read:analyze?api-version=2024-02-29-preview`;
+  // Using stable API version for better regional compatibility
+  const analyzeUrl = `${endpoint}/formrecognizer/documentModels/prebuilt-read:analyze?api-version=2023-07-31`;
   
-  const analyzeResponse = await axios.post(
-    analyzeUrl,
-    { urlSource: fileUrl },
-    { 
-      headers: { 
-        'Ocp-Apim-Subscription-Key': key,
-        'Content-Type': 'application/json'
-      } 
+  let analyzeResponse;
+  try {
+    analyzeResponse = await axios.post(
+      analyzeUrl,
+      { urlSource: fileUrl },
+      { 
+        headers: { 
+          'Ocp-Apim-Subscription-Key': key,
+          'Content-Type': 'application/json'
+        } 
+      }
+    );
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error('Azure OCR API Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: analyzeUrl
+      });
+      throw new Error(`Azure OCR API failed: ${error.response?.status} - ${error.response?.statusText || error.message}`);
     }
-  );
+    throw error;
+  }
 
   const operationLocation = analyzeResponse.headers['operation-location'];
   console.log(`OCR operation submitted: ${operationLocation}`);
