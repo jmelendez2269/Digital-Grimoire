@@ -12,7 +12,8 @@ import {
   Edit3,
   BookOpen,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -73,6 +74,17 @@ export default function MyLibraryPage() {
   const [progress, setProgress] = useState<ReadingProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    icon: '📚',
+    color: '#f59e0b',
+    is_public: false,
+  });
 
   useEffect(() => {
     checkAuth();
@@ -155,6 +167,54 @@ export default function MyLibraryPage() {
 
     if (response.ok) {
       setCollections(collections.filter((c) => c.id !== collectionId));
+    }
+  };
+
+  const openEditModal = (collection: Collection) => {
+    setEditingCollection(collection);
+    setEditForm({
+      name: collection.name,
+      description: collection.description || '',
+      icon: collection.icon,
+      color: collection.color,
+      is_public: false, // Default to false as we don't have this field yet in the interface
+    });
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setEditingCollection(null);
+    setEditForm({
+      name: '',
+      description: '',
+      icon: '📚',
+      color: '#f59e0b',
+      is_public: false,
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCollection) return;
+
+    const response = await fetch(`/api/collections?id=${editingCollection.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editForm),
+    });
+
+    if (response.ok) {
+      const { collection: updatedCollection } = await response.json();
+      // Update the collection in the local state
+      setCollections(collections.map((c) =>
+        c.id === editingCollection.id
+          ? { ...c, ...updatedCollection }
+          : c
+      ));
+      closeEditModal();
+    } else {
+      alert('Failed to update collection');
     }
   };
 
@@ -354,13 +414,22 @@ export default function MyLibraryPage() {
                               )}
                             </div>
                           </div>
-                          <button
-                            onClick={() => deleteCollection(collection.id)}
-                            className="text-red-400 hover:text-red-300 transition-colors"
-                            title="Delete collection"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => openEditModal(collection)}
+                              className="text-amber-400 hover:text-amber-300 transition-colors"
+                              title="Edit collection"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteCollection(collection.id)}
+                              className="text-red-400 hover:text-red-300 transition-colors"
+                              title="Delete collection"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="space-y-2">
@@ -482,6 +551,135 @@ export default function MyLibraryPage() {
           </>
         )}
       </div>
+
+      {/* Edit Collection Modal */}
+      {editModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-amber-900/30 rounded-lg shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-amber-900/20">
+              <h2 className="text-2xl font-bold text-amber-100">Edit Collection</h2>
+              <button
+                onClick={closeEditModal}
+                className="text-amber-100/60 hover:text-amber-100 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-6">
+              {/* Collection Name */}
+              <div>
+                <label htmlFor="edit-name" className="block text-sm font-medium text-amber-100 mb-2">
+                  Collection Name *
+                </label>
+                <input
+                  id="edit-name"
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/30 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 focus:outline-none transition-colors"
+                  placeholder="My Collection"
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label htmlFor="edit-description" className="block text-sm font-medium text-amber-100 mb-2">
+                  Description
+                </label>
+                <textarea
+                  id="edit-description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full px-4 py-3 bg-zinc-950 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/30 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 focus:outline-none transition-colors resize-none"
+                  rows={3}
+                  placeholder="Optional description..."
+                />
+              </div>
+
+              {/* Icon Selector */}
+              <div>
+                <label className="block text-sm font-medium text-amber-100 mb-2">
+                  Icon
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {['📚', '⭐', '❤️', '🔖', '📖', '✨', '🌟', '💎', '🎯', '🔥'].map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      onClick={() => setEditForm({ ...editForm, icon })}
+                      className={`text-3xl p-3 rounded-lg transition-all ${
+                        editForm.icon === icon
+                          ? 'bg-amber-600/20 ring-2 ring-amber-600/50 scale-110'
+                          : 'bg-zinc-950 hover:bg-zinc-800 hover:scale-105'
+                      }`}
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Selector */}
+              <div>
+                <label className="block text-sm font-medium text-amber-100 mb-2">
+                  Color
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {[
+                    { name: 'Amber', value: '#f59e0b' },
+                    { name: 'Red', value: '#ef4444' },
+                    { name: 'Orange', value: '#f97316' },
+                    { name: 'Green', value: '#22c55e' },
+                    { name: 'Blue', value: '#3b82f6' },
+                    { name: 'Purple', value: '#a855f7' },
+                    { name: 'Pink', value: '#ec4899' },
+                    { name: 'Cyan', value: '#06b6d4' },
+                    { name: 'Emerald', value: '#10b981' },
+                    { name: 'Indigo', value: '#6366f1' },
+                    { name: 'Rose', value: '#f43f5e' },
+                    { name: 'Teal', value: '#14b8a6' },
+                  ].map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => setEditForm({ ...editForm, color: color.value })}
+                      className={`w-10 h-10 rounded-lg transition-all ${
+                        editForm.color === color.value
+                          ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-zinc-900 scale-110'
+                          : 'hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color.value }}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeEditModal}
+                  className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editForm.name.trim()}
+                  className="flex-1 px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
