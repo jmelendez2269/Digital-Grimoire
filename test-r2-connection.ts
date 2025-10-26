@@ -29,6 +29,9 @@ async function testR2Connection() {
   console.log(`📦 Bucket: ${bucketName}`);
   console.log('═'.repeat(60));
   console.log();
+  console.log('ℹ️  Note: This test skips "List Buckets" which requires Admin permissions.');
+  console.log('   We only need Object Read/Write for the actual application.');
+  console.log();
 
   // Create S3 client configured for R2
   const s3Client = new S3Client({
@@ -41,24 +44,9 @@ async function testR2Connection() {
   });
 
   try {
-    // Test 1: List buckets (verify credentials work)
-    console.log('Test 1: Verifying credentials...');
-    const listCommand = new ListBucketsCommand({});
-    const listResponse = await s3Client.send(listCommand);
-    
-    if (listResponse.Buckets && listResponse.Buckets.length > 0) {
-      console.log('✅ Credentials valid!');
-      console.log(`📋 Found ${listResponse.Buckets.length} bucket(s):`);
-      listResponse.Buckets.forEach(bucket => {
-        console.log(`   - ${bucket.Name}`);
-      });
-    } else {
-      console.log('⚠️  No buckets found. Did you create the bucket?');
-    }
-    console.log();
-
-    // Test 2: Upload a test file
-    console.log('Test 2: Uploading test file...');
+    // Test 1: Upload a test file (this is what we actually need)
+    // Note: "List Buckets" requires Admin permissions, but we only need Object Read/Write
+    console.log('Test 1: Uploading test file to bucket...');
     const testFileName = `test-${Date.now()}.txt`;
     const testContent = 'Hello from Digital Grimoire! This is a test file to verify R2 uploads work correctly.';
     
@@ -73,8 +61,8 @@ async function testR2Connection() {
     console.log(`✅ File uploaded successfully: ${testFileName}`);
     console.log();
 
-    // Test 3: Download the test file
-    console.log('Test 3: Downloading test file...');
+    // Test 2: Download the test file
+    console.log('Test 2: Downloading test file...');
     const getCommand = new GetObjectCommand({
       Bucket: bucketName,
       Key: testFileName,
@@ -91,8 +79,8 @@ async function testR2Connection() {
     }
     console.log();
 
-    // Test 4: Delete the test file (cleanup)
-    console.log('Test 4: Cleaning up test file...');
+    // Test 3: Delete the test file (cleanup)
+    console.log('Test 3: Cleaning up test file...');
     const deleteCommand = new DeleteObjectCommand({
       Bucket: bucketName,
       Key: testFileName,
