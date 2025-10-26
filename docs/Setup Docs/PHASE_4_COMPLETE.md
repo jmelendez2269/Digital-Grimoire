@@ -18,6 +18,9 @@
 **Features:**
 - Analyzes first 3000 characters of OCR text
 - Extracts metadata: title, author, year, publisher
+- Generates standardized ID in format: `type_shortname_author_year`
+  - Example: `book_esoteric_secret_doctrine_blavatsky_1888`
+  - All lowercase with underscores for consistency
 - Classifies into 20 document types (book_esoteric, article_scholarly, etc.)
 - Assigns domain and confidence level
 - Generates relevant tags
@@ -113,15 +116,16 @@ Check Supabase dashboard:
 1. Go to **Table Editor** → `texts` table
 2. Find your newly uploaded document
 3. Verify fields are populated:
-   - ✅ `title`
+   - ✅ `title` (full document title)
    - ✅ `content` (full OCR text)
-   - ✅ `s3_key`
+   - ✅ `s3_key` (R2 storage key)
    - ✅ `type` (document classification)
    - ✅ `author`, `year`, `publisher` (if detected)
    - ✅ `domain`
    - ✅ `tags` (JSON array)
    - ✅ `confidence`
    - ✅ `status` = 'ready'
+   - ✅ `metadata` (JSONB with standardizedId, pageCount, lineCount)
 
 ### Step 6: Check Library Page
 
