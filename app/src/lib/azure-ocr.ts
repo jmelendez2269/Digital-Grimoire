@@ -14,42 +14,84 @@ export async function performOCR(fileUrl: string): Promise<OCRResult> {
     throw new Error('Azure credentials not configured');
   }
 
-  // Submit OCR request
+  console.log(`Starting OCR for URL: ${fileUrl}`);
+
+  // Submit OCR request using Azure Document Intelligence Read API v4.0
+  // This API is better for large documents (supports up to 2000 pages)
+  const analyzeUrl = `${endpoint}/formrecognizer/documentModels/prebuilt-read:analyze?api-version=2024-02-29-preview`;
+  
   const analyzeResponse = await axios.post(
-    `${endpoint}/vision/v3.2/read/analyze`,
-    { url: fileUrl },
-    { headers: { 'Ocp-Apim-Subscription-Key': key } }
+    analyzeUrl,
+    { urlSource: fileUrl },
+    { 
+      headers: { 
+        'Ocp-Apim-Subscription-Key': key,
+        'Content-Type': 'application/json'
+      } 
+    }
   );
 
   const operationLocation = analyzeResponse.headers['operation-location'];
+  console.log(`OCR operation submitted: ${operationLocation}`);
 
-  // Poll for results (max 30 attempts)
+  // Poll for results with extended timeout for large documents (max 300 attempts = 5 minutes)
   let result;
   let attempts = 0;
+  const maxAttempts = 300; // Increased for large PDFs
+  
   do {
     await new Promise(resolve => setTimeout(resolve, 1000));
     result = await axios.get(operationLocation, {
       headers: { 'Ocp-Apim-Subscription-Key': key }
     });
     attempts++;
+    
+    if (attempts % 10 === 0) {
+      console.log(`OCR still processing... (attempt ${attempts}/${maxAttempts}, status: ${result.data.status})`);
+    }
   } while (
     (result.data.status === 'running' || result.data.status === 'notStarted') 
-    && attempts < 30
+    && attempts < maxAttempts
   );
 
   if (result.data.status !== 'succeeded') {
-    throw new Error(`OCR failed with status: ${result.data.status}`);
+    throw new Error(`OCR failed with status: ${result.data.status} after ${attempts} attempts`);
   }
 
-  // Extract text
-  const pages = result.data.analyzeResult.readResults;
-  const lines = pages.flatMap((page: any) => page.lines.map((line: any) => line.text));
-  const text = lines.join('\n');
+  console.log(`OCR completed successfully after ${attempts} attempts`);
+
+  // Extract text from the Document Intelligence response
+  const analyzeResult = result.data.analyzeResult;
+  
+  if (!analyzeResult || !analyzeResult.pages) {
+    throw new Error('Invalid OCR response: missing pages data');
+  }
+
+  // Extract all text lines from all pages
+  const allLines: string[] = [];
+  let pageCount = 0;
+
+  // Document Intelligence v4.0 structure: analyzeResult.pages[].lines[]
+  for (const page of analyzeResult.pages) {
+    pageCount++;
+    if (page.lines && Array.isArray(page.lines)) {
+      for (const line of page.lines) {
+        if (line.content) {
+          allLines.push(line.content);
+        }
+      }
+    }
+  }
+
+  const text = allLines.join('\n');
+  const lineCount = allLines.length;
+
+  console.log(`OCR extraction complete: ${pageCount} pages, ${lineCount} lines, ${text.length} characters`);
 
   return {
     text,
-    pageCount: pages.length,
-    lineCount: lines.length,
+    pageCount,
+    lineCount,
   };
 }
 

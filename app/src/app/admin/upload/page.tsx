@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, Eye, Trash2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { DocumentMetadata } from '@/lib/claude-metadata';
 
@@ -18,6 +18,8 @@ interface UploadFile {
   rawAiOutput?: string;
   pageCount?: number;
   lineCount?: number;
+  lenses?: string[];
+  previewUrl?: string;
 }
 
 export default function AdminUploadPage() {
@@ -25,6 +27,7 @@ export default function AdminUploadPage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
+  const [previewFile, setPreviewFile] = useState<UploadFile | null>(null);
 
   // File validation
   const validateFile = (file: File): string | null => {
@@ -51,12 +54,15 @@ export default function AdminUploadPage() {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadFile[] = acceptedFiles.map((file) => {
       const error = validateFile(file);
+      // Create preview URL for PDFs
+      const previewUrl = file.type === 'application/pdf' ? URL.createObjectURL(file) : undefined;
       return {
         id: Math.random().toString(36).substring(7),
         file,
         progress: 0,
         status: error ? 'error' : 'pending',
         error: error || undefined,
+        previewUrl,
       };
     });
     setFiles((prev) => [...prev, ...newFiles]);
@@ -75,7 +81,41 @@ export default function AdminUploadPage() {
 
   // Remove file from queue
   const removeFile = (id: string) => {
+    const fileToRemove = files.find((f) => f.id === id);
+    if (fileToRemove?.previewUrl) {
+      URL.revokeObjectURL(fileToRemove.previewUrl);
+    }
     setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  // Clear all successful uploads
+  const clearSuccessful = () => {
+    files.forEach((f) => {
+      if (f.status === 'success' && f.previewUrl) {
+        URL.revokeObjectURL(f.previewUrl);
+      }
+    });
+    setFiles((prev) => prev.filter((f) => f.status !== 'success'));
+  };
+
+  // Clear all failed uploads
+  const clearFailed = () => {
+    files.forEach((f) => {
+      if (f.status === 'error' && f.previewUrl) {
+        URL.revokeObjectURL(f.previewUrl);
+      }
+    });
+    setFiles((prev) => prev.filter((f) => f.status !== 'error'));
+  };
+
+  // Clear all uploads (success and failed)
+  const clearAll = () => {
+    files.forEach((f) => {
+      if ((f.status === 'success' || f.status === 'error') && f.previewUrl) {
+        URL.revokeObjectURL(f.previewUrl);
+      }
+    });
+    setFiles((prev) => prev.filter((f) => f.status !== 'success' && f.status !== 'error'));
   };
 
   // Toggle file details expansion
@@ -187,6 +227,7 @@ export default function AdminUploadPage() {
                 rawAiOutput: processData.rawAiOutput,
                 pageCount: processData.pageCount,
                 lineCount: processData.lineCount,
+                lenses: processData.metadata?.lenses || [],
               }
             : f
         )
@@ -279,7 +320,7 @@ export default function AdminUploadPage() {
               <h2 className="text-lg font-medium text-amber-100">
                 Upload Queue ({files.length})
               </h2>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {successCount > 0 && (
                   <span className="text-sm text-emerald-400">
                     {successCount} uploaded
@@ -288,6 +329,43 @@ export default function AdminUploadPage() {
                 {errorCount > 0 && (
                   <span className="text-sm text-red-400">{errorCount} failed</span>
                 )}
+                
+                {/* Clear buttons */}
+                {(successCount > 0 || errorCount > 0) && (
+                  <>
+                    {successCount > 0 && (
+                      <button
+                        onClick={clearSuccessful}
+                        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5"
+                        title="Clear successful uploads"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Clear Success
+                      </button>
+                    )}
+                    {errorCount > 0 && (
+                      <button
+                        onClick={clearFailed}
+                        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-red-400 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5"
+                        title="Clear failed uploads"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Clear Failed
+                      </button>
+                    )}
+                    {successCount > 0 && errorCount > 0 && (
+                      <button
+                        onClick={clearAll}
+                        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5"
+                        title="Clear all completed uploads"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Clear All
+                      </button>
+                    )}
+                  </>
+                )}
+                
                 {pendingCount > 0 && (
                   <button
                     onClick={handleUploadAll}
@@ -332,11 +410,23 @@ export default function AdminUploadPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Preview button for PDFs */}
+                      {uploadFile.previewUrl && uploadFile.status === 'pending' && (
+                        <button
+                          onClick={() => setPreviewFile(uploadFile)}
+                          className="text-amber-100/60 hover:text-amber-100 transition-colors"
+                          title="Preview PDF"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      )}
+                      
                       {/* Status Icon */}
                       {uploadFile.status === 'pending' && (
                         <button
                           onClick={() => removeFile(uploadFile.id)}
                           className="text-amber-100/40 hover:text-amber-100 transition-colors"
+                          title="Remove from queue"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -345,10 +435,28 @@ export default function AdminUploadPage() {
                         <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
                       )}
                       {uploadFile.status === 'success' && (
-                        <Check className="w-4 h-4 text-emerald-400" />
+                        <>
+                          <Check className="w-4 h-4 text-emerald-400" />
+                          <button
+                            onClick={() => removeFile(uploadFile.id)}
+                            className="text-amber-100/40 hover:text-amber-100 transition-colors"
+                            title="Remove from list"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
                       )}
                       {uploadFile.status === 'error' && (
-                        <AlertCircle className="w-4 h-4 text-red-400" />
+                        <>
+                          <AlertCircle className="w-4 h-4 text-red-400" />
+                          <button
+                            onClick={() => removeFile(uploadFile.id)}
+                            className="text-amber-100/40 hover:text-amber-100 transition-colors"
+                            title="Remove from list"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -459,6 +567,23 @@ export default function AdminUploadPage() {
                             )}
                           </div>
 
+                          {/* Lenses */}
+                          {uploadFile.lenses && uploadFile.lenses.length > 0 && (
+                            <div>
+                              <p className="text-xs text-amber-100/60 mb-2">Convergence Machine Lenses</p>
+                              <div className="flex flex-wrap gap-2">
+                                {uploadFile.lenses.map((lens, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-3 py-1.5 bg-amber-600/20 border border-amber-600/40 rounded-md text-xs text-amber-100 font-medium"
+                                  >
+                                    {lens.replace(/_/g, ' ')}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Tags */}
                           {uploadFile.metadata.tags && uploadFile.metadata.tags.length > 0 && (
                             <div>
@@ -506,6 +631,65 @@ export default function AdminUploadPage() {
           </div>
         )}
       </div>
+
+      {/* PDF Preview Modal */}
+      {previewFile && previewFile.previewUrl && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setPreviewFile(null)}
+        >
+          <div 
+            className="bg-zinc-900 border border-amber-900/30 rounded-lg max-w-6xl w-full h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-amber-900/20">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-medium text-amber-100 truncate">
+                  {previewFile.file.name}
+                </h3>
+                <p className="text-sm text-amber-100/60">
+                  {formatFileSize(previewFile.file.size)}
+                </p>
+              </div>
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="ml-4 text-amber-100/60 hover:text-amber-100 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* PDF Preview */}
+            <div className="flex-1 overflow-auto p-4">
+              <iframe
+                src={previewFile.previewUrl}
+                className="w-full h-full border-0 rounded"
+                title="PDF Preview"
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-amber-900/20 flex justify-end gap-3">
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-md text-sm font-medium transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setPreviewFile(null);
+                  // Upload will happen when user clicks the upload button in the queue
+                }}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm font-medium transition-colors"
+              >
+                Continue to Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
