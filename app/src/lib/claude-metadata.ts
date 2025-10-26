@@ -74,6 +74,14 @@ Respond with valid JSON only, no markdown code blocks.`
   }
 
   console.log('✅ OpenAI GPT-4 response received');
-  return JSON.parse(responseText);
+  console.log('📄 LLM Raw Output:');
+  console.log('='.repeat(80));
+  console.log(responseText);
+  console.log('='.repeat(80));
+  
+  const metadata = JSON.parse(responseText);
+  console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
+  
+  return metadata;
 }
 
