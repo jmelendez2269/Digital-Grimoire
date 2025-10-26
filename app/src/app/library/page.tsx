@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, Search, Filter, Calendar, User } from 'lucide-react';
+import { FileText, Search, Calendar, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import AdvancedFilters from '@/components/AdvancedFilters';
+import Pagination from '@/components/Pagination';
 
 interface Text {
   id: string;
@@ -12,31 +14,143 @@ interface Text {
   year: number | null;
   type: string | null;
   domain: string | null;
+  tags: string[] | null;
   file_size: number | null;
   status: string;
   created_at: string;
+}
+
+interface FilterValues {
+  domain: string;
+  type: string;
+  yearMin: number | null;
+  yearMax: number | null;
+  tags: string[];
 }
 
 export default function LibraryPage() {
   const [texts, setTexts] = useState<Text[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 12;
+
+  // Advanced filter state
+  const [filterValues, setFilterValues] = useState<FilterValues>({
+    domain: 'all',
+    type: 'all',
+    yearMin: null,
+    yearMax: null,
+    tags: [],
+  });
+
+  // Filter options
+  const [allDomains, setAllDomains] = useState<string[]>([]);
+  const [allTypes, setAllTypes] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
 
   useEffect(() => {
     fetchTexts();
-  }, []);
+  }, [currentPage, searchQuery, filterValues]);
+
+  const fetchFilterOptions = async () => {
+    try {
+      const supabase = createClient();
+      
+      // Fetch all documents to extract unique values
+      const { data, error } = await supabase
+        .from('texts')
+        .select('domain, type, tags');
+
+      if (error) throw error;
+
+      if (data) {
+        // Extract unique domains
+        const domains = Array.from(
+          new Set(data.map((t) => t.domain).filter(Boolean))
+        ) as string[];
+        setAllDomains(domains.sort());
+
+        // Extract unique types
+        const types = Array.from(
+          new Set(data.map((t) => t.type).filter(Boolean))
+        ) as string[];
+        setAllTypes(types.sort());
+
+        // Extract unique tags
+        const tagsSet = new Set<string>();
+        data.forEach((t) => {
+          if (t.tags && Array.isArray(t.tags)) {
+            t.tags.forEach((tag) => tagsSet.add(tag));
+          }
+        });
+        setAllTags(Array.from(tagsSet).sort());
+      }
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+    }
+  };
 
   const fetchTexts = async () => {
     try {
+      setLoading(true);
       const supabase = createClient();
-      const { data, error } = await supabase
+
+      // Start building the query
+      let query = supabase
         .from('texts')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' });
+
+      // Apply search filter
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,author.ilike.%${searchQuery}%`);
+      }
+
+      // Apply domain filter
+      if (filterValues.domain !== 'all') {
+        query = query.eq('domain', filterValues.domain);
+      }
+
+      // Apply type filter
+      if (filterValues.type !== 'all') {
+        query = query.eq('type', filterValues.type);
+      }
+
+      // Apply year range filter
+      if (filterValues.yearMin !== null) {
+        query = query.gte('year', filterValues.yearMin);
+      }
+      if (filterValues.yearMax !== null) {
+        query = query.lte('year', filterValues.yearMax);
+      }
+
+      // Apply tags filter
+      if (filterValues.tags.length > 0) {
+        // Use overlaps operator to match any of the selected tags
+        query = query.overlaps('tags', filterValues.tags);
+      }
+
+      // Apply pagination
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      query = query.range(from, to);
+
+      // Order by created_at
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error, count } = await query;
 
       if (error) throw error;
+      
       setTexts(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error('Error fetching texts:', error);
     } finally {
@@ -75,15 +189,22 @@ export default function LibraryPage() {
     }
   };
 
-  const filteredTexts = texts.filter((text) => {
-    const matchesSearch =
-      text.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      text.author?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === 'all' || text.type === filterType;
-    return matchesSearch && matchesType;
-  });
+  const handleFilterChange = (newValues: FilterValues) => {
+    setFilterValues(newValues);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
 
-  const uniqueTypes = Array.from(new Set(texts.map((t) => t.type).filter(Boolean)));
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-amber-50">
@@ -100,41 +221,36 @@ export default function LibraryPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Search and Filters */}
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          {/* Search Bar */}
-          <div className="relative flex-1 max-w-md">
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-2xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-100/40" />
             <input
               type="text"
-              placeholder="Search texts..."
+              placeholder="Search by title or author..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 transition-colors"
+              onChange={handleSearchChange}
+              className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 transition-colors"
             />
           </div>
+        </div>
 
-          {/* Type Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-amber-100/60" />
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 focus:outline-none focus:border-amber-600/50 transition-colors"
-            >
-              <option value="all">All Types</option>
-              {uniqueTypes.map((type) => (
-                <option key={type} value={type || ''}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Advanced Filters */}
+        <div className="mb-6">
+          <AdvancedFilters
+            options={{
+              domains: allDomains,
+              types: allTypes,
+              allTags: allTags,
+            }}
+            values={filterValues}
+            onChange={handleFilterChange}
+          />
         </div>
 
         {/* Results Count */}
         <div className="mb-6 text-sm text-amber-100/60">
-          Showing {filteredTexts.length} of {texts.length} texts
+          Showing {texts.length} of {totalCount} texts
         </div>
 
         {/* Loading State */}
@@ -147,19 +263,21 @@ export default function LibraryPage() {
               />
             ))}
           </div>
-        ) : filteredTexts.length === 0 ? (
+        ) : texts.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16">
             <FileText className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
             <h3 className="text-lg font-medium text-amber-100 mb-2">
-              {searchQuery || filterType !== 'all' ? 'No texts found' : 'No texts yet'}
+              {searchQuery || filterValues.domain !== 'all' || filterValues.type !== 'all' 
+                ? 'No texts found' 
+                : 'No texts yet'}
             </h3>
             <p className="text-sm text-amber-100/60 mb-6">
-              {searchQuery || filterType !== 'all'
+              {searchQuery || filterValues.domain !== 'all' || filterValues.type !== 'all'
                 ? 'Try adjusting your search or filters'
                 : 'Upload your first text to get started'}
             </p>
-            {!searchQuery && filterType === 'all' && (
+            {!searchQuery && filterValues.domain === 'all' && filterValues.type === 'all' && (
               <Link
                 href="/admin/upload"
                 className="inline-block px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
@@ -169,9 +287,10 @@ export default function LibraryPage() {
             )}
           </div>
         ) : (
-          /* Document Grid */
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTexts.map((text) => (
+          <>
+            {/* Document Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+              {texts.map((text) => (
               <div
                 key={text.id}
                 className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 hover:border-amber-800/50 transition-all duration-200 hover:shadow-lg hover:shadow-amber-900/10"
@@ -230,8 +349,20 @@ export default function LibraryPage() {
                   </Link>
                 )}
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalCount}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
