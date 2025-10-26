@@ -1,40 +1,37 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, Check, AlertCircle, Loader2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
 interface UploadFile {
   id: string;
   file: File;
   progress: number;
-  status: 'pending' | 'uploading' | 'success' | 'error';
+  status: 'pending' | 'uploading' | 'processing' | 'success' | 'error';
   error?: string;
 }
 
 export default function AdminUploadPage() {
-  const router = useRouter();
-  const supabase = createClient();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   // File validation
   const validateFile = (file: File): string | null => {
-    const maxSize = 100 * 1024 * 1024; // 100MB
+    const maxSize = 50 * 1024 * 1024; // 50MB
     const allowedTypes = [
       'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/msword',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      return 'Only PDF and DOCX files are allowed';
+      return 'Only PDF and image files (PNG, JPG) are allowed';
     }
 
     if (file.size > maxSize) {
-      return 'File size must be less than 100MB';
+      return 'File size must be less than 50MB';
     }
 
     return null;
@@ -59,10 +56,11 @@ export default function AdminUploadPage() {
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/msword': ['.doc'],
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg'],
     },
     multiple: true,
+    maxSize: 52428800, // 50MB
   });
 
   // Remove file from queue
@@ -83,91 +81,66 @@ export default function AdminUploadPage() {
       );
 
       // Get presigned URL from API
-      const response = await fetch('/api/upload/presigned', {
+      const presignedResponse = await fetch('/api/upload/presigned', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
+          fileName: file.name,
+          fileType: file.type,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get upload URL');
+      if (!presignedResponse.ok) {
+        const error = await presignedResponse.json();
+        throw new Error(error.error || 'Failed to get upload URL');
       }
 
-      const { uploadUrl, key } = await response.json();
+      const { presignedUrl, key } = await presignedResponse.json();
 
       // Update progress
       setFiles((prev) =>
-        prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: 30 } : f))
+        prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: 25 } : f))
       );
 
-      // Upload to S3
-      let uploadResponse;
-      try {
-        uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
-          },
-        });
-      } catch (fetchError) {
-        console.error('Network error uploading to S3:', fetchError);
-        console.error('This is likely a CORS configuration issue. Check AWS_S3_SETUP.md for instructions.');
-        throw new Error('Network error: Cannot connect to S3. Check CORS configuration and AWS_S3_SETUP.md');
-      }
+      // Upload to R2
+      const uploadResponse = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
 
       if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error('S3 upload failed:', {
-          status: uploadResponse.status,
-          statusText: uploadResponse.statusText,
-          error: errorText,
-        });
-        throw new Error(`Failed to upload file to S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        throw new Error(`Failed to upload file to R2: ${uploadResponse.statusText}`);
       }
 
       // Update progress
       setFiles((prev) =>
-        prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: 70 } : f))
+        prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: 50 } : f))
       );
 
-      // Create database record
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const { data: textData, error: dbError } = await supabase.from('texts').insert({
-        title: file.name.replace(/\.(pdf|docx?)$/i, ''),
-        s3_key: key,
-        mime_type: file.type,
-        file_size: file.size,
-        uploaded_by: user?.id,
-        status: 'processing',
-      }).select().single();
+      // Update status to processing
+      setFiles((prev) =>
+        prev.map((f) => (f.id === uploadFile.id ? { ...f, status: 'processing', progress: 60 } : f))
+      );
 
-      if (dbError) {
-        throw new Error('Failed to save to database');
+      // Trigger document processing (OCR + metadata extraction)
+      const processResponse = await fetch('/api/process-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key }),
+      });
+
+      if (!processResponse.ok) {
+        const error = await processResponse.json();
+        throw new Error(error.error || 'Failed to process document');
       }
 
       // Update progress
       setFiles((prev) =>
-        prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: 85 } : f))
+        prev.map((f) => (f.id === uploadFile.id ? { ...f, progress: 90 } : f))
       );
-
-      // Extract metadata using Claude (optional - won't fail if API key not configured)
-      try {
-        await fetch('/api/metadata/extract', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            textId: textData.id,
-            s3Key: key,
-          }),
-        });
-      } catch (metadataError) {
-        console.log('Metadata extraction failed (non-critical):', metadataError);
-      }
 
       // Success!
       setFiles((prev) =>
@@ -252,7 +225,7 @@ export default function AdminUploadPage() {
             or click to browse your computer
           </p>
           <p className="text-xs text-amber-100/40">
-            Supported formats: PDF, DOCX • Max size: 100MB per file
+            Supported formats: PDF, PNG, JPG • Max size: 50MB per file
           </p>
         </div>
 
@@ -325,7 +298,7 @@ export default function AdminUploadPage() {
                           <X className="w-4 h-4" />
                         </button>
                       )}
-                      {uploadFile.status === 'uploading' && (
+                      {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
                         <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
                       )}
                       {uploadFile.status === 'success' && (
@@ -338,7 +311,7 @@ export default function AdminUploadPage() {
                   </div>
 
                   {/* Progress Bar */}
-                  {uploadFile.status === 'uploading' && (
+                  {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
                     <div className="mt-3">
                       <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                         <div
@@ -346,6 +319,9 @@ export default function AdminUploadPage() {
                           style={{ width: `${uploadFile.progress}%` }}
                         />
                       </div>
+                      <p className="text-xs text-amber-100/60 mt-1">
+                        {uploadFile.status === 'uploading' ? 'Uploading...' : 'Processing with OCR...'}
+                      </p>
                     </div>
                   )}
                 </div>

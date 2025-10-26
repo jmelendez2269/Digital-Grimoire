@@ -3,12 +3,13 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createClient } from '@/lib/supabase/server';
 
-// Initialize S3 client
+// Initialize R2 client (compatible with S3 API)
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -37,47 +38,50 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const { filename, contentType } = await request.json();
+    const { fileName, fileType } = await request.json();
 
-    if (!filename || !contentType) {
+    if (!fileName || !fileType) {
       return NextResponse.json(
-        { error: 'Filename and content type are required' },
+        { error: 'Filename and file type are required' },
         { status: 400 }
       );
     }
 
-    // Validate content type
+    // Validate file type
     const allowedTypes = [
       'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/msword',
     ];
 
-    if (!allowedTypes.includes(contentType)) {
+    if (!allowedTypes.includes(fileType)) {
       return NextResponse.json(
-        { error: 'Invalid file type' },
+        { error: 'Invalid file type. Allowed: PDF, images (PNG, JPG), DOCX' },
         { status: 400 }
       );
     }
 
-    // Generate unique key for S3
+    // Generate unique key for R2
     const timestamp = Date.now();
-    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const key = `uploads/${user.id}/${timestamp}-${sanitizedFilename}`;
+    const sanitizedFilename = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const key = `uploads/${timestamp}-${sanitizedFilename}`;
 
-    // Create presigned URL
+    // Create presigned URL for R2
     const command = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET!,
+      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
       Key: key,
-      ContentType: contentType,
+      ContentType: fileType,
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, command, {
+    const presignedUrl = await getSignedUrl(s3Client, command, {
       expiresIn: 3600, // URL expires in 1 hour
     });
 
     return NextResponse.json({
-      uploadUrl,
+      presignedUrl,
       key,
     });
   } catch (error) {
