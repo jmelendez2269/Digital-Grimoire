@@ -15,7 +15,7 @@ const s3Client = new S3Client({
 });
 
 export async function POST(request: NextRequest) {
-  const { key } = await request.json();
+  const { key, userId } = await request.json();
   
   try {
     // Build file URL for Azure OCR
@@ -37,10 +37,6 @@ export async function POST(request: NextRequest) {
     // Step 3: Save to Supabase
     console.log('Step 3: Saving to Supabase...');
     const supabase = createServiceClient();
-    
-    // Get user from the request (admin who uploaded)
-    // Note: Using service role, so we need to pass user ID explicitly
-    const { data: { user } } = await supabase.auth.getUser();
 
     const { data: textRecord, error: dbError } = await supabase
       .from('texts')
@@ -56,7 +52,7 @@ export async function POST(request: NextRequest) {
         confidence: metadata.confidence,
         tags: metadata.tags,
         status: 'ready',
-        uploaded_by: user?.id,
+        uploaded_by: userId || null,
         metadata: {
           standardizedId: metadata.standardizedId,
           pageCount: ocrResult.pageCount,

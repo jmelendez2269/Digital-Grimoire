@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface UploadFile {
   id: string;
@@ -13,6 +14,7 @@ interface UploadFile {
 }
 
 export default function AdminUploadPage() {
+  const supabase = createClient();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -125,11 +127,17 @@ export default function AdminUploadPage() {
         prev.map((f) => (f.id === uploadFile.id ? { ...f, status: 'processing', progress: 60 } : f))
       );
 
+      // Get current user to pass to processing
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
       // Trigger document processing (OCR + metadata extraction)
       const processResponse = await fetch('/api/process-document', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key }),
+        body: JSON.stringify({ 
+          key,
+          userId: currentUser?.id 
+        }),
       });
 
       if (!processResponse.ok) {
