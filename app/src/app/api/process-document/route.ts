@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/service';
+import { createClient } from '@/lib/supabase/server';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
     const metadata = await extractMetadata(ocrResult.text, filename);
     console.log('Metadata extracted:', metadata.title);
 
-    // Step 3: Save to Supabase
+    // Step 3: Save to Supabase (using regular authenticated client)
     console.log('Step 3: Saving to Supabase...');
-    const supabase = createServiceClient();
+    const supabase = await createClient();
 
     const { data: textRecord, error: dbError } = await supabase
       .from('texts')
