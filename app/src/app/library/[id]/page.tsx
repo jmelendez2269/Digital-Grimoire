@@ -470,14 +470,12 @@ export default function DocumentDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <CollectionsPanel textId={documentId} />
-            
-            {/* AI Summary Section */}
+            {/* Summary Section */}
             {(document.summary || document.curator_note) && (
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-amber-600" />
-                  AI Summary
+                  Summary
                 </h3>
                 <div className="max-h-64 overflow-y-auto pr-2 space-y-3">
                   {document.summary && (
@@ -495,6 +493,8 @@ export default function DocumentDetailPage() {
                 </div>
               </div>
             )}
+            
+            <CollectionsPanel textId={documentId} />
           </div>
         </div>
       </div>
