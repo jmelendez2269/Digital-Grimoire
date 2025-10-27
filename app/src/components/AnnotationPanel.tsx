@@ -9,8 +9,19 @@ interface Annotation {
   quote: string;
   note: string | null;
   position: any;
+  category: 'general' | 'important' | 'question' | 'insight' | 'to-research' | 'quote' | 'critique';
   created_at: string;
 }
+
+const ANNOTATION_CATEGORIES = [
+  { value: 'general', label: '📝 General', color: 'gray' },
+  { value: 'important', label: '⭐ Important', color: 'red' },
+  { value: 'question', label: '❓ Question', color: 'blue' },
+  { value: 'insight', label: '💡 Insight', color: 'yellow' },
+  { value: 'to-research', label: '🔍 To Research', color: 'purple' },
+  { value: 'quote', label: '💬 Quote', color: 'green' },
+  { value: 'critique', label: '🎯 Critique', color: 'orange' },
+] as const;
 
 interface AnnotationPanelProps {
   textId: string;
@@ -38,8 +49,12 @@ export default function AnnotationPanel({
   const [showForm, setShowForm] = useState(showAddForm);
   const [newQuote, setNewQuote] = useState('');
   const [newNote, setNewNote] = useState('');
+  const [newCategory, setNewCategory] = useState<Annotation['category']>('general');
   const [newPosition, setNewPosition] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Filter state
+  const [filterCategory, setFilterCategory] = useState<Annotation['category'] | 'all'>('all');
 
   // Auto-populate form when text is selected in PDF
   useEffect(() => {
@@ -80,6 +95,7 @@ export default function AnnotationPanel({
           text_id: textId,
           quote: newQuote.trim(),
           note: newNote.trim() || null,
+          category: newCategory,
           position: newPosition || {},
         }),
       });
@@ -89,6 +105,7 @@ export default function AnnotationPanel({
         setAnnotations([data.annotation, ...annotations]);
         setNewQuote('');
         setNewNote('');
+        setNewCategory('general');
         setNewPosition(null);
         setShowForm(false);
         onAnnotationAdded?.();
@@ -159,6 +176,7 @@ export default function AnnotationPanel({
             if (showForm) {
               setNewQuote('');
               setNewNote('');
+              setNewCategory('general');
               setNewPosition(null);
               onSelectionCleared?.();
             }
@@ -169,6 +187,40 @@ export default function AnnotationPanel({
           {showForm ? 'Cancel' : '+ Add Note'}
         </button>
       </div>
+
+      {/* Category Filter */}
+      {annotations.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-amber-100/60">Filter:</span>
+          <button
+            onClick={() => setFilterCategory('all')}
+            className={`text-xs px-2 py-1 rounded-md transition-colors ${
+              filterCategory === 'all'
+                ? 'bg-amber-600 text-white'
+                : 'bg-zinc-800 text-amber-100/60 hover:bg-zinc-700'
+            }`}
+          >
+            All ({annotations.length})
+          </button>
+          {ANNOTATION_CATEGORIES.map((cat) => {
+            const count = annotations.filter((a) => a.category === cat.value).length;
+            if (count === 0) return null;
+            return (
+              <button
+                key={cat.value}
+                onClick={() => setFilterCategory(cat.value as Annotation['category'])}
+                className={`text-xs px-2 py-1 rounded-md transition-colors ${
+                  filterCategory === cat.value
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-zinc-800 text-amber-100/60 hover:bg-zinc-700'
+                }`}
+              >
+                {cat.label.split(' ')[0]} {count}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Add Annotation Form */}
       {showForm && (
@@ -184,6 +236,22 @@ export default function AnnotationPanel({
               className="w-full px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-md text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 text-sm resize-none"
               rows={3}
             />
+          </div>
+          <div>
+            <label className="block text-sm text-amber-100/60 mb-2">
+              Category *
+            </label>
+            <select
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value as Annotation['category'])}
+              className="w-full px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-md text-amber-100 focus:outline-none focus:border-amber-600/50 text-sm"
+            >
+              {ANNOTATION_CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm text-amber-100/60 mb-2">
@@ -210,6 +278,7 @@ export default function AnnotationPanel({
                 setShowForm(false);
                 setNewQuote('');
                 setNewNote('');
+                setNewCategory('general');
                 setNewPosition(null);
                 onSelectionCleared?.();
               }}
@@ -231,11 +300,34 @@ export default function AnnotationPanel({
         </div>
       ) : (
         <div className="space-y-4">
-          {annotations.map((annotation) => (
+          {annotations
+            .filter((a) => filterCategory === 'all' || a.category === filterCategory)
+            .map((annotation) => {
+              const categoryInfo = ANNOTATION_CATEGORIES.find((c) => c.value === annotation.category);
+              const categoryColor = categoryInfo?.color || 'gray';
+              
+              return (
             <div
               key={annotation.id}
               className="p-4 bg-zinc-800/30 border border-amber-900/10 rounded-lg space-y-2"
             >
+              {/* Category Badge */}
+              <div className="flex items-center justify-between">
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    categoryColor === 'red' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                    categoryColor === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                    categoryColor === 'yellow' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                    categoryColor === 'purple' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                    categoryColor === 'green' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                    categoryColor === 'orange' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
+                    'bg-zinc-700/50 text-zinc-400 border border-zinc-600/20'
+                  }`}
+                >
+                  {categoryInfo?.label}
+                </span>
+              </div>
+              
               {/* Quoted Text */}
               <div className="pl-3 border-l-2 border-amber-600/50">
                 <p className="text-sm text-amber-100/90 italic">
@@ -307,7 +399,8 @@ export default function AnnotationPanel({
                 </div>
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       )}
     </div>
