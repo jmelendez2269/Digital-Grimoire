@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if item already exists in collection
-    const { data: existing } = await supabase
+    const { data: existing, error: checkError } = await supabase
       .from('collection_items')
       .select('id')
       .eq('collection_id', collection_id)
       .eq('text_id', text_id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -69,8 +69,17 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error adding item to collection:', error);
+      
+      // Handle duplicate key constraint violation
+      if (error.code === '23505') {
+        return NextResponse.json(
+          { error: 'Item already exists in collection' },
+          { status: 409 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to add item to collection' },
+        { error: 'Failed to add item to collection', details: error.message },
         { status: 500 }
       );
     }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logOcrUsage } from './usage-tracker';
 
 interface OCRResult {
   text: string;
@@ -6,7 +7,11 @@ interface OCRResult {
   lineCount: number;
 }
 
-export async function performOCR(fileUrl: string): Promise<OCRResult> {
+export async function performOCR(
+  fileUrl: string,
+  userId?: string,
+  documentId?: string
+): Promise<OCRResult> {
   const endpoint = process.env.AZURE_VISION_ENDPOINT;
   const key = process.env.AZURE_VISION_KEY;
 
@@ -42,6 +47,16 @@ export async function performOCR(fileUrl: string): Promise<OCRResult> {
         data: error.response?.data,
         url: analyzeUrl
       });
+      
+      // Log failed OCR attempt
+      await logOcrUsage({
+        pages: 0,
+        userId,
+        documentId,
+        success: false,
+        errorMessage: `Azure OCR API failed: ${error.response?.status} - ${error.response?.statusText || error.message}`,
+      });
+      
       throw new Error(`Azure OCR API failed: ${error.response?.status} - ${error.response?.statusText || error.message}`);
     }
     throw error;
@@ -103,6 +118,15 @@ export async function performOCR(fileUrl: string): Promise<OCRResult> {
   const lineCount = allLines.length;
 
   console.log(`OCR extraction complete: ${pageCount} pages, ${lineCount} lines, ${text.length} characters`);
+
+  // Log usage for tracking
+  await logOcrUsage({
+    pages: pageCount,
+    userId,
+    documentId,
+    success: true,
+    responseTime: attempts * 1000, // Approximate time in ms
+  });
 
   return {
     text,

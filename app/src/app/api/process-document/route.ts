@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { S3Client, DeleteObjectCommand, CopyObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
+import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
 
 // Initialize R2 client for cleanup on error
 const s3Client = new S3Client({
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     console.log('Step 1: Running Azure OCR...');
     let ocrResult;
     try {
-      ocrResult = await performOCR(fileUrl);
+      ocrResult = await performOCR(fileUrl, userId);
       console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
     } catch (ocrError) {
       console.error('OCR failed:', ocrError);
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     const filename = key.split('/').pop() || 'document';
     let metadata;
     try {
-      const result = await extractMetadata(ocrResult.text, filename);
+      const result = await extractMetadata(ocrResult.text, filename, userId);
       metadata = result.metadata;
       rawAiOutput = result.rawOutput; // Store for response
       console.log('Metadata extracted:', metadata.title);
@@ -178,6 +179,11 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Document processing complete! ID:', textRecord.id);
+
+    // Log user activity
+    if (userId) {
+      await logUserActivity(userId, 'upload');
+    }
 
     return NextResponse.json({
       success: true,

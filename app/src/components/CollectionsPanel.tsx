@@ -27,6 +27,7 @@ export default function CollectionsPanel({
   const [textCollections, setTextCollections] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [togglingCollections, setTogglingCollections] = useState<Set<string>>(new Set());
   
   // Create form state
   const [newName, setNewName] = useState('');
@@ -91,7 +92,15 @@ export default function CollectionsPanel({
   };
 
   const toggleCollection = async (collectionId: string) => {
+    // Prevent duplicate requests
+    if (togglingCollections.has(collectionId)) {
+      return;
+    }
+
     const isInCollection = textCollections.includes(collectionId);
+    
+    // Mark as toggling
+    setTogglingCollections(prev => new Set(prev).add(collectionId));
 
     try {
       if (isInCollection) {
@@ -104,6 +113,9 @@ export default function CollectionsPanel({
         if (response.ok) {
           setTextCollections(textCollections.filter((id) => id !== collectionId));
           onCollectionChange?.();
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to remove from collection:', errorData);
         }
       } else {
         // Add to collection
@@ -119,10 +131,23 @@ export default function CollectionsPanel({
         if (response.ok) {
           setTextCollections([...textCollections, collectionId]);
           onCollectionChange?.();
+        } else if (response.status === 409) {
+          // Already in collection - update UI to reflect this
+          setTextCollections([...textCollections, collectionId]);
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to add to collection:', errorData);
         }
       }
     } catch (error) {
       console.error('Error toggling collection:', error);
+    } finally {
+      // Remove from toggling set
+      setTogglingCollections(prev => {
+        const next = new Set(prev);
+        next.delete(collectionId);
+        return next;
+      });
     }
   };
 
@@ -239,11 +264,12 @@ export default function CollectionsPanel({
               <button
                 key={collection.id}
                 onClick={() => toggleCollection(collection.id)}
+                disabled={togglingCollections.has(collection.id)}
                 className={`w-full p-3 rounded-lg text-left transition-all ${
                   isInCollection
                     ? 'bg-amber-600/10 border-amber-600/30 ring-1 ring-amber-600/20'
                     : 'bg-zinc-800/30 border-amber-900/10 hover:bg-zinc-800/50'
-                } border`}
+                } border disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

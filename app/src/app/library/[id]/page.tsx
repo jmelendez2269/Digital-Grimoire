@@ -94,14 +94,15 @@ export default function DocumentDetailPage() {
 
       setDocument(data);
 
-      // If document has S3 key, fetch the signed URL
+      // If document has S3 key, fetch the signed URL from R2
       if (data.s3_key && data.status === 'ready') {
-        const { data: urlData } = await supabase.storage
-          .from('documents')
-          .createSignedUrl(data.s3_key, 3600); // 1 hour expiry
-
-        if (urlData?.signedUrl) {
-          setPdfUrl(urlData.signedUrl);
+        const response = await fetch(`/api/documents/${documentId}`);
+        
+        if (response.ok) {
+          const { url } = await response.json();
+          setPdfUrl(url);
+        } else {
+          console.error('Failed to fetch document URL:', await response.text());
         }
       }
     } catch (err) {

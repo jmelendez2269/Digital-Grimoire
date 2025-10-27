@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { logMetadataExtractionUsage } from './usage-tracker';
 
 export interface DocumentMetadata {
   title: string;
@@ -17,7 +18,9 @@ export interface DocumentMetadata {
 
 export async function extractMetadata(
   ocrText: string, 
-  filename: string = 'document'
+  filename: string = 'document',
+  userId?: string,
+  documentId?: string
 ): Promise<{ metadata: DocumentMetadata; rawOutput: string }> {
   const apiKey = process.env.OPENAI_API_KEY;
   
@@ -105,6 +108,16 @@ Respond with valid JSON only, no markdown code blocks.`
   
   const metadata = JSON.parse(responseText);
   console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
+  
+  // Log token usage for tracking
+  await logMetadataExtractionUsage({
+    inputTokens: completion.usage?.prompt_tokens || 0,
+    outputTokens: completion.usage?.completion_tokens || 0,
+    userId,
+    documentId,
+    success: true,
+    model: 'gpt-4o',
+  });
   
   return { metadata, rawOutput: responseText };
 }
