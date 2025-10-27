@@ -89,6 +89,9 @@ export default function DocumentDetailPage() {
   const [highlightPosition, setHighlightPosition] = useState<{ charIndex: number; charLength: number } | null>(null);
   const [audioPlayerRef, setAudioPlayerRef] = useState<{ startFromPosition: (pos: number) => void } | null>(null);
 
+  // Initialize reading progress tracker
+  const { currentPage, updatePage } = useReadingProgressTracker(documentId, numPages || undefined);
+
   useEffect(() => {
     if (documentId) {
       fetchDocument();
@@ -135,6 +138,18 @@ export default function DocumentDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle PDF document load
+  const handleDocumentLoad = (totalPages: number) => {
+    console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
+    setNumPages(totalPages);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    console.log('[DocumentDetailPage] Page changed to', page);
+    updatePage(page);
   };
 
   if (loading) {
@@ -257,7 +272,12 @@ export default function DocumentDetailPage() {
             {activeTab === 'viewer' && (
               <div className="h-[calc(100vh-250px)]">
                 {pdfUrl && document.status === 'ready' ? (
-                  <PDFViewer fileUrl={pdfUrl} fileName={document.title} />
+                  <PDFViewer 
+                    fileUrl={pdfUrl} 
+                    fileName={document.title}
+                    onDocumentLoad={handleDocumentLoad}
+                    onPageChange={handlePageChange}
+                  />
                 ) : (
                   <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
                     <div className="text-center">

@@ -144,17 +144,31 @@ export default function ReadingProgress({
 // Hook for tracking reading progress
 export function useReadingProgressTracker(textId: string, totalPages?: number) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [startTime, setStartTime] = useState<number | null>(null);
+  const [startTime] = useState<number>(Date.now());
 
   useEffect(() => {
-    setStartTime(Date.now());
+    // Save progress when component unmounts
     return () => {
-      if (startTime) {
-        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-        saveProgress(timeSpent);
+      const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+      if (timeSpent > 0) {
+        // Use fetch with keepalive to ensure request completes even if page is closing
+        fetch('/api/reading-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text_id: textId,
+            current_page: currentPage,
+            total_pages: totalPages,
+            progress_percent: totalPages ? (currentPage / totalPages) * 100 : 0,
+            time_spent_seconds: timeSpent,
+          }),
+          keepalive: true,
+        }).catch((error) => {
+          console.error('Error saving progress on unmount:', error);
+        });
       }
     };
-  }, []);
+  }, [textId, currentPage, totalPages, startTime]);
 
   const saveProgress = async (timeSpent: number = 0) => {
     try {
@@ -179,7 +193,6 @@ export function useReadingProgressTracker(textId: string, totalPages?: number) {
   const updatePage = (page: number) => {
     setCurrentPage(page);
     if (totalPages) {
-      const progressPercent = (page / totalPages) * 100;
       saveProgress();
     }
   };

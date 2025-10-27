@@ -63,6 +63,8 @@ export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageCha
             fileUrl={fileUrl}
             plugins={[defaultLayoutPluginInstance]}
             renderError={renderError}
+            onDocumentLoad={handleDocumentLoad}
+            onPageChange={handlePageChange}
             theme={{
               theme: 'dark',
             }}
