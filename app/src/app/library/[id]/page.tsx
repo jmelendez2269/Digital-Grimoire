@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -140,17 +140,26 @@ export default function DocumentDetailPage() {
     }
   };
 
-  // Handle PDF document load
-  const handleDocumentLoad = (totalPages: number) => {
+  // Handle PDF document load - MEMOIZED to prevent re-creation
+  const handleDocumentLoad = useCallback((totalPages: number) => {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
-  };
+  }, []);
 
-  // Handle page change
-  const handlePageChange = (page: number) => {
+  // Handle page change - MEMOIZED to prevent re-creation
+  const handlePageChange = useCallback((page: number) => {
     console.log('[DocumentDetailPage] Page changed to', page);
     updatePage(page);
-  };
+  }, [updatePage]);
+
+  // Audio player callbacks - MEMOIZED to prevent re-creation
+  const handleHighlight = useCallback((charIndex: number, charLength: number) => {
+    setHighlightPosition({ charIndex, charLength });
+  }, []);
+
+  const handleAudioReady = useCallback((controls: { startFromPosition: (pos: number) => void }) => {
+    setAudioPlayerRef(controls);
+  }, []);
 
   if (loading) {
     return (
@@ -442,12 +451,8 @@ export default function DocumentDetailPage() {
         documentId={documentId}
         ocrText={document.content}
         pdfUrl={pdfUrl}
-        onHighlight={(charIndex, charLength) => {
-          setHighlightPosition({ charIndex, charLength });
-        }}
-        onReady={(controls) => {
-          setAudioPlayerRef(controls);
-        }}
+        onHighlight={handleHighlight}
+        onReady={handleAudioReady}
       />
     </div>
   );
