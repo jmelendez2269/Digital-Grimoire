@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { FileText, Search, Calendar, User } from 'lucide-react';
+import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
@@ -29,6 +29,9 @@ interface Text {
   file_size: number | null;
   status: string;
   created_at: string;
+  cover_image_url: string | null;
+  short_summary: string | null;
+  curator_note: string | null;
 }
 
 interface FilterValues {
@@ -46,6 +49,7 @@ export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,6 +98,19 @@ export default function LibraryPage() {
 
       console.log('[Library] Session found, setting authenticated to true');
       setIsAuthenticated(true);
+
+      // Check if user is admin
+      if (session.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.role === 'admin') {
+          setIsAdmin(true);
+        }
+      }
     } catch (err) {
       console.error('[Library] Error checking auth:', err);
       setError('Failed to verify authentication.');
@@ -345,12 +362,21 @@ export default function LibraryPage() {
 
         {/* Loading State */}
         {!isAuthenticated ? null : loading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="h-48 bg-zinc-900/30 border border-amber-900/20 rounded-lg animate-pulse"
-              />
+                className="bg-zinc-900/30 border border-amber-900/20 rounded-xl overflow-hidden animate-pulse"
+              >
+                {/* Cover placeholder */}
+                <div className="aspect-[2/3] bg-zinc-800/50" />
+                {/* Content placeholder */}
+                <div className="p-5 space-y-3">
+                  <div className="h-6 bg-zinc-800/50 rounded w-3/4" />
+                  <div className="h-4 bg-zinc-800/50 rounded w-1/2" />
+                  <div className="h-8 bg-zinc-800/50 rounded w-full" />
+                </div>
+              </div>
             ))}
           </div>
         ) : error ? null : texts.length === 0 ? (
@@ -379,68 +405,141 @@ export default function LibraryPage() {
         ) : (
           <>
             {/* Document Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
               {texts.map((text) => (
               <div
                 key={text.id}
-                className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 hover:border-amber-800/50 transition-all duration-200 hover:shadow-lg hover:shadow-amber-900/10"
+                className="group bg-zinc-900/50 border border-amber-900/20 rounded-xl overflow-hidden hover:border-amber-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-900/20 hover:-translate-y-1"
               >
-                {/* Document Icon & Status */}
-                <div className="flex items-start justify-between mb-4">
-                  <FileText className="w-8 h-8 text-amber-600" />
-                  <div className="flex items-center gap-2">
+                {/* Book Cover */}
+                <Link href={`/library/${text.id}`} className="block relative aspect-[2/3] bg-zinc-800/50 overflow-hidden">
+                  {text.cover_image_url ? (
+                    <img
+                      src={text.cover_image_url}
+                      alt={text.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-900/20 to-zinc-900/50">
+                      <BookOpen className="w-16 h-16 text-amber-600/30" />
+                    </div>
+                  )}
+                  {/* Action buttons overlay */}
+                  <div className="absolute top-3 right-3 z-10 flex gap-2">
+                    {isAdmin && (
+                      <Link
+                        href={`/admin/edit/${text.id}`}
+                        className="p-2 bg-zinc-900/90 hover:bg-zinc-800 border border-amber-600/30 hover:border-amber-600/50 rounded-lg transition-colors backdrop-blur-sm"
+                        title="Edit document"
+                      >
+                        <Edit className="w-4 h-4 text-amber-400" />
+                      </Link>
+                    )}
                     <BookmarkButton textId={text.id} size="sm" />
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded border ${getStatusColor(
-                        text.status
-                      )}`}
-                    >
-                      {text.status}
-                    </span>
                   </div>
-                </div>
+                </Link>
 
-                {/* Title */}
-                <h3 className="text-lg font-semibold text-amber-100 mb-2 line-clamp-2">
-                  {text.title}
-                </h3>
+                {/* Card Content */}
+                <div className="p-5 space-y-4">
+                  {/* Title & Author */}
+                  <div>
+                    <Link href={`/library/${text.id}`}>
+                      <h3 className="text-lg font-bold text-amber-100 mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
+                        {text.title}
+                      </h3>
+                    </Link>
+                    {text.author && (
+                      <p className="text-sm text-amber-100/60 flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5" />
+                        {text.author}
+                        {text.year && <span className="ml-1">({text.year})</span>}
+                      </p>
+                    )}
+                  </div>
 
-                {/* Metadata */}
-                <div className="space-y-2 text-sm text-amber-100/60">
-                  {text.author && (
+                  {/* Domain */}
+                  {text.domain && (
                     <div className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      <span>{text.author}</span>
+                      <div className="px-2.5 py-1 bg-amber-600/10 border border-amber-600/20 rounded-md text-xs font-medium text-amber-400">
+                        {text.domain}
+                      </div>
                     </div>
                   )}
-                  {text.year && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{text.year}</span>
-                    </div>
-                  )}
-                  {text.type && (
-                    <div className="text-xs text-amber-600">
-                      {text.type.replace(/_/g, ' ')}
-                    </div>
-                  )}
-                </div>
 
-                {/* Footer */}
-                <div className="mt-4 pt-4 border-t border-amber-900/20 flex items-center justify-between text-xs text-amber-100/40">
-                  <span>{formatFileSize(text.file_size)}</span>
-                  <span>{formatDate(text.created_at)}</span>
-                </div>
+                  {/* Lenses */}
+                  {text.lenses && text.lenses.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2 text-xs text-amber-100/50">
+                        <Eye className="w-3.5 h-3.5" />
+                        <span className="font-medium">Lenses</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {text.lenses.slice(0, 3).map((lens) => (
+                          <span
+                            key={lens}
+                            className="px-2 py-0.5 bg-zinc-800/50 border border-amber-900/30 rounded text-xs text-amber-100/70"
+                          >
+                            {lens.replace(/_/g, ' ')}
+                          </span>
+                        ))}
+                        {text.lenses.length > 3 && (
+                          <span className="px-2 py-0.5 text-xs text-amber-100/50">
+                            +{text.lenses.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-                {/* View Button */}
-                {text.status === 'ready' && (
+                  {/* Tags */}
+                  {text.tags && text.tags.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2 text-xs text-amber-100/50">
+                        <Tag className="w-3.5 h-3.5" />
+                        <span className="font-medium">Tags</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {text.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-0.5 bg-zinc-800/50 border border-zinc-700/50 rounded text-xs text-amber-100/60"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {text.tags.length > 3 && (
+                          <span className="px-2 py-0.5 text-xs text-amber-100/50">
+                            +{text.tags.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Summary */}
+                  {text.short_summary && (
+                    <p className="text-sm text-amber-100/70 line-clamp-3 leading-relaxed">
+                      {text.short_summary}
+                    </p>
+                  )}
+
+                  {/* Curator Note */}
+                  {text.curator_note && (
+                    <div className="pt-3 border-t border-amber-900/20">
+                      <p className="text-xs text-amber-400/80 italic line-clamp-2">
+                        "{text.curator_note}"
+                      </p>
+                    </div>
+                  )}
+
+                  {/* View Button */}
                   <Link
                     href={`/library/${text.id}`}
-                    className="mt-4 block w-full py-2 text-center bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 rounded-md text-sm font-medium transition-colors"
+                    className="block w-full py-2.5 text-center bg-amber-600/10 hover:bg-amber-600 text-amber-400 hover:text-white rounded-lg text-sm font-medium transition-all duration-200"
                   >
-                    View Text
+                    View Document
                   </Link>
-                )}
+                </div>
               </div>
               ))}
             </div>
