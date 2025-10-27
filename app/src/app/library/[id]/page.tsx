@@ -10,7 +10,6 @@ import {
   User, 
   Tag, 
   BookOpen, 
-  Globe, 
   FileText,
   Loader2,
   AlertCircle,
@@ -47,14 +46,6 @@ const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
   loading: () => null,
 });
 
-// Dynamically import TextHighlight for content tab
-const TextHighlight = dynamic(() => import('@/components/TextHighlight'), {
-  ssr: false,
-  loading: () => (
-    <div className="animate-pulse bg-zinc-800/50 rounded h-40" />
-  ),
-});
-
 interface TextDocument {
   id: string;
   title: string;
@@ -88,7 +79,7 @@ export default function DocumentDetailPage() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content' | 'notes'>('viewer');
+  const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'notes'>('viewer');
   const [numPages, setNumPages] = useState<number | null>(null);
   
   // Text selection and annotations state
@@ -96,10 +87,6 @@ export default function DocumentDetailPage() {
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [annotationsRefreshTrigger, setAnnotationsRefreshTrigger] = useState(0);
-
-  // TTS state for text highlighting
-  const [ttsCharIndex, setTtsCharIndex] = useState(0);
-  const [ttsHighlightLength, setTtsHighlightLength] = useState(50);
 
   useEffect(() => {
     if (documentId) {
@@ -207,12 +194,6 @@ export default function DocumentDetailPage() {
     setNumPages(totalPages);
   }, []);
 
-  // Handle TTS highlight updates
-  const handleTTSHighlight = useCallback((charIndex: number, charLength: number) => {
-    setTtsCharIndex(charIndex);
-    setTtsHighlightLength(charLength);
-  }, []);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -298,17 +279,6 @@ export default function DocumentDetailPage() {
             >
               <BookOpen className="w-4 h-4 inline mr-2" />
               Metadata
-            </button>
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                activeTab === 'content'
-                  ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
-                  : 'text-amber-100/60 hover:text-amber-100'
-              }`}
-            >
-              <Globe className="w-4 h-4 inline mr-2" />
-              Content
             </button>
             <button
               onClick={() => setActiveTab('notes')}
@@ -399,11 +369,8 @@ export default function DocumentDetailPage() {
                 )}
                 {document.domain && (
                   <div>
-                    <dt className="text-sm text-amber-100/60 flex items-center gap-2 mb-1">
-                      <Globe className="w-4 h-4" />
-                      Domain
-                    </dt>
-                    <dd className="text-amber-100 ml-6 capitalize">{document.domain}</dd>
+                    <dt className="text-sm text-amber-100/60 mb-1">Domain</dt>
+                    <dd className="text-amber-100 capitalize">{document.domain}</dd>
                   </div>
                 )}
               </dl>
@@ -462,24 +429,6 @@ export default function DocumentDetailPage() {
               </div>
             )}
 
-            {activeTab === 'content' && (
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-amber-100 mb-4">Full Text Content</h2>
-                {document.content ? (
-                  <TextHighlight
-                    text={document.content}
-                    currentCharIndex={ttsCharIndex}
-                    highlightLength={ttsHighlightLength}
-                    isPlaying={false}
-                  />
-                ) : (
-                  <p className="text-amber-100/60 text-center py-8">
-                    No extracted text content available for this document.
-                  </p>
-                )}
-              </div>
-            )}
-
             {activeTab === 'notes' && (
               <div className="space-y-6">
                 <AnnotationPanelLazy 
@@ -530,7 +479,7 @@ export default function DocumentDetailPage() {
           documentId={documentId}
           ocrText={document.content}
           pdfUrl={pdfUrl}
-          onHighlight={handleTTSHighlight}
+          defaultCollapsed={true}
         />
       )}
     </div>

@@ -14,7 +14,8 @@ import {
   ChevronDown, 
   ChevronUp,
   Settings,
-  Sparkles
+  Sparkles,
+  Volume
 } from 'lucide-react';
 import { useTTS } from '@/hooks/useTTS';
 import { TTSEngine, TTSVoice } from '@/lib/services/tts-service';
@@ -31,6 +32,7 @@ export interface AudioPlayerProps {
   pdfUrl?: string | null;
   onHighlight?: (charIndex: number, charLength: number) => void;
   onReady?: (controls: AudioPlayerControls) => void;
+  defaultCollapsed?: boolean;
 }
 
 type TextSource = 'ocr' | 'pdf';
@@ -41,9 +43,10 @@ export default function AudioPlayer({
   pdfUrl,
   onHighlight,
   onReady,
+  defaultCollapsed = false,
 }: AudioPlayerProps) {
   // UI State
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(!defaultCollapsed);
   const [showSettings, setShowSettings] = useState(false);
   const [textSource, setTextSource] = useState<TextSource>('ocr');
   const [currentText, setCurrentText] = useState<string>('');
@@ -274,22 +277,30 @@ export default function AudioPlayer({
 
   return (
     <>
-      {/* Floating Audio Player */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 border-t border-amber-900/20 backdrop-blur-lg">
-        {/* Collapse/Expand Button */}
+      {/* Read Aloud Button - Shown when collapsed */}
+      {!isExpanded && (
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="absolute -top-10 right-4 p-2 bg-zinc-900/95 border border-amber-900/20 rounded-t-lg hover:bg-zinc-800 transition-colors"
-          aria-label={isExpanded ? 'Collapse player' : 'Expand player'}
+          onClick={() => setIsExpanded(true)}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+          aria-label="Open Read Aloud player"
         >
-          {isExpanded ? (
-            <ChevronDown className="w-5 h-5 text-amber-400" />
-          ) : (
-            <ChevronUp className="w-5 h-5 text-amber-400" />
-          )}
+          <Volume className="w-5 h-5" />
+          <span className="font-medium">Read Aloud</span>
         </button>
+      )}
 
-        {isExpanded && (
+      {/* Floating Audio Player */}
+      {isExpanded && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 border-t border-amber-900/20 backdrop-blur-lg">
+          {/* Collapse/Expand Button */}
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="absolute -top-10 right-4 p-2 bg-zinc-900/95 border border-amber-900/20 rounded-t-lg hover:bg-zinc-800 transition-colors"
+            aria-label="Collapse player"
+          >
+            <ChevronDown className="w-5 h-5 text-amber-400" />
+          </button>
+
           <div className="max-w-7xl mx-auto px-6 py-4">
             {/* Progress Bar */}
             <div className="mb-4">
@@ -446,8 +457,8 @@ export default function AudioPlayer({
               <kbd className="px-1 py-0.5 bg-zinc-800 rounded ml-1">Ctrl+←→</kbd> Speed
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Settings Modal */}
       {showSettings && (
