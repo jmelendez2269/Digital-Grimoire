@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Worker, Viewer, DocumentLoadEvent, PageChangeEvent } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -12,12 +13,9 @@ interface PDFViewerProps {
   onPageChange?: (currentPage: number) => void;
 }
 
-// Create plugin instance OUTSIDE component to avoid hook issues
-// This is instantiated once when the module loads, not on each render
-// Using plugin without customization to avoid hook calls at module level
-const defaultLayoutPluginInstance = defaultLayoutPlugin();
-
 export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageChange }: PDFViewerProps) {
+  // Create plugin instance with lazy initialization
+  const [defaultLayoutPluginInstance] = useState(() => defaultLayoutPlugin());
 
   const handleDocumentLoad = (e: DocumentLoadEvent) => {
     if (onDocumentLoad) {

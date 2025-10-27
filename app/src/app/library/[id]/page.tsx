@@ -22,8 +22,8 @@ import ReadingProgress, { useReadingProgressTracker } from '@/components/Reading
 import CollectionsPanel from '@/components/CollectionsPanel';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
 
-// Dynamically import SimplePDFViewer to avoid SSR issues with canvas/pdfjs
-const SimplePDFViewer = dynamic(() => import('@/components/SimplePDFViewer'), {
+// Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
+const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
   ssr: false,
   loading: () => (
     <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
@@ -40,16 +40,6 @@ const AnnotationPanelLazy = dynamic(() => import('@/components/AnnotationPanel')
       <div className="h-40 bg-zinc-800/50 rounded" />
     </div>
   ),
-});
-
-// Lazy load AudioPlayer
-const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
-  ssr: false,
-});
-
-// Lazy load TextHighlight
-const TextHighlight = dynamic(() => import('@/components/TextHighlight'), {
-  ssr: false,
 });
 
 interface TextDocument {
@@ -86,8 +76,6 @@ export default function DocumentDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content' | 'notes'>('viewer');
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [highlightPosition, setHighlightPosition] = useState<{ charIndex: number; charLength: number } | null>(null);
-  const [audioPlayerRef, setAudioPlayerRef] = useState<{ startFromPosition: (pos: number) => void } | null>(null);
 
   // Initialize reading progress tracker
   const { currentPage, updatePage } = useReadingProgressTracker(documentId, numPages || undefined);
@@ -151,15 +139,6 @@ export default function DocumentDetailPage() {
     console.log('[DocumentDetailPage] Page changed to', page);
     updatePage(page);
   }, [updatePage]);
-
-  // Audio player callbacks - MEMOIZED to prevent re-creation
-  const handleHighlight = useCallback((charIndex: number, charLength: number) => {
-    setHighlightPosition({ charIndex, charLength });
-  }, []);
-
-  const handleAudioReady = useCallback((controls: { startFromPosition: (pos: number) => void }) => {
-    setAudioPlayerRef(controls);
-  }, []);
 
   if (loading) {
     return (
@@ -281,7 +260,7 @@ export default function DocumentDetailPage() {
             {activeTab === 'viewer' && (
               <div className="h-[calc(100vh-250px)]">
                 {pdfUrl && document.status === 'ready' ? (
-                  <SimplePDFViewer 
+                  <PDFViewer 
                     fileUrl={pdfUrl} 
                     fileName={document.title}
                     onDocumentLoad={handleDocumentLoad}
@@ -412,17 +391,11 @@ export default function DocumentDetailPage() {
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-amber-100 mb-4">Full Text Content</h2>
                 {document.content ? (
-                  <TextHighlight
-                    text={document.content}
-                    currentCharIndex={highlightPosition?.charIndex || 0}
-                    highlightLength={highlightPosition?.charLength || 50}
-                    onPositionClick={(charIndex) => {
-                      // Start playing from clicked position
-                      if (audioPlayerRef?.startFromPosition) {
-                        audioPlayerRef.startFromPosition(charIndex);
-                      }
-                    }}
-                  />
+                  <div className="prose prose-invert prose-amber max-w-none">
+                    <pre className="whitespace-pre-wrap font-sans text-sm text-amber-100/80 leading-relaxed">
+                      {document.content}
+                    </pre>
+                  </div>
                 ) : (
                   <p className="text-amber-100/60 text-center py-8">
                     No extracted text content available for this document.
@@ -445,15 +418,6 @@ export default function DocumentDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* Audio Player - Floating at bottom */}
-      <AudioPlayer
-        documentId={documentId}
-        ocrText={document.content}
-        pdfUrl={pdfUrl}
-        onHighlight={handleHighlight}
-        onReady={handleAudioReady}
-      />
     </div>
   );
 }
