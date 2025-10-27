@@ -22,45 +22,83 @@ This guide explains how to use the **LIBRARY_SEED_100_TEXTS.csv** file to popula
 | **Source_URL** | Where to download the PDF/text | "https://www.sacred-texts.com/..." |
 | **Priority** | Implementation priority (1-4) | 1 |
 | **Status** | Tracking status | "queued" |
+| **Why_Chosen** | Value proposition - why this text matters | "Foundational hermetic principles..." |
+
+### Two CSV Versions
+
+**LIBRARY_SEED_100_TEXTS.csv** - Original list organized by theme/domain  
+**LIBRARY_SEED_100_TEXTS_BALANCED.csv** - ✨ **RECOMMENDED** - Reorganized for balanced lens coverage at each priority level
+
+**Use the BALANCED version if you want to:**
+- Test lens filtering at every stage
+- Have representative content for all 7 lenses from day one
+- Avoid front-loading any single perspective
+- See the full platform vision early
+
+**Use the ORIGINAL version if you want to:**
+- Build domain clusters (all philosophy, then all science)
+- Focus deeply on one tradition at a time
+- Follow thematic narrative progression
 
 ---
 
-## 🎯 Priority System
+## 🎯 Priority System (BALANCED Approach)
 
 ### Priority 1 (20 texts) - **Week 1: Foundation**
-The most recognizable classics that establish immediate credibility:
-- Darwin, Plato, Marcus Aurelius, Jung, Freud
-- The Kybalion, Bhagavad Gita, Tao Te Ching
-- Blavatsky, Nietzsche, Augustine
+**Each lens represented** - you can test filtering from day one:
+- **3 Scientific** (Darwin, Einstein, Darwin's Beagle)
+- **4 Psychological** (Freud, Jung, William James x2, Bucke)  
+- **5 Philosophical** (Marcus Aurelius, Plato, Nietzsche, Aristotle implied)
+- **6 Religious/Spiritual** (Bhagavad Gita, Tao Te Ching, Augustine, Upanishads, plus multi-lens)
+- **3 Historical/Anthropological** (Golden Bough, overlaps with multi-lens texts)
+- **5 Symbolic/Occult** (Kybalion, Secret Teachings, Emerald Tablet, Isis Unveiled, Abramelin)
+- **2 Mathematical** (Euclid, Einstein has math)
 
-**Goal:** Launch MVP with 20 highly recognizable texts
+**Goal:** MVP with BALANCED lens coverage - test all features immediately
 
 ### Priority 2 (30 texts) - **Weeks 2-3: Depth**
-Fill out major domains:
-- Complete esoteric collection (Qabalah, Alchemy, Tarot)
-- Religious diversity (Buddhism, Sufism, Christianity)
-- Philosophy breadth (Ancient to Modern)
-- Core psychology texts
+**Maintain balance while adding depth:**
+- Continue proportional distribution across all 7 lenses
+- Add major texts in each domain (Qabalah, Alchemy, Tarot, more philosophy)
+- Ensure no lens is neglected
+- Include both Eastern and Western perspectives
 
-**Goal:** Reach 50 texts with balanced domain coverage
+**Goal:** 50 texts with continued balanced coverage
 
 ### Priority 3 (30 texts) - **Weeks 4-5: Coverage**
-Ensure lens balance:
-- Scientific texts (Evolution, Physics, Astronomy)
-- Mathematical/geometry works
-- Anthropology and mythology
-- Historical esotericism
+**Strengthen weaker lenses:**
+- Additional scientific texts (physics, astronomy, evolution)
+- Mathematical/geometry works (Kepler, Pacioli, Coolidge)
+- Anthropology and mythology (Frazer, Bulfinch, Tylor)
+- Continue other lenses proportionally
 
-**Goal:** Reach 80 texts with all 7 lenses well-represented
+**Goal:** 80 texts with all 7 lenses equally strong
 
 ### Priority 4 (20 texts) - **Week 6: Polish**
-Fill gaps and add variety:
-- Lesser-known gems
-- Specialized topics
-- Ensure each lens has 15+ tagged texts
-- Balance beginner/advanced content
+**Final balancing and polish:**
+- Fill any remaining lens gaps
+- Add specialized or advanced texts
+- Ensure each lens has 12-15+ texts minimum
+- Add variety (different time periods, cultures, approaches)
 
-**Goal:** Complete 100-text library with comprehensive coverage
+**Goal:** 100-text library with perfect lens equilibrium
+
+### Why Balanced Priority Matters
+
+**Test Features Early:**
+- Lens filtering works from day one (all lenses present)
+- Search across perspectives is meaningful immediately
+- Users see the full platform vision right away
+
+**User Experience:**
+- No matter their interest, they find content early
+- Shows platform isn't biased toward one perspective
+- Encourages exploration across lenses
+
+**Development Benefits:**
+- Test all features with real balanced data
+- Identify bugs or UX issues per lens early
+- Make informed decisions about lens implementation
 
 ---
 
@@ -139,21 +177,35 @@ Update the CSV **Status** column:
 
 ---
 
-## 📊 Distribution Analysis
+## 📊 Distribution Analysis (BALANCED Version)
 
 ### By Lens (texts can have multiple lenses)
 
-| Lens | Tagged Texts | Percentage |
-|------|--------------|------------|
-| Philosophical | 67 texts | 67% |
-| Religious/Spiritual | 52 texts | 52% |
-| Symbolic/Occult | 45 texts | 45% |
-| Historical/Anthropological | 44 texts | 44% |
-| Psychological | 38 texts | 38% |
-| Scientific | 22 texts | 22% |
-| Mathematical | 12 texts | 12% |
+| Lens | Tagged Texts | Percentage | Priority 1 | Priority 2 | Priority 3 | Priority 4 |
+|------|--------------|------------|------------|------------|------------|------------|
+| Philosophical | 67 texts | 67% | 5 texts | +15 texts | +15 texts | +32 texts |
+| Religious/Spiritual | 52 texts | 52% | 6 texts | +14 texts | +12 texts | +20 texts |
+| Symbolic/Occult | 45 texts | 45% | 5 texts | +12 texts | +10 texts | +18 texts |
+| Historical/Anthropological | 44 texts | 44% | 3 texts | +10 texts | +15 texts | +16 texts |
+| Psychological | 38 texts | 38% | 4 texts | +10 texts | +8 texts | +16 texts |
+| Scientific | 22 texts | 22% | 3 texts | +5 texts | +8 texts | +6 texts |
+| Mathematical | 12 texts | 12% | 2 texts | +3 texts | +5 texts | +2 texts |
 
 **Note:** Total > 100 because texts have multiple lenses
+
+### Balanced Distribution Achieved
+
+With the BALANCED version, you get:
+- **All 7 lenses represented in Priority 1** (20 texts)
+- **Proportional growth** across all priorities
+- **No neglected perspectives** at any stage
+- **Scientific & Mathematical lenses** appear early (not deferred to Priority 3)
+
+**Testing Timeline:**
+- Week 1: Can test all 7 lens filters ✅
+- Week 3: Each lens has 8-15 texts ✅
+- Week 5: Each lens has 12-20+ texts ✅
+- Week 6: Full balanced library ✅
 
 ### By Document Type
 
