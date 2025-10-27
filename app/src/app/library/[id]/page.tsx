@@ -22,8 +22,8 @@ import ReadingProgress, { useReadingProgressTracker } from '@/components/Reading
 import CollectionsPanel from '@/components/CollectionsPanel';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
 
-// Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
-const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
+// Dynamically import SimplePDFViewer to avoid SSR issues with canvas/pdfjs
+const SimplePDFViewer = dynamic(() => import('@/components/SimplePDFViewer'), {
   ssr: false,
   loading: () => (
     <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
@@ -281,7 +281,7 @@ export default function DocumentDetailPage() {
             {activeTab === 'viewer' && (
               <div className="h-[calc(100vh-250px)]">
                 {pdfUrl && document.status === 'ready' ? (
-                  <PDFViewer 
+                  <SimplePDFViewer 
                     fileUrl={pdfUrl} 
                     fileName={document.title}
                     onDocumentLoad={handleDocumentLoad}
