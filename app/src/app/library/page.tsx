@@ -69,28 +69,36 @@ export default function LibraryPage() {
   const [allLenses, setAllLenses] = useState<string[]>([]);
 
   const checkAuth = async () => {
+    console.log('[Library] Starting auth check...');
     try {
       const supabase = createClient();
       const { data: { session }, error } = await supabase.auth.getSession();
       
+      console.log('[Library] Auth check result:', { hasSession: !!session, error: error?.message });
+      
       if (error) {
-        console.error('Auth error:', error);
+        console.error('[Library] Auth error:', error);
         setError('Authentication error. Please try logging in again.');
         setIsAuthenticated(false);
+        setLoading(false);
         return;
       }
 
       if (!session) {
+        console.log('[Library] No session found');
         setError('You must be logged in to view the library.');
         setIsAuthenticated(false);
+        setLoading(false);
         return;
       }
 
+      console.log('[Library] Session found, setting authenticated to true');
       setIsAuthenticated(true);
     } catch (err) {
-      console.error('Error checking auth:', err);
+      console.error('[Library] Error checking auth:', err);
       setError('Failed to verify authentication.');
       setIsAuthenticated(false);
+      setLoading(false);
     }
   };
 
@@ -153,6 +161,7 @@ export default function LibraryPage() {
   };
 
   const fetchTexts = useCallback(async () => {
+    console.log('[Library] Starting fetchTexts...');
     try {
       setLoading(true);
       setError(null);
@@ -208,22 +217,26 @@ export default function LibraryPage() {
 
       const { data, error, count } = await query;
 
+      console.log('[Library] Query result:', { count, dataLength: data?.length, error: error?.message });
+
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('[Library] Supabase error:', error);
         setError(`Failed to load library: ${error.message}`);
         setTexts([]);
         setTotalCount(0);
         return;
       }
       
+      console.log('[Library] Setting texts:', data?.length || 0, 'items');
       setTexts(data || []);
       setTotalCount(count || 0);
     } catch (error) {
-      console.error('Error fetching texts:', error);
+      console.error('[Library] Error fetching texts:', error);
       setError('An unexpected error occurred while loading the library.');
       setTexts([]);
       setTotalCount(0);
     } finally {
+      console.log('[Library] fetchTexts complete, setting loading to false');
       setLoading(false);
     }
   }, [currentPage, searchQuery, filterValues]);

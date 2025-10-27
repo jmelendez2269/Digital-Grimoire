@@ -51,7 +51,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Check if user's email is verified (except for auth routes and public routes)
+  // TEMPORARILY DISABLED: Email verification check
+  // This can cause issues during development if email verification is not set up
+  // Uncomment when email verification is properly configured
+  /*
   if (user && !isPublicRoute && !user.email_confirmed_at) {
     // User is authenticated but email not verified
     const url = request.nextUrl.clone();
@@ -59,6 +62,7 @@ export async function updateSession(request: NextRequest) {
     url.searchParams.set("email", user.email || "");
     return NextResponse.redirect(url);
   }
+  */
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:

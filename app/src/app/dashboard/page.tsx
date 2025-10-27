@@ -10,16 +10,22 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[Dashboard] Initializing...');
     const supabase = createClient();
     
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[Dashboard] Session:', { hasSession: !!session, user: session?.user?.email });
       setUser(session?.user ?? null);
+      setLoading(false);
+    }).catch((error) => {
+      console.error('[Dashboard] Error getting session:', error);
       setLoading(false);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('[Dashboard] Auth state changed:', { hasSession: !!session });
       setUser(session?.user ?? null);
     });
 
