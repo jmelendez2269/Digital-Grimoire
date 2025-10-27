@@ -234,6 +234,19 @@ export default function DashboardPage() {
           </Link>
 
           <Link
+            href="/annotations/search"
+            className="group rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900"
+          >
+            <div className="mb-2 text-3xl">🔍</div>
+            <h3 className="mb-1 text-lg font-semibold text-amber-100 group-hover:text-amber-400">
+              Search Annotations
+            </h3>
+            <p className="text-sm text-zinc-400">
+              Search across all your highlights and notes
+            </p>
+          </Link>
+
+          <Link
             href="/profile"
             className="group rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900"
           >

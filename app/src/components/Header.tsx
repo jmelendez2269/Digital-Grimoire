@@ -217,6 +217,13 @@ export default function Header() {
                       📖 My Library
                     </Link>
                     <Link
+                      href="/annotations/search"
+                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      🔍 Search Annotations
+                    </Link>
+                    <Link
                       href="/settings"
                       className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
                       onClick={() => setMenuOpen(false)}

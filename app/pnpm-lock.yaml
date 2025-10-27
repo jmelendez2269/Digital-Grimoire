@@ -92,6 +92,9 @@ importers:
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
+      fuse.js:
+        specifier: ^7.1.0
+        version: 7.1.0
       lucide-react:
         specifier: ^0.548.0
         version: 0.548.0(react@19.2.0)

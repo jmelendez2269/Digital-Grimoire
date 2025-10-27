@@ -121,8 +121,12 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Bookmark documents | P0 | S | 4 | ✅ Complete | Quick access from library & viewer |
 | My Library page | P0 | M | 4 | ✅ Complete | Personal collection view |
 | Admin usage tracking | P1 | L | 4 | ✅ Complete | Analytics dashboard with cost monitoring |
+| **Annotation search (Fuse.js)** | **P1** | **XS** | **4** | **✅ Complete** | **Client-side fuzzy search across all annotations (Oct 27)** |
+| **PostgreSQL FTS annotation search** | **P1** | **S** | **5** | **⬜ Planned** | **Server-side full-text search + Fuse.js for scalability (Next Sprint)** |
 | Collection sharing | P1 | M | Post | ⬜ Planned | Share collections with others |
-| Export annotations | P1 | S | Post | ⬜ Planned | Download as Markdown/CSV |
+| Export annotations to Markdown | P1 | XS | Post | ⬜ Planned | Download annotations as Markdown (30 min) |
+| Export annotations to CSV | P1 | XS | Post | ⬜ Planned | Download annotations as CSV |
+| Share annotations (collaborative) | P1 | M | Post | ⬜ Planned | Collaborative annotation features (2-3 hours) |
 | Reading goals | P2 | M | Post | ⬜ Planned | Set and track reading targets |
 | Reading statistics | P2 | M | Post | ⬜ Planned | Time spent, pages read analytics |
 
