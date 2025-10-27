@@ -1,68 +1,110 @@
 /**
  * API Route: Reading Position
- * GET/POST endpoints for managing reading positions
+ * Manages user's reading position for text-to-speech functionality
  */
 
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
+interface ReadingPosition {
+  char_position: number;
+  text_source: 'ocr' | 'pdf';
+  playback_rate?: number;
+  selected_voice?: string;
+}
+
+/**
+ * GET /api/texts/[id]/reading-position
+ * Fetch user's saved reading position for a document
+ */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
     const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
+
+    const textId = params.id;
 
     // Fetch reading position
     const { data, error } = await supabase
       .from('reading_positions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('text_id', id)
+      .eq('text_id', textId)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 is "not found" which is ok
-      console.error('Error fetching reading position:', error);
-      return NextResponse.json({ error: 'Failed to fetch reading position' }, { status: 500 });
+    if (error) {
+      // No saved position found is OK
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ position: null });
+      }
+      throw error;
     }
 
-    return NextResponse.json({ data: data || null });
+    return NextResponse.json({
+      position: {
+        charPosition: data.char_position,
+        textSource: data.text_source,
+        playbackRate: data.playback_rate,
+        selectedVoice: data.selected_voice,
+      },
+    });
   } catch (error) {
-    console.error('Error in GET /api/texts/[id]/reading-position:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error fetching reading position:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch reading position' },
+      { status: 500 }
+    );
   }
 }
 
+/**
+ * POST /api/texts/[id]/reading-position
+ * Save or update user's reading position
+ */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
     const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
+    const textId = params.id;
     const body = await request.json();
-    const { char_position, text_source, playback_rate, selected_voice } = body;
+
+    // Validate input
+    if (typeof body.charPosition !== 'number') {
+      return NextResponse.json(
+        { error: 'Invalid charPosition' },
+        { status: 400 }
+      );
+    }
+
+    if (!['ocr', 'pdf'].includes(body.textSource)) {
+      return NextResponse.json(
+        { error: 'Invalid textSource (must be "ocr" or "pdf")' },
+        { status: 400 }
+      );
+    }
 
     // Upsert reading position
     const { data, error } = await supabase
@@ -70,12 +112,11 @@ export async function POST(
       .upsert(
         {
           user_id: user.id,
-          text_id: id,
-          char_position: char_position || 0,
-          text_source: text_source || 'ocr',
-          playback_rate: playback_rate || 1.0,
-          selected_voice: selected_voice || null,
-          updated_at: new Date().toISOString(),
+          text_id: textId,
+          char_position: body.charPosition,
+          text_source: body.textSource,
+          playback_rate: body.playbackRate || 1.0,
+          selected_voice: body.selectedVoice || null,
         },
         {
           onConflict: 'user_id,text_id',
@@ -85,50 +126,66 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Error saving reading position:', error);
-      return NextResponse.json({ error: 'Failed to save reading position' }, { status: 500 });
+      throw error;
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json({
+      success: true,
+      position: {
+        charPosition: data.char_position,
+        textSource: data.text_source,
+        playbackRate: data.playback_rate,
+        selectedVoice: data.selected_voice,
+      },
+    });
   } catch (error) {
-    console.error('Error in POST /api/texts/[id]/reading-position:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error saving reading position:', error);
+    return NextResponse.json(
+      { error: 'Failed to save reading position' },
+      { status: 500 }
+    );
   }
 }
 
+/**
+ * DELETE /api/texts/[id]/reading-position
+ * Clear user's reading position
+ */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
     const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
+
+    const textId = params.id;
 
     // Delete reading position
     const { error } = await supabase
       .from('reading_positions')
       .delete()
       .eq('user_id', user.id)
-      .eq('text_id', id);
+      .eq('text_id', textId);
 
     if (error) {
-      console.error('Error deleting reading position:', error);
-      return NextResponse.json({ error: 'Failed to delete reading position' }, { status: 500 });
+      throw error;
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/texts/[id]/reading-position:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error deleting reading position:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete reading position' },
+      { status: 500 }
+    );
   }
 }
-

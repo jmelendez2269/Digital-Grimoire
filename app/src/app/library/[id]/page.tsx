@@ -41,6 +41,20 @@ const AnnotationPanelLazy = dynamic(() => import('@/components/AnnotationPanel')
   ),
 });
 
+// Dynamically import AudioPlayer to avoid SSR issues with Web Speech API
+const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
+  ssr: false,
+  loading: () => null,
+});
+
+// Dynamically import TextHighlight for content tab
+const TextHighlight = dynamic(() => import('@/components/TextHighlight'), {
+  ssr: false,
+  loading: () => (
+    <div className="animate-pulse bg-zinc-800/50 rounded h-40" />
+  ),
+});
+
 interface TextDocument {
   id: string;
   title: string;
@@ -82,6 +96,10 @@ export default function DocumentDetailPage() {
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [annotationsRefreshTrigger, setAnnotationsRefreshTrigger] = useState(0);
+
+  // TTS state for text highlighting
+  const [ttsCharIndex, setTtsCharIndex] = useState(0);
+  const [ttsHighlightLength, setTtsHighlightLength] = useState(50);
 
   useEffect(() => {
     if (documentId) {
@@ -187,6 +205,12 @@ export default function DocumentDetailPage() {
   const handleDocumentLoad = useCallback((totalPages: number) => {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
+  }, []);
+
+  // Handle TTS highlight updates
+  const handleTTSHighlight = useCallback((charIndex: number, charLength: number) => {
+    setTtsCharIndex(charIndex);
+    setTtsHighlightLength(charLength);
   }, []);
 
   if (loading) {
@@ -442,11 +466,12 @@ export default function DocumentDetailPage() {
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-amber-100 mb-4">Full Text Content</h2>
                 {document.content ? (
-                  <div className="prose prose-invert prose-amber max-w-none">
-                    <pre className="whitespace-pre-wrap font-sans text-sm text-amber-100/80 leading-relaxed">
-                      {document.content}
-                    </pre>
-                  </div>
+                  <TextHighlight
+                    text={document.content}
+                    currentCharIndex={ttsCharIndex}
+                    highlightLength={ttsHighlightLength}
+                    isPlaying={false}
+                  />
                 ) : (
                   <p className="text-amber-100/60 text-center py-8">
                     No extracted text content available for this document.
@@ -498,6 +523,16 @@ export default function DocumentDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Audio Player for TTS */}
+      {document && document.status === 'ready' && (
+        <AudioPlayer
+          documentId={documentId}
+          ocrText={document.content}
+          pdfUrl={pdfUrl}
+          onHighlight={handleTTSHighlight}
+        />
+      )}
     </div>
   );
 }
