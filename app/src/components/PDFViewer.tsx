@@ -12,14 +12,16 @@ interface PDFViewerProps {
   onPageChange?: (currentPage: number) => void;
 }
 
+// Create plugin instance OUTSIDE component to avoid hook issues
+// This is instantiated once when the module loads, not on each render
+const defaultLayoutPluginInstance = defaultLayoutPlugin({
+  sidebarTabs: (defaultTabs) => [
+    defaultTabs[0], // Thumbnails
+    defaultTabs[1], // Bookmarks
+  ],
+});
+
 export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageChange }: PDFViewerProps) {
-  // Configure the default layout plugin with customizations
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [
-      defaultTabs[0], // Thumbnails
-      defaultTabs[1], // Bookmarks
-    ],
-  });
 
   const handleDocumentLoad = (e: DocumentLoadEvent) => {
     if (onDocumentLoad) {
