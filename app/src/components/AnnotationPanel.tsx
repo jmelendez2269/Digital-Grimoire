@@ -10,17 +10,28 @@ interface Annotation {
   note: string | null;
   position: any;
   category: 'general' | 'important' | 'question' | 'insight' | 'to-research' | 'quote' | 'critique';
+  highlight_color: 'yellow' | 'green' | 'blue' | 'pink' | 'red' | 'purple' | 'orange';
   created_at: string;
 }
 
 const ANNOTATION_CATEGORIES = [
-  { value: 'general', label: '📝 General', color: 'gray' },
-  { value: 'important', label: '⭐ Important', color: 'red' },
-  { value: 'question', label: '❓ Question', color: 'blue' },
-  { value: 'insight', label: '💡 Insight', color: 'yellow' },
-  { value: 'to-research', label: '🔍 To Research', color: 'purple' },
-  { value: 'quote', label: '💬 Quote', color: 'green' },
-  { value: 'critique', label: '🎯 Critique', color: 'orange' },
+  { value: 'general', label: '📝 General', color: 'gray', defaultHighlight: 'yellow' },
+  { value: 'important', label: '⭐ Important', color: 'red', defaultHighlight: 'red' },
+  { value: 'question', label: '❓ Question', color: 'blue', defaultHighlight: 'blue' },
+  { value: 'insight', label: '💡 Insight', color: 'yellow', defaultHighlight: 'yellow' },
+  { value: 'to-research', label: '🔍 To Research', color: 'purple', defaultHighlight: 'purple' },
+  { value: 'quote', label: '💬 Quote', color: 'green', defaultHighlight: 'green' },
+  { value: 'critique', label: '🎯 Critique', color: 'orange', defaultHighlight: 'orange' },
+] as const;
+
+const HIGHLIGHT_COLORS = [
+  { value: 'yellow', label: 'Yellow', bg: 'bg-yellow-500', preview: 'rgba(234, 179, 8, 0.3)' },
+  { value: 'green', label: 'Green', bg: 'bg-green-500', preview: 'rgba(34, 197, 94, 0.3)' },
+  { value: 'blue', label: 'Blue', bg: 'bg-blue-500', preview: 'rgba(59, 130, 246, 0.3)' },
+  { value: 'pink', label: 'Pink', bg: 'bg-pink-500', preview: 'rgba(236, 72, 153, 0.3)' },
+  { value: 'red', label: 'Red', bg: 'bg-red-500', preview: 'rgba(239, 68, 68, 0.3)' },
+  { value: 'purple', label: 'Purple', bg: 'bg-purple-500', preview: 'rgba(168, 85, 247, 0.3)' },
+  { value: 'orange', label: 'Orange', bg: 'bg-orange-500', preview: 'rgba(249, 115, 22, 0.3)' },
 ] as const;
 
 interface AnnotationPanelProps {
@@ -50,11 +61,20 @@ export default function AnnotationPanel({
   const [newQuote, setNewQuote] = useState('');
   const [newNote, setNewNote] = useState('');
   const [newCategory, setNewCategory] = useState<Annotation['category']>('general');
+  const [newHighlightColor, setNewHighlightColor] = useState<Annotation['highlight_color']>('yellow');
   const [newPosition, setNewPosition] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   
   // Filter state
   const [filterCategory, setFilterCategory] = useState<Annotation['category'] | 'all'>('all');
+
+  // Update highlight color when category changes
+  useEffect(() => {
+    const categoryInfo = ANNOTATION_CATEGORIES.find((c) => c.value === newCategory);
+    if (categoryInfo) {
+      setNewHighlightColor(categoryInfo.defaultHighlight as Annotation['highlight_color']);
+    }
+  }, [newCategory]);
 
   // Auto-populate form when text is selected in PDF
   useEffect(() => {
@@ -96,6 +116,7 @@ export default function AnnotationPanel({
           quote: newQuote.trim(),
           note: newNote.trim() || null,
           category: newCategory,
+          highlight_color: newHighlightColor,
           position: newPosition || {},
         }),
       });
@@ -106,6 +127,7 @@ export default function AnnotationPanel({
         setNewQuote('');
         setNewNote('');
         setNewCategory('general');
+        setNewHighlightColor('yellow');
         setNewPosition(null);
         setShowForm(false);
         onAnnotationAdded?.();
@@ -177,6 +199,7 @@ export default function AnnotationPanel({
               setNewQuote('');
               setNewNote('');
               setNewCategory('general');
+              setNewHighlightColor('yellow');
               setNewPosition(null);
               onSelectionCleared?.();
             }
@@ -255,6 +278,33 @@ export default function AnnotationPanel({
           </div>
           <div>
             <label className="block text-sm text-amber-100/60 mb-2">
+              Highlight Color *
+            </label>
+            <div className="flex gap-2">
+              {HIGHLIGHT_COLORS.map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => setNewHighlightColor(color.value as Annotation['highlight_color'])}
+                  className={`w-10 h-10 rounded-md border-2 transition-all ${
+                    newHighlightColor === color.value
+                      ? 'border-amber-400 scale-110'
+                      : 'border-zinc-700 hover:border-zinc-600'
+                  }`}
+                  style={{ backgroundColor: color.preview }}
+                  title={color.label}
+                  aria-label={`Select ${color.label} highlight color`}
+                >
+                  <span className="sr-only">{color.label}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-amber-100/40 mt-1">
+              Selected: {HIGHLIGHT_COLORS.find((c) => c.value === newHighlightColor)?.label}
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm text-amber-100/60 mb-2">
               Your Note (Optional)
             </label>
             <textarea
@@ -279,6 +329,7 @@ export default function AnnotationPanel({
                 setNewQuote('');
                 setNewNote('');
                 setNewCategory('general');
+                setNewHighlightColor('yellow');
                 setNewPosition(null);
                 onSelectionCleared?.();
               }}

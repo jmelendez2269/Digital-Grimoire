@@ -15,6 +15,7 @@ interface Annotation {
   id: string;
   quote: string;
   note: string | null;
+  highlight_color: 'yellow' | 'green' | 'blue' | 'pink' | 'red' | 'purple' | 'orange';
   position: {
     pageIndex: number;
     rects: Array<{
@@ -26,6 +27,17 @@ interface Annotation {
     }>;
   };
 }
+
+// Highlight color mapping
+const HIGHLIGHT_COLOR_MAP: Record<Annotation['highlight_color'], string> = {
+  yellow: 'rgba(234, 179, 8, 0.3)',
+  green: 'rgba(34, 197, 94, 0.3)',
+  blue: 'rgba(59, 130, 246, 0.3)',
+  pink: 'rgba(236, 72, 153, 0.3)',
+  red: 'rgba(239, 68, 68, 0.3)',
+  purple: 'rgba(168, 85, 247, 0.3)',
+  orange: 'rgba(249, 115, 22, 0.3)',
+};
 
 // Extended HighlightArea with annotation ID
 interface ExtendedHighlightArea extends HighlightArea {
@@ -100,11 +112,12 @@ export default function PDFViewer({
   const renderHighlightTarget = useCallback((props: RenderHighlightTargetProps) => {
     const areas = props.highlightAreas as ExtendedHighlightArea[];
     const annotation = annotations.find((a) => a.id === areas[0]?.id);
+    const highlightColor = annotation?.highlight_color ? HIGHLIGHT_COLOR_MAP[annotation.highlight_color] : 'rgba(251, 191, 36, 0.3)';
     
     return (
       <div
         style={{
-          background: 'rgba(251, 191, 36, 0.3)',
+          background: highlightColor,
           cursor: 'pointer',
           opacity: props.selectedText ? 0.5 : 1,
         }}
@@ -123,28 +136,33 @@ export default function PDFViewer({
       <div>
         {convertToHighlightAreas()
           .filter((area) => area.pageIndex === props.pageIndex)
-          .map((area, idx) => (
-            <div
-              key={idx}
-              className="highlight-area"
-              style={{
-                background: 'rgba(251, 191, 36, 0.3)',
-                border: '1px solid rgba(217, 119, 6, 0.5)',
-                position: 'absolute',
-                left: `${area.left}%`,
-                top: `${area.top}%`,
-                height: `${area.height}%`,
-                width: `${area.width}%`,
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                const annotation = annotations.find((a) => a.id === area.id);
-                if (annotation && onAnnotationClick) {
-                  onAnnotationClick(annotation);
-                }
-              }}
-            />
-          ))}
+          .map((area, idx) => {
+            const annotation = annotations.find((a) => a.id === area.id);
+            const highlightColor = annotation?.highlight_color ? HIGHLIGHT_COLOR_MAP[annotation.highlight_color] : 'rgba(251, 191, 36, 0.3)';
+            const borderColor = annotation?.highlight_color ? highlightColor.replace('0.3', '0.5') : 'rgba(217, 119, 6, 0.5)';
+            
+            return (
+              <div
+                key={idx}
+                className="highlight-area"
+                style={{
+                  background: highlightColor,
+                  border: `1px solid ${borderColor}`,
+                  position: 'absolute',
+                  left: `${area.left}%`,
+                  top: `${area.top}%`,
+                  height: `${area.height}%`,
+                  width: `${area.width}%`,
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  if (annotation && onAnnotationClick) {
+                    onAnnotationClick(annotation);
+                  }
+                }}
+              />
+            );
+          })}
       </div>
     );
   }, [annotations, convertToHighlightAreas, onAnnotationClick]);
@@ -280,7 +298,7 @@ export default function PDFViewer({
             }}
           />
         </div>
-      </Worker>
+        </Worker>
 
       {/* Custom dark theme styles */}
       <style jsx global>{`

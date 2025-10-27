@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text_id, quote, note, category, position } = body;
+    const { text_id, quote, note, category, highlight_color, position } = body;
 
     if (!text_id || !quote) {
       return NextResponse.json(
@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
         quote,
         note: note || null,
         category: category || 'general',
+        highlight_color: highlight_color || 'yellow',
         position: position || {},
       })
       .select()
@@ -154,12 +155,13 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { quote, note, category, position } = body;
+    const { quote, note, category, highlight_color, position } = body;
 
     const updateData: any = {};
     if (quote !== undefined) updateData.quote = quote;
     if (note !== undefined) updateData.note = note;
     if (category !== undefined) updateData.category = category;
+    if (highlight_color !== undefined) updateData.highlight_color = highlight_color;
     if (position !== undefined) updateData.position = position;
 
     // Update annotation
