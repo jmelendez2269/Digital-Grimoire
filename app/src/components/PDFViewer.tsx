@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { Worker, Viewer, DocumentLoadEvent, PageChangeEvent } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 interface PDFViewerProps {
   fileUrl: string;
@@ -14,20 +13,43 @@ interface PDFViewerProps {
 }
 
 export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageChange }: PDFViewerProps) {
-  // Create plugin instance with lazy initialization
-  const [defaultLayoutPluginInstance] = useState(() => defaultLayoutPlugin());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [numPages, setNumPages] = useState(0);
+  const [scale, setScale] = useState(1.5);
 
   const handleDocumentLoad = (e: DocumentLoadEvent) => {
+    setNumPages(e.doc.numPages);
     if (onDocumentLoad) {
       onDocumentLoad(e.doc.numPages);
     }
   };
 
   const handlePageChange = (e: PageChangeEvent) => {
+    setCurrentPage(e.currentPage + 1);
     if (onPageChange) {
       // e.currentPage is 0-indexed, convert to 1-indexed
       onPageChange(e.currentPage + 1);
     }
+  };
+
+  const goToPrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentPage < numPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const zoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.25, 3));
+  };
+
+  const zoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.25, 0.5));
   };
 
   const renderError = (e: any) => {
@@ -53,17 +75,67 @@ export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageCha
 
   return (
     <div className="flex flex-col h-full bg-zinc-900/50 border border-amber-900/20 rounded-lg overflow-hidden pdf-viewer-container">
-      <div className="flex-1 overflow-hidden">
+      {/* Custom Toolbar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-amber-900/20 bg-zinc-900/80">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goToPrevious}
+            disabled={currentPage <= 1}
+            className="p-2 text-amber-100 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Previous page"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          <span className="text-sm text-amber-100 min-w-[100px] text-center">
+            {currentPage} / {numPages || '?'}
+          </span>
+          
+          <button
+            onClick={goToNext}
+            disabled={currentPage >= numPages}
+            className="p-2 text-amber-100 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Next page"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={zoomOut}
+            disabled={scale <= 0.5}
+            className="p-2 text-amber-100 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Zoom out"
+          >
+            <ZoomOut className="w-5 h-5" />
+          </button>
+          
+          <span className="text-sm text-amber-100 min-w-[60px] text-center">
+            {Math.round(scale * 100)}%
+          </span>
+          
+          <button
+            onClick={zoomIn}
+            disabled={scale >= 3}
+            className="p-2 text-amber-100 hover:text-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Zoom in"
+          >
+            <ZoomIn className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* PDF Viewer */}
+      <div className="flex-1 overflow-auto">
         <Worker workerUrl="/pdf-worker/pdf.worker.min.js">
           <Viewer
             fileUrl={fileUrl}
-            plugins={[defaultLayoutPluginInstance]}
             renderError={renderError}
             onDocumentLoad={handleDocumentLoad}
             onPageChange={handlePageChange}
-            theme={{
-              theme: 'dark',
-            }}
+            defaultScale={scale}
+            initialPage={currentPage - 1}
           />
         </Worker>
       </div>
@@ -71,7 +143,7 @@ export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageCha
       {/* Custom styles for dark theme integration */}
       <style jsx global>{`
         .pdf-viewer-container .rpv-core__viewer {
-          background-color: rgba(24, 24, 27, 0.3);
+          background-color: rgba(24, 24, 27, 0.5);
         }
         
         .pdf-viewer-container .rpv-core__inner-pages {
@@ -79,46 +151,16 @@ export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageCha
         }
         
         .pdf-viewer-container .rpv-core__page-layer {
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+          margin-bottom: 1rem;
         }
 
         .pdf-viewer-container .rpv-core__text-layer {
           color: #f0efeb;
         }
 
-        .pdf-viewer-container button {
-          color: #f0efeb;
-          transition: all 0.2s;
-        }
-
-        .pdf-viewer-container button:hover {
-          background-color: rgba(180, 143, 74, 0.2);
-          color: #fbbf24;
-        }
-
-        .pdf-viewer-container input {
-          background-color: rgba(39, 39, 42, 0.5);
-          color: #f0efeb;
-          border: 1px solid rgba(180, 143, 74, 0.2);
-          border-radius: 0.375rem;
-        }
-
-        .pdf-viewer-container .rpv-core__inner-container {
-          background-color: rgba(24, 24, 27, 0.5);
-        }
-
-        .pdf-viewer-container .rpv-default-layout__sidebar {
-          background-color: rgba(24, 24, 27, 0.95);
-          border-right: 1px solid rgba(180, 143, 74, 0.2);
-        }
-
-        .pdf-viewer-container .rpv-default-layout__sidebar-tab {
-          color: rgba(240, 239, 235, 0.6);
-        }
-
-        .pdf-viewer-container .rpv-default-layout__sidebar-tab--selected {
-          color: #fbbf24;
-          background-color: rgba(180, 143, 74, 0.1);
+        .pdf-viewer-container .rpv-core__canvas-layer {
+          filter: brightness(0.95);
         }
       `}</style>
     </div>
