@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import BookmarkButton from '@/components/BookmarkButton';
-import ReadingProgress, { useReadingProgressTracker } from '@/components/ReadingProgress';
 import CollectionsPanel from '@/components/CollectionsPanel';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
 
@@ -78,9 +77,6 @@ export default function DocumentDetailPage() {
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content' | 'notes'>('viewer');
   const [numPages, setNumPages] = useState<number | null>(null);
 
-  // Initialize reading progress tracker
-  const { currentPage, updatePage } = useReadingProgressTracker(documentId, numPages || undefined);
-
   useEffect(() => {
     if (documentId) {
       fetchDocument();
@@ -134,12 +130,6 @@ export default function DocumentDetailPage() {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
   }, []);
-
-  // Handle page change - MEMOIZED to prevent re-creation
-  const handlePageChange = useCallback((page: number) => {
-    console.log('[DocumentDetailPage] Page changed to', page);
-    updatePage(page);
-  }, [updatePage]);
 
   if (loading) {
     return (
@@ -265,7 +255,6 @@ export default function DocumentDetailPage() {
                     fileUrl={pdfUrl} 
                     fileName={document.title}
                     onDocumentLoad={handleDocumentLoad}
-                    onPageChange={handlePageChange}
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
@@ -414,7 +403,6 @@ export default function DocumentDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <ReadingProgress textId={documentId} totalPages={numPages || undefined} />
             <CollectionsPanel textId={documentId} />
             
             {/* AI Summary Section */}
