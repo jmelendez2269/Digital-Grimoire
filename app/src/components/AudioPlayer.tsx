@@ -21,11 +21,16 @@ import { TTSEngine, TTSVoice } from '@/lib/services/tts-service';
 import { extractPDFText } from '@/lib/utils/pdf-text-extractor';
 import TTSSettings from './TTSSettings';
 
+export interface AudioPlayerControls {
+  startFromPosition: (charIndex: number) => void;
+}
+
 export interface AudioPlayerProps {
   documentId: string;
   ocrText?: string | null;
   pdfUrl?: string | null;
   onHighlight?: (charIndex: number, charLength: number) => void;
+  onReady?: (controls: AudioPlayerControls) => void;
 }
 
 type TextSource = 'ocr' | 'pdf';
@@ -35,6 +40,7 @@ export default function AudioPlayer({
   ocrText,
   pdfUrl,
   onHighlight,
+  onReady,
 }: AudioPlayerProps) {
   // UI State
   const [isExpanded, setIsExpanded] = useState(true);
@@ -154,19 +160,38 @@ export default function AudioPlayer({
   }, [textSource, pdfUrl, ocrText]);
 
   // Handle play
-  const handlePlay = async () => {
+  const handlePlay = async (startPosition?: number) => {
     if (!currentText) return;
 
-    // Load saved position if available
-    const savedPosition = localStorage.getItem(`tts-position-${documentId}`);
-    const startPosition = savedPosition ? parseInt(savedPosition, 10) : 0;
+    // Use provided position or load saved position
+    let position = startPosition;
+    if (position === undefined) {
+      const savedPosition = localStorage.getItem(`tts-position-${documentId}`);
+      position = savedPosition ? parseInt(savedPosition, 10) : 0;
+    }
 
     try {
-      await speak(currentText, startPosition);
+      await speak(currentText, position);
     } catch (err) {
       console.error('Error playing audio:', err);
     }
   };
+
+  // Expose controls to parent component
+  useEffect(() => {
+    if (onReady && currentText) {
+      onReady({
+        startFromPosition: (charIndex: number) => {
+          // Stop current playback if any
+          if (isPlaying) {
+            stop();
+          }
+          // Start from the clicked position
+          handlePlay(charIndex);
+        },
+      });
+    }
+  }, [onReady, currentText, isPlaying]);
 
   // Handle pause/resume
   const handleTogglePlayPause = () => {

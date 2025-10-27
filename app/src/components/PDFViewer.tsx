@@ -1,6 +1,6 @@
 'use client';
 
-import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { Worker, Viewer, DocumentLoadEvent, PageChangeEvent } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
@@ -8,9 +8,11 @@ import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 interface PDFViewerProps {
   fileUrl: string;
   fileName?: string;
+  onDocumentLoad?: (numPages: number) => void;
+  onPageChange?: (currentPage: number) => void;
 }
 
-export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
+export default function PDFViewer({ fileUrl, fileName, onDocumentLoad, onPageChange }: PDFViewerProps) {
   // Configure the default layout plugin with customizations
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: (defaultTabs) => [
@@ -18,6 +20,19 @@ export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
       defaultTabs[1], // Bookmarks
     ],
   });
+
+  const handleDocumentLoad = (e: DocumentLoadEvent) => {
+    if (onDocumentLoad) {
+      onDocumentLoad(e.doc.numPages);
+    }
+  };
+
+  const handlePageChange = (e: PageChangeEvent) => {
+    if (onPageChange) {
+      // e.currentPage is 0-indexed, convert to 1-indexed
+      onPageChange(e.currentPage + 1);
+    }
+  };
 
   const renderError = (e: any) => {
     console.error('Error loading PDF:', e);

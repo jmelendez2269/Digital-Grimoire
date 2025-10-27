@@ -87,6 +87,7 @@ export default function DocumentDetailPage() {
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content' | 'notes'>('viewer');
   const [numPages, setNumPages] = useState<number | null>(null);
   const [highlightPosition, setHighlightPosition] = useState<{ charIndex: number; charLength: number } | null>(null);
+  const [audioPlayerRef, setAudioPlayerRef] = useState<{ startFromPosition: (pos: number) => void } | null>(null);
 
   useEffect(() => {
     if (documentId) {
@@ -382,19 +383,17 @@ export default function DocumentDetailPage() {
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-amber-100 mb-4">Full Text Content</h2>
                 {document.content ? (
-                  highlightPosition ? (
-                    <TextHighlight
-                      text={document.content}
-                      currentCharIndex={highlightPosition.charIndex}
-                      highlightLength={highlightPosition.charLength}
-                    />
-                  ) : (
-                    <div className="prose prose-invert prose-amber max-w-none">
-                      <pre className="whitespace-pre-wrap text-sm text-amber-100/80 leading-relaxed font-sans">
-                        {document.content}
-                      </pre>
-                    </div>
-                  )
+                  <TextHighlight
+                    text={document.content}
+                    currentCharIndex={highlightPosition?.charIndex || 0}
+                    highlightLength={highlightPosition?.charLength || 50}
+                    onPositionClick={(charIndex) => {
+                      // Start playing from clicked position
+                      if (audioPlayerRef?.startFromPosition) {
+                        audioPlayerRef.startFromPosition(charIndex);
+                      }
+                    }}
+                  />
                 ) : (
                   <p className="text-amber-100/60 text-center py-8">
                     No extracted text content available for this document.
@@ -425,6 +424,9 @@ export default function DocumentDetailPage() {
         pdfUrl={pdfUrl}
         onHighlight={(charIndex, charLength) => {
           setHighlightPosition({ charIndex, charLength });
+        }}
+        onReady={(controls) => {
+          setAudioPlayerRef(controls);
         }}
       />
     </div>
