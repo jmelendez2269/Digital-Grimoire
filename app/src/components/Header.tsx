@@ -19,6 +19,11 @@ export default function Header() {
     
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('[Header] Session check:', {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email
+      });
       setUser(session?.user ?? null);
       
       // Check if user is admin
@@ -31,13 +36,18 @@ export default function Header() {
             .single();
           
           if (error) {
-            console.warn('Could not fetch user profile:', error.message);
+            console.warn('[Header] Could not fetch user profile:', error.message);
+            console.log('[Header] Setting admin to false due to error');
             setIsAdmin(false);
           } else {
+            console.log('[Header] User profile fetched:', {
+              role: profile?.role,
+              isAdmin: profile?.role === 'admin'
+            });
             setIsAdmin(profile?.role === 'admin');
           }
         } catch (err) {
-          console.error('Error checking admin status:', err);
+          console.error('[Header] Error checking admin status:', err);
           setIsAdmin(false);
         }
       }
@@ -181,10 +191,10 @@ export default function Header() {
               {menuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-10"
+                    className="fixed inset-0 z-40"
                     onClick={() => setMenuOpen(false)}
                   />
-                  <div className="absolute right-0 z-20 mt-2 w-48 rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-lg">
+                  <div className="absolute right-0 z-50 mt-2 w-48 rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-lg">
                     <Link
                       href="/profile"
                       className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
@@ -217,11 +227,18 @@ export default function Header() {
                       <>
                         <hr className="my-1 border-zinc-700" />
                         <Link
+                          href="/admin"
+                          className="block px-4 py-2 text-sm text-amber-400 hover:bg-zinc-800"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          🔐 Admin Panel
+                        </Link>
+                        <Link
                           href="/admin/upload"
                           className="block px-4 py-2 text-sm text-amber-400 hover:bg-zinc-800"
                           onClick={() => setMenuOpen(false)}
                         >
-                          🔐 Admin Upload
+                          📤 Admin Upload
                         </Link>
                       </>
                     )}

@@ -42,6 +42,16 @@ const AnnotationPanelLazy = dynamic(() => import('@/components/AnnotationPanel')
   ),
 });
 
+// Lazy load AudioPlayer
+const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
+  ssr: false,
+});
+
+// Lazy load TextHighlight
+const TextHighlight = dynamic(() => import('@/components/TextHighlight'), {
+  ssr: false,
+});
+
 interface TextDocument {
   id: string;
   title: string;
@@ -76,6 +86,7 @@ export default function DocumentDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content' | 'notes'>('viewer');
   const [numPages, setNumPages] = useState<number | null>(null);
+  const [highlightPosition, setHighlightPosition] = useState<{ charIndex: number; charLength: number } | null>(null);
 
   useEffect(() => {
     if (documentId) {
@@ -371,11 +382,19 @@ export default function DocumentDetailPage() {
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h2 className="text-lg font-semibold text-amber-100 mb-4">Full Text Content</h2>
                 {document.content ? (
-                  <div className="prose prose-invert prose-amber max-w-none">
-                    <pre className="whitespace-pre-wrap text-sm text-amber-100/80 leading-relaxed font-sans">
-                      {document.content}
-                    </pre>
-                  </div>
+                  highlightPosition ? (
+                    <TextHighlight
+                      text={document.content}
+                      currentCharIndex={highlightPosition.charIndex}
+                      highlightLength={highlightPosition.charLength}
+                    />
+                  ) : (
+                    <div className="prose prose-invert prose-amber max-w-none">
+                      <pre className="whitespace-pre-wrap text-sm text-amber-100/80 leading-relaxed font-sans">
+                        {document.content}
+                      </pre>
+                    </div>
+                  )
                 ) : (
                   <p className="text-amber-100/60 text-center py-8">
                     No extracted text content available for this document.
@@ -398,6 +417,16 @@ export default function DocumentDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Audio Player - Floating at bottom */}
+      <AudioPlayer
+        documentId={documentId}
+        ocrText={document.content}
+        pdfUrl={pdfUrl}
+        onHighlight={(charIndex, charLength) => {
+          setHighlightPosition({ charIndex, charLength });
+        }}
+      />
     </div>
   );
 }

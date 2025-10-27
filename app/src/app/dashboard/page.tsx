@@ -12,24 +12,54 @@ export default function DashboardPage() {
   useEffect(() => {
     console.log('[Dashboard] Initializing...');
     const supabase = createClient();
+    let isMounted = true;
     
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[Dashboard] Session:', { hasSession: !!session, user: session?.user?.email });
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[Dashboard] Loading timeout - forcing load complete');
+        setLoading(false);
+      }
+    }, 3000); // 3 second timeout
+    
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!isMounted) return;
+      
+      if (error) {
+        console.error('[Dashboard] Session error:', error);
+      } else {
+        console.log('[Dashboard] Session loaded:', { 
+          hasSession: !!session, 
+          user: session?.user?.email 
+        });
+      }
+      
       setUser(session?.user ?? null);
       setLoading(false);
+      clearTimeout(timeout);
     }).catch((error) => {
+      if (!isMounted) return;
       console.error('[Dashboard] Error getting session:', error);
       setLoading(false);
+      clearTimeout(timeout);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('[Dashboard] Auth state changed:', { hasSession: !!session });
+      if (!isMounted) return;
+      console.log('[Dashboard] Auth state changed:', { 
+        event: _event, 
+        hasSession: !!session 
+      });
       setUser(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (loading) {
