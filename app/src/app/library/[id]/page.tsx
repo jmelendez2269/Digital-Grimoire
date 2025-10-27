@@ -397,10 +397,10 @@ export default function DocumentDetailPage() {
                     </dd>
                   </div>
                 )}
-                {document.metadata?.pageCount && (
+                {(document.metadata?.pageCount || numPages) && (
                   <div>
                     <dt className="text-sm text-amber-100/60 mb-1">Pages</dt>
-                    <dd className="text-amber-100">{document.metadata.pageCount} pages</dd>
+                    <dd className="text-amber-100">{document.metadata?.pageCount || numPages} pages</dd>
                   </div>
                 )}
                 {document.metadata?.lineCount && (
