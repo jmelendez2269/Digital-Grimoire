@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 interface PaginationProps {
@@ -10,17 +11,17 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export default function Pagination({
+function Pagination({
   currentPage,
   totalPages,
   totalItems,
   itemsPerPage,
   onPageChange,
 }: PaginationProps) {
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const startItem = useMemo(() => (currentPage - 1) * itemsPerPage + 1, [currentPage, itemsPerPage]);
+  const endItem = useMemo(() => Math.min(currentPage * itemsPerPage, totalItems), [currentPage, itemsPerPage, totalItems]);
 
-  const getPageNumbers = () => {
+  const pageNumbers = useMemo(() => {
     const pages: (number | string)[] = [];
     const maxVisible = 7;
 
@@ -64,7 +65,7 @@ export default function Pagination({
     }
 
     return pages;
-  };
+  }, [currentPage, totalPages]);
 
   if (totalPages <= 1) {
     return null;
@@ -103,7 +104,7 @@ export default function Pagination({
 
         {/* Page Numbers */}
         <div className="flex items-center gap-1 mx-2">
-          {getPageNumbers().map((page, index) => (
+          {pageNumbers.map((page, index) => (
             <button
               key={index}
               onClick={() => typeof page === 'number' && onPageChange(page)}
@@ -145,3 +146,4 @@ export default function Pagination({
   );
 }
 
+export default memo(Pagination);

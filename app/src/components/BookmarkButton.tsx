@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { Bookmark } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -11,7 +11,7 @@ interface BookmarkButtonProps {
   onBookmarkChange?: (isBookmarked: boolean) => void;
 }
 
-export default function BookmarkButton({
+function BookmarkButton({
   textId,
   size = 'md',
   showLabel = false,
@@ -137,3 +137,4 @@ export default function BookmarkButton({
   );
 }
 
+export default memo(BookmarkButton);

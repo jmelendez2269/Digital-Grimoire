@@ -68,20 +68,6 @@ export default function LibraryPage() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [allLenses, setAllLenses] = useState<string[]>([]);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    fetchFilterOptions();
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchTexts();
-    }
-  }, [isAuthenticated, fetchTexts]);
-
   const checkAuth = async () => {
     try {
       const supabase = createClient();
@@ -258,6 +244,20 @@ export default function LibraryPage() {
   };
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchTexts();
+    }
+  }, [isAuthenticated, fetchTexts]);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-amber-50">
