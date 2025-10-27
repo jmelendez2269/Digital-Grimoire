@@ -516,19 +516,18 @@ export default function LibraryPage() {
                     </div>
                   )}
 
-                  {/* Summary */}
-                  {text.short_summary && (
-                    <p className="text-xs text-amber-100/70 line-clamp-3 leading-relaxed">
-                      {text.short_summary}
-                    </p>
-                  )}
-
-                  {/* Curator Note */}
+                  {/* Collection Reason */}
                   {text.curator_note && (
                     <div className="pt-2 border-t border-amber-900/20">
-                      <p className="text-xs text-amber-400/80 italic line-clamp-2">
-                        "{text.curator_note}"
+                      <p className="text-xs text-amber-100/70 leading-relaxed line-clamp-3">
+                        {text.curator_note}
                       </p>
+                      <Link
+                        href={`/library/${text.id}`}
+                        className="inline-block mt-2 text-xs text-amber-400 hover:text-amber-300 underline transition-colors"
+                      >
+                        Summary →
+                      </Link>
                     </div>
                   )}
 

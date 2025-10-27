@@ -16,12 +16,18 @@ interface AnnotationPanelProps {
   textId: string;
   showAddForm?: boolean;
   onAnnotationAdded?: () => void;
+  selectedText?: string | null;
+  selectedPosition?: any;
+  onSelectionCleared?: () => void;
 }
 
 export default function AnnotationPanel({
   textId,
   showAddForm = false,
   onAnnotationAdded,
+  selectedText = null,
+  selectedPosition = null,
+  onSelectionCleared,
 }: AnnotationPanelProps) {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +38,17 @@ export default function AnnotationPanel({
   const [showForm, setShowForm] = useState(showAddForm);
   const [newQuote, setNewQuote] = useState('');
   const [newNote, setNewNote] = useState('');
+  const [newPosition, setNewPosition] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-populate form when text is selected in PDF
+  useEffect(() => {
+    if (selectedText && selectedText.length > 0) {
+      setNewQuote(selectedText);
+      setNewPosition(selectedPosition);
+      setShowForm(true);
+    }
+  }, [selectedText, selectedPosition]);
 
   const fetchAnnotations = useCallback(async () => {
     try {
@@ -64,6 +80,7 @@ export default function AnnotationPanel({
           text_id: textId,
           quote: newQuote.trim(),
           note: newNote.trim() || null,
+          position: newPosition || {},
         }),
       });
 
@@ -72,8 +89,10 @@ export default function AnnotationPanel({
         setAnnotations([data.annotation, ...annotations]);
         setNewQuote('');
         setNewNote('');
+        setNewPosition(null);
         setShowForm(false);
         onAnnotationAdded?.();
+        onSelectionCleared?.();
       }
     } catch (error) {
       console.error('Error adding annotation:', error);
@@ -136,7 +155,15 @@ export default function AnnotationPanel({
           Annotations & Highlights
         </h3>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (showForm) {
+              setNewQuote('');
+              setNewNote('');
+              setNewPosition(null);
+              onSelectionCleared?.();
+            }
+            setShowForm(!showForm);
+          }}
           className="text-xs px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 rounded-md transition-colors"
         >
           {showForm ? 'Cancel' : '+ Add Note'}
@@ -153,7 +180,7 @@ export default function AnnotationPanel({
             <textarea
               value={newQuote}
               onChange={(e) => setNewQuote(e.target.value)}
-              placeholder="Paste the text you want to highlight..."
+              placeholder="Select text in PDF or paste here..."
               className="w-full px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-md text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 text-sm resize-none"
               rows={3}
             />
@@ -183,6 +210,8 @@ export default function AnnotationPanel({
                 setShowForm(false);
                 setNewQuote('');
                 setNewNote('');
+                setNewPosition(null);
+                onSelectionCleared?.();
               }}
               className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-md text-sm font-medium transition-colors"
             >

@@ -76,12 +76,26 @@ export default function DocumentDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'content' | 'notes'>('viewer');
   const [numPages, setNumPages] = useState<number | null>(null);
+  
+  // Text selection and annotations state
+  const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState<any>(null);
+  const [annotations, setAnnotations] = useState<any[]>([]);
+  const [annotationsRefreshTrigger, setAnnotationsRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (documentId) {
       fetchDocument();
+      fetchAnnotations();
     }
   }, [documentId]);
+
+  // Refetch annotations when trigger changes
+  useEffect(() => {
+    if (documentId && annotationsRefreshTrigger > 0) {
+      fetchAnnotations();
+    }
+  }, [annotationsRefreshTrigger, documentId]);
 
   const fetchDocument = async () => {
     if (!documentId) return;
@@ -124,6 +138,50 @@ export default function DocumentDetailPage() {
       setLoading(false);
     }
   };
+
+  // Fetch annotations for this document
+  const fetchAnnotations = async () => {
+    if (!documentId) return;
+    
+    try {
+      const response = await fetch(`/api/annotations?text_id=${documentId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAnnotations(data.annotations || []);
+      }
+    } catch (error) {
+      console.error('Error fetching annotations:', error);
+    }
+  };
+
+  // Handle text selection from PDF viewer
+  const handleTextSelected = useCallback((selection: { text: string; position: any }) => {
+    console.log('[DocumentDetailPage] Text selected:', selection.text.substring(0, 50) + '...');
+    setSelectedText(selection.text);
+    setSelectedPosition(selection.position);
+    
+    // Auto-switch to notes tab when text is selected
+    setActiveTab('notes');
+  }, []);
+
+  // Clear text selection
+  const handleSelectionCleared = useCallback(() => {
+    setSelectedText(null);
+    setSelectedPosition(null);
+  }, []);
+
+  // Handle annotation added
+  const handleAnnotationAdded = useCallback(() => {
+    // Refresh annotations in PDF viewer
+    setAnnotationsRefreshTrigger(prev => prev + 1);
+  }, []);
+
+  // Handle annotation click from PDF viewer
+  const handleAnnotationClick = useCallback((annotation: any) => {
+    console.log('[DocumentDetailPage] Annotation clicked:', annotation.id);
+    // Switch to notes tab to show the annotation
+    setActiveTab('notes');
+  }, []);
 
   // Handle PDF document load - MEMOIZED to prevent re-creation
   const handleDocumentLoad = useCallback((totalPages: number) => {
@@ -255,6 +313,9 @@ export default function DocumentDetailPage() {
                     fileUrl={pdfUrl} 
                     fileName={document.title}
                     onDocumentLoad={handleDocumentLoad}
+                    onTextSelected={handleTextSelected}
+                    annotations={annotations}
+                    onAnnotationClick={handleAnnotationClick}
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
@@ -396,7 +457,13 @@ export default function DocumentDetailPage() {
 
             {activeTab === 'notes' && (
               <div className="space-y-6">
-                <AnnotationPanelLazy textId={documentId} />
+                <AnnotationPanelLazy 
+                  textId={documentId}
+                  selectedText={selectedText}
+                  selectedPosition={selectedPosition}
+                  onSelectionCleared={handleSelectionCleared}
+                  onAnnotationAdded={handleAnnotationAdded}
+                />
               </div>
             )}
           </div>
