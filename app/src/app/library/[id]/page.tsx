@@ -32,6 +32,16 @@ const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
   ),
 });
 
+// Lazy load AnnotationPanel - only needed when user switches to notes tab
+const AnnotationPanelLazy = dynamic(() => import('@/components/AnnotationPanel'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 animate-pulse">
+      <div className="h-40 bg-zinc-800/50 rounded" />
+    </div>
+  ),
+});
+
 interface TextDocument {
   id: string;
   title: string;
@@ -392,7 +402,7 @@ export default function DocumentDetailPage() {
 
             {activeTab === 'notes' && (
               <div className="space-y-6">
-                <AnnotationPanel textId={documentId} />
+                <AnnotationPanelLazy textId={documentId} />
               </div>
             )}
           </div>

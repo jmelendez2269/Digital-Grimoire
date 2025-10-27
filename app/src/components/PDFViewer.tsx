@@ -43,7 +43,7 @@ export default function PDFViewer({ fileUrl, fileName }: PDFViewerProps) {
   return (
     <div className="flex flex-col h-full bg-zinc-900/50 border border-amber-900/20 rounded-lg overflow-hidden pdf-viewer-container">
       <div className="flex-1 overflow-hidden">
-        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+        <Worker workerUrl="/pdf-worker/pdf.worker.min.js">
           <Viewer
             fileUrl={fileUrl}
             plugins={[defaultLayoutPluginInstance]}

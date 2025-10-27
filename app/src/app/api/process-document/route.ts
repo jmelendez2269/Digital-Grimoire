@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { S3Client, DeleteObjectCommand, CopyObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getR2Client, DeleteObjectCommand, CopyObjectCommand, PutObjectCommand } from '@/lib/storage/r2-client';
 import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
 import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
 
 // Initialize R2 client for cleanup on error
-const s3Client = new S3Client({
-  region: 'auto',
-  endpoint: process.env.R2_ENDPOINT,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
+const s3Client = getR2Client();
 
 export async function POST(request: NextRequest) {
   let body;

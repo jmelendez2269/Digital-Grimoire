@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { FileText, Search, Calendar, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import AdvancedFilters from '@/components/AdvancedFilters';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
+
+// Lazy load AdvancedFilters - not needed on initial render
+const AdvancedFilters = dynamic(() => import('@/components/AdvancedFilters'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-20 bg-zinc-900/30 border border-amber-900/20 rounded-lg animate-pulse" />
+  ),
+});
 
 interface Text {
   id: string;
