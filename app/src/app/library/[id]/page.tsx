@@ -52,6 +52,7 @@ interface TextDocument {
   publisher: string | null;
   tags: string[] | null;
   summary: string | null;
+  curator_note: string | null;
   content: string | null;
   s3_key: string | null;
   file_size: number | null;
@@ -415,6 +416,30 @@ export default function DocumentDetailPage() {
           <div className="lg:col-span-1 space-y-6">
             <ReadingProgress textId={documentId} totalPages={numPages || undefined} />
             <CollectionsPanel textId={documentId} />
+            
+            {/* AI Summary Section */}
+            {(document.summary || document.curator_note) && (
+              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-amber-600" />
+                  AI Summary
+                </h3>
+                <div className="max-h-64 overflow-y-auto pr-2 space-y-3">
+                  {document.summary && (
+                    <p className="text-sm text-amber-100/80 leading-relaxed">
+                      {document.summary}
+                    </p>
+                  )}
+                  {document.curator_note && (
+                    <div className={document.summary ? "pt-3 border-t border-amber-900/20" : ""}>
+                      <p className="text-sm text-amber-400/80 italic leading-relaxed">
+                        "{document.curator_note}"
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

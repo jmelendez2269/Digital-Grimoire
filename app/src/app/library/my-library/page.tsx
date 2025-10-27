@@ -328,44 +328,50 @@ export default function MyLibraryPage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 lg:grid-cols-2">
                     {bookmarks.map((bookmark) => (
                       <div
                         key={bookmark.id}
-                        className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 hover:border-amber-800/50 transition-all"
+                        className="bg-zinc-900/50 border border-amber-900/20 rounded-lg hover:border-amber-800/50 transition-all flex flex-col md:flex-row overflow-hidden"
                       >
-                        <div className="flex items-start justify-between mb-4">
-                          <FileText className="w-8 h-8 text-amber-600" />
-                          <button
-                            onClick={() => removeBookmark(bookmark.text_id)}
-                            className="text-red-400 hover:text-red-300 transition-colors"
-                            title="Remove bookmark"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                        {/* Icon Section */}
+                        <div className="md:w-24 w-full h-32 md:h-auto bg-zinc-800/50 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-12 h-12 text-amber-600" />
                         </div>
 
-                        <Link href={`/library/${bookmark.text_id}`}>
-                          <h3 className="text-lg font-semibold text-amber-100 mb-2 line-clamp-2 hover:text-amber-400 transition-colors">
-                            {bookmark.texts.title}
-                          </h3>
-                        </Link>
-
-                        {bookmark.texts.author && (
-                          <div className="flex items-center gap-2 text-sm text-amber-100/60 mb-2">
-                            <User className="w-4 h-4" />
-                            <span>{bookmark.texts.author}</span>
+                        {/* Content Section - Scrollable */}
+                        <div className="flex-1 p-4 overflow-y-auto max-h-40 space-y-2">
+                          <div className="flex items-start justify-between mb-2">
+                            <Link href={`/library/${bookmark.text_id}`} className="flex-1">
+                              <h3 className="text-base font-semibold text-amber-100 line-clamp-2 hover:text-amber-400 transition-colors">
+                                {bookmark.texts.title}
+                              </h3>
+                            </Link>
+                            <button
+                              onClick={() => removeBookmark(bookmark.text_id)}
+                              className="text-red-400 hover:text-red-300 transition-colors ml-2"
+                              title="Remove bookmark"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                        )}
 
-                        {bookmark.notes && (
-                          <p className="text-sm text-amber-100/60 mb-4 line-clamp-2">
-                            {bookmark.notes}
-                          </p>
-                        )}
+                          {bookmark.texts.author && (
+                            <div className="flex items-center gap-2 text-xs text-amber-100/60">
+                              <User className="w-3 h-3" />
+                              <span>{bookmark.texts.author}</span>
+                            </div>
+                          )}
 
-                        <div className="text-xs text-amber-100/40">
-                          Bookmarked {formatDate(bookmark.created_at)}
+                          {bookmark.notes && (
+                            <p className="text-xs text-amber-100/60 line-clamp-2">
+                              {bookmark.notes}
+                            </p>
+                          )}
+
+                          <div className="text-xs text-amber-100/40 pt-1">
+                            Bookmarked {formatDate(bookmark.created_at)}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -492,55 +498,59 @@ export default function MyLibraryPage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 lg:grid-cols-2">
                     {progress.map((item) => (
                       <Link
                         key={item.id}
                         href={`/library/${item.text_id}`}
-                        className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 hover:border-amber-800/50 transition-all"
+                        className="bg-zinc-900/50 border border-amber-900/20 rounded-lg hover:border-amber-800/50 transition-all flex flex-col md:flex-row overflow-hidden"
                       >
-                        <div className="flex items-start justify-between mb-4">
-                          <BookOpen className="w-8 h-8 text-amber-600" />
+                        {/* Icon Section */}
+                        <div className="md:w-24 w-full h-32 md:h-auto bg-zinc-800/50 flex items-center justify-center flex-shrink-0 relative">
+                          <BookOpen className="w-12 h-12 text-amber-600" />
                           {item.completed && (
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                            <CheckCircle2 className="absolute top-2 right-2 w-4 h-4 text-emerald-400" />
                           )}
                         </div>
 
-                        <h3 className="text-lg font-semibold text-amber-100 mb-2 line-clamp-2">
-                          {item.texts.title}
-                        </h3>
+                        {/* Content Section - Scrollable */}
+                        <div className="flex-1 p-4 overflow-y-auto max-h-40 space-y-2">
+                          <h3 className="text-base font-semibold text-amber-100 line-clamp-2">
+                            {item.texts.title}
+                          </h3>
 
-                        {item.texts.author && (
-                          <div className="flex items-center gap-2 text-sm text-amber-100/60 mb-4">
-                            <User className="w-4 h-4" />
-                            <span>{item.texts.author}</span>
-                          </div>
-                        )}
+                          {item.texts.author && (
+                            <div className="flex items-center gap-2 text-xs text-amber-100/60">
+                              <User className="w-3 h-3" />
+                              <span>{item.texts.author}</span>
+                            </div>
+                          )}
 
-                        {/* Progress Bar */}
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-xs text-amber-100/60">
-                            <span>Progress</span>
-                            <span>{Math.round(item.progress_percent)}%</span>
+                          {/* Progress Bar */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-amber-100/60">
+                              <span>Progress</span>
+                              <span>{Math.round(item.progress_percent)}%</span>
+                            </div>
+                            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-amber-600 to-amber-500 transition-all duration-300"
+                                style={{ width: `${item.progress_percent}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-amber-600 to-amber-500 transition-all duration-300"
-                              style={{ width: `${item.progress_percent}%` }}
-                            />
-                          </div>
-                        </div>
 
-                        {/* Time Spent */}
-                        {item.time_spent_seconds > 0 && (
-                          <div className="flex items-center gap-2 text-xs text-amber-100/40 mt-3">
-                            <Clock className="w-3 h-3" />
-                            <span>{formatTime(item.time_spent_seconds)} read</span>
-                          </div>
-                        )}
+                          {/* Time Spent */}
+                          {item.time_spent_seconds > 0 && (
+                            <div className="flex items-center gap-2 text-xs text-amber-100/40">
+                              <Clock className="w-3 h-3" />
+                              <span>{formatTime(item.time_spent_seconds)} read</span>
+                            </div>
+                          )}
 
-                        <div className="text-xs text-amber-100/40 mt-3">
-                          Last read {formatDate(item.updated_at)}
+                          <div className="text-xs text-amber-100/40">
+                            Last read {formatDate(item.updated_at)}
+                          </div>
                         </div>
                       </Link>
                     ))}
