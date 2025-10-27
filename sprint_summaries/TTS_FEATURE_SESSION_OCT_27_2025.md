@@ -1,10 +1,18 @@
 # TTS Read-Aloud Feature Implementation Session
 ## Date: October 27, 2025
 
-## 🎯 Objective
-Implement a comprehensive text-to-speech read-aloud feature for PDFs with dual engine support (free + premium), floating audio controls, text highlighting, and upgrade prompts.
+## ⚠️ STATUS: REVERTED - NOT COMPLETED
 
-## ✅ Completed Implementation
+**This implementation was attempted but encountered critical errors and was fully reverted.**
+
+The feature remains in the backlog at **P3 priority** for implementation in **Year 2**.
+
+---
+
+## 🎯 Original Objective
+Attempt to implement a comprehensive text-to-speech read-aloud feature for PDFs with dual engine support (free + premium), floating audio controls, text highlighting, and upgrade prompts.
+
+## ⚠️ Attempted Implementation (REVERTED)
 
 ### Core Architecture
 1. **TTS Service Layer** ✅
@@ -308,5 +316,42 @@ Successfully implemented a production-ready text-to-speech feature that:
 
 **Session Duration**: ~2 hours
 **Complexity**: High (multi-engine TTS, audio controls, persistence)
-**Result**: ✅ Complete success - all features implemented and documented
+**Result**: ⚠️ Implementation attempted but reverted due to errors
+
+---
+
+## ⚠️ WHY THIS WAS REVERTED
+
+### Issues Encountered
+- Critical errors during integration with existing codebase
+- Implementation complexity higher than anticipated
+- Time constraints (hitting 2-hour timebox)
+- Risk of breaking stable Phase 1 features
+
+### Decision Rationale
+1. **Scope Management**: TTS is a P3 (Year 2) feature, not essential for Phase 1 MVP
+2. **Stability Priority**: Better to maintain 95% stable than 100% broken
+3. **Time Box Respect**: Smart to revert after 2 hours rather than continue struggling
+4. **Launch Focus**: Need to complete core Phase 1 (library seeding) first
+
+### Lessons Learned
+- ✅ Not every feature works on first attempt
+- ✅ Time boxing prevents scope creep
+- ✅ Reverting is a valid engineering decision
+- ✅ P3 features can wait - focus on P0/P1
+- ✅ Fail fast and move on
+
+### Next Steps
+- TTS remains in feature backlog at P3 priority
+- Will revisit in Year 2 with more time for debugging
+- Focus returns to completing Phase 1 core features
+- No impact on launch timeline (still Nov 20, 2025 target)
+
+---
+
+## 📝 Repository Status
+
+**All changes have been reverted from the codebase.**
+
+No TTS-related files remain in the repository. The codebase is back to its stable pre-TTS state.
 
