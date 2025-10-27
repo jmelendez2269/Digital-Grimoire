@@ -1,0 +1,161 @@
+name: Performance Testing
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual triggers
+  schedule:
+    # Run weekly on Monday at 3 AM UTC
+    - cron: '0 3 * * 1'
+
+jobs:
+  unlighthouse:
+    name: Unlighthouse Performance Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'Digital-Grimoire/app/pnpm-lock.yaml'
+
+      - name: Install dependencies
+        working-directory: Digital-Grimoire/app
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js app
+        working-directory: Digital-Grimoire/app
+        env:
+          # Add your build-time environment variables here
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: pnpm build
+
+      - name: Start Next.js server
+        working-directory: Digital-Grimoire/app
+        run: |
+          pnpm start &
+          # Wait for server to be ready
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run Unlighthouse
+        working-directory: Digital-Grimoire/app
+        env:
+          UNLIGHTHOUSE_SITE_URL: 'http://localhost:3000'
+          CI: 'true'
+        run: pnpm perf:ci
+
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unlighthouse-reports
+          path: Digital-Grimoire/app/.unlighthouse/
+          retention-days: 30
+
+      - name: Check performance budgets
+        working-directory: Digital-Grimoire/app
+        run: |
+          # Parse the reports and check against budgets
+          echo "Checking performance budgets..."
+          
+          # Check if any page failed the budget thresholds
+          if [ -f ".unlighthouse/ci-result.json" ]; then
+            node -e "
+              const results = require('./.unlighthouse/ci-result.json');
+              let failed = false;
+              
+              if (results.summary) {
+                const perf = results.summary.performance || 0;
+                const a11y = results.summary.accessibility || 0;
+                const bp = results.summary['best-practices'] || 0;
+                const seo = results.summary.seo || 0;
+                
+                console.log('📊 Average Scores:');
+                console.log('  Performance:', perf);
+                console.log('  Accessibility:', a11y);
+                console.log('  Best Practices:', bp);
+                console.log('  SEO:', seo);
+                
+                if (perf < 75) {
+                  console.error('❌ Performance score below threshold (75)');
+                  failed = true;
+                }
+                if (a11y < 90) {
+                  console.error('❌ Accessibility score below threshold (90)');
+                  failed = true;
+                }
+                if (bp < 85) {
+                  console.error('❌ Best Practices score below threshold (85)');
+                  failed = true;
+                }
+                if (seo < 90) {
+                  console.error('❌ SEO score below threshold (90)');
+                  failed = true;
+                }
+              }
+              
+              if (failed) {
+                process.exit(1);
+              }
+              
+              console.log('✅ All performance budgets met!');
+            "
+          else
+            echo "⚠️ No CI results file found, skipping budget check"
+          fi
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              const resultsPath = path.join(process.env.GITHUB_WORKSPACE, 'Digital-Grimoire/app/.unlighthouse/ci-result.json');
+              const results = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+              
+              const summary = results.summary || {};
+              const perf = summary.performance || 0;
+              const a11y = summary.accessibility || 0;
+              const bp = summary['best-practices'] || 0;
+              const seo = summary.seo || 0;
+              
+              const comment = `## 🚦 Performance Test Results
+              
+              | Category | Score | Status |
+              |----------|-------|--------|
+              | 🚀 Performance | ${perf} | ${perf >= 75 ? '✅' : '❌'} |
+              | ♿ Accessibility | ${a11y} | ${a11y >= 90 ? '✅' : '❌'} |
+              | ✨ Best Practices | ${bp} | ${bp >= 85 ? '✅' : '❌'} |
+              | 🔍 SEO | ${seo} | ${seo >= 90 ? '✅' : '❌'} |
+              
+              📊 [Download Full Report](../actions/runs/${context.runId})
+              
+              *Thresholds: Performance ≥75, Accessibility ≥90, Best Practices ≥85, SEO ≥90*
+              `;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.log('Could not post PR comment:', error.message);
+            }
+

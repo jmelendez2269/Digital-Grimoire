@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { formatLensName, LENS_DESCRIPTIONS } from '@/lib/utils/formatting';
 
 interface FilterOptions {
   domains: string[];
@@ -25,12 +26,12 @@ interface AdvancedFiltersProps {
   onChange: (values: FilterValues) => void;
 }
 
-export default function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
+function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [showLensDropdown, setShowLensDropdown] = useState(false);
 
-  const currentYear = new Date().getFullYear();
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   const handleDomainChange = (domain: string) => {
     onChange({ ...values, domain });
@@ -75,13 +76,15 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
     });
   };
 
-  const activeFilterCount = 
+  const activeFilterCount = useMemo(() => 
     (values.domain !== 'all' ? 1 : 0) +
     (values.type !== 'all' ? 1 : 0) +
     (values.yearMin !== null ? 1 : 0) +
     (values.yearMax !== null ? 1 : 0) +
     values.tags.length +
-    values.lenses.length;
+    values.lenses.length,
+    [values]
+  );
 
   return (
     <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg overflow-hidden">
@@ -298,23 +301,9 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
                   <div className="absolute z-20 w-full mt-1 max-h-80 overflow-y-auto bg-zinc-800 border border-amber-900/20 rounded-lg shadow-xl">
                     {options.allLenses.length > 0 ? (
                       options.allLenses.map((lens) => {
-                        // Format lens name for display
-                        const lensDisplay = lens
-                          .split('_')
-                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                          .join(' / ');
+                        const lensDisplay = formatLensName(lens);
+                        const lensDescription = LENS_DESCRIPTIONS[lens];
                         
-                        // Get lens description
-                        const lensDescriptions: Record<string, string> = {
-                          'scientific': 'Physics, biology, cosmology, empirical evidence',
-                          'psychological': 'Jungian archetypes, cognitive science, shadow work',
-                          'philosophical': 'Metaphysics, ethics, epistemology, ontology',
-                          'religious_spiritual': 'Comparative theology, mysticism, sacred texts',
-                          'historical_anthropological': 'Cultural evolution, mythology, ritual context',
-                          'symbolic_occult': 'Correspondences, alchemy, astrology, esoteric systems',
-                          'mathematical': 'Sacred geometry, numerology, patterns, universal ratios'
-                        };
-
                         return (
                           <label
                             key={lens}
@@ -328,7 +317,7 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
                             />
                             <div className="flex-1">
                               <div className="text-sm font-medium text-amber-100">{lensDisplay}</div>
-                              <div className="text-xs text-amber-100/50 mt-0.5">{lensDescriptions[lens]}</div>
+                              <div className="text-xs text-amber-100/50 mt-0.5">{lensDescription}</div>
                             </div>
                           </label>
                         );
@@ -346,27 +335,20 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
             {/* Selected Lenses */}
             {values.lenses.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {values.lenses.map((lens) => {
-                  const lensDisplay = lens
-                    .split('_')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' / ');
-                  
-                  return (
-                    <span
-                      key={lens}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-amber-600/10 text-amber-400 rounded-full text-xs font-medium border border-amber-600/20"
+                {values.lenses.map((lens) => (
+                  <span
+                    key={lens}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-amber-600/10 text-amber-400 rounded-full text-xs font-medium border border-amber-600/20"
+                  >
+                    {formatLensName(lens)}
+                    <button
+                      onClick={() => handleLensToggle(lens)}
+                      className="hover:bg-amber-600/20 rounded-full p-0.5 transition-colors"
                     >
-                      {lensDisplay}
-                      <button
-                        onClick={() => handleLensToggle(lens)}
-                        className="hover:bg-amber-600/20 rounded-full p-0.5 transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  );
-                })}
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
               </div>
             )}
           </div>
@@ -376,3 +358,4 @@ export default function AdvancedFilters({ options, values, onChange }: AdvancedF
   );
 }
 
+export default memo(AdvancedFilters);

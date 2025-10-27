@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FileText, Search, Calendar, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
+import { formatFileSize, formatDate, getStatusColor } from '@/lib/utils/formatting';
 
 // Lazy load AdvancedFilters - not needed on initial render
 const AdvancedFilters = dynamic(() => import('@/components/AdvancedFilters'), {
@@ -79,7 +80,7 @@ export default function LibraryPage() {
     if (isAuthenticated) {
       fetchTexts();
     }
-  }, [currentPage, searchQuery, filterValues, isAuthenticated]);
+  }, [isAuthenticated, fetchTexts]);
 
   const checkAuth = async () => {
     try {
@@ -165,7 +166,7 @@ export default function LibraryPage() {
     }
   };
 
-  const fetchTexts = async () => {
+  const fetchTexts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -239,38 +240,7 @@ export default function LibraryPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatFileSize = (bytes: number | null): string => {
-    if (!bytes) return 'Unknown';
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'processing':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'ready':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      case 'error':
-        return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default:
-        return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
-    }
-  };
+  }, [currentPage, searchQuery, filterValues]);
 
   const handleFilterChange = (newValues: FilterValues) => {
     setFilterValues(newValues);

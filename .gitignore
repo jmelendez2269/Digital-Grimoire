@@ -9,6 +9,10 @@ node_modules/
 # Test outputs
 test-output/
 
+# Performance testing
+.unlighthouse/
+unlighthouse-reports/
+
 # OS files
 .DS_Store
 Thumbs.db

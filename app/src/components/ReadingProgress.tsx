@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { BookOpen, Clock, CheckCircle2 } from 'lucide-react';
+import { formatTime } from '@/lib/utils/formatting';
 
 interface ReadingProgressProps {
   textId: string;
@@ -62,12 +63,6 @@ export default function ReadingProgress({
     } catch (error) {
       console.error('Error updating reading progress:', error);
     }
-  };
-
-  const formatTime = (seconds: number): string => {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
   };
 
   const markAsCompleted = async () => {

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Highlighter, MessageSquare, Trash2, Edit3, Save, X } from 'lucide-react';
+import { formatDate } from '@/lib/utils/formatting';
 
 interface Annotation {
   id: string;
@@ -33,11 +34,7 @@ export default function AnnotationPanel({
   const [newNote, setNewNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchAnnotations();
-  }, [textId]);
-
-  const fetchAnnotations = async () => {
+  const fetchAnnotations = useCallback(async () => {
     try {
       const response = await fetch(`/api/annotations?text_id=${textId}`);
       if (response.ok) {
@@ -49,7 +46,11 @@ export default function AnnotationPanel({
     } finally {
       setLoading(false);
     }
-  };
+  }, [textId]);
+
+  useEffect(() => {
+    fetchAnnotations();
+  }, [fetchAnnotations]);
 
   const addAnnotation = async () => {
     if (!newQuote.trim()) return;
@@ -117,15 +118,6 @@ export default function AnnotationPanel({
     } catch (error) {
       console.error('Error deleting annotation:', error);
     }
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
   };
 
   if (loading) {

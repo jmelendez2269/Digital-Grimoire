@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { logOcrUsage } from './usage-tracker';
 
 interface OCRResult {
@@ -29,22 +28,21 @@ export async function performOCR(
   
   let analyzeResponse;
   try {
-    analyzeResponse = await axios.post(
-      analyzeUrl,
-      { urlSource: fileUrl },
-      { 
-        headers: { 
-          'Ocp-Apim-Subscription-Key': key,
-          'Content-Type': 'application/json'
-        } 
-      }
-    );
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
+    const response = await fetch(analyzeUrl, {
+      method: 'POST',
+      headers: { 
+        'Ocp-Apim-Subscription-Key': key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ urlSource: fileUrl })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       console.error('Azure OCR API Error:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
+        status: response.status,
+        statusText: response.statusText,
+        data: errorData,
         url: analyzeUrl
       });
       
@@ -54,11 +52,27 @@ export async function performOCR(
         userId,
         documentId,
         success: false,
-        errorMessage: `Azure OCR API failed: ${error.response?.status} - ${error.response?.statusText || error.message}`,
+        errorMessage: `Azure OCR API failed: ${response.status} - ${response.statusText}`,
       });
       
-      throw new Error(`Azure OCR API failed: ${error.response?.status} - ${error.response?.statusText || error.message}`);
+      throw new Error(`Azure OCR API failed: ${response.status} - ${response.statusText}`);
     }
+
+    analyzeResponse = {
+      headers: Object.fromEntries(response.headers.entries())
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Azure OCR API failed')) {
+      throw error;
+    }
+    console.error('Network error during OCR request:', error);
+    await logOcrUsage({
+      pages: 0,
+      userId,
+      documentId,
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown network error',
+    });
     throw error;
   }
 
@@ -66,33 +80,40 @@ export async function performOCR(
   console.log(`OCR operation submitted: ${operationLocation}`);
 
   // Poll for results with extended timeout for large documents (max 300 attempts = 5 minutes)
-  let result;
+  let resultData: any;
   let attempts = 0;
   const maxAttempts = 300; // Increased for large PDFs
   
   do {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    result = await axios.get(operationLocation, {
+    
+    const response = await fetch(operationLocation, {
       headers: { 'Ocp-Apim-Subscription-Key': key }
     });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to poll OCR status: ${response.status} - ${response.statusText}`);
+    }
+    
+    resultData = await response.json();
     attempts++;
     
     if (attempts % 10 === 0) {
-      console.log(`OCR still processing... (attempt ${attempts}/${maxAttempts}, status: ${result.data.status})`);
+      console.log(`OCR still processing... (attempt ${attempts}/${maxAttempts}, status: ${resultData.status})`);
     }
   } while (
-    (result.data.status === 'running' || result.data.status === 'notStarted') 
+    (resultData.status === 'running' || resultData.status === 'notStarted') 
     && attempts < maxAttempts
   );
 
-  if (result.data.status !== 'succeeded') {
-    throw new Error(`OCR failed with status: ${result.data.status} after ${attempts} attempts`);
+  if (resultData.status !== 'succeeded') {
+    throw new Error(`OCR failed with status: ${resultData.status} after ${attempts} attempts`);
   }
 
   console.log(`OCR completed successfully after ${attempts} attempts`);
 
   // Extract text from the Document Intelligence response
-  const analyzeResult = result.data.analyzeResult;
+  const analyzeResult = resultData.analyzeResult;
   
   if (!analyzeResult || !analyzeResult.pages) {
     throw new Error('Invalid OCR response: missing pages data');

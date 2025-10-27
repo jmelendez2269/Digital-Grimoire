@@ -19,8 +19,8 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import BookmarkButton from '@/components/BookmarkButton';
 import ReadingProgress, { useReadingProgressTracker } from '@/components/ReadingProgress';
-import AnnotationPanel from '@/components/AnnotationPanel';
 import CollectionsPanel from '@/components/CollectionsPanel';
+import { formatFileSize, formatDate } from '@/lib/utils/formatting';
 
 // Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
 const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
@@ -84,6 +84,8 @@ export default function DocumentDetailPage() {
   }, [documentId]);
 
   const fetchDocument = async () => {
+    if (!documentId) return;
+    
     try {
       setLoading(true);
       const supabase = createClient();
@@ -121,24 +123,6 @@ export default function DocumentDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatFileSize = (bytes: number | null): string => {
-    if (!bytes) return 'Unknown';
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
   };
 
   if (loading) {

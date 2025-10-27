@@ -355,6 +355,11 @@ Digital-Grimoire/
 | Test Coverage | >80% |
 | Lighthouse | >90 |
 
+**Performance Testing:**
+- Automated with [Unlighthouse](https://unlighthouse.dev/) in CI/CD
+- Weekly scheduled audits + PR checks
+- See [Performance Testing Guide](docs/guides/PERFORMANCE_TESTING.md)
+
 ---
 
 ## 🤖 AI Agent Architecture
