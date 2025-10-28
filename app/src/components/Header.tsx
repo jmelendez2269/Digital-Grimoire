@@ -17,6 +17,12 @@ export default function Header() {
   useEffect(() => {
     const supabase = createClient();
     
+    // Safety timeout - ensure loading doesn't get stuck
+    const timeoutId = setTimeout(() => {
+      console.log('[Header] Safety timeout triggered - forcing loading to false');
+      setLoading(false);
+    }, 3000);
+    
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('[Header] Session check:', {
@@ -52,6 +58,12 @@ export default function Header() {
         }
       }
       
+      clearTimeout(timeoutId);
+      setLoading(false);
+      console.log('[Header] Loading complete, setting loading to false');
+    }).catch((error) => {
+      console.error('[Header] Error getting session:', error);
+      clearTimeout(timeoutId);
       setLoading(false);
     });
 
@@ -85,7 +97,10 @@ export default function Header() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSignOut = async () => {
@@ -171,8 +186,17 @@ export default function Header() {
 
         {/* Auth Buttons / User Menu */}
         <div className="flex items-center gap-4">
+          {/* Debug info - remove after testing */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-zinc-500">
+              {loading ? '⏳' : user ? '👤' : '🚫'}
+            </div>
+          )}
+          
           {loading ? (
-            <div className="h-9 w-20 animate-pulse rounded-md bg-zinc-800" />
+            <div className="h-9 w-20 animate-pulse rounded-md bg-zinc-800">
+              <span className="sr-only">Loading user menu...</span>
+            </div>
           ) : user ? (
             <div className="relative">
               <button
