@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,13 +14,12 @@ export async function GET() {
   };
 
   try {
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     // Check 1: Authentication
     diagnostics.checks.push({ name: 'Authentication', status: 'checking...' });
     try {
-      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError) {
         diagnostics.checks[0] = {
@@ -29,7 +27,7 @@ export async function GET() {
           status: 'error',
           error: authError.message,
         };
-      } else if (!session) {
+      } else if (!user) {
         diagnostics.checks[0] = {
           name: 'Authentication',
           status: 'warning',
@@ -39,8 +37,8 @@ export async function GET() {
         diagnostics.checks[0] = {
           name: 'Authentication',
           status: 'success',
-          user: session.user.email,
-          userId: session.user.id,
+          user: user.email,
+          userId: user.id,
         };
       }
     } catch (err: any) {
