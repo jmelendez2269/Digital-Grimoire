@@ -55,6 +55,7 @@ interface TextDocument {
   domain: string | null;
   publisher: string | null;
   tags: string[] | null;
+  lenses: string[] | null;
   summary: string | null;
   curator_note: string | null;
   content: string | null;
@@ -367,6 +368,21 @@ export default function DocumentDetailPage() {
                     <dd className="text-amber-100 capitalize">{document.domain}</dd>
                   </div>
                 )}
+                {document.lenses && document.lenses.length > 0 && (
+                  <div>
+                    <dt className="text-sm text-amber-100/60 mb-2">Lenses</dt>
+                    <dd className="flex flex-wrap gap-2">
+                      {document.lenses.map((lens, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-purple-600/10 text-purple-400 rounded-full text-xs font-medium border border-purple-600/20"
+                        >
+                          {lens.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                )}
               </dl>
             </div>
 
@@ -412,10 +428,6 @@ export default function DocumentDetailPage() {
                 <div>
                   <dt className="text-sm text-amber-100/60 mb-1">File Size</dt>
                   <dd className="text-amber-100">{formatFileSize(document.file_size)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-amber-100/60 mb-1">Uploaded</dt>
-                  <dd className="text-amber-100">{formatDate(document.created_at)}</dd>
                 </div>
               </dl>
             </div>
