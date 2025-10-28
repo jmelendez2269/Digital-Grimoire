@@ -1,8 +1,8 @@
 # CONVERGENCE - MASTER DEVELOPMENT PLAN
 
-**Version:** 3.0  
-**Last Updated:** October 26, 2025  
-**Status:** Phase 1 - 80% Complete | Active Development  
+**Version:** 3.1  
+**Last Updated:** October 28, 2025  
+**Status:** Phase 1 - 95% Complete | Active Development  
 
 ---
 
@@ -52,24 +52,30 @@
 - Role-based access control (admin detection)
 - Protected routes with middleware
 
-**✅ Sprint 3-4: Document Processing & Library (6h)**
+**✅ Sprint 3: Document Processing Pipeline (4h)**
 - Admin upload page with drag-and-drop interface
 - Cloudflare R2 presigned URL uploads
 - Azure Computer Vision OCR integration
 - OpenAI GPT-4o metadata extraction
 - Automated document classification (20 types)
 - Complete processing pipeline: upload → OCR → AI analysis → database
+- RLS policies and error handling
+
+**✅ Sprint 4: Public Library & Advanced Features (6h)**
 - Library browsing page with search and filters
 - PDF document viewer (@react-pdf-viewer)
 - Advanced filtering (domain, year range, tags, 7 lenses)
 - Pagination for large result sets
-- RLS policies and error handling
+- Full-text search (PostgreSQL FTS)
+- Document detail pages with tabs
+- Bookmark functionality
 
-**✅ BONUS FEATURES DELIVERED (Oct 26-27, 2025):**
+**✅ Sprint 5: Advanced Features & User Library (4h)**
 - **7 Convergence Lenses** - Full classification and filtering system (migration 007)
 - **Reading Progress Tracking** - Per-user, per-document with sidebar panel
 - **User Collections** - Create, manage, organize documents
 - **Annotations & Highlights** - Notes tab with quote/note saving
+- **Annotation Search** - Client-side fuzzy search with Fuse.js
 - **Bookmarks** - Quick document bookmarking
 - **My Library Page** - Personalized collection view
 - **Admin Usage Tracking** - Analytics dashboard with cost monitoring
@@ -119,11 +125,13 @@
 - **OCR Strategy:** ✅ Implemented with Azure Computer Vision (5K pages/month free)
 - **Metadata Extraction:** ✅ Automated with OpenAI GPT-4o (switched from Claude for stability)
 
-**📊 Development Velocity (Oct 26, 2025):**
+**📊 Development Velocity (Oct 28, 2025):**
 - **Sprint 1:** Infrastructure & Setup - ✅ Complete (1h 53m, 20x velocity)
 - **Sprint 2:** Auth & Core UI - ✅ Complete (2.5h, 32x velocity)
-- **Sprint 3/Phase 4:** Document Processing - ✅ Complete (4h, full pipeline working)
-- **Total:** ~8 hours of development = ~250 hours traditional time saved
+- **Sprint 3:** Document Processing - ✅ Complete (4h, full pipeline working)
+- **Sprint 4:** Library & Search - ✅ Complete (6h, 10x velocity)
+- **Sprint 5:** Advanced Features - ✅ Complete (4h, 10x velocity)
+- **Total:** ~14.5 hours of development = ~330 hours traditional time saved
 
 ### Database Schema (Implemented in supabase-schema.sql)
 
