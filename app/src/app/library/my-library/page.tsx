@@ -158,6 +158,25 @@ export default function MyLibraryPage() {
     }
   };
 
+  const removeProgress = async (progressId: string, textId: string) => {
+    if (!confirm('Remove this reading progress? This will delete your progress tracking for this document.')) return;
+    
+    try {
+      const response = await fetch(`/api/reading-progress?id=${progressId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setProgress(progress.filter((p) => p.id !== progressId));
+      } else {
+        alert('Failed to remove reading progress');
+      }
+    } catch (error) {
+      console.error('Error removing progress:', error);
+      alert('An error occurred while removing reading progress');
+    }
+  };
+
   const deleteCollection = async (collectionId: string) => {
     if (!confirm('Delete this collection? All items will be removed.')) return;
 
@@ -500,24 +519,34 @@ export default function MyLibraryPage() {
                 ) : (
                   <div className="grid gap-4 lg:grid-cols-2">
                     {progress.map((item) => (
-                      <Link
+                      <div
                         key={item.id}
-                        href={`/library/${item.text_id}`}
                         className="bg-zinc-900/50 border border-amber-900/20 rounded-lg hover:border-amber-800/50 transition-all flex flex-col md:flex-row overflow-hidden"
                       >
                         {/* Icon Section */}
-                        <div className="md:w-24 w-full h-32 md:h-auto bg-zinc-800/50 flex items-center justify-center flex-shrink-0 relative">
+                        <Link href={`/library/${item.text_id}`} className="md:w-24 w-full h-32 md:h-auto bg-zinc-800/50 flex items-center justify-center flex-shrink-0 relative">
                           <BookOpen className="w-12 h-12 text-amber-600" />
                           {item.completed && (
                             <CheckCircle2 className="absolute top-2 right-2 w-4 h-4 text-emerald-400" />
                           )}
-                        </div>
+                        </Link>
 
                         {/* Content Section - Scrollable */}
                         <div className="flex-1 p-4 overflow-y-auto max-h-40 space-y-2">
-                          <h3 className="text-base font-semibold text-amber-100 line-clamp-2">
-                            {item.texts.title}
-                          </h3>
+                          <div className="flex items-start justify-between mb-2">
+                            <Link href={`/library/${item.text_id}`} className="flex-1">
+                              <h3 className="text-base font-semibold text-amber-100 line-clamp-2 hover:text-amber-400 transition-colors">
+                                {item.texts.title}
+                              </h3>
+                            </Link>
+                            <button
+                              onClick={() => removeProgress(item.id, item.text_id)}
+                              className="text-red-400 hover:text-red-300 transition-colors ml-2"
+                              title="Remove progress tracking"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
 
                           {item.texts.author && (
                             <div className="flex items-center gap-2 text-xs text-amber-100/60">
@@ -552,7 +581,7 @@ export default function MyLibraryPage() {
                             Last read {formatDate(item.updated_at)}
                           </div>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}

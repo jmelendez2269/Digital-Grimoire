@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit } from 'lucide-react';
+import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
@@ -275,6 +275,31 @@ export default function LibraryPage() {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
+  const deleteText = async (textId: string, title: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${title}"?\n\nThis will remove the document and all associated data (bookmarks, annotations, etc.). This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/texts/${textId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setTexts(texts.filter((t) => t.id !== textId));
+        setTotalCount(totalCount - 1);
+        alert('Document deleted successfully');
+      } else {
+        const data = await response.json();
+        alert(`Failed to delete document: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('An error occurred while deleting the document');
+    }
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -427,13 +452,25 @@ export default function LibraryPage() {
                   {/* Action buttons overlay */}
                   <div className="absolute top-2 right-2 z-10 flex gap-2">
                     {isAdmin && (
-                      <Link
-                        href={`/admin/edit/${text.id}`}
-                        className="p-1.5 bg-zinc-900/90 hover:bg-zinc-800 border border-amber-600/30 hover:border-amber-600/50 rounded-lg transition-colors backdrop-blur-sm"
-                        title="Edit document"
-                      >
-                        <Edit className="w-3.5 h-3.5 text-amber-400" />
-                      </Link>
+                      <>
+                        <Link
+                          href={`/admin/edit/${text.id}`}
+                          className="p-1.5 bg-zinc-900/90 hover:bg-zinc-800 border border-amber-600/30 hover:border-amber-600/50 rounded-lg transition-colors backdrop-blur-sm"
+                          title="Edit document"
+                        >
+                          <Edit className="w-3.5 h-3.5 text-amber-400" />
+                        </Link>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            deleteText(text.id, text.title);
+                          }}
+                          className="p-1.5 bg-zinc-900/90 hover:bg-red-900 border border-red-600/30 hover:border-red-600/50 rounded-lg transition-colors backdrop-blur-sm"
+                          title="Delete document"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                        </button>
+                      </>
                     )}
                     <BookmarkButton textId={text.id} size="sm" />
                   </div>

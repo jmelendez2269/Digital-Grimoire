@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE /api/reading-progress?text_id=xxx - Delete reading progress
+// DELETE /api/reading-progress?text_id=xxx or ?id=xxx - Delete reading progress
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -201,20 +201,28 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const text_id = searchParams.get('text_id');
+    const id = searchParams.get('id');
 
-    if (!text_id) {
+    if (!text_id && !id) {
       return NextResponse.json(
-        { error: 'text_id is required' },
+        { error: 'text_id or id is required' },
         { status: 400 }
       );
     }
 
     // Delete reading progress
-    const { error } = await supabase
+    let query = supabase
       .from('reading_progress')
       .delete()
-      .eq('user_id', user.id)
-      .eq('text_id', text_id);
+      .eq('user_id', user.id);
+    
+    if (id) {
+      query = query.eq('id', id);
+    } else if (text_id) {
+      query = query.eq('text_id', text_id);
+    }
+
+    const { error } = await query;
 
     if (error) {
       console.error('Error deleting reading progress:', error);
