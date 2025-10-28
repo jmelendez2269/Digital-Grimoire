@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 // GET /api/journal/[id] - Fetch single journal page
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -20,7 +20,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch page (RLS ensures user can only access their own pages)
     const { data: page, error } = await supabase
@@ -56,7 +56,7 @@ export async function GET(
 // PUT /api/journal/[id] - Update journal page
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -70,7 +70,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { title, content, icon, is_archived } = body;
 
@@ -142,7 +142,7 @@ export async function PUT(
 // DELETE /api/journal/[id] - Delete journal page
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -156,7 +156,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Get query parameter to determine if we should hard delete or archive
     const { searchParams } = new URL(request.url);
