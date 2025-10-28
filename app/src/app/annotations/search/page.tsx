@@ -45,28 +45,51 @@ export default function AnnotationSearchPage() {
   const router = useRouter();
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch all user annotations
+  // Debounced search with PostgreSQL FTS
   useEffect(() => {
-    async function fetchAnnotations() {
-      try {
-        const response = await fetch('/api/annotations');
-        if (response.ok) {
-          const data = await response.json();
-          setAnnotations(data.annotations || []);
-        }
-      } catch (error) {
-        console.error('Error fetching annotations:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    const timer = setTimeout(() => {
+      performSearch();
+    }, 500); // 500ms debounce
 
-    fetchAnnotations();
+    return () => clearTimeout(timer);
+  }, [searchQuery, page]);
+
+  async function performSearch() {
+    setSearching(true);
+    try {
+      // Build query params
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.append('q', searchQuery.trim());
+      params.append('page', page.toString());
+      params.append('pageSize', '50');
+
+      const response = await fetch(`/api/annotations/search?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAnnotations(data.annotations || []);
+        setTotalCount(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+      }
+    } catch (error) {
+      console.error('Error searching annotations:', error);
+    } finally {
+      setSearching(false);
+      setLoading(false);
+    }
+  }
+
+  // Initial load
+  useEffect(() => {
+    performSearch();
   }, []);
 
   // Configure Fuse.js for fuzzy search
@@ -85,28 +108,22 @@ export default function AnnotationSearchPage() {
     });
   }, [annotations]);
 
-  // Filter and search annotations
+  // Client-side filtering with Fuse.js (for loaded results only)
   const filteredAnnotations = useMemo(() => {
     let results = annotations;
 
-    // Apply search query using Fuse.js
-    if (searchQuery.trim()) {
-      const fuseResults = fuse.search(searchQuery.trim());
-      results = fuseResults.map((result) => result.item);
-    }
-
-    // Apply category filters
+    // Apply category filters (client-side for instant feedback)
     if (selectedCategories.length > 0) {
       results = results.filter((ann) => selectedCategories.includes(ann.category));
     }
 
-    // Apply color filters
+    // Apply color filters (client-side for instant feedback)
     if (selectedColors.length > 0) {
       results = results.filter((ann) => selectedColors.includes(ann.highlight_color));
     }
 
     return results;
-  }, [annotations, fuse, searchQuery, selectedCategories, selectedColors]);
+  }, [annotations, selectedCategories, selectedColors]);
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
@@ -124,6 +141,7 @@ export default function AnnotationSearchPage() {
     setSearchQuery('');
     setSelectedCategories([]);
     setSelectedColors([]);
+    setPage(1);
   };
 
   const getCategoryInfo = (category: string) =>
@@ -159,7 +177,7 @@ export default function AnnotationSearchPage() {
             Search Annotations
           </h1>
           <p className="text-amber-100/60">
-            Search across all your highlights and notes. {annotations.length} total annotations.
+            Search across all your highlights and notes using powerful full-text search. {totalCount} total annotations.
           </p>
         </div>
 
@@ -305,9 +323,33 @@ export default function AnnotationSearchPage() {
           </div>
         )}
 
-        {/* Results Count */}
-        <div className="mb-4 text-sm text-amber-100/60">
-          Showing {filteredAnnotations.length} of {annotations.length} annotations
+        {/* Results Count & Pagination */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="text-sm text-amber-100/60">
+            {searching ? 'Searching...' : `Showing ${filteredAnnotations.length} of ${totalCount} annotations`}
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1 || searching}
+                className="px-3 py-1 bg-zinc-800 text-amber-100 rounded hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-amber-100/60">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages || searching}
+                className="px-3 py-1 bg-zinc-800 text-amber-100 rounded hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Results */}
