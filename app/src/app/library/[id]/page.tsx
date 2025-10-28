@@ -361,12 +361,6 @@ export default function DocumentDetailPage() {
                     <dd className="text-amber-100">{document.publisher}</dd>
                   </div>
                 )}
-                {document.type && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-1">Type</dt>
-                    <dd className="text-amber-100">{document.type.replace(/_/g, ' ')}</dd>
-                  </div>
-                )}
                 {document.domain && (
                   <div>
                     <dt className="text-sm text-amber-100/60 mb-1">Domain</dt>
@@ -395,6 +389,12 @@ export default function DocumentDetailPage() {
                         </span>
                       ))}
                     </dd>
+                  </div>
+                )}
+                {document.type && (
+                  <div>
+                    <dt className="text-sm text-amber-100/60 mb-1">Type</dt>
+                    <dd className="text-amber-100">{document.type.replace(/_/g, ' ')}</dd>
                   </div>
                 )}
                 {(document.metadata?.pageCount || numPages) && (
@@ -444,26 +444,17 @@ export default function DocumentDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Summary Section */}
-            {(document.summary || document.curator_note) && (
+            {/* Curator Note Section */}
+            {document.curator_note && (
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-amber-600" />
-                  Summary
+                  Curator Note
                 </h3>
-                <div className="max-h-64 overflow-y-auto pr-2 space-y-3">
-                  {document.summary && (
-                    <p className="text-sm text-amber-100/80 leading-relaxed">
-                      {document.summary}
-                    </p>
-                  )}
-                  {document.curator_note && (
-                    <div className={document.summary ? "pt-3 border-t border-amber-900/20" : ""}>
-                      <p className="text-sm text-amber-400/80 italic leading-relaxed">
-                        "{document.curator_note}"
-                      </p>
-                    </div>
-                  )}
+                <div className="max-h-64 overflow-y-auto pr-2">
+                  <p className="text-sm text-amber-100/80 leading-relaxed">
+                    {document.curator_note}
+                  </p>
                 </div>
               </div>
             )}
