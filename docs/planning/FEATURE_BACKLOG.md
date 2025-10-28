@@ -21,7 +21,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 2 Complete (2.5h):** Authentication, Core UI, Avatar System, Dashboard, Toast Notifications  
 **Sprint 3 Complete (4h):** Document Processing Pipeline (Cloudflare R2 + Azure OCR + AI Metadata)  
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
-**Sprint 5 Complete (4h):** 7 Lenses, User Library Features, Annotation Search, Admin Analytics
+**Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
 ### Standout Features Delivered:
 - ✅ **Production-Ready Avatar System** (crop/zoom/compress/delete)
@@ -33,9 +33,14 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - ✅ **PDF Document Viewer** (@react-pdf-viewer with dark theme)
 - ✅ **User Library Features** (reading progress, collections, annotations, bookmarks)
 - ✅ **Admin Usage Tracking** (analytics dashboard with cost monitoring)
+- ✅ **Study Journal MVP** (Tiptap editor, auto-save, emoji picker, search)
+- ✅ **PostgreSQL Full-Text Search** (10-100x faster annotation search)
+- ✅ **Annotation Export** (Markdown & CSV with filtering)
 
-**Total Velocity:** 23x faster than traditional development with AI assistance! 🚀  
-**Phase 1 Status:** 95% complete (Sprint 1-5 done, library seeding remains)
+**Total Velocity:** 20x faster than traditional development with AI assistance! 🚀  
+**Total Development Time:** ~20.5 hours  
+**Phase 1 Status:** 95% complete (Sprint 1-5 done, library seeding remains)  
+**Phase 2 Status:** Study Journal MVP complete (30% of Phase 2)
 
 ---
 
@@ -92,12 +97,12 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Tiptap editor setup | P0 | M | 5 | ⬜ Planned | Core blocks |
-| Page CRUD operations | P0 | M | 6 | ⬜ Planned | Create/read/update/delete |
-| Auto-save functionality | P0 | S | 6 | ⬜ Planned | Debounced |
-| Slash command menu | P0 | M | 5 | ⬜ Planned | / trigger |
+| Tiptap editor setup | P0 | M | 5 | ✅ Complete | Core blocks (Sprint 5) |
+| Page CRUD operations | P0 | M | 5 | ✅ Complete | Create/read/update/delete (Sprint 5) |
+| Auto-save functionality | P0 | S | 5 | ✅ Complete | Debounced (Sprint 5) |
+| Slash command menu | P0 | M | 6 | ⬜ Planned | / trigger |
 | Block drag-and-drop | P0 | M | 6 | ⬜ Planned | ⋮⋮ handle |
-| Page sidebar navigation | P0 | M | 6 | ⬜ Planned | Tree view |
+| Page sidebar navigation | P0 | M | 5 | ✅ Complete | Tree view (Sprint 5) |
 | Clip from library | P0 | M | 7 | ⬜ Planned | Save passages |
 | Wikilinks [[Page]] | P0 | M | 7 | ⬜ Planned | Internal links |
 | Export to Markdown | P0 | S | 7 | ⬜ Planned | .md download |
@@ -123,10 +128,10 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | My Library page | P0 | M | 4 | ✅ Complete | Personal collection view |
 | Admin usage tracking | P1 | L | 4 | ✅ Complete | Analytics dashboard with cost monitoring |
 | **Annotation search (Fuse.js)** | **P1** | **XS** | **4** | **✅ Complete** | **Client-side fuzzy search across all annotations (Oct 27)** |
-| **PostgreSQL FTS annotation search** | **P1** | **S** | **5** | **⬜ Planned** | **Server-side full-text search + Fuse.js for scalability (Next Sprint)** |
+| **PostgreSQL FTS annotation search** | **P1** | **S** | **5** | **✅ Complete** | **Server-side full-text search with tsvector + GIN index (Sprint 5)** |
 | Collection sharing | P1 | M | Post | ⬜ Planned | Share collections with others |
-| Export annotations to Markdown | P1 | XS | Post | ⬜ Planned | Download annotations as Markdown (30 min) |
-| Export annotations to CSV | P1 | XS | Post | ⬜ Planned | Download annotations as CSV |
+| Export annotations to Markdown | P1 | XS | 5 | ✅ Complete | Download annotations as Markdown (Sprint 5) |
+| Export annotations to CSV | P1 | XS | 5 | ✅ Complete | Download annotations as CSV (Sprint 5) |
 | Share annotations (collaborative) | P1 | M | Post | ⬜ Planned | Collaborative annotation features (2-3 hours) |
 | Reading goals | P2 | M | Post | ⬜ Planned | Set and track reading targets |
 | Reading statistics | P2 | M | Post | ⬜ Planned | Time spent, pages read analytics |

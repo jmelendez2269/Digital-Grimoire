@@ -31,7 +31,7 @@
 
 ---
 
-## 🎉 PROGRESS REPORT (As of October 27, 2025)
+## 🎉 PROGRESS REPORT (As of October 28, 2025)
 
 ### What's Been Built (4 weeks of work compressed into ~8 hours!)
 
@@ -70,20 +70,20 @@
 - Document detail pages with tabs
 - Bookmark functionality
 
-**✅ Sprint 5: Advanced Features & User Library (4h)**
-- **7 Convergence Lenses** - Full classification and filtering system (migration 007)
-- **Reading Progress Tracking** - Per-user, per-document with sidebar panel
-- **User Collections** - Create, manage, organize documents
-- **Annotations & Highlights** - Notes tab with quote/note saving
-- **Annotation Search** - Client-side fuzzy search with Fuse.js
-- **Bookmarks** - Quick document bookmarking
-- **My Library Page** - Personalized collection view
-- **Admin Usage Tracking** - Analytics dashboard with cost monitoring
+**✅ Sprint 5: Study Journal MVP + Power Features (6h)**
+- **Study Journal MVP** - Tiptap rich-text editor with full formatting toolbar
+- **Database schema** - journal_pages table with RLS policies (migration 015)
+- **Complete CRUD** - API endpoints and UI pages with auto-save
+- **PostgreSQL Full-Text Search** - tsvector column, GIN index, hybrid search (migration 016)
+- **Annotation Export** - Markdown and CSV export with filtering
+- **Journal Navigation** - Header integration, search, grid layout
+- **Total:** 9 files created, 2 modified, 3 documentation files, 1,563 lines of code
 
-**📊 Total Development Time:** ~14.5 hours  
-**Traditional Estimate:** ~330 hours  
-**Velocity:** 23x faster with AI-assisted development  
-**Phase 1 Progress:** 95% complete (only seeding library content remains)
+**📊 Total Development Time:** ~20.5 hours  
+**Traditional Estimate:** ~420 hours  
+**Velocity:** 20x faster with AI-assisted development  
+**Phase 1 Progress:** 95% complete (only seeding library content remains)  
+**Phase 2 Status:** Study Journal MVP complete (30% of Phase 2)
 
 ### What's Next
 
@@ -97,7 +97,7 @@
 - Complete Phase 1 MVP (library seeding)
 - Deploy to production (Vercel)
 - Beta testing with initial users
-- Begin Phase 2 (Personal Grimoire/Study Journal)
+- Complete remaining Phase 2 features (clip system, wikilinks, export enhancements)
 
 ---
 
@@ -114,7 +114,7 @@
 | **Graph DB** | Amazon Neptune | Correspondence graph | ✅ 750hrs | ⏳ Phase 3 |
 | **OCR** | Azure Computer Vision | Document processing | ✅ 5K/mo free | ✅ Active |
 | **Serverless** | Cloudflare Workers | Event processing | ✅ 100K/day | ✅ Active |
-| **Editor** | Tiptap | Rich text editing | ✅ Open source | ⏳ Phase 2 |
+| **Editor** | Tiptap | Rich text editing | ✅ Open source | ✅ Active |
 | **Graph Viz** | D3.js | Force-directed layouts | ✅ Open source | ⏳ Phase 3 |
 | **AI** | Claude API / GPT-4 | Metadata extraction & Multi-lens | 💰 Pay-per-use | 🔄 Partial (Metadata ✅) |
 
@@ -275,6 +275,9 @@ associated_names: Related figures
 - [x] ✅ **BONUS: 7 Convergence Lenses system**
 - [x] ✅ **BONUS: User library features (progress, collections, annotations, bookmarks)**
 - [x] ✅ **BONUS: Admin usage tracking and analytics**
+- [x] ✅ **BONUS: Study Journal MVP** (Tiptap editor, CRUD, auto-save)
+- [x] ✅ **BONUS: PostgreSQL Full-Text Search** (annotation search with tsvector + GIN index)
+- [x] ✅ **BONUS: Annotation Export** (Markdown & CSV with filtering)
 - [ ] ⏳ 20+ seeded texts in library - In Progress
 
 ---
@@ -284,19 +287,19 @@ associated_names: Related figures
 **Goal:** Implement private note-taking workspace
 
 #### Week 9-10: Tiptap Editor Integration
-- [ ] Install Tiptap with essential extensions
-- [ ] Block-based editor component
+- [x] Install Tiptap with essential extensions
+- [x] Block-based editor component
 - [ ] Slash `/` command menu
 - [ ] Drag handle (`⋮⋮`) for reordering
-- [ ] Basic blocks: text, heading, list, quote
+- [x] Basic blocks: text, heading, list, quote
 - [ ] Image upload to S3
-- [ ] Auto-save with debouncing
+- [x] Auto-save with debouncing
 
 #### Week 11-12: Note Management
-- [ ] Create/read/update/delete grimoire pages
-- [ ] Nested page hierarchy (parent_id)
-- [ ] Sidebar navigation
-- [ ] Page icons and cover images
+- [x] Create/read/update/delete grimoire pages
+- [x] Nested page hierarchy (parent_id)
+- [x] Sidebar navigation
+- [x] Page icons and cover images
 - [ ] Internal wikilinks `[[Page Name]]`
 - [ ] Backlinks panel
 
