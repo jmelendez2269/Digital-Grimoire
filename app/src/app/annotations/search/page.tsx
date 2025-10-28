@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Fuse from 'fuse.js';
 import { Search, Filter, BookOpen, Calendar, Tag, Palette, X, Download } from 'lucide-react';
 import { formatDate } from '@/lib/utils/formatting';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface Annotation {
   id: string;
@@ -215,8 +217,11 @@ export default function AnnotationSearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 pt-24 px-6 pb-20">
-      <div className="max-w-6xl mx-auto">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex-1">
+        <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 pt-8 px-6 pb-20">
+          <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-3">
@@ -545,7 +550,10 @@ export default function AnnotationSearchPage() {
             })}
           </div>
         )}
-      </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2 } fr
 import { createClient } from '@/lib/supabase/client';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { formatFileSize, formatDate, getStatusColor } from '@/lib/utils/formatting';
 
 // Lazy load AdvancedFilters - not needed on initial render
@@ -315,20 +317,23 @@ export default function LibraryPage() {
   }, [isAuthenticated, fetchTexts]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-amber-50">
-      {/* Header */}
-      <div className="border-b border-amber-900/20 bg-zinc-900/50">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-3xl font-bold text-amber-100 mb-2">
-            The Convergence Library
-          </h1>
-          <p className="text-amber-100/60">
-            Explore esoteric texts, religious scriptures, philosophical works, and wisdom traditions
-          </p>
-        </div>
-      </div>
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex-1">
+        <div className="min-h-screen bg-zinc-950 text-amber-50">
+          {/* Header */}
+          <div className="border-b border-amber-900/20 bg-zinc-900/50">
+            <div className="max-w-7xl mx-auto px-6 py-8">
+              <h1 className="text-3xl font-bold text-amber-100 mb-2">
+                The Convergence Library
+              </h1>
+              <p className="text-amber-100/60">
+                Explore esoteric texts, religious scriptures, philosophical works, and wisdom traditions
+              </p>
+            </div>
+          </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
@@ -592,7 +597,10 @@ export default function LibraryPage() {
             )}
           </>
         )}
-      </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

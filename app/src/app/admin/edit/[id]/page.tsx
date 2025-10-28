@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Tag, Eye, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 
@@ -162,10 +163,11 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-amber-50">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
       <Header />
-
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <main className="flex-1">
+        <div className="min-h-screen bg-zinc-950 text-amber-50">
+          <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -414,7 +416,10 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
             </Link>
           </div>
         </div>
-      </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

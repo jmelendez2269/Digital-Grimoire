@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Search, Archive, FileText, Clock, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface JournalPage {
   id: string;
@@ -76,8 +78,11 @@ export default function JournalHomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-900 to-amber-900/20">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex-1">
+        <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-900 to-amber-900/20">
+          <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -158,7 +163,10 @@ export default function JournalHomePage() {
             ))}
           </div>
         )}
-      </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

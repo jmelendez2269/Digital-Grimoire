@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface UsageMetrics {
   overview: {
@@ -196,8 +198,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-amber-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex-1">
+        <div className="min-h-screen bg-zinc-950 text-amber-50">
+          <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -657,7 +662,10 @@ export default function AdminDashboard() {
             No metrics available
           </div>
         )}
-      </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

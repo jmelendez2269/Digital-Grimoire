@@ -18,6 +18,8 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
 
 // Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
@@ -226,9 +228,12 @@ export default function DocumentDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-amber-50">
-      {/* Header */}
-      <div className="border-b border-amber-900/20 bg-zinc-900/50 sticky top-0 z-10">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex-1">
+        <div className="min-h-screen bg-zinc-950 text-amber-50">
+          {/* Header */}
+          <div className="border-b border-amber-900/20 bg-zinc-900/50 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <Link
@@ -485,6 +490,9 @@ export default function DocumentDetailPage() {
           defaultCollapsed={true}
         />
       )}
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

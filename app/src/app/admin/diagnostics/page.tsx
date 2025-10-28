@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface DiagnosticResult {
   test: string;
@@ -214,8 +216,11 @@ export default function DiagnosticsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-amber-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex-1">
+        <div className="min-h-screen bg-zinc-950 text-amber-50">
+          <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
           <Link
             href="/dashboard"
@@ -290,7 +295,10 @@ export default function DiagnosticsPage() {
             Go to Library
           </Link>
         </div>
-      </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }
