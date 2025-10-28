@@ -177,13 +177,31 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-amber-100 transition-colors hover:bg-zinc-700"
+                className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-medium text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                aria-label="User menu"
+                aria-expanded={menuOpen}
               >
-                <span className="hidden sm:inline">
-                  {user.user_metadata?.username || user.email?.split("@")[0]}
+                {/* User Avatar/Initial */}
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="User avatar"
+                    className="h-6 w-6 rounded-full object-cover ring-1 ring-amber-500/50"
+                  />
+                ) : (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-xs font-bold text-zinc-900 ring-1 ring-amber-500/50">
+                    {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
+                  </div>
+                )}
+                
+                {/* Username - visible on larger screens */}
+                <span className="hidden sm:inline text-amber-100">
+                  {user.user_metadata?.username || user.email?.split("@")[0] || "User"}
                 </span>
+                
+                {/* Dropdown indicator */}
                 <svg
-                  className="h-4 w-4"
+                  className={`h-4 w-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -200,82 +218,138 @@ export default function Header() {
               {/* Dropdown Menu */}
               {menuOpen && (
                 <>
+                  {/* Backdrop */}
                   <div
                     className="fixed inset-0 z-40"
                     onClick={() => setMenuOpen(false)}
                   />
-                  <div className="absolute right-0 z-50 mt-2 w-48 rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-lg">
-                    <Link
-                      href="/profile"
-                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      👤 Profile
-                    </Link>
-                    <Link
-                      href="/dashboard"
-                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      📊 Dashboard
-                    </Link>
-                    <Link
-                      href="/library/my-library"
-                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      📖 My Library
-                    </Link>
-                    <Link
-                      href="/journal"
-                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      📝 Study Journal
-                    </Link>
-                    <Link
-                      href="/annotations/search"
-                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      🔍 Search Annotations
-                    </Link>
-                    <Link
-                      href="/settings"
-                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      ⚙️ Settings
-                    </Link>
+                  
+                  {/* Menu */}
+                  <div className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/50 overflow-hidden">
+                    {/* User Info Header */}
+                    <div className="border-b border-zinc-800 bg-zinc-800/50 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {user.user_metadata?.avatar_url ? (
+                          <img
+                            src={user.user_metadata.avatar_url}
+                            alt="User avatar"
+                            className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-500/50"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-base font-bold text-zinc-900 ring-2 ring-amber-500/50">
+                            {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
+                          </div>
+                        )}
+                        <div className="flex-1 overflow-hidden">
+                          <div className="text-sm font-semibold text-amber-100 truncate">
+                            {user.user_metadata?.username || user.email?.split("@")[0] || "User"}
+                          </div>
+                          <div className="text-xs text-zinc-400 truncate">
+                            {user.email}
+                          </div>
+                          {isAdmin && (
+                            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400">
+                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                              </svg>
+                              Admin
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Navigation Links */}
+                    <div className="py-1">
+                      <Link
+                        href="/profile"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <span className="text-base">👤</span>
+                        <span>Profile</span>
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <span className="text-base">📊</span>
+                        <span>Dashboard</span>
+                      </Link>
+                      <Link
+                        href="/library/my-library"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <span className="text-base">📖</span>
+                        <span>My Library</span>
+                      </Link>
+                      <Link
+                        href="/journal"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <span className="text-base">📝</span>
+                        <span>Study Journal</span>
+                      </Link>
+                      <Link
+                        href="/annotations/search"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <span className="text-base">🔍</span>
+                        <span>Search Annotations</span>
+                      </Link>
+                      <Link
+                        href="/settings"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <span className="text-base">⚙️</span>
+                        <span>Settings</span>
+                      </Link>
+                    </div>
+
+                    {/* Admin Section */}
                     {isAdmin && (
                       <>
-                        <hr className="my-1 border-zinc-700" />
-                        <Link
-                          href="/admin"
-                          className="block px-4 py-2 text-sm text-amber-400 hover:bg-zinc-800"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          🔐 Admin Panel
-                        </Link>
-                        <Link
-                          href="/admin/upload"
-                          className="block px-4 py-2 text-sm text-amber-400 hover:bg-zinc-800"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          📤 Admin Upload
-                        </Link>
+                        <hr className="my-1 border-zinc-800" />
+                        <div className="py-1">
+                          <Link
+                            href="/admin"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            <span className="text-base">🔐</span>
+                            <span>Admin Panel</span>
+                          </Link>
+                          <Link
+                            href="/admin/upload"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            <span className="text-base">📤</span>
+                            <span>Admin Upload</span>
+                          </Link>
+                        </div>
                       </>
                     )}
-                    <hr className="my-1 border-zinc-700" />
-                    <button
-                      onClick={() => {
-                        setMenuOpen(false);
-                        handleSignOut();
-                      }}
-                      className="block w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-zinc-800"
-                    >
-                      🚪 Sign Out
-                    </button>
+
+                    {/* Sign Out */}
+                    <hr className="my-1 border-zinc-800" />
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          handleSignOut();
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-red-400 transition-colors hover:bg-zinc-800 hover:text-red-300"
+                      >
+                        <span className="text-base">🚪</span>
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
                   </div>
                 </>
               )}

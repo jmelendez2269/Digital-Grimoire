@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { 
   Bookmark, 
   Folder, 
@@ -257,7 +259,10 @@ export default function MyLibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-amber-50">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <main className="flex-1">
+        <div className="min-h-screen bg-zinc-950 text-amber-50">
       {/* Header */}
       <div className="border-b border-amber-900/20 bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -719,6 +724,9 @@ export default function MyLibraryPage() {
           </div>
         </div>
       )}
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }
