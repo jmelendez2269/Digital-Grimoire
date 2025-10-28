@@ -1,0 +1,189 @@
+name: Dependabot Configuration Audit
+
+on:
+  schedule:
+    # Run on the 1st of every month at 9 AM UTC
+    - cron: '0 9 1 * *'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  audit-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan for dependency files
+        id: scan
+        run: |
+          echo "🔍 Scanning for dependency files..."
+          
+          # Find all dependency files in the repo
+          found_files=""
+          
+          # NPM/Yarn/PNPM
+          npm_files=$(find . -name "package.json" -not -path "*/node_modules/*" -not -path "*/.next/*" | sort)
+          
+          # Python
+          pip_files=$(find . -name "requirements.txt" -o -name "Pipfile" -o -name "pyproject.toml" | sort)
+          
+          # Other ecosystems
+          go_files=$(find . -name "go.mod" | sort)
+          ruby_files=$(find . -name "Gemfile" | sort)
+          docker_files=$(find . -name "Dockerfile" | sort)
+          
+          # GitHub Actions
+          action_files=$(find .github/workflows -name "*.yml" -o -name "*.yaml" 2>/dev/null | sort)
+          
+          # Read current dependabot config
+          if [ -f ".github/dependabot.yml" ]; then
+            monitored=$(grep "directory:" .github/dependabot.yml | awk '{print $2}' | tr -d '"' | sort)
+          else
+            monitored=""
+          fi
+          
+          # Create summary
+          echo "## 📋 Dependency Files Found" > audit-summary.md
+          echo "" >> audit-summary.md
+          
+          # Check NPM files
+          if [ -n "$npm_files" ]; then
+            echo "### NPM/PNPM (package.json)" >> audit-summary.md
+            for file in $npm_files; do
+              dir=$(dirname "$file")
+              if echo "$monitored" | grep -q "^$dir$"; then
+                echo "- ✅ \`$file\` (monitored)" >> audit-summary.md
+              else
+                echo "- ⚠️ \`$file\` (NOT monitored)" >> audit-summary.md
+                found_files="true"
+              fi
+            done
+            echo "" >> audit-summary.md
+          fi
+          
+          # Check Python files
+          if [ -n "$pip_files" ]; then
+            echo "### Python (requirements.txt/Pipfile)" >> audit-summary.md
+            for file in $pip_files; do
+              dir=$(dirname "$file")
+              if echo "$monitored" | grep -q "^$dir$"; then
+                echo "- ✅ \`$file\` (monitored)" >> audit-summary.md
+              else
+                echo "- ⚠️ \`$file\` (NOT monitored)" >> audit-summary.md
+                found_files="true"
+              fi
+            done
+            echo "" >> audit-summary.md
+          fi
+          
+          # Check Go files
+          if [ -n "$go_files" ]; then
+            echo "### Go (go.mod)" >> audit-summary.md
+            for file in $go_files; do
+              echo "- ⚠️ \`$file\` (NOT monitored)" >> audit-summary.md
+              found_files="true"
+            done
+            echo "" >> audit-summary.md
+          fi
+          
+          # Check Ruby files
+          if [ -n "$ruby_files" ]; then
+            echo "### Ruby (Gemfile)" >> audit-summary.md
+            for file in $ruby_files; do
+              echo "- ⚠️ \`$file\` (NOT monitored)" >> audit-summary.md
+              found_files="true"
+            done
+            echo "" >> audit-summary.md
+          fi
+          
+          # Check Docker files
+          if [ -n "$docker_files" ]; then
+            echo "### Docker (Dockerfile)" >> audit-summary.md
+            for file in $docker_files; do
+              echo "- ⚠️ \`$file\` (NOT monitored)" >> audit-summary.md
+              found_files="true"
+            done
+            echo "" >> audit-summary.md
+          fi
+          
+          # GitHub Actions status
+          if [ -n "$action_files" ]; then
+            echo "### GitHub Actions" >> audit-summary.md
+            if echo "$monitored" | grep -q "^/$"; then
+              echo "- ✅ GitHub Actions are monitored" >> audit-summary.md
+            else
+              echo "- ⚠️ GitHub Actions NOT monitored" >> audit-summary.md
+              found_files="true"
+            fi
+            echo "" >> audit-summary.md
+          fi
+          
+          # Set output
+          if [ "$found_files" = "true" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create issue if unmonitored dependencies found
+        if: steps.scan.outputs.needs_update == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('audit-summary.md', 'utf8');
+            
+            const issueBody = `## 🔍 Dependabot Configuration Audit
+            
+            The monthly dependency audit has found files that are not being monitored by Dependabot.
+            
+            ${summary}
+            
+            ### 📝 Action Required
+            
+            Please review the unmonitored files above and update \`.github/dependabot.yml\` to include them.
+            
+            ### 🔗 Resources
+            - [Dependabot Documentation](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file)
+            - [Supported Ecosystems](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/about-dependabot-version-updates#supported-repositories-and-ecosystems)
+            
+            ---
+            *This issue was automatically created by the Dependabot Configuration Audit workflow.*
+            `;
+            
+            // Check if an open issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'dependabot-audit',
+              per_page: 100
+            });
+            
+            if (issues.data.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🔍 Update Dependabot Configuration - Unmonitored Dependencies Found',
+                body: issueBody,
+                labels: ['dependabot-audit', 'dependencies', 'maintenance']
+              });
+              console.log('✅ Created new issue for unmonitored dependencies');
+            } else {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body: issueBody
+              });
+              console.log('✅ Updated existing issue with latest audit results');
+            }
+
+      - name: Report success
+        if: steps.scan.outputs.needs_update == 'false'
+        run: |
+          echo "✅ All dependency files are being monitored by Dependabot!"
+          echo "No action required."
+

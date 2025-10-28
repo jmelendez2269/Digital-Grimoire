@@ -1,0 +1,93 @@
+version: 2
+updates:
+  # 1. Monitor Next.js App Dependencies
+  - package-ecosystem: "npm"
+    directory: "/app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      # Group dev dependencies together
+      development-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier*"
+          - "@typescript-eslint/*"
+          - "@unlighthouse/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group React ecosystem updates
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "next"
+        update-types:
+          - "patch"
+      # Group UI library updates
+      ui-libraries:
+        patterns:
+          - "@radix-ui/*"
+          - "lucide-react"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-prerelease"]
+
+  # 2. Monitor Python Lambda Dependencies - Textract Trigger
+  - package-ecosystem: "pip"
+    directory: "/lambda/textract-trigger"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "lambda"
+      - "python"
+    allow:
+      - dependency-type: "all"
+
+  # 3. Monitor Python Lambda Dependencies - Textract Completion
+  - package-ecosystem: "pip"
+    directory: "/lambda/textract-completion"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "lambda"
+      - "python"
+    allow:
+      - dependency-type: "all"
+
+  # 4. Monitor GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+    groups:
+      # Group all GitHub Actions updates together
+      github-actions:
+        patterns:
+          - "*"
+
