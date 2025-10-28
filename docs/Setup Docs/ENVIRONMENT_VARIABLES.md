@@ -58,6 +58,30 @@ ANTHROPIC_API_KEY=sk-ant-your_key_here
 
 ---
 
+### Nano Banana AI (Book Cover Generation)
+```env
+NANO_BANANA_API_KEY=your_nano_banana_key_here
+```
+
+**What it does:**
+- AI-powered book cover generation using Google's Gemini 2.5 Flash
+- Automatically generates vintage Dark Academia style covers when scraping fails
+- Fallback for documents without existing covers
+
+**Where to find:**
+- Go to [Nano Banana](https://nano-banana.ai)
+- Sign up for free (includes 5 free credits = 2 images)
+- Navigate to dashboard and copy your API key
+
+**Pricing:**
+- Basic: $9.99/month = 100 credits (50 images)
+- 2 credits per image generation
+- One-time credit packs also available
+
+**Note:** This is optional. If not configured, the system will only attempt to scrape covers from public sources (Open Library, Internet Archive, Google Books).
+
+---
+
 ## Complete .env.local Template
 
 Copy this entire template to `Digital-Grimoire/app/.env.local` and fill in your values:
@@ -89,6 +113,11 @@ AZURE_VISION_KEY=your_azure_vision_key
 # Anthropic Claude API (Metadata Extraction)
 # ============================================
 ANTHROPIC_API_KEY=sk-ant-your_key_here
+
+# ============================================
+# Nano Banana AI (Book Cover Generation) - OPTIONAL
+# ============================================
+NANO_BANANA_API_KEY=your_nano_banana_key_here
 ```
 
 ---
@@ -160,4 +189,5 @@ Consider using separate Supabase project and R2 bucket for testing.
 3. 📋 Set up Cloudflare R2 → [CLOUDFLARE_R2_SETUP.md](./CLOUDFLARE_R2_SETUP.md)
 4. 📋 Set up Azure Computer Vision → [AZURE_COMPUTER_VISION_SETUP.md](./AZURE_COMPUTER_VISION_SETUP.md)
 5. 📋 Get Anthropic API key → [console.anthropic.com](https://console.anthropic.com/)
+6. 📋 (Optional) Get Nano Banana API key → [nano-banana.ai](https://nano-banana.ai) for AI cover generation
 
