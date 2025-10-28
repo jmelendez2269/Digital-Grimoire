@@ -57,8 +57,41 @@ interface UsageMetrics {
   }>;
 }
 
+interface CoverSystemStatus {
+  nanoBanana: {
+    configured: boolean;
+    available: boolean;
+    credits?: number;
+    error?: string;
+  };
+  stats: {
+    totalJobs: number;
+    completed: number;
+    failed: number;
+    pending: number;
+    successRate: number;
+    totalCreditsUsed: number;
+    estimatedCost: number;
+  };
+  coverSources: Array<{
+    cover_source: string;
+    count: number;
+  }>;
+  recentJobs: Array<{
+    id: string;
+    text_id: string;
+    status: string;
+    source: string | null;
+    result_url: string | null;
+    error: string | null;
+    credits_used: number;
+    created_at: string;
+  }>;
+}
+
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
+  const [coverStatus, setCoverStatus] = useState<CoverSystemStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -96,11 +129,21 @@ export default function AdminDashboard() {
   const fetchMetrics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/usage?range=${timeRange}`);
-      const data = await response.json();
+      
+      // Fetch usage metrics
+      const metricsResponse = await fetch(`/api/admin/usage?range=${timeRange}`);
+      const metricsData = await metricsResponse.json();
 
-      if (data.success) {
-        setMetrics(data);
+      if (metricsData.success) {
+        setMetrics(metricsData);
+      }
+
+      // Fetch cover system status
+      const coverResponse = await fetch('/api/admin/covers/status');
+      const coverData = await coverResponse.json();
+
+      if (coverData.success) {
+        setCoverStatus(coverData);
       }
     } catch (error) {
       console.error('Failed to fetch metrics:', error);
@@ -355,6 +398,160 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Book Cover System Status */}
+            {coverStatus && (
+              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-amber-100 mb-4">
+                  🎨 Book Cover System
+                </h2>
+
+                {/* API Status Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* Nano Banana Status */}
+                  <div className={`border rounded-lg p-4 ${
+                    coverStatus.nanoBanana.available
+                      ? 'bg-green-950/20 border-green-700/30'
+                      : 'bg-amber-950/20 border-amber-700/30'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-amber-100">Nano Banana AI</span>
+                      <span className={`px-2 py-1 text-xs rounded ${
+                        coverStatus.nanoBanana.available
+                          ? 'bg-green-600/20 text-green-400'
+                          : 'bg-amber-600/20 text-amber-400'
+                      }`}>
+                        {coverStatus.nanoBanana.available ? '✓ Active' : '○ Not Configured'}
+                      </span>
+                    </div>
+                    {coverStatus.nanoBanana.available && coverStatus.nanoBanana.credits !== undefined && (
+                      <div>
+                        <div className="text-2xl font-bold text-amber-100">{coverStatus.nanoBanana.credits}</div>
+                        <div className="text-xs text-amber-100/60">credits available</div>
+                        <div className="text-xs text-amber-100/60 mt-1">
+                          ≈ {Math.floor(coverStatus.nanoBanana.credits / 2)} covers
+                        </div>
+                      </div>
+                    )}
+                    {!coverStatus.nanoBanana.available && (
+                      <div className="text-xs text-amber-100/60 mt-1">
+                        Add NANO_BANANA_API_KEY to enable AI cover generation
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Generation Stats */}
+                  <div className="border border-amber-900/20 rounded-lg p-4">
+                    <div className="text-sm font-semibold text-amber-100 mb-2">Generation Stats</div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-amber-100/60">Success Rate:</span>
+                        <span className="font-semibold text-green-400">
+                          {coverStatus.stats.successRate}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-amber-100/60">Total Jobs:</span>
+                        <span className="font-semibold text-amber-100">
+                          {coverStatus.stats.totalJobs}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-amber-100/60">Credits Used:</span>
+                        <span className="font-semibold text-amber-100">
+                          {coverStatus.stats.totalCreditsUsed}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cost Tracking */}
+                  <div className="border border-amber-900/20 rounded-lg p-4">
+                    <div className="text-sm font-semibold text-amber-100 mb-2">AI Generation Cost</div>
+                    <div className="text-3xl font-bold text-green-400 mb-1">
+                      {formatCurrency(coverStatus.stats.estimatedCost)}
+                    </div>
+                    <div className="text-xs text-amber-100/60">
+                      {coverStatus.stats.completed} covers generated
+                    </div>
+                    {coverStatus.stats.failed > 0 && (
+                      <div className="text-xs text-red-400 mt-1">
+                        {coverStatus.stats.failed} failed attempts
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cover Source Distribution */}
+                {coverStatus.coverSources.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-amber-100 mb-3">Cover Sources</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {coverStatus.coverSources.map((source) => (
+                        <div key={source.cover_source} className="bg-zinc-800/50 border border-amber-900/20 rounded-lg p-3">
+                          <div className="text-xs text-amber-100/60 mb-1">
+                            {source.cover_source === 'scraped' ? '🔍 Scraped' :
+                             source.cover_source === 'ai-generated' ? '🤖 AI Generated' :
+                             source.cover_source === 'manual' ? '📤 Manual' : source.cover_source}
+                          </div>
+                          <div className="text-xl font-bold text-amber-100">{source.count}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent Cover Jobs */}
+                {coverStatus.recentJobs.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-amber-100 mb-3">Recent Cover Generation Jobs</h3>
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                      {coverStatus.recentJobs.slice(0, 10).map((job) => (
+                        <div key={job.id} className="bg-zinc-800/50 border border-amber-900/20 rounded p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-0.5 text-xs rounded ${
+                                job.status === 'completed' ? 'bg-green-600/20 text-green-400' :
+                                job.status === 'failed' ? 'bg-red-600/20 text-red-400' :
+                                job.status === 'processing' ? 'bg-blue-600/20 text-blue-400' :
+                                'bg-amber-600/20 text-amber-400'
+                              }`}>
+                                {job.status}
+                              </span>
+                              <span className="text-xs text-amber-100/60">
+                                {job.source || 'unknown source'}
+                              </span>
+                              {job.credits_used > 0 && (
+                                <span className="text-xs text-amber-100/60">
+                                  • {job.credits_used} credits
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-amber-100/40">
+                              {new Date(job.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                          {job.error && (
+                            <div className="text-xs text-red-400 mt-1">{job.error}</div>
+                          )}
+                          {job.result_url && (
+                            <div className="text-xs text-amber-100/60 mt-1 truncate">
+                              ✓ {job.result_url}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {coverStatus.recentJobs.length === 0 && (
+                  <div className="text-center py-8 text-amber-100/40">
+                    No cover generation jobs yet
+                  </div>
+                )}
               </div>
             )}
 
