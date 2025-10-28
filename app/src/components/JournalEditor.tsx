@@ -37,6 +37,7 @@ export default function JournalEditor({
   const [charCount, setCharCount] = useState(0);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: {
