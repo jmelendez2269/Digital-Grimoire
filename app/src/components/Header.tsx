@@ -128,6 +128,16 @@ export default function Header() {
             📚 Library
           </Link>
           <Link
+            href="/journal"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/journal") || pathname?.startsWith("/journal/")
+                ? "text-amber-400"
+                : "text-zinc-400 hover:text-amber-300"
+            }`}
+          >
+            📝 Journal
+          </Link>
+          <Link
             href="/correspondences"
             className={`text-sm font-medium transition-colors ${
               isActive("/correspondences")
@@ -215,6 +225,13 @@ export default function Header() {
                       onClick={() => setMenuOpen(false)}
                     >
                       📖 My Library
+                    </Link>
+                    <Link
+                      href="/journal"
+                      className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      📝 Study Journal
                     </Link>
                     <Link
                       href="/annotations/search"
