@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Fuse from 'fuse.js';
-import { Search, Filter, BookOpen, Calendar, Tag, Palette, X } from 'lucide-react';
+import { Search, Filter, BookOpen, Calendar, Tag, Palette, X, Download } from 'lucide-react';
 import { formatDate } from '@/lib/utils/formatting';
 
 interface Annotation {
@@ -53,6 +53,8 @@ export default function AnnotationSearchPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Debounced search with PostgreSQL FTS
   useEffect(() => {
@@ -149,6 +151,51 @@ export default function AnnotationSearchPage() {
 
   const getColorInfo = (color: string) => HIGHLIGHT_COLORS.find((c) => c.value === color);
 
+  async function handleExport(format: 'markdown' | 'csv') {
+    setExporting(true);
+    setShowExportMenu(false);
+    
+    try {
+      // Build query params with current filters
+      const params = new URLSearchParams();
+      params.append('format', format);
+      if (searchQuery.trim()) params.append('q', searchQuery.trim());
+      if (selectedCategories.length > 0) {
+        selectedCategories.forEach(cat => params.append('category', cat));
+      }
+      if (selectedColors.length > 0) {
+        selectedColors.forEach(color => params.append('color', color));
+      }
+
+      const response = await fetch(`/api/annotations/export?${params}`);
+      
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch?.[1] || `annotations.${format === 'csv' ? 'csv' : 'md'}`;
+
+      // Download file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export annotations. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 pt-24 px-6">
@@ -172,13 +219,55 @@ export default function AnnotationSearchPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-amber-100 mb-3 flex items-center gap-3">
-            <Search className="w-10 h-10 text-amber-600" />
-            Search Annotations
-          </h1>
-          <p className="text-amber-100/60">
-            Search across all your highlights and notes using powerful full-text search. {totalCount} total annotations.
-          </p>
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h1 className="text-4xl font-bold text-amber-100 mb-3 flex items-center gap-3">
+                <Search className="w-10 h-10 text-amber-600" />
+                Search Annotations
+              </h1>
+              <p className="text-amber-100/60">
+                Search across all your highlights and notes using powerful full-text search. {totalCount} total annotations.
+              </p>
+            </div>
+            
+            {/* Export Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                disabled={exporting || totalCount === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="w-4 h-4" />
+                {exporting ? 'Exporting...' : 'Export'}
+              </button>
+
+              {/* Export Dropdown */}
+              {showExportMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 z-50 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl overflow-hidden">
+                    <button
+                      onClick={() => handleExport('markdown')}
+                      className="w-full px-4 py-3 text-left text-sm text-amber-100 hover:bg-zinc-800 transition-colors flex items-center gap-2"
+                    >
+                      <span>📄</span>
+                      Export as Markdown
+                    </button>
+                    <button
+                      onClick={() => handleExport('csv')}
+                      className="w-full px-4 py-3 text-left text-sm text-amber-100 hover:bg-zinc-800 transition-colors flex items-center gap-2 border-t border-zinc-800"
+                    >
+                      <span>📊</span>
+                      Export as CSV
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Search Bar */}
