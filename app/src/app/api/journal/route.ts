@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 // GET /api/journal - List user's journal pages
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession();
@@ -63,7 +64,8 @@ export async function GET(request: NextRequest) {
 // POST /api/journal - Create new journal page
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession();

@@ -15,7 +15,8 @@ export async function GET() {
   };
 
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
     // Check 1: Authentication
     diagnostics.checks.push({ name: 'Authentication', status: 'checking...' });
