@@ -72,3 +72,4 @@ COMMENT ON COLUMN journal_pages.content IS 'Tiptap document JSON format';
 COMMENT ON COLUMN journal_pages.parent_id IS 'For nested/hierarchical pages (future feature)';
 COMMENT ON COLUMN journal_pages.icon IS 'Emoji icon for the page';
 
+

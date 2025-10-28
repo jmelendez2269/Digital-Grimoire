@@ -51,6 +51,29 @@ Once the migration is run, you'll have access to:
 
 ## Troubleshooting
 
+### Error: "EBUSY: resource busy or locked"
+This is a **Next.js build cache issue**, not a database problem!
+
+**Quick Fix:**
+```powershell
+cd "Digital-Grimoire"
+.\fix-ebusy.ps1
+```
+
+Or manually:
+```powershell
+cd app
+Remove-Item -Recurse -Force .next
+npm run dev
+```
+
+**Why it happens:**
+- OneDrive syncing `.next` folder (common on Windows)
+- Corrupted build cache
+- Multiple dev servers running
+
+See `docs/FIX_EBUSY_ERROR.md` for detailed instructions.
+
 ### Error: "relation 'journal_pages' already exists"
 This means the table is already created. The feature should work!
 
@@ -61,6 +84,7 @@ Run an earlier migration that creates this function. It should be in one of the 
 1. Check browser console (F12) for detailed error messages
 2. Verify you're logged in
 3. Check Supabase logs in Dashboard → Logs → API
+4. Run the diagnostic: `http://localhost:3000/journal/test`
 
 ## Migration Files
 
