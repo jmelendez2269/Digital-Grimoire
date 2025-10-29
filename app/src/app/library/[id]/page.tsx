@@ -48,6 +48,22 @@ const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
   loading: () => null,
 });
 
+// Dynamically import ChapterViewer for structured text documents
+const ChapterViewer = dynamic(() => import('@/components/ChapterViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+      <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+    </div>
+  ),
+});
+
+interface Chapter {
+  id: string;
+  title: string;
+  content: string;
+}
+
 interface TextDocument {
   id: string;
   title: string;
@@ -70,6 +86,8 @@ interface TextDocument {
     pageCount?: number;
     lineCount?: number;
     metadataFileKey?: string;
+    isStructuredText?: boolean;
+    chapters?: Chapter[];
   };
 }
 
@@ -308,7 +326,13 @@ export default function DocumentDetailPage() {
           <div className="lg:col-span-2">
             {activeTab === 'viewer' && (
               <div className="h-[calc(100vh-250px)]">
-                {pdfUrl && document.status === 'ready' ? (
+                {/* Show ChapterViewer for structured text documents */}
+                {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                  <ChapterViewer 
+                    chapters={document.metadata.chapters}
+                    documentTitle={document.title}
+                  />
+                ) : pdfUrl && document.status === 'ready' ? (
                   <PDFViewer 
                     fileUrl={pdfUrl} 
                     fileName={document.title}
@@ -418,7 +442,12 @@ export default function DocumentDetailPage() {
                     <dd className="text-amber-100">{document.type.replace(/_/g, ' ')}</dd>
                   </div>
                 )}
-                {(document.metadata?.pageCount || numPages) && (
+                {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                  <div>
+                    <dt className="text-sm text-amber-100/60 mb-1">Chapters</dt>
+                    <dd className="text-amber-100">{document.metadata.chapters.length} chapters</dd>
+                  </div>
+                ) : (document.metadata?.pageCount || numPages) && (
                   <div>
                     <dt className="text-sm text-amber-100/60 mb-1">Pages</dt>
                     <dd className="text-amber-100">{document.metadata?.pageCount || numPages} pages</dd>
@@ -454,6 +483,7 @@ export default function DocumentDetailPage() {
                   selectedPosition={selectedPosition}
                   onSelectionCleared={handleSelectionCleared}
                   onAnnotationAdded={handleAnnotationAdded}
+                  documentTitle={document.title}
                 />
               </div>
             )}

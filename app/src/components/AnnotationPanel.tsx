@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Highlighter, MessageSquare, Trash2, Edit3, Save, X } from 'lucide-react';
+import { Highlighter, MessageSquare, Trash2, Edit3, Save, X, Sparkles } from 'lucide-react';
 import { formatDate } from '@/lib/utils/formatting';
 
 interface Annotation {
@@ -41,6 +41,7 @@ interface AnnotationPanelProps {
   selectedText?: string | null;
   selectedPosition?: any;
   onSelectionCleared?: () => void;
+  documentTitle?: string;
 }
 
 export default function AnnotationPanel({
@@ -50,6 +51,7 @@ export default function AnnotationPanel({
   selectedText = null,
   selectedPosition = null,
   onSelectionCleared,
+  documentTitle,
 }: AnnotationPanelProps) {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +69,9 @@ export default function AnnotationPanel({
   
   // Filter state
   const [filterCategory, setFilterCategory] = useState<Annotation['category'] | 'all'>('all');
+  
+  // Convergence Machine modal state
+  const [showConvergenceModal, setShowConvergenceModal] = useState(false);
 
   // Update highlight color when category changes
   useEffect(() => {
@@ -210,6 +215,89 @@ export default function AnnotationPanel({
           {showForm ? 'Cancel' : '+ Add Note'}
         </button>
       </div>
+
+      {/* Convergence Machine Placeholder Button (only for The Kybalion) */}
+      {documentTitle === 'The Kybalion' && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-purple-900/20 via-amber-900/20 to-purple-900/20 border border-purple-600/30 rounded-lg">
+          <button
+            onClick={() => setShowConvergenceModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-700 hover:to-amber-700 text-white rounded-lg font-medium transition-all transform hover:scale-[1.02]"
+          >
+            <Sparkles className="w-5 h-5" />
+            Explore in Convergence Machine
+          </button>
+          <p className="text-xs text-amber-100/60 mt-2 text-center">
+            Experience The Kybalion through 7 unique analytical lenses
+          </p>
+        </div>
+      )}
+
+      {/* Convergence Machine Coming Soon Modal */}
+      {showConvergenceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowConvergenceModal(false)}>
+          <div className="bg-zinc-900 border-2 border-purple-600/50 rounded-xl p-6 max-w-lg mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <Sparkles className="w-8 h-8 text-purple-400" />
+              <h3 className="text-2xl font-bold text-amber-100">Convergence Machine</h3>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <p className="text-amber-100/80 leading-relaxed">
+                The <span className="font-semibold text-purple-400">Convergence Machine</span> will allow you to explore The Kybalion through seven unique analytical lenses:
+              </p>
+              
+              <ul className="space-y-2 text-sm text-amber-100/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <span><strong className="text-amber-100">Philosophical:</strong> Examine core concepts and logical frameworks</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <span><strong className="text-amber-100">Symbolic/Occult:</strong> Decode esoteric symbols and hidden meanings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <span><strong className="text-amber-100">Religious/Spiritual:</strong> Explore theological dimensions</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <span><strong className="text-amber-100">Historical/Anthropological:</strong> Trace cultural origins and influences</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <span><strong className="text-amber-100">Psychological:</strong> Analyze mental and cognitive aspects</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <span><strong className="text-amber-100">Scientific:</strong> Compare with modern scientific understanding</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <span><strong className="text-amber-100">Literary:</strong> Appreciate language, style, and narrative structure</span>
+                </li>
+              </ul>
+              
+              <p className="text-amber-100/80 leading-relaxed">
+                Highlight any passage in The Kybalion to trigger AI-powered analysis across all seven perspectives, revealing deep interconnections and insights.
+              </p>
+              
+              <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-3">
+                <p className="text-xs text-purple-300">
+                  <strong className="block mb-1">Coming Soon</strong>
+                  This feature is currently in development and will be available in a future update. Check back soon!
+                </p>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowConvergenceModal(false)}
+              className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Category Filter */}
       {annotations.length > 0 && (
