@@ -380,6 +380,224 @@ associated_names: Related figures
 
 ---
 
+### Phase 3 — Detailed Plan (Objectives, Architecture, Milestones)
+
+**Objectives (Phase 3 overall):**
+- Ship a performant, editable knowledge graph for traditional correspondences (Phase 3A) and a conceptual cross-tradition graph (Phase 3B).
+- Maintain bootstrap budget: prefer PostgreSQL fallback during development; enable Neptune behind a feature flag.
+- Deliver user-facing value: interactive graph + CRUD + searchable comparative tables.
+
+**Success Metrics:**
+- Performance: initial graph render <800ms for 200 nodes/400 edges; interactions <50ms.
+- Reliability: >99% success for CRUD operations with RLS preserved.
+- Content: ≥50 correspondence entities and ≥30 convergence concepts seeded with citations.
+- UX: Task completion (find node, see connections, open details) <10s for new users.
+
+#### 3A. Graph Data Model (Neptune + PostgreSQL Fallback)
+
+- Vertex types: `entity` (category enum: planet, element, deity, tarot, sephirah, path, metal, herb, color, etc.)
+- Edge types: `corresponds_to`, `associated_with`, `governs`, `opposes` with properties: `weight` (0-1), `source`, `confidence` enum, `notes`.
+- Identifiers: slugified stable IDs, human names, aliases.
+- PostgreSQL fallback tables:
+  - `correspondences(id, name, category, aliases text[], description, created_by, created_at)`
+  - `correspondence_relationships(id, source_id, target_id, type, weight, source_citation, confidence, notes, created_at)`
+  - Indexes: btree on `(category)`, `(type)`, gin on `aliases`, composite `(source_id, target_id, type)` unique.
+- Sync plan: one-way export job PG → JSONL; importer for Neptune; feature flag `NEPTUNE_ENABLED`.
+
+#### 3B. Convergence Concepts Model
+
+- Tables (as listed): `convergence_concepts`, `convergence_relationships` with `similarity` (0-1), `tradition`, `era`, `source_citation`.
+- Required fields per concept: `name`, `tradition`, `short_definition`, `primary_sources[]`, `tags[]`.
+
+#### API & CRUD Interfaces
+
+- REST endpoints (Next.js route handlers):
+  - `GET /api/graph/entities`, `POST /api/graph/entities`, `PATCH /api/graph/entities/:id`, `DELETE /api/graph/entities/:id`
+  - `GET /api/graph/edges`, `POST /api/graph/edges`, `PATCH /api/graph/edges/:id`, `DELETE /api/graph/edges/:id`
+  - `GET /api/concepts`, `POST /api/concepts`, `PATCH /api/concepts/:id`, `DELETE /api/concepts/:id`
+  - `GET /api/concepts/relationships`
+- Filters: category, tag, lens, confidence, weight range.
+- RLS: admin-create/edit; user-suggested items stored as `pending` for moderation.
+
+#### Visualization (D3.js)
+
+- Force-directed layout with collision, zoom/pan, and smart label avoidance.
+- Node styling by category; edge thickness by weight; hover highlights neighbors; click opens right-panel.
+- Lens presets: Astrological, Elemental, Qabalistic toggle filters and color scales.
+- Accessibility: keyboard focus cycle across nodes; tooltip content readable by screen readers.
+
+#### Data Seeding & Sources
+
+- Seed sets: planets (7 classical), signs/elements, tarot majors, sephiroth/paths, metals, colors, herbs.
+- Sources captured in `source_citation` (e.g., Golden Dawn, Agrippa, Crowley; academic references where available).
+- Convergence seed examples: Emptiness/Śūnyatā, Taoist Wu, Christian Negative Theology; Unity/Oneness variants; Consciousness mappings.
+
+#### Performance & Quality Targets
+
+- Back-end: queries under 100ms P95 for 1k nodes; indexes required as above.
+- Front-end: virtualization for detail tables; WebGL fallback considered if node count >1k (defer).
+- Tests: unit tests for API validation, integration tests for CRUD + RLS, visual regression for graph node coloring.
+
+#### Risks & Mitigations
+
+- Neptune cost/complexity: start on PostgreSQL; enable Neptune when usage justifies; provide export/import scripts.
+- Data validity: moderation workflow and citation-required rule for new edges.
+- Hairball risk: default filters + lens presets + degree limit on initial render.
+
+#### Milestones & Acceptance Criteria
+
+- Week 15: PG schema finalized; API scaffolding live; seed 30 entities, 60 edges. AC: CRUD works locally with RLS.
+- Week 16: D3 graph MVP interactive; table CRUD UI; export JSON. AC: render <800ms, hover/click behaviors complete.
+- Week 17: Moderation + filters + presets; seed reaches 50/120. AC: role-gated actions; preset filters functional.
+- Week 18: Neptune experimental behind flag; sync job PG→Neptune. AC: parity render from Neptune sample.
+- Week 19: Convergence tables/migrations + API + seed 15 concepts, 20 links. AC: comparative view lists concepts with citations.
+- Week 20: Convergence graph vis + search; total 30 concepts, 40 links. AC: similarity weights rendered; search across traditions.
+
+#### Dependencies & Cost Notes
+
+- Optional Neptune (free tier/credits). Keep disabled in production until Phase 3 metrics hit.
+- No change to Supabase tier initially; monitor DB size and index bloat.
+
+---
+
+#### PostgreSQL DDL (Proposed)
+
+```sql
+-- Entities
+create table if not exists correspondences (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null,
+  category text not null check (category in (
+    'planet','element','deity','tarot','sephirah','path','metal','herb','color','sign','house','angel','demon','stone','note','other'
+  )),
+  aliases text[] default '{}',
+  description text,
+  lenses text[] default '{}',
+  created_by uuid references auth.users(id),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists idx_correspondences_category on correspondences(category);
+create index if not exists idx_correspondences_aliases on correspondences using gin (aliases);
+create unique index if not exists idx_correspondences_slug on correspondences(slug);
+
+-- Relationships
+create table if not exists correspondence_relationships (
+  id uuid primary key default gen_random_uuid(),
+  source_id uuid not null references correspondences(id) on delete cascade,
+  target_id uuid not null references correspondences(id) on delete cascade,
+  type text not null check (type in (
+    'corresponds_to','associated_with','governs','opposes','harmonizes_with','derives_from'
+  )),
+  weight numeric not null default 0.5 check (weight >= 0 and weight <= 1),
+  confidence text not null default 'tradition' check (confidence in ('established','interpretive','speculative','tradition')),
+  source_citation text,
+  notes text,
+  created_by uuid references auth.users(id),
+  created_at timestamptz default now()
+);
+
+create unique index if not exists idx_corr_unique_edge on correspondence_relationships(source_id, target_id, type);
+create index if not exists idx_corr_type on correspondence_relationships(type);
+create index if not exists idx_corr_weight on correspondence_relationships(weight);
+
+-- Convergence Concepts
+create table if not exists convergence_concepts (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null,
+  tradition text not null,
+  era text,
+  short_definition text,
+  primary_sources text[] default '{}',
+  tags text[] default '{}',
+  created_by uuid references auth.users(id),
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_concepts_tradition on convergence_concepts(tradition);
+create index if not exists idx_concepts_tags on convergence_concepts using gin(tags);
+
+create table if not exists convergence_relationships (
+  id uuid primary key default gen_random_uuid(),
+  source_id uuid not null references convergence_concepts(id) on delete cascade,
+  target_id uuid not null references convergence_concepts(id) on delete cascade,
+  similarity numeric not null default 0.5 check (similarity >= 0 and similarity <= 1),
+  source_citation text,
+  notes text,
+  created_by uuid references auth.users(id),
+  created_at timestamptz default now()
+);
+
+create unique index if not exists idx_conv_unique_edge on convergence_relationships(source_id, target_id);
+```
+
+RLS policies (sketch):
+- Select for all authenticated users; insert/update/delete only for admins.
+- Separate `pending_*` tables optional for user suggestions.
+
+#### Neptune Schema (Gremlin outline)
+
+- Vertex label: `entity` with properties: `slug`, `name`, `category`, `aliases` (list), `lenses` (list).
+- Edge labels: `CORRESPONDS_TO`, `ASSOCIATED_WITH`, `GOVERNS`, `OPPOSES`, `HARMONIZES_WITH`, `DERIVES_FROM` with properties: `weight`, `confidence`, `source`, `notes`.
+- Convergence graph: vertex label `concept` with `tradition`, `era`, `tags`; edge label `SIMILAR_TO` with `similarity`, `source`.
+- Import format: JSONL records for vertices then edges with foreign key by `slug`.
+- Feature flag: `NEPTUNE_ENABLED` to switch data source in server routes.
+
+#### API Contracts (Selected)
+
+```
+GET /api/graph/entities?category=&q=&lens=&limit=&cursor=
+  200 { items: Entity[], nextCursor?: string }
+POST /api/graph/entities
+  body { name, slug?, category, aliases?, description?, lenses? }
+  201 { entity }
+PATCH /api/graph/entities/:id
+DELETE /api/graph/entities/:id
+
+GET /api/graph/edges?type=&minWeight=&sourceId=&targetId=&limit=&cursor=
+POST /api/graph/edges { sourceId, targetId, type, weight?, confidence?, source_citation?, notes? }
+
+GET /api/concepts?q=&tradition=&tag=&limit=&cursor=
+POST /api/concepts { name, tradition, era?, short_definition?, primary_sources?, tags? }
+GET /api/concepts/relationships?sourceId=&minSimilarity=
+POST /api/concepts/relationships { sourceId, targetId, similarity, source_citation?, notes? }
+```
+
+Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
+
+#### UI Work Breakdown
+
+- Graph Canvas (`GraphView`): D3 force sim, zoom/pan, node/edge renderers, presets.
+- Details Panel (`EntityDetails`/`ConceptDetails`): metadata, citations, related items.
+- CRUD Modals: create/edit entity, create/edit relationship with validation.
+- Tables: entities, relationships, concepts with filters and pagination.
+- Presets Toolbar: lens toggles, category filters, weight/similarity sliders.
+
+#### Seeding Checklist (Initial)
+
+- Planets (7), Zodiac signs (12), Elements (4/5), Metals (7), Colors (7), Sephiroth (10), Paths (22), Tarot Majors (22).
+- At least 2 citations per relationship where available (primary and secondary).
+- Convergence: Emptiness/Wu/Void cluster; Unity/Oneness cluster; Consciousness cluster (mind, awareness, spirit).
+
+#### Quality & Testing Plan
+
+- Backend: unit tests for validation; integration tests for CRUD, RLS, pagination, filters.
+- Frontend: component tests; interaction tests for hover/click/keyboard; visual regression for color scales.
+- Performance: scripts to load 1k nodes/2k edges and measure render/interaction; DB explain analyze on heavy queries.
+- Monitoring: server logs for slow queries; client perf markers around layout/paint.
+
+#### Neptune Migration Plan
+
+- Step 1: Maintain PG as source of truth; scheduled export to JSONL.
+- Step 2: One-click importer to Neptune test cluster; verify counts and sampled paths.
+- Step 3: Behind flag routing for read-only queries; writes remain in PG.
+- Step 4: If stable and economically justified, consider dual-write or primary swap.
+
+---
+
 ### Phase 4: The Convergence Machine (Weeks 21-28)
 
 **Goal:** Premium 7-lens AI reasoning system with adjustable perspective weighting

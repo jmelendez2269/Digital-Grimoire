@@ -4,6 +4,12 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
+import HorizontalRule from '@tiptap/extension-horizontal-rule';
+import { SlashMenu } from '../tiptap/extensions/SlashMenu';
+import { DragHandle } from '../tiptap/extensions/DragHandle';
+import Image from '@tiptap/extension-image';
+import { createClient as createSbClient } from '@/lib/supabase/client';
+import { WikiLink } from '../tiptap/extensions/WikiLinkExtension';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Bold,
@@ -48,6 +54,11 @@ export default function JournalEditor({
         placeholder,
       }),
       Typography,
+      HorizontalRule,
+      SlashMenu,
+      DragHandle,
+      Image,
+      WikiLink,
     ],
     content,
     editorProps: {
@@ -103,6 +114,43 @@ export default function JournalEditor({
       </div>
     );
   }
+
+  // Image upload handler
+  useEffect(() => {
+    const onUpload = async () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const supabase = createSbClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+        const sanitized = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const path = `${user.id}/${Date.now()}-${sanitized}`;
+        const { error: uploadError } = await supabase.storage
+          .from('journal-images')
+          .upload(path, file, { upsert: false, contentType: file.type });
+        if (uploadError) {
+          console.error(uploadError);
+          return;
+        }
+        const { data: signed } = await supabase.storage
+          .from('journal-images')
+          .createSignedUrl(path, 60 * 60 * 24 * 7);
+        const url = signed?.signedUrl;
+        if (url) {
+          editor.chain().focus().setImage({ src: url, alt: sanitized }).run();
+        }
+      };
+      input.click();
+    };
+    document.addEventListener('tiptap-image-upload', onUpload);
+    return () => document.removeEventListener('tiptap-image-upload', onUpload);
+  }, [editor]);
 
   return (
     <div className="border border-zinc-700 rounded-lg bg-zinc-900/50 overflow-hidden">

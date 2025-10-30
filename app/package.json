@@ -11,7 +11,8 @@
     "perf": "unlighthouse --no-cache",
     "perf:ci": "unlighthouse-ci --build-static",
     "perf:debug": "unlighthouse --debug --no-cache",
-    "seed:kybalion": "tsx scripts/seed-kybalion.ts"
+    "seed:kybalion": "tsx scripts/seed-kybalion.ts",
+    "summary": "tsx scripts/generate-session-summary.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.67.0",

@@ -8,6 +8,9 @@ export const PRICING = {
   // OpenAI (per 1K tokens)
   OPENAI_INPUT_PER_1K: 0.0025,  // GPT-4o pricing
   OPENAI_OUTPUT_PER_1K: 0.01,   // GPT-4o pricing
+
+  // Notion API (per 1K requests) - Notion API is generally free; track at $0 for visibility
+  NOTION_REQUEST_PER_1K: 0,
   
   // Cloudflare R2
   R2_STORAGE_PER_GB_MONTH: 0.015, // $0.015 per GB/month
@@ -20,7 +23,7 @@ export const PRICING = {
 };
 
 export interface UsageLogParams {
-  service: 'azure_ocr' | 'openai_metadata' | 'r2_storage' | 'r2_bandwidth' | 'other';
+  service: 'azure_ocr' | 'openai_metadata' | 'r2_storage' | 'r2_bandwidth' | 'notion' | 'other';
   endpoint?: string;
   operation: string;
   unitsUsed: number;
@@ -80,6 +83,10 @@ function calculateCost(
       // Assuming mixed input/output, use average
       const avgCostPer1K = (PRICING.OPENAI_INPUT_PER_1K + PRICING.OPENAI_OUTPUT_PER_1K) / 2;
       return (units / 1000) * avgCostPer1K;
+    
+    case 'notion':
+      // Track requests for visibility (free or enterprise-dependent). This is set to $0 by default.
+      return (units / 1000) * PRICING.NOTION_REQUEST_PER_1K;
     
     case 'r2_storage':
       if (unitType === 'bytes') {
@@ -209,6 +216,31 @@ export async function logBandwidthUsage(params: {
     requestMetadata: {
       bytes: params.bytes,
     },
+  });
+}
+
+/**
+ * Log Notion API usage
+ */
+export async function logNotionUsage(params: {
+  requests: number;
+  operation: string;
+  userId?: string;
+  endpoint?: string;
+  success?: boolean;
+  errorMessage?: string;
+  metadata?: Record<string, any>;
+}) {
+  await logApiUsage({
+    service: 'notion',
+    operation: params.operation,
+    endpoint: params.endpoint,
+    unitsUsed: params.requests,
+    unitType: 'requests',
+    userId: params.userId,
+    success: params.success,
+    errorMessage: params.errorMessage,
+    requestMetadata: params.metadata,
   });
 }
 
