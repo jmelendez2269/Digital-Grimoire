@@ -112,6 +112,15 @@ export default function Header() {
 
   const isActive = (path: string) => pathname === path;
 
+  // --- Admin Navigation Config ---
+  // All admin navigation must exist only in this array, and only inside the profile dropdown.
+  // Do not add admin links to the main navigation bar; new admin pages must be added to this array.
+  const adminLinks = [
+    { label: "Admin Panel", icon: "🔐", href: "/admin" },
+    { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
+    // To add new admin pages, add entries here!
+  ];
+
   return (
     <header className="border-b border-zinc-800 bg-zinc-900/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
@@ -340,22 +349,17 @@ export default function Header() {
                       <>
                         <hr className="my-1 border-zinc-800" />
                         <div className="py-1">
-                          <Link
-                            href="/admin"
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300"
-                            onClick={() => setMenuOpen(false)}
-                          >
-                            <span className="text-base">🔐</span>
-                            <span>Admin Panel</span>
-                          </Link>
-                          <Link
-                            href="/admin/upload"
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300"
-                            onClick={() => setMenuOpen(false)}
-                          >
-                            <span className="text-base">📤</span>
-                            <span>Admin Upload</span>
-                          </Link>
+                          {adminLinks.map(link => (
+                            <Link
+                              key={link.href}
+                              href={link.href}
+                              className="flex items-center gap-3 px-4 py-2 text-sm text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300"
+                              onClick={() => setMenuOpen(false)}
+                            >
+                              <span className="text-base">{link.icon}</span>
+                              <span>{link.label}</span>
+                            </Link>
+                          ))}
                         </div>
                       </>
                     )}

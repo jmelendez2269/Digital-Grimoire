@@ -542,3 +542,13 @@ This project synthesizes insights from:
 **Version:** 2.0 (Convergence Rebrand)  
 **Status:** Planning Complete → Development Beginning
 
+---
+
+## 🛡️ Admin Navigation Rule
+
+- Admin navigation pages (routes under `/admin` or admin-only actions) must be added only to the profile avatar dropdown menu.
+- The dropdown's admin links are maintained by a single `adminLinks` array in `app/src/components/Header.tsx`.
+- Do **not** add admin links to the main navigation bar. All new admin-only navigation should be discoverable from the dropdown for admins only.
+
+---
+
