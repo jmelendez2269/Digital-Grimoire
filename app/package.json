@@ -12,6 +12,7 @@
     "perf:ci": "unlighthouse-ci --build-static",
     "perf:debug": "unlighthouse --debug --no-cache",
     "seed:kybalion": "tsx scripts/seed-kybalion.ts",
+    "seed:correspondences": "tsx scripts/seed-correspondences.ts",
     "summary": "tsx scripts/generate-session-summary.ts"
   },
   "dependencies": {
