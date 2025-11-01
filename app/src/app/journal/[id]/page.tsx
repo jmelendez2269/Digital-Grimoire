@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Trash2, Archive, Smile } from 'lucide-react';
+import { ArrowLeft, Trash2, Archive } from 'lucide-react';
 import Link from 'next/link';
 import JournalEditor from '@/components/JournalEditor';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -19,6 +19,35 @@ interface JournalPage {
   updated_at: string;
 }
 
+function serializeContent(content: unknown): string {
+  if (content === null || content === undefined) {
+    return '';
+  }
+
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  try {
+    return JSON.stringify(content);
+  } catch (error) {
+    console.error('Unable to serialize journal content:', error);
+    return '';
+  }
+}
+
+function toApiContent(content: string) {
+  if (!content) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(content);
+  } catch (error) {
+    return content;
+  }
+}
+
 export default function JournalPageEditor() {
   const router = useRouter();
   const params = useParams();
@@ -28,6 +57,10 @@ export default function JournalPageEditor() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [draftContent, setDraftContent] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     if (pageId) {
@@ -50,6 +83,9 @@ export default function JournalPageEditor() {
 
       const data = await response.json();
       setPage(data.page);
+      setDraftContent(serializeContent(data.page.content));
+      setIsDirty(false);
+      setSaveStatus('idle');
     } catch (err) {
       console.error('Error fetching page:', err);
       setError('Failed to load page');
@@ -79,15 +115,15 @@ export default function JournalPageEditor() {
     }
   }
 
-  async function updateContent(newContent: string) {
+  async function persistContent(newContent: string) {
     if (!page) return;
 
     try {
-      const contentJson = JSON.parse(newContent);
+      const contentPayload = toApiContent(newContent);
       const response = await fetch(`/api/journal/${pageId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: contentJson }),
+        body: JSON.stringify({ content: contentPayload }),
       });
 
       if (!response.ok) {
@@ -95,9 +131,49 @@ export default function JournalPageEditor() {
       }
 
       const data = await response.json();
-      setPage(data.page);
+
+      // Keep local state in sync with the newly saved content to avoid reapplying stale data
+      setPage((prev) =>
+        prev
+          ? {
+              ...prev,
+              content: contentPayload,
+              updated_at: data.page.updated_at,
+            }
+          : null
+      );
+      setDraftContent(newContent);
+      return data.page;
     } catch (err) {
       console.error('Error updating content:', err);
+      throw err;
+    }
+  }
+
+  async function handleSave() {
+    if (!page || isSaving || !isDirty) {
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveStatus('idle');
+
+    try {
+      await persistContent(draftContent);
+      setIsDirty(false);
+      setSaveStatus('success');
+    } catch (err) {
+      setSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function handleEditorChange(newValue: string) {
+    setDraftContent(newValue);
+    setIsDirty(true);
+    if (saveStatus !== 'idle') {
+      setSaveStatus('idle');
     }
   }
 
@@ -208,6 +284,13 @@ export default function JournalPageEditor() {
 
             <div className="flex items-center gap-2">
               <button
+                onClick={handleSave}
+                disabled={!isDirty || isSaving}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSaving ? 'Saving...' : isDirty ? 'Save Changes' : 'Saved'}
+              </button>
+              <button
                 onClick={toggleArchive}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
               >
@@ -223,6 +306,14 @@ export default function JournalPageEditor() {
               </button>
             </div>
           </div>
+
+        {saveStatus === 'success' && (
+          <div className="mb-4 text-sm text-green-400">Changes saved.</div>
+        )}
+
+        {saveStatus === 'error' && (
+          <div className="mb-4 text-sm text-red-400">Failed to save changes. Try again.</div>
+        )}
 
           {/* Page icon and title */}
           <div className="flex items-start gap-4 mb-4">
@@ -288,12 +379,7 @@ export default function JournalPageEditor() {
         </div>
 
         {/* Editor */}
-        <JournalEditor
-          content={JSON.stringify(page.content)}
-          onUpdate={updateContent}
-          placeholder="Start writing your thoughts..."
-          autoSave={true}
-        />
+        <JournalEditor content={draftContent} onUpdate={handleEditorChange} />
           </div>
         </div>
       </main>

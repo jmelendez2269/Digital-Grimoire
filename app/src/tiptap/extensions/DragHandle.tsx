@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Editor } from '@tiptap/react';
-import { Plugin, PluginKey } from 'prosemirror-state';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 
 function moveCurrentBlock(editor: Editor, direction: 'up' | 'down') {
   const { state, view } = editor;

@@ -289,11 +289,6 @@ export const SlashMenu = Extension.create<SlashMenuOptions>({
                 const handleSelect = (item: CommandItem) => {
                   const { from, to } = pluginState.range;
                   
-                  // Delete the slash command
-                  view.dispatch(
-                    view.state.tr.deleteRange(from, to)
-                  );
-                  
                   // Clean up menu first
                   if (menuRoot) {
                     if (reactRoot) {
@@ -304,14 +299,17 @@ export const SlashMenu = Extension.create<SlashMenuOptions>({
                     menuRoot = null;
                   }
                   
-                  // Use setTimeout to ensure the deletion transaction is fully processed
-                  // before executing the command
+                  // Use Tiptap's API to delete the slash command text and execute the command
+                  // This ensures proper state synchronization
+                  editor.chain()
+                    .focus()
+                    .deleteRange({ from, to })
+                    .run();
+                  
+                  // Use setTimeout to ensure the deletion is complete before running the command
                   setTimeout(() => {
-                    // Ensure editor is focused
-                    editor.view.focus();
-                    // Execute the command
                     item.action(editor as Editor);
-                  }, 0);
+                  }, 10);
                 };
                 
                 const handleClose = () => {
