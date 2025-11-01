@@ -1,0 +1,150 @@
+# Digital Grimoire Cursor Rules
+
+## ⚠️ CRITICAL PATH INFORMATION
+
+### Current Folder Structure Reality:
+
+The project has a **nested structure** due to naming discrepancy:
+- **Outer folder:** "Digital Grimore" (with SPACE) 
+- **Git repository:** "Digital-Grimoire" (with HYPHEN)
+- **App location:** Inside the Git repository
+
+### ALWAYS Use This Full Path for Package Installation:
+
+```
+C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire\app
+```
+
+**Why the nesting?**
+- Git repo is named `Digital-Grimoire` (hyphen)
+- But it's inside a folder called `Digital Grimore` (space)
+- The app is at `Digital-Grimoire/app/`
+
+## Package Installation Rules
+
+When installing npm/pnpm packages, **ALWAYS**:
+
+1. Use the **full absolute path** to the app directory
+2. Navigate to: `C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire\app`
+3. Quote paths in PowerShell commands
+4. Use semicolon (`;`) not `&&` in PowerShell
+
+### ✅ CORRECT Package Installation:
+```powershell
+cd "C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire\app"; pnpm add <package>
+```
+
+### ❌ WRONG - Will Install in Wrong Location:
+```powershell
+cd "Digital-Grimoire/app"; pnpm add <package>
+```
+
+## Directory Structure
+
+```
+Digital Grimore/                          # Root folder (has SPACE)
+├── .cursorrules                          # This file
+├── package.json                          # Root package.json (not the main one)
+└── Digital-Grimoire/                     # Nested folder (has HYPHEN)
+    └── app/                              # Next.js app - THIS IS THE MAIN PROJECT
+        ├── package.json                  # ⭐ Main package.json
+        ├── src/
+        │   ├── app/
+        │   ├── components/
+        │   ├── tiptap/
+        │   └── ...
+        └── ...
+```
+
+## Before Any Package Operation
+
+1. **Always verify location** with `pwd`
+2. **Use full absolute path** when changing directories
+3. **Quote paths** that contain spaces
+4. **Check the correct package.json** is being modified
+
+## Common Mistakes to Avoid
+
+❌ Assuming relative paths will work  
+❌ Forgetting the space in "Digital Grimore"  
+❌ Confusing "Digital Grimore" (root) with "Digital-Grimoire" (subfolder)  
+❌ Installing packages in workspace root instead of app directory  
+❌ Using `&&` instead of `;` in PowerShell  
+
+## When a Module is Not Found
+
+If you see "Module not found: Can't resolve '<package>'":
+
+1. **Navigate** to app directory with full path
+2. **Install** the package: `pnpm add <package>`
+3. **Verify** it's in `Digital-Grimoire/app/package.json`
+4. **Confirm** peer dependencies are satisfied
+
+## Git Repository Sync Rules
+
+### Periodic Git Sync (MANDATORY)
+
+The AI assistant **MUST** periodically sync code with the remote repository:
+
+#### When to Sync:
+
+1. **After completing any feature** or significant change
+2. **After creating/updating documentation**
+3. **After fixing bugs** or resolving issues
+4. **At the end of each work session**
+5. **When asked by the user** to commit/push
+6. **After making multiple file changes** (every 5-10 files)
+
+#### Sync Process:
+
+```powershell
+# 1. Navigate to repo root
+cd "C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire"
+
+# 2. Check status
+git status
+
+# 3. Pull latest changes
+git pull origin main
+
+# 4. Add changes (organized by type)
+git add <files>
+
+# 5. Commit with descriptive message
+git commit -m "type: description"
+
+# 6. Push to remote
+git push origin main
+```
+
+#### Commit Message Format:
+
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation only
+- `style:` - Formatting, missing semi colons, etc
+- `refactor:` - Code restructuring
+- `test:` - Adding tests
+- `chore:` - Maintenance tasks
+- `db:` - Database migrations
+
+#### ⚠️ IMPORTANT:
+
+- **Never commit without explicit user permission** for first commit in a session
+- **After that, proactively commit and push** completed work
+- **Group related changes** into logical commits
+- **Always pull before pushing** to avoid conflicts
+- **Verify sync success** with `git status`
+
+#### Why This Rule Exists:
+
+- ✅ Prevents work loss
+- ✅ Maintains backup in cloud
+- ✅ Enables collaboration
+- ✅ Tracks project history
+- ✅ Ensures documentation stays current
+
+## Reference Documentation
+
+See `Digital-Grimoire/docs/rules/WORKSPACE_STRUCTURE_RULES.md` for detailed information.
+
