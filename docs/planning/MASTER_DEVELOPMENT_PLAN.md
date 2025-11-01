@@ -83,7 +83,14 @@
 **Traditional Estimate:** ~420 hours  
 **Velocity:** 20x faster with AI-assisted development  
 **Phase 1 Progress:** 95% complete (only seeding library content remains)  
-**Phase 2 Status:** Study Journal MVP complete (30% of Phase 2)
+**Phase 2 Status:** Study Journal MVP complete (~40% of Phase 2 - 10/17 features)
+
+### Today's Updates (October 30, 2025)
+
+- Centralized all admin navigation in `Header.tsx` using a single `adminLinks` source; removed duplicate admin links elsewhere.
+- Documented and enforced the single-source-of-truth rule in `README.md`.
+- Added `QUICK_START.md` with server commands and a quick reference guide.
+- Maintained zero-lint policy and ensured Dark Academia UX consistency.
 
 ### What's Next
 
@@ -1314,9 +1321,9 @@ This master plan provides a clear, actionable roadmap from MVP to market leaders
 
 ---
 
-**Last Updated:** October 26, 2025  
+**Last Updated:** October 30, 2025  
 **Next Review:** November 1, 2025  
-**Version:** 3.0
+**Version:** 3.2
 
 ---
 

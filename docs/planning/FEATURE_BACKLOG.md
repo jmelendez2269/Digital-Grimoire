@@ -1,7 +1,7 @@
 # CONVERGENCE - FEATURE BACKLOG & PRIORITIES
 
-**Last Updated:** October 28, 2025  
-**Version:** 1.3  
+**Last Updated:** October 30, 2025  
+**Version:** 1.4  
 
 ## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
 
@@ -22,6 +22,10 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 3 Complete (4h):** Document Processing Pipeline (Cloudflare R2 + Azure OCR + AI Metadata)  
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
+**Oct 30 Updates:**
+- Centralized admin navigation in `Header.tsx` via single `adminLinks` source (removed duplicates)
+- Added `QUICK_START.md` with server commands and quick reference
+- Maintained zero-lint policy; ensured Dark Academia UX consistency
 
 ### Standout Features Delivered:
 - ✅ **Production-Ready Avatar System** (crop/zoom/compress/delete)
@@ -100,17 +104,17 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Tiptap editor setup | P0 | M | 5 | ✅ Complete | Core blocks (Sprint 5) |
 | Page CRUD operations | P0 | M | 5 | ✅ Complete | Create/read/update/delete (Sprint 5) |
 | Auto-save functionality | P0 | S | 5 | ✅ Complete | Debounced (Sprint 5) |
-| Slash command menu | P0 | M | 6 | ⬜ Planned | / trigger |
-| Block drag-and-drop | P0 | M | 6 | ⬜ Planned | ⋮⋮ handle |
+| Slash command menu | P0 | M | 5 | ✅ Complete | / trigger for block insertion (Sprint 5) |
+| Block drag-and-drop | P0 | M | 5 | ✅ Complete | ⋮⋮ handle with visual feedback (Sprint 5) |
 | Page sidebar navigation | P0 | M | 5 | ✅ Complete | Tree view (Sprint 5) |
-| Clip from library | P0 | M | 7 | ⬜ Planned | Save passages |
-| Wikilinks [[Page]] | P0 | M | 7 | ⬜ Planned | Internal links |
-| Export to Markdown | P0 | S | 7 | ⬜ Planned | .md download |
-| Export to HTML | P0 | S | 7 | ⬜ Planned | Styled |
-| Backlinks panel | P1 | M | 7 | ⬜ Planned | Show incoming links |
-| Export to PDF | P1 | M | 7 | ⬜ Planned | jsPDF |
+| Clip from library | P0 | M | 5 | ✅ Complete | Save passages with attribution (Sprint 5) |
+| Wikilinks [[Page]] | P0 | M | 5 | ✅ Complete | Auto-conversion + keyboard nav (Sprint 5) |
+| Export to Markdown | P0 | S | 5 | ✅ Complete | Full formatting preserved (Sprint 5) |
+| Export to HTML | P0 | S | 5 | ✅ Complete | Styled output (Sprint 5) |
+| Backlinks panel | P1 | M | 5 | ✅ Complete | Shows incoming WikiLinks (Sprint 5) |
+| Export to PDF | P1 | M | 5 | ✅ Complete | Puppeteer-based with pagination (Sprint 5) |
 | Export to Notion | P1 | M | 7 | ⬜ Planned | Blocks format |
-| Nested pages (hierarchy) | P1 | M | 6 | ⬜ Planned | parent_id |
+| Nested pages (hierarchy) | P1 | M | 5 | ✅ Complete | parent_id field in migration 015 (Sprint 5) |
 | Page templates | P2 | M | Post | ⬜ Planned | Ritual, study, etc. |
 | Collaborative editing | P2 | XL | Post | ⬜ Planned | Real-time sync |
 | Version history | P2 | L | Post | ⬜ Planned | Time travel |
@@ -136,13 +140,43 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Reading goals | P2 | M | Post | ⬜ Planned | Set and track reading targets |
 | Reading statistics | P2 | M | Post | ⬜ Planned | Time spent, pages read analytics |
 
-### 4. CORRESPONDENCE TABLES
+### 4. TEXT-TO-SPEECH (Read Aloud)
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Neptune cluster setup | P0 | L | 8 | ⬜ Planned | Graph database |
-| Graph schema definition | P0 | M | 8 | ⬜ Planned | Vertices + edges |
-| Seed data (100+ entities) | P0 | M | 8 | ⬜ Planned | Classical corr. |
+| TTS service architecture | P1 | L | 5 | ✅ Complete | Factory pattern, dual engines (Sprint 5) |
+| AudioPlayer component | P1 | M | 5 | ✅ Complete | Floating controls, full features (Sprint 5) |
+| TTSSettings modal | P1 | M | 5 | ✅ Complete | Free/premium voice management (Sprint 5) |
+| TextHighlight component | P1 | S | 5 | ✅ Complete | Real-time sync with audio (Sprint 5) |
+| Reading position tracking | P1 | M | 5 | ⚠️ Requires Testing | API + DB migration 012 (Sprint 5) |
+| TTS preferences storage | P1 | S | 5 | ⚠️ Requires Testing | User preferences in DB (Sprint 5) |
+| Web Speech API integration | P1 | M | 5 | ✅ Complete | Free unlimited TTS (Sprint 5) |
+| Azure Speech integration | P2 | L | 5 | ✅ Complete | Premium neural voices (Sprint 5) |
+| PDF text extraction | P1 | M | 5 | ✅ Complete | Fallback for OCR text (Sprint 5) |
+| Speed control (0.5x-2.0x) | P1 | XS | 5 | ✅ Complete | User-adjustable playback (Sprint 5) |
+| Volume control | P1 | XS | 5 | ✅ Complete | User-adjustable volume (Sprint 5) |
+| Voice selector | P1 | S | 5 | ✅ Complete | Choose from available voices (Sprint 5) |
+| Position bookmarking | P1 | M | 5 | ⚠️ Requires Testing | LocalStorage + DB sync (Sprint 5) |
+| Cross-tab persistence | P1 | S | 5 | ⚠️ Requires Testing | Sync across browser tabs (Sprint 5) |
+| Keyboard shortcuts | P2 | S | 5 | ✅ Complete | Play/pause/stop shortcuts (Sprint 5) |
+| Premium upgrade path | P2 | S | 5 | ✅ Complete | Clear Azure benefits messaging (Sprint 5) |
+
+**Implementation Notes:**
+- **Migration Required:** 012 (`012_add_reading_positions.sql`)
+- **Testing:** See [TTS Testing Checklist](../testing/SPRINT_5_TESTING_CHECKLIST.md#a-text-to-speech-feature-testing)
+- **Documentation:** `docs/TEXT_TO_SPEECH_FEATURE.md`, `docs/TTS_IMPLEMENTATION_SUMMARY.md`
+- **Status:** Implementation complete, requires user testing before marking fully complete
+
+### 5. CORRESPONDENCE TABLES (Phase 3A)
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| **PostgreSQL schema (Migration 018)** | **P0** | **M** | **5** | **✅ Complete** | **Correspondences + relationships tables (Sprint 5)** |
+| **Basic API routes** | **P1** | **M** | **5** | **🔄 Partial** | **entities/edges endpoints exist (Sprint 5)** |
+| **GraphView component** | **P1** | **M** | **5** | **🔄 Placeholder** | **Basic rendering, needs D3 (Sprint 5)** |
+| Neptune cluster setup | P0 | L | 8 | ⬜ Deferred | Graph database (optional for Phase 3) |
+| Graph schema definition | P0 | M | 8 | ✅ Complete | PostgreSQL schema in place |
+| Seed data (100+ entities) | P0 | M | 8 | ⬜ Planned | Classical correspondences data |
 | D3.js visualization | P0 | L | 9 | ⬜ Planned | Force-directed |
 | Node hover highlights | P0 | S | 9 | ⬜ Planned | Show connections |
 | Click to view details | P0 | M | 9 | ⬜ Planned | Modal popup |
@@ -309,6 +343,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | CI/CD pipeline | P0 | M | 1 | 🟡 Partial | GitHub ready, actions pending |
 | Vercel deployment | P0 | S | 1 | 🟡 Partial | Ready to deploy |
 | Environment variables | P0 | XS | 1 | ✅ Complete | .env management |
+| Quick start guide (QUICK_START.md) | P0 | XS | 6 | ✅ Complete | Server commands quick reference |
 | Error tracking (Sentry) | P1 | S | Post | ⬜ Planned | Production errors |
 | CloudWatch alarms | P1 | M | Post | ⬜ Planned | AWS monitoring |
 | Uptime monitoring | P1 | S | Post | ⬜ Planned | Pingdom |
@@ -342,6 +377,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Loading states | P0 | M | 4 | 🟡 Partial | Spinners done, skeleton screens next |
 | Error states | P0 | M | 4 | ✅ Complete | Toast notifications |
 | Toast notifications | P1 | S | 2 | ✅ Complete | Sonner implemented! |
+| Admin navigation single-source (`Header` `adminLinks`) | P0 | XS | 6 | ✅ Complete | Centralized admin links, rule documented |
 | Light theme | P2 | M | Post | ⬜ Planned | Accessibility |
 | Custom theme builder | P3 | L | Year 2 | ⬜ Planned | User preference |
 
