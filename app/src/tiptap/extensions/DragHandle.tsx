@@ -56,18 +56,21 @@ export const DragHandle = Extension.create({
         view(view) {
           const handle = document.createElement('div');
           handle.setAttribute('data-drag-handle', 'true');
-          handle.className = 'absolute -ml-8 mt-1 text-zinc-400 hover:text-amber-400 cursor-grab select-none';
+          handle.className = 'absolute -ml-8 mt-1 text-zinc-400 hover:text-amber-400 cursor-grab select-none pointer-events-auto';
           handle.innerText = '⋮⋮';
           handle.style.display = 'none';
+          handle.style.zIndex = '10';
 
-          // Position the handle next to the current block selection cursor
-          const updatePosition = () => {
-            const { state } = view;
-            const { $from } = state.selection;
-            const coords = view.coordsAtPos($from.pos);
+          let isHoveringEditor = false;
+          let currentBlockElement: HTMLElement | null = null;
+
+          // Position the handle next to a specific block element
+          const updatePosition = (blockElement: HTMLElement) => {
             const editorRect = (view.dom as HTMLElement).getBoundingClientRect();
-            handle.style.left = `${coords.left - editorRect.left}px`;
-            handle.style.top = `${coords.top - editorRect.top}px`;
+            const blockRect = blockElement.getBoundingClientRect();
+            handle.style.left = `${blockRect.left - editorRect.left - 32}px`;
+            handle.style.top = `${blockRect.top - editorRect.top}px`;
+            handle.style.display = 'block';
           };
 
           // Up/Down buttons on right-click for quick reorder
@@ -111,18 +114,64 @@ export const DragHandle = Extension.create({
             handle.classList.remove('cursor-grabbing');
           });
 
-          (view.dom as HTMLElement).style.position = 'relative';
-          (view.dom as HTMLElement).appendChild(handle);
+          // Show handle on hover over blocks
+          const editorElement = view.dom as HTMLElement;
+          editorElement.style.position = 'relative';
+          editorElement.appendChild(handle);
+
+          const handleMouseOver = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // Find the nearest block-level element (p, h1, h2, h3, li, etc.)
+            const block = target.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote');
+            if (block && block instanceof HTMLElement && editorElement.contains(block)) {
+              currentBlockElement = block;
+              updatePosition(block);
+              isHoveringEditor = true;
+            }
+          };
+
+          const handleMouseOut = (e: MouseEvent) => {
+            const relatedTarget = e.relatedTarget as HTMLElement;
+            // Hide handle if mouse leaves editor and not hovering over handle
+            if (!editorElement.contains(relatedTarget) && relatedTarget !== handle) {
+              isHoveringEditor = false;
+              setTimeout(() => {
+                if (!isHoveringEditor) {
+                  handle.style.display = 'none';
+                  currentBlockElement = null;
+                }
+              }, 100);
+            }
+          };
+
+          editorElement.addEventListener('mouseover', handleMouseOver);
+          editorElement.addEventListener('mouseout', handleMouseOut);
+
+          // Keep handle visible when hovering over it
+          handle.addEventListener('mouseenter', () => {
+            isHoveringEditor = true;
+          });
+
+          handle.addEventListener('mouseleave', () => {
+            isHoveringEditor = false;
+            setTimeout(() => {
+              if (!isHoveringEditor) {
+                handle.style.display = 'none';
+                currentBlockElement = null;
+              }
+            }, 100);
+          });
 
           return {
             update() {
-              const { state } = view;
-              const { $from } = state.selection;
-              if (!$from) return;
-              handle.style.display = 'block';
-              updatePosition();
+              // Only update position if handle is visible and we have a current block
+              if (currentBlockElement && handle.style.display !== 'none') {
+                updatePosition(currentBlockElement);
+              }
             },
             destroy() {
+              editorElement.removeEventListener('mouseover', handleMouseOver);
+              editorElement.removeEventListener('mouseout', handleMouseOut);
               handle.remove();
             },
           };

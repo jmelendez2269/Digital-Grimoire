@@ -4,7 +4,6 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
-import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import { SlashMenu } from '../tiptap/extensions/SlashMenu';
 import { DragHandle } from '../tiptap/extensions/DragHandle';
 import Image from '@tiptap/extension-image';
@@ -49,12 +48,12 @@ export default function JournalEditor({
         heading: {
           levels: [1, 2, 3],
         },
+        // horizontalRule is already included in StarterKit
       }),
       Placeholder.configure({
         placeholder,
       }),
       Typography,
-      HorizontalRule,
       SlashMenu,
       DragHandle,
       Image,
@@ -107,16 +106,10 @@ export default function JournalEditor({
     }
   }, [content, editor]);
 
-  if (!editor) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-zinc-400">
-        Loading editor...
-      </div>
-    );
-  }
-
-  // Image upload handler
+  // Image upload handler - MUST be called before any conditional returns
   useEffect(() => {
+    if (!editor) return; // Guard clause instead of checking after return
+    
     const onUpload = async () => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -148,9 +141,19 @@ export default function JournalEditor({
       };
       input.click();
     };
+    
     document.addEventListener('tiptap-image-upload', onUpload);
     return () => document.removeEventListener('tiptap-image-upload', onUpload);
   }, [editor]);
+
+  // Early return AFTER all hooks have been called
+  if (!editor) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] text-zinc-400">
+        Loading editor...
+      </div>
+    );
+  }
 
   return (
     <div className="border border-zinc-700 rounded-lg bg-zinc-900/50 overflow-hidden">
