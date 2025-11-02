@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import DOMPurify from 'dompurify';
 
 interface Chapter {
   id: string;
@@ -12,9 +15,10 @@ interface Chapter {
 interface ChapterViewerProps {
   chapters: Chapter[];
   documentTitle?: string;
+  format?: 'html' | 'markdown' | 'plaintext';
 }
 
-export default function ChapterViewer({ chapters, documentTitle }: ChapterViewerProps) {
+export default function ChapterViewer({ chapters, documentTitle, format = 'plaintext' }: ChapterViewerProps) {
   const [activeChapterId, setActiveChapterId] = useState<string>(
     chapters[0]?.id || ''
   );
@@ -22,7 +26,25 @@ export default function ChapterViewer({ chapters, documentTitle }: ChapterViewer
 
   const activeChapter = chapters.find(ch => ch.id === activeChapterId);
 
-  // Format content for display (simple markdown-like rendering)
+  // Sanitize HTML content
+  const sanitizedHtml = useMemo(() => {
+    if (format === 'html' && activeChapter) {
+      return DOMPurify.sanitize(activeChapter.content, {
+        ALLOWED_TAGS: [
+          'p', 'br', 'strong', 'em', 'u', 'i', 'b',
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'ul', 'ol', 'li',
+          'blockquote', 'pre', 'code',
+          'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+          'div', 'span',
+        ],
+        ALLOWED_ATTR: ['href', 'class'],
+      });
+    }
+    return '';
+  }, [format, activeChapter]);
+
+  // Format content for display (simple markdown-like rendering for plaintext)
   const formatContent = (content: string) => {
     // Split into paragraphs
     const paragraphs = content.split('\n\n').filter(p => p.trim());
@@ -59,6 +81,91 @@ export default function ChapterViewer({ chapters, documentTitle }: ChapterViewer
         </p>
       );
     });
+  };
+
+  // Render content based on format
+  const renderContent = () => {
+    if (!activeChapter) return null;
+
+    if (format === 'html') {
+      return (
+        <div 
+          className="chapter-content prose prose-invert prose-amber max-w-none"
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+        />
+      );
+    }
+
+    if (format === 'markdown') {
+      return (
+        <div className="chapter-content prose prose-invert prose-amber max-w-none">
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ children }) => (
+                <p className="my-4 text-amber-100/80 leading-relaxed text-justify">
+                  {children}
+                </p>
+              ),
+              h1: ({ children }) => (
+                <h1 className="text-2xl font-bold text-amber-100 mt-8 mb-4">
+                  {children}
+                </h1>
+              ),
+              h2: ({ children }) => (
+                <h2 className="text-xl font-bold text-amber-100 mt-6 mb-3">
+                  {children}
+                </h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-lg font-semibold text-amber-100 mt-4 mb-2">
+                  {children}
+                </h3>
+              ),
+              blockquote: ({ children }) => (
+                <blockquote className="my-6 pl-6 border-l-4 border-amber-600/50 italic text-amber-200/90 text-lg leading-relaxed">
+                  {children}
+                </blockquote>
+              ),
+              ul: ({ children }) => (
+                <ul className="my-4 list-disc list-inside text-amber-100/80">
+                  {children}
+                </ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="my-4 list-decimal list-inside text-amber-100/80">
+                  {children}
+                </ol>
+              ),
+              code: ({ children }) => (
+                <code className="px-2 py-1 bg-zinc-800 rounded text-amber-300 text-sm">
+                  {children}
+                </code>
+              ),
+              a: ({ href, children }) => (
+                <a 
+                  href={href} 
+                  className="text-amber-400 hover:text-amber-300 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {activeChapter.content}
+          </ReactMarkdown>
+        </div>
+      );
+    }
+
+    // Default: plaintext format
+    return (
+      <div className="chapter-content prose prose-invert prose-amber max-w-none">
+        {formatContent(activeChapter.content)}
+      </div>
+    );
   };
 
   return (
@@ -137,9 +244,7 @@ export default function ChapterViewer({ chapters, documentTitle }: ChapterViewer
             </header>
 
             {/* Chapter content with custom formatting */}
-            <div className="chapter-content prose prose-invert prose-amber max-w-none">
-              {formatContent(activeChapter.content)}
-            </div>
+            {renderContent()}
 
             {/* Chapter navigation */}
             <footer className="mt-12 pt-6 border-t border-amber-900/20 flex justify-between items-center">

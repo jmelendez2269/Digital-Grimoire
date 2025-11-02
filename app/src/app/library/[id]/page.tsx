@@ -88,6 +88,7 @@ interface TextDocument {
     metadataFileKey?: string;
     isStructuredText?: boolean;
     chapters?: Chapter[];
+    format?: 'html' | 'markdown' | 'plaintext';
   };
 }
 
@@ -331,6 +332,7 @@ export default function DocumentDetailPage() {
                   <ChapterViewer 
                     chapters={document.metadata.chapters}
                     documentTitle={document.title}
+                    format={document.metadata.format || 'plaintext'}
                   />
                 ) : pdfUrl && document.status === 'ready' ? (
                   <PDFViewer 

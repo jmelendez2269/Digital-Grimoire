@@ -1,111 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, signOut, isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const supabase = createClient();
-    
-    // Safety timeout - ensure loading doesn't get stuck
-    const timeoutId = setTimeout(() => {
-      console.log('[Header] Safety timeout triggered - forcing loading to false');
-      setLoading(false);
-    }, 3000);
-    
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('[Header] Session check:', {
-        hasSession: !!session,
-        userId: session?.user?.id,
-        email: session?.user?.email
-      });
-      setUser(session?.user ?? null);
-      
-      // Check if user is admin
-      if (session?.user) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.warn('[Header] Could not fetch user profile:', error.message);
-            console.log('[Header] Setting admin to false due to error');
-            setIsAdmin(false);
-          } else {
-            console.log('[Header] User profile fetched:', {
-              role: profile?.role,
-              isAdmin: profile?.role === 'admin'
-            });
-            setIsAdmin(profile?.role === 'admin');
-          }
-        } catch (err) {
-          console.error('[Header] Error checking admin status:', err);
-          setIsAdmin(false);
-        }
-      }
-      
-      clearTimeout(timeoutId);
-      setLoading(false);
-      console.log('[Header] Loading complete, setting loading to false');
-    }).catch((error) => {
-      console.error('[Header] Error getting session:', error);
-      clearTimeout(timeoutId);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      
-      // Update admin status
-      if (session?.user) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.warn('Could not fetch user profile:', error.message);
-            setIsAdmin(false);
-          } else {
-            setIsAdmin(profile?.role === 'admin');
-          }
-        } catch (err) {
-          console.error('Error checking admin status:', err);
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
-      }
-    });
-
-    return () => {
-      clearTimeout(timeoutId);
-      subscription.unsubscribe();
-    };
-  }, []);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await signOut();
     router.push("/");
     router.refresh();
   };
@@ -118,6 +25,7 @@ export default function Header() {
   const adminLinks = [
     { label: "Admin Panel", icon: "🔐", href: "/admin" },
     { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
+    { label: "Import Sacred Text", icon: "🌐", href: "/admin/import-sacred-text" },
     // To add new admin pages, add entries here!
   ];
 
