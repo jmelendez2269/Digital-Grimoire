@@ -254,6 +254,30 @@ Imported texts appear in the library just like uploaded PDFs, with these feature
 2. Check with system administrator about admin access
 3. Look for "Import Sacred Text" in profile dropdown menu
 
+### Database Error: "violates check constraint texts_type_check"
+
+**Possible Causes**:
+- Invalid document type selected
+- Database schema mismatch
+
+**Solutions**:
+1. The type field must match one of the 20 allowed values
+2. Use the dropdown in the form (don't type manually)
+3. Valid types include: `book_esoteric`, `book_spiritual`, `commentary`, `mythology`, etc.
+4. Default type is `book_esoteric` which is valid
+
+### Database Error: "Could not find column 'user_id'"
+
+**Possible Causes**:
+- PostgREST schema cache is stale
+- Database migration not applied
+
+**Solutions**:
+1. Run the database migration `020_add_source_format_column.sql`
+2. Refresh Supabase schema cache: Dashboard → API Settings → Reload Schema
+3. Or run SQL: `NOTIFY pgrst, 'reload schema';`
+4. Wait 2-3 minutes for auto-refresh
+
 ## Database Schema
 
 Imported texts are stored in the `texts` table with:
@@ -298,9 +322,26 @@ The parser (`sacred-texts-parser.ts`) works in several stages:
 ### Security
 
 - **HTML Sanitization**: All HTML content is sanitized with DOMPurify
+  - Server-side uses `jsdom` + `dompurify` for Node.js compatibility
+  - Client-side uses standard `dompurify` package
 - **Allowed HTML Tags**: Only safe formatting tags (no scripts, iframes)
 - **URL Validation**: Only sacred-texts.com URLs accepted
 - **Authentication**: Admin-only access required
+
+### Implementation Notes
+
+**Server-Side DOMPurify**: 
+- Uses `jsdom` to create a virtual DOM window for server-side sanitization
+- Required because `isomorphic-dompurify` had compatibility issues with Next.js API routes
+
+**Database Constraints**:
+- `type` field must be one of 20 predefined values (see dropdown options)
+- Default type is `book_esoteric` (valid for most sacred texts)
+- `user_id` is automatically set via RLS policies (don't set explicitly)
+
+**PostgREST Schema Cache**:
+- If you get "column not found" errors after running migrations, refresh the schema cache
+- Supabase Dashboard → API Settings → Reload Schema
 
 ### Performance
 
@@ -329,7 +370,7 @@ Imports a text from sacred-texts.com.
     "year": 1912,
     "tags": ["hermeticism", "alchemy"],
     "lenses": ["symbolic_occult", "philosophical"],
-    "type": "sacred_text",
+    "type": "book_esoteric",
     "domain": "occultism",
     "summary": "Optional custom summary"
   }
