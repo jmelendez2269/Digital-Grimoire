@@ -8,6 +8,7 @@ import JournalEditor from '@/components/JournalEditor';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import useWikiLinkActivation from '@/hooks/useWikiLinkActivation';
 
 interface JournalPage {
   id: string;
@@ -61,6 +62,34 @@ export default function JournalPageEditor() {
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showWikiLinkActions, setShowWikiLinkActions] = useState(false);
+
+  const {
+    activeLink,
+    clearActiveLink,
+    triggerNavigate,
+    triggerPreview,
+    triggerAIAction,
+  } = useWikiLinkActivation({
+    onActivate: () => {
+      setShowWikiLinkActions(true);
+    },
+    onNavigate: (detail) => {
+      console.info('[WikiLink] Navigate placeholder', detail);
+    },
+    onPreview: (detail) => {
+      console.info('[WikiLink] Preview placeholder', detail);
+    },
+    onAIAction: (detail) => {
+      console.info('[WikiLink] AI assist placeholder', detail);
+    },
+  });
+
+  useEffect(() => {
+    if (!activeLink) {
+      setShowWikiLinkActions(false);
+    }
+  }, [activeLink]);
 
   useEffect(() => {
     if (pageId) {
@@ -384,6 +413,49 @@ export default function JournalPageEditor() {
         </div>
       </main>
       <Footer />
+      {showWikiLinkActions && activeLink && (
+        <div className="fixed bottom-6 right-6 z-50 w-72 rounded-lg border border-amber-500/40 bg-zinc-900/95 p-4 shadow-lg shadow-amber-500/20">
+          <div className="text-sm font-semibold text-amber-300">WikiLink activated</div>
+          <div className="mt-1 text-sm text-zinc-300">
+            {activeLink.title || activeLink.slug
+              ? `[[${activeLink.title || activeLink.slug}]]`
+              : 'Untitled link'}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => triggerNavigate()}
+              className="flex-1 rounded-md border border-amber-500/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20"
+            >
+              Open page
+            </button>
+            <button
+              type="button"
+              onClick={() => triggerPreview()}
+              className="flex-1 rounded-md border border-zinc-700 bg-zinc-800/80 px-3 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-700"
+            >
+              Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => triggerAIAction()}
+              className="flex-1 rounded-md border border-zinc-700 bg-zinc-800/80 px-3 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-700"
+            >
+              Ask AI
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              clearActiveLink();
+              setShowWikiLinkActions(false);
+            }}
+            className="mt-3 w-full rounded-md border border-transparent px-3 py-1 text-xs text-zinc-500 hover:text-zinc-300"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
     </div>
   );
 }

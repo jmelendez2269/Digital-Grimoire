@@ -5,6 +5,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
+import { WikiLink } from '../tiptap/extensions/WikiLinkExtension';
 import {
   Bold,
   Italic,
@@ -44,6 +45,7 @@ export default function JournalEditor({
         placeholder,
       }),
       Typography,
+      WikiLink,
     ],
     editorProps: {
       attributes: {

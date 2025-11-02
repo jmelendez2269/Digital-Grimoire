@@ -42,7 +42,11 @@ export const WikiLink = Mark.create<WikiLinkOptions>({
   renderHTML({ HTMLAttributes }) {
     return [
       'span',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-wikilink': 'true' }),
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+        'data-wikilink': 'true',
+        'data-wikilink-title': HTMLAttributes?.title ?? '',
+        'data-wikilink-slug': HTMLAttributes?.slug ?? '',
+      }),
       `[[${HTMLAttributes.title || HTMLAttributes.slug}]]`,
     ];
   },
@@ -105,6 +109,9 @@ export const WikiLink = Mark.create<WikiLinkOptions>({
         if (mark) {
           found = true;
           const { title, slug } = mark.attrs as any;
+          if (process.env.NODE_ENV !== 'production') {
+            console.info('[WikiLinkExtension] wikilink-activate', { title, slug });
+          }
           document.dispatchEvent(new CustomEvent('wikilink-activate', { detail: { title, slug } }));
         }
         return found;
