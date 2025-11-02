@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { supabase, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,6 +22,22 @@ export function LoginForm() {
     }
   }, [searchParams]);
 
+  // Redirect when user becomes authenticated
+  useEffect(() => {
+    if (user && window.location.pathname === "/login") {
+      console.log("✅ User authenticated, redirecting to dashboard");
+      setLoading(false);
+      router.push("/dashboard");
+      // Fallback navigation if router.push doesn't work
+      setTimeout(() => {
+        if (window.location.pathname === "/login") {
+          console.log("⚠️ Router navigation timeout - trying window.location");
+          window.location.href = "/dashboard";
+        }
+      }, 500);
+    }
+  }, [user, router]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -29,15 +46,6 @@ export function LoginForm() {
     console.log("🔐 Login attempt started for:", email);
 
     try {
-      const supabase = createClient();
-      
-      if (!supabase) {
-        console.error("❌ Supabase client failed to initialize");
-        setError("Configuration error. Please contact support.");
-        setLoading(false);
-        return;
-      }
-
       console.log("📡 Calling Supabase signInWithPassword...");
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -49,6 +57,7 @@ export function LoginForm() {
         // Check if error is related to email confirmation
         if (signInError.message.includes("Email not confirmed")) {
           console.log("⚠️ Email not confirmed, redirecting to verification page");
+          setLoading(false);
           router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
           return;
         }
@@ -63,12 +72,29 @@ export function LoginForm() {
         // Check if email is verified
         if (!data.user.email_confirmed_at) {
           console.log("⚠️ Email not verified, redirecting to verification page");
+          setLoading(false);
           router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
           return;
         }
         console.log("✅ Redirecting to dashboard");
+        
+        // Reset loading state before redirect
+        setLoading(false);
         router.push("/dashboard");
         router.refresh();
+        
+        // Fallback: force hard navigation if router.push doesn't work within 1 second
+        setTimeout(() => {
+          if (window.location.pathname === "/login") {
+            console.log("⚠️ Router navigation timeout - trying window.location");
+            window.location.href = "/dashboard";
+          }
+        }, 1000);
+      } else {
+        // No user data returned - shouldn't happen but handle it
+        console.error("❌ Login succeeded but no user data returned");
+        setError("Login succeeded but user data is missing");
+        setLoading(false);
       }
     } catch (err) {
       console.error("❌ Unexpected error during login:", err);
