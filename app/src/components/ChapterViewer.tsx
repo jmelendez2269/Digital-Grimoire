@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import DOMPurify from 'dompurify';
@@ -25,6 +25,7 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const activeChapter = chapters.find(ch => ch.id === activeChapterId);
+  const isFirstChapter = chapters[0]?.id === activeChapterId; // Check if viewing first chapter (title/index page)
 
   // Sanitize HTML content
   const sanitizedHtml = useMemo(() => {
@@ -168,6 +169,43 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
     );
   };
 
+  // Render Table of Contents component (only on first chapter/title page)
+  const renderTableOfContents = () => {
+    if (!isFirstChapter || chapters.length <= 1) return null;
+
+    return (
+      <div className="my-8 p-6 bg-zinc-800/50 border border-amber-900/30 rounded-lg">
+        <h2 className="text-xl font-bold text-amber-100 mb-4 flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-amber-600" />
+          Table of Contents
+        </h2>
+        <nav className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {chapters.map((chapter, index) => (
+            <button
+              key={chapter.id}
+              onClick={() => {
+                setActiveChapterId(chapter.id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`text-left px-4 py-2 rounded-lg transition-colors ${
+                chapter.id === activeChapterId
+                  ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
+                  : 'bg-zinc-900/50 text-amber-100/80 hover:bg-zinc-900/70 hover:text-amber-100 border border-transparent hover:border-amber-900/30'
+              }`}
+            >
+              <span className="text-sm font-medium text-amber-100/50 mr-2">
+                {index + 1}.
+              </span>
+              <span className="text-sm">
+                {chapter.title.replace(/^Chapter\s+[IVX]+:\s*/i, '')}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+    );
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Desktop: Horizontal tabs */}
@@ -242,6 +280,9 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
                 </p>
               )}
             </header>
+
+            {/* Table of Contents - only show on first chapter/title page */}
+            {renderTableOfContents()}
 
             {/* Chapter content with custom formatting */}
             {renderContent()}
