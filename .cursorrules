@@ -132,6 +132,7 @@ git push origin main
 
 - **Ask the user if they're ready to commit** after completing successful changes
 - **Proactively offer to commit and push** when work is complete
+- **Push commits to remote immediately after user approval** to ensure work is backed up
 - **Group related changes** into logical commits
 - **Always pull before pushing** to avoid conflicts
 - **Verify sync success** with `git status`
