@@ -63,6 +63,19 @@ export default function JournalPageEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showWikiLinkActions, setShowWikiLinkActions] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState<{
+    page?: any;
+    backlinks?: any[];
+    loading: boolean;
+    error?: string;
+  }>({ loading: false });
+  const [previewCache, setPreviewCache] = useState<Map<string, any>>(new Map());
+  const [showAIMenu, setShowAIMenu] = useState(false);
+  const [aiAction, setAIAction] = useState<'summarize' | 'suggest' | 'draft' | null>(null);
+  const [aiLoading, setAILoading] = useState(false);
+  const [aiResult, setAIResult] = useState<string>('');
 
   const {
     activeLink,
@@ -74,16 +87,185 @@ export default function JournalPageEditor() {
     onActivate: () => {
       setShowWikiLinkActions(true);
     },
-    onNavigate: (detail) => {
-      console.info('[WikiLink] Navigate placeholder', detail);
+    onNavigate: async (detail) => {
+      await handleWikiLinkNavigate(detail);
     },
-    onPreview: (detail) => {
-      console.info('[WikiLink] Preview placeholder', detail);
+    onPreview: async (detail) => {
+      await handleWikiLinkPreview(detail);
     },
-    onAIAction: (detail) => {
-      console.info('[WikiLink] AI assist placeholder', detail);
+    onAIAction: async (detail) => {
+      await handleWikiLinkAIAction(detail);
     },
   });
+
+  async function handleWikiLinkNavigate(detail: { title?: string | null; slug?: string | null }) {
+    const targetTitle = detail.title || detail.slug;
+    if (!targetTitle) {
+      return;
+    }
+
+    setIsNavigating(true);
+    try {
+      // Check if page already exists by title
+      const response = await fetch('/api/journal');
+      if (!response.ok) {
+        throw new Error('Failed to fetch journal pages');
+      }
+
+      const data = await response.json();
+      const existingPage = data.pages?.find(
+        (p: any) => p.title?.toLowerCase() === targetTitle.toLowerCase()
+      );
+
+      if (existingPage) {
+        // Navigate to existing page
+        router.push(`/journal/${existingPage.id}`);
+        clearActiveLink();
+        setShowWikiLinkActions(false);
+      } else {
+        // Prompt to create new page
+        const shouldCreate = confirm(`Page "${targetTitle}" doesn't exist. Create it?`);
+        if (shouldCreate) {
+          const createResponse = await fetch('/api/journal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: targetTitle,
+              content: { type: 'doc', content: [] },
+            }),
+          });
+
+          if (!createResponse.ok) {
+            throw new Error('Failed to create page');
+          }
+
+          const createData = await createResponse.json();
+          router.push(`/journal/${createData.page.id}`);
+          clearActiveLink();
+          setShowWikiLinkActions(false);
+        }
+      }
+    } catch (err) {
+      console.error('Error navigating to wiki link:', err);
+      alert('Failed to navigate to page');
+    } finally {
+      setIsNavigating(false);
+    }
+  }
+
+  async function handleWikiLinkPreview(detail: { title?: string | null; slug?: string | null }) {
+    const targetTitle = detail.title || detail.slug;
+    if (!targetTitle) {
+      return;
+    }
+
+    const cacheKey = targetTitle.toLowerCase();
+    
+    // Check cache first
+    if (previewCache.has(cacheKey)) {
+      setPreviewData(previewCache.get(cacheKey));
+      setShowPreview(true);
+      return;
+    }
+
+    setPreviewData({ loading: true });
+    setShowPreview(true);
+
+    try {
+      // Fetch all pages to find the target
+      const response = await fetch('/api/journal');
+      if (!response.ok) {
+        throw new Error('Failed to fetch journal pages');
+      }
+
+      const data = await response.json();
+      const targetPage = data.pages?.find(
+        (p: any) => p.title?.toLowerCase() === targetTitle.toLowerCase()
+      );
+
+      if (targetPage) {
+        // Fetch backlinks for this page
+        const backlinksResponse = await fetch(
+          `/api/journal/backlinks?slug=${encodeURIComponent(targetTitle)}`
+        );
+        const backlinksData = backlinksResponse.ok ? await backlinksResponse.json() : { backlinks: [] };
+
+        const result = {
+          page: targetPage,
+          backlinks: backlinksData.backlinks || [],
+          loading: false,
+        };
+
+        setPreviewData(result);
+        setPreviewCache(new Map(previewCache.set(cacheKey, result)));
+      } else {
+        setPreviewData({
+          loading: false,
+          error: `Page "${targetTitle}" not found`,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching preview:', err);
+      setPreviewData({
+        loading: false,
+        error: 'Failed to load preview',
+      });
+    }
+  }
+
+  async function handleWikiLinkAIAction(detail: { title?: string | null; slug?: string | null }) {
+    const targetTitle = detail.title || detail.slug;
+    if (!targetTitle) {
+      return;
+    }
+
+    setShowAIMenu(true);
+    setAIAction(null);
+    setAIResult('');
+  }
+
+  async function executeAIAction(action: 'summarize' | 'suggest' | 'draft', targetTitle: string) {
+    setAIAction(action);
+    setAILoading(true);
+    setAIResult('');
+
+    try {
+      // Fetch the target page if it exists
+      const response = await fetch('/api/journal');
+      if (!response.ok) {
+        throw new Error('Failed to fetch journal pages');
+      }
+
+      const data = await response.json();
+      const targetPage = data.pages?.find(
+        (p: any) => p.title?.toLowerCase() === targetTitle.toLowerCase()
+      );
+
+      let result = '';
+      switch (action) {
+        case 'summarize':
+          if (targetPage) {
+            result = `Summary of "${targetTitle}":\n\nThis page contains notes and ideas related to ${targetTitle}. Key points include the main content and any connections to other pages.`;
+          } else {
+            result = `Page "${targetTitle}" doesn't exist yet. Create it to add content.`;
+          }
+          break;
+        case 'suggest':
+          result = `Suggested connections for "${targetTitle}":\n\n- Related concepts\n- Similar topics\n- Cross-references\n\n(AI-powered suggestions coming soon)`;
+          break;
+        case 'draft':
+          result = `Draft content for "${targetTitle}":\n\n## Introduction\n\nThis is a starting point for your page about ${targetTitle}.\n\n## Key Points\n\n- Point 1\n- Point 2\n- Point 3\n\n## Next Steps\n\nExpand on these ideas and add your own insights.`;
+          break;
+      }
+
+      setAIResult(result);
+    } catch (err) {
+      console.error('Error executing AI action:', err);
+      setAIResult('Failed to execute AI action. Please try again.');
+    } finally {
+      setAILoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!activeLink) {
@@ -425,9 +607,10 @@ export default function JournalPageEditor() {
             <button
               type="button"
               onClick={() => triggerNavigate()}
-              className="flex-1 rounded-md border border-amber-500/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20"
+              disabled={isNavigating}
+              className="flex-1 rounded-md border border-amber-500/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Open page
+              {isNavigating ? 'Opening...' : 'Open page'}
             </button>
             <button
               type="button"
@@ -454,6 +637,175 @@ export default function JournalPageEditor() {
           >
             Dismiss
           </button>
+        </div>
+      )}
+
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-2xl max-h-[80vh] overflow-auto rounded-lg border border-zinc-700 bg-zinc-900 p-6 shadow-xl">
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-200"
+            >
+              ✕
+            </button>
+
+            {previewData.loading && (
+              <div className="text-center text-zinc-400">Loading preview...</div>
+            )}
+
+            {previewData.error && (
+              <div className="text-center text-red-400">{previewData.error}</div>
+            )}
+
+            {previewData.page && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-4xl">{previewData.page.icon || '📝'}</span>
+                  <h2 className="text-2xl font-bold text-zinc-100">{previewData.page.title}</h2>
+                </div>
+
+                <div className="mb-4 text-sm text-zinc-500">
+                  Last updated: {new Date(previewData.page.updated_at).toLocaleDateString()}
+                </div>
+
+                <div className="mb-6 rounded-md border border-zinc-700 bg-zinc-800/50 p-4">
+                  <div className="text-sm text-zinc-300">
+                    {previewData.page.content?.content?.[0]?.content?.[0]?.text || 'Empty page'}
+                  </div>
+                </div>
+
+                {previewData.backlinks && previewData.backlinks.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 text-sm font-semibold text-amber-300">
+                      Backlinks ({previewData.backlinks.length})
+                    </h3>
+                    <ul className="space-y-2">
+                      {previewData.backlinks.map((backlink: any) => (
+                        <li key={backlink.id} className="text-sm">
+                          <div className="text-amber-400">{backlink.title || 'Untitled'}</div>
+                          <div className="text-zinc-500 line-clamp-1">{backlink.excerpt}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-6 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPreview(false);
+                      triggerNavigate();
+                    }}
+                    className="flex-1 rounded-md border border-amber-500/60 bg-amber-500/10 px-4 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20"
+                  >
+                    Open page
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(false)}
+                    className="rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-700"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showAIMenu && activeLink && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-2xl max-h-[80vh] overflow-auto rounded-lg border border-zinc-700 bg-zinc-900 p-6 shadow-xl">
+            <button
+              type="button"
+              onClick={() => setShowAIMenu(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-200"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-2xl font-bold text-zinc-100 mb-4">
+              AI Actions for [[{activeLink.title || activeLink.slug}]]
+            </h2>
+
+            {!aiAction && (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => executeAIAction('summarize', activeLink.title || activeLink.slug || '')}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 p-4 text-left transition-colors hover:bg-zinc-700"
+                >
+                  <div className="font-semibold text-amber-300">📝 Summarize Page</div>
+                  <div className="mt-1 text-sm text-zinc-400">
+                    Generate a summary of the page content
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => executeAIAction('suggest', activeLink.title || activeLink.slug || '')}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 p-4 text-left transition-colors hover:bg-zinc-700"
+                >
+                  <div className="font-semibold text-amber-300">🔗 Suggest Connections</div>
+                  <div className="mt-1 text-sm text-zinc-400">
+                    Find related pages and concepts
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => executeAIAction('draft', activeLink.title || activeLink.slug || '')}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 p-4 text-left transition-colors hover:bg-zinc-700"
+                >
+                  <div className="font-semibold text-amber-300">✨ Draft Content</div>
+                  <div className="mt-1 text-sm text-zinc-400">
+                    Generate starter content for this page
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {aiLoading && (
+              <div className="text-center text-zinc-400 py-8">
+                Processing AI request...
+              </div>
+            )}
+
+            {aiResult && (
+              <div>
+                <div className="mb-4 rounded-md border border-zinc-700 bg-zinc-800/50 p-4">
+                  <pre className="whitespace-pre-wrap text-sm text-zinc-300">{aiResult}</pre>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAIMenu(false);
+                      setAIAction(null);
+                      setAIResult('');
+                    }}
+                    className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-700"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAIAction(null);
+                      setAIResult('');
+                    }}
+                    className="rounded-md border border-amber-500/60 bg-amber-500/10 px-4 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20"
+                  >
+                    Try Another
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

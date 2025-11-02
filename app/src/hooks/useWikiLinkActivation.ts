@@ -31,6 +31,10 @@ const defaultDetail: WikiLinkEventDetail = {};
  */
 export function useWikiLinkActivation(options: UseWikiLinkActivationOptions = {}) {
   const [activeLink, setActiveLink] = useState<WikiLinkEventDetail | null>(null);
+  const [activationHistory, setActivationHistory] = useState<Array<{
+    detail: WikiLinkEventDetail;
+    timestamp: number;
+  }>>([]);
   const optionsRef = useRef(options);
 
   useEffect(() => {
@@ -65,6 +69,29 @@ export function useWikiLinkActivation(options: UseWikiLinkActivationOptions = {}
     const activate = (detail: WikiLinkEventDetail) => {
       const normalizedDetail = detail ?? defaultDetail;
       setActiveLink(normalizedDetail);
+
+      // Track activation in history
+      setActivationHistory((prev) => {
+        const newEntry = { detail: normalizedDetail, timestamp: Date.now() };
+        const updated = [newEntry, ...prev].slice(0, 50); // Keep last 50
+        
+        // Optional: Store in localStorage for persistence
+        try {
+          localStorage.setItem('wikilink-history', JSON.stringify(updated));
+        } catch (e) {
+          // Ignore storage errors
+        }
+        
+        return updated;
+      });
+
+      // Optional: Emit analytics event
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'wikilink_activate', {
+          event_category: 'journal',
+          event_label: normalizedDetail.title || normalizedDetail.slug || 'unknown',
+        });
+      }
 
       const helpers: WikiLinkActionHelpers = {
         triggerNavigate: (detailOverride) => triggerNavigate(detailOverride ?? normalizedDetail),
@@ -115,9 +142,31 @@ export function useWikiLinkActivation(options: UseWikiLinkActivationOptions = {}
     };
   }, [triggerNavigate, triggerPreview, triggerAIAction]);
 
+  // Load history from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('wikilink-history');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setActivationHistory(parsed);
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  }, []);
+
   return {
     activeLink,
+    activationHistory,
     clearActiveLink: () => setActiveLink(null),
+    clearHistory: () => {
+      setActivationHistory([]);
+      try {
+        localStorage.removeItem('wikilink-history');
+      } catch (e) {
+        // Ignore errors
+      }
+    },
     triggerNavigate,
     triggerPreview,
     triggerAIAction,
