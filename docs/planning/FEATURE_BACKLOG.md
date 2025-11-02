@@ -109,6 +109,11 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Page sidebar navigation | P0 | M | 5 | ✅ Complete | Tree view (Sprint 5) |
 | Clip from library | P0 | M | 5 | ✅ Complete | Save passages with attribution (Sprint 5) |
 | Wikilinks [[Page]] | P0 | M | 5 | ✅ Complete | Auto-conversion + keyboard nav (Sprint 5) |
+| **WikiLink click activation** | **P0** | **M** | **6** | **✅ Complete** | **Action card with 3 options (Sprint 6)** |
+| **WikiLink navigation flow** | **P0** | **M** | **6** | **✅ Complete** | **Open existing + auto-create new pages (Sprint 6)** |
+| **WikiLink preview modal** | **P1** | **M** | **6** | **✅ Complete** | **Page content + backlinks with caching (Sprint 6)** |
+| **WikiLink AI actions** | **P1** | **M** | **6** | **✅ Complete** | **Summarize/Suggest/Draft placeholders (Sprint 6)** |
+| **WikiLink telemetry** | **P2** | **S** | **6** | **✅ Complete** | **History tracking + localStorage (Sprint 6)** |
 | Export to Markdown | P0 | S | 5 | ✅ Complete | Full formatting preserved (Sprint 5) |
 | Export to HTML | P0 | S | 5 | ✅ Complete | Styled output (Sprint 5) |
 | Backlinks panel | P1 | M | 5 | ✅ Complete | Shows incoming WikiLinks (Sprint 5) |

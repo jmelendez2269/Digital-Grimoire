@@ -234,15 +234,63 @@ This format is:
 
 ---
 
+## WikiLink System ✅ **COMPLETE** (Sprint 6)
+
+### Overview
+
+Connect journal pages using double-bracket syntax: `[[Page Name]]`
+
+Click any wiki link to:
+- Navigate to existing pages
+- Create new pages on-the-fly
+- Preview page content
+- Get AI assistance
+
+### Features
+
+**Interactive Activation:**
+- Click any `[[Wiki Link]]` to open action card
+- Three actions: Navigate, Preview, AI Assist
+- Keyboard shortcut: `Ctrl/Cmd+Enter`
+
+**Smart Navigation:**
+- Opens existing pages instantly
+- Prompts to create missing pages
+- Loading states during navigation
+
+**Preview Modal:**
+- Page icon, title, and timestamp
+- Content excerpt
+- Backlinks with context
+- Cached for performance
+
+**AI Actions:**
+- 📝 Summarize Page
+- 🔗 Suggest Connections
+- ✨ Draft Content
+- Placeholder implementations (real AI coming soon)
+
+**Telemetry:**
+- Tracks last 50 activations
+- Persists in localStorage
+- Optional Google Analytics events
+
+### Documentation
+
+See [WikiLink Features Guide](./WIKILINK_FEATURES.md) for complete usage instructions.
+
+---
+
 ## Future Enhancements
 
 ### Planned Features
-- [ ] **Wikilinks** - Link between journal pages
+- [ ] **Real AI integration** - OpenAI/Claude for wiki-link actions
+- [ ] **Graph visualization** - Visual wiki-link network
+- [ ] **Auto-complete** - Suggest pages while typing `[[`
 - [ ] **Slash commands** - Quick formatting with /
 - [ ] **Templates** - Pre-formatted page templates
 - [ ] **Nested pages** - Full hierarchical organization
 - [ ] **Tags** - Tag pages for cross-referencing
-- [ ] **Export** - Export pages to PDF/Markdown
 - [ ] **Full-text search** - Search page content (not just titles)
 - [ ] **Collaborative editing** - Share pages with others
 - [ ] **Version history** - Track changes over time
@@ -251,6 +299,7 @@ This format is:
 - Link journal pages to library documents
 - Embed annotations in journal pages
 - Cross-reference with grimoire entries
+- Wiki-link to correspondence graph entities
 
 ---
 

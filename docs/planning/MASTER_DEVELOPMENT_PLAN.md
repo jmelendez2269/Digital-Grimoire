@@ -307,8 +307,13 @@ associated_names: Related figures
 - [x] Nested page hierarchy (parent_id)
 - [x] Sidebar navigation
 - [x] Page icons and cover images
-- [ ] Internal wikilinks `[[Page Name]]`
-- [ ] Backlinks panel
+- [x] Internal wikilinks `[[Page Name]]` ✅ **Sprint 6**
+- [x] Backlinks panel ✅ **Sprint 6**
+- [x] WikiLink click activation ✅ **Sprint 6**
+- [x] WikiLink navigation + auto-create ✅ **Sprint 6**
+- [x] WikiLink preview modal ✅ **Sprint 6**
+- [x] WikiLink AI actions menu ✅ **Sprint 6**
+- [x] WikiLink telemetry & history ✅ **Sprint 6**
 
 #### Week 13-14: Clip & Export System
 - [ ] "Clip to Grimoire" button on library texts
