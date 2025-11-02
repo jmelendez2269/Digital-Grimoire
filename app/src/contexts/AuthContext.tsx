@@ -51,9 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Race between profile fetch and timeout
             const profilePromise = supabase
               .from('users')
-              .select('role')
+              .select('role, id, email')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle(); // Use maybeSingle to handle missing records gracefully
             
             try {
               const { data: profile, error: profileError } = await Promise.race([
@@ -62,11 +62,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               ]) as any;
               
               if (profileError) {
-                console.warn('[AuthContext] Could not fetch user profile:', profileError.message);
+                console.error('[AuthContext] Error fetching user profile:', {
+                  message: profileError.message,
+                  code: profileError.code,
+                  details: profileError.details,
+                  userId: session.user.id,
+                  userEmail: session.user.email
+                });
+                setIsAdmin(false);
+              } else if (!profile) {
+                console.warn('[AuthContext] User profile not found in users table', {
+                  userId: session.user.id,
+                  userEmail: session.user.email
+                });
                 setIsAdmin(false);
               } else {
                 const isUserAdmin = profile?.role === 'admin';
-                console.log('[AuthContext] User role:', profile?.role, 'isAdmin:', isUserAdmin);
+                console.log('[AuthContext] User role:', profile?.role, 'isAdmin:', isUserAdmin, {
+                  userId: profile.id,
+                  email: profile.email
+                });
                 setIsAdmin(isUserAdmin);
               }
             } catch (raceError) {
@@ -108,15 +123,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { data: profile, error: profileError } = await supabase
               .from('users')
-              .select('role')
+              .select('role, id, email')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle();
             
             if (profileError) {
-              console.warn('[AuthContext] Could not fetch user profile:', profileError.message);
+              console.error('[AuthContext] Could not fetch user profile:', {
+                message: profileError.message,
+                code: profileError.code,
+                userId: session.user.id,
+                userEmail: session.user.email
+              });
+              setIsAdmin(false);
+            } else if (!profile) {
+              console.warn('[AuthContext] User profile not found in users table during auth state change');
               setIsAdmin(false);
             } else {
-              setIsAdmin(profile?.role === 'admin');
+              const isUserAdmin = profile?.role === 'admin';
+              console.log('[AuthContext] Auth state change - User role:', profile?.role, 'isAdmin:', isUserAdmin);
+              setIsAdmin(isUserAdmin);
             }
           } catch (err) {
             console.error('[AuthContext] Error checking admin status:', err);
