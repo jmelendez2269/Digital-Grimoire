@@ -19,7 +19,7 @@ interface ReadingPosition {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -33,7 +33,7 @@ export async function GET(
       );
     }
 
-    const textId = params.id;
+    const { id: textId } = await params;
 
     // Fetch reading position
     const { data, error } = await supabase
@@ -74,7 +74,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -88,7 +88,7 @@ export async function POST(
       );
     }
 
-    const textId = params.id;
+    const { id: textId } = await params;
     const body = await request.json();
 
     // Validate input
@@ -153,7 +153,7 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -167,7 +167,7 @@ export async function DELETE(
       );
     }
 
-    const textId = params.id;
+    const { id: textId } = await params;
 
     // Delete reading position
     const { error } = await supabase

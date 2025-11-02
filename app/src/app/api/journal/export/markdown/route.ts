@@ -24,9 +24,9 @@ function serializeNode(node: any): string {
       return `${'#'.repeat(level)} ${content}`;
     }
     case 'bulletList':
-      return (node.content || []).map(li => serializeNode(li)).join('\n');
+      return (node.content || []).map((li: any) => serializeNode(li)).join('\n');
     case 'orderedList':
-      return (node.content || []).map((li, i) => serializeNode({ ...li, attrs: { order: (node.attrs?.start || 1) + i } })).join('\n');
+      return (node.content || []).map((li: any, i: number) => serializeNode({ ...li, attrs: { order: (node.attrs?.start || 1) + i } })).join('\n');
     case 'listItem':
       if (node.attrs?.order) {
         const inner = (node.content || []).map(serializeNode).join(' ');
@@ -34,7 +34,7 @@ function serializeNode(node: any): string {
       }
       return `- ${(node.content || []).map(serializeNode).join(' ')}`;
     case 'blockquote':
-      return (node.content || []).map(serializeNode).join('\n').split('\n').map(l => `> ${l}`).join('\n');
+      return (node.content || []).map(serializeNode).join('\n').split('\n').map((l: string) => `> ${l}`).join('\n');
     case 'codeBlock':
       return `\n\n\
 \`\`\`\n${(node.content || []).map(serializeNode).join('')}\n\

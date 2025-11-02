@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -22,8 +22,9 @@ interface DocumentData {
   curator_note: string | null;
 }
 
-export default function EditDocumentPage({ params }: { params: { id: string } }) {
+export default function EditDocumentPage() {
   const router = useRouter();
+  const params = useParams();
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,9 +51,13 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
     'mathematical'
   ];
 
+  const documentId = params.id as string;
+
   useEffect(() => {
-    fetchDocument();
-  }, [params.id]);
+    if (documentId) {
+      fetchDocument();
+    }
+  }, [documentId]);
 
   const fetchDocument = async () => {
     try {
@@ -62,7 +67,7 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
       const { data, error: fetchError } = await supabase
         .from('texts')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', documentId)
         .single();
 
       if (fetchError) throw fetchError;
@@ -99,7 +104,7 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
           tags,
           lenses,
         })
-        .eq('id', params.id);
+        .eq('id', documentId);
 
       if (updateError) throw updateError;
 
@@ -409,7 +414,7 @@ export default function EditDocumentPage({ params }: { params: { id: string } })
               )}
             </button>
             <Link
-              href={`/library/${params.id}`}
+              href={`/library/${documentId}`}
               className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-lg font-medium transition-colors flex items-center justify-center"
             >
               View Document

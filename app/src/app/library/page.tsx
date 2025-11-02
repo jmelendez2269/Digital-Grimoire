@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
 import Header from '@/components/Header';
@@ -46,12 +46,11 @@ interface FilterValues {
 }
 
 export default function LibraryPage() {
+  const { user, loading: authLoading, supabase, isAdmin } = useAuth();
   const [texts, setTexts] = useState<Text[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,56 +73,8 @@ export default function LibraryPage() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [allLenses, setAllLenses] = useState<string[]>([]);
 
-  const checkAuth = async () => {
-    console.log('[Library] Starting auth check...');
-    try {
-      const supabase = createClient();
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      console.log('[Library] Auth check result:', { hasSession: !!session, error: error?.message });
-      
-      if (error) {
-        console.error('[Library] Auth error:', error);
-        setError('Authentication error. Please try logging in again.');
-        setIsAuthenticated(false);
-        setLoading(false);
-        return;
-      }
-
-      if (!session) {
-        console.log('[Library] No session found');
-        setError('You must be logged in to view the library.');
-        setIsAuthenticated(false);
-        setLoading(false);
-        return;
-      }
-
-      console.log('[Library] Session found, setting authenticated to true');
-      setIsAuthenticated(true);
-
-      // Check if user is admin
-      if (session.user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.role === 'admin') {
-          setIsAdmin(true);
-        }
-      }
-    } catch (err) {
-      console.error('[Library] Error checking auth:', err);
-      setError('Failed to verify authentication.');
-      setIsAuthenticated(false);
-      setLoading(false);
-    }
-  };
-
   const fetchFilterOptions = async () => {
     try {
-      const supabase = createClient();
       
       // Fetch all documents to extract unique values
       const { data, error } = await supabase
@@ -180,85 +131,86 @@ export default function LibraryPage() {
   };
 
   const fetchTexts = useCallback(async () => {
-    console.log('[Library] Starting fetchTexts...');
+    console.log('[Library] Starting fetchTexts via API route...');
+    console.log('[Library] User from context:', user?.email);
+    
+    // Don't proceed if no user - API route will handle auth
+    if (!user) {
+      console.log('[Library] No user in context, waiting...');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const supabase = createClient();
 
-      // Start building the query
-      let query = supabase
-        .from('texts')
-        .select('*', { count: 'exact' });
+      // Build query parameters for API route
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+      });
 
-      // Apply search filter
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,author.ilike.%${searchQuery}%`);
+        params.append('search', searchQuery);
       }
-
-      // Apply domain filter
       if (filterValues.domain !== 'all') {
-        query = query.eq('domain', filterValues.domain);
+        params.append('domain', filterValues.domain);
       }
-
-      // Apply type filter
       if (filterValues.type !== 'all') {
-        query = query.eq('type', filterValues.type);
+        params.append('type', filterValues.type);
       }
-
-      // Apply year range filter
       if (filterValues.yearMin !== null) {
-        query = query.gte('year', filterValues.yearMin);
+        params.append('yearMin', filterValues.yearMin.toString());
       }
       if (filterValues.yearMax !== null) {
-        query = query.lte('year', filterValues.yearMax);
+        params.append('yearMax', filterValues.yearMax.toString());
       }
-
-      // Apply tags filter
       if (filterValues.tags.length > 0) {
-        // Use overlaps operator to match any of the selected tags
-        query = query.overlaps('tags', filterValues.tags);
+        params.append('tags', filterValues.tags.join(','));
       }
-
-      // Apply lenses filter
       if (filterValues.lenses.length > 0) {
-        // Use overlaps operator to match any of the selected lenses
-        query = query.overlaps('lenses', filterValues.lenses);
+        params.append('lenses', filterValues.lenses.join(','));
       }
 
-      // Apply pagination
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
-      query = query.range(from, to);
+      console.log('[Library] Calling API route with params:', params.toString());
 
-      // Order by created_at
-      query = query.order('created_at', { ascending: false });
+      // Use API route instead of direct Supabase query
+      const response = await fetch(`/api/texts?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      const { data, error, count } = await query;
-
-      console.log('[Library] Query result:', { count, dataLength: data?.length, error: error?.message });
-
-      if (error) {
-        console.error('[Library] Supabase error:', error);
-        setError(`Failed to load library: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Library] API error:', errorData);
+        setError(errorData.error || `Failed to load library (${response.status})`);
         setTexts([]);
         setTotalCount(0);
         return;
       }
-      
-      console.log('[Library] Setting texts:', data?.length || 0, 'items');
-      setTexts(data || []);
-      setTotalCount(count || 0);
-    } catch (error) {
+
+      const data = await response.json();
+      console.log('[Library] API response:', { 
+        count: data.total, 
+        dataLength: data.texts?.length,
+        page: data.page,
+        totalPages: data.totalPages
+      });
+
+      setTexts(data.texts || []);
+      setTotalCount(data.total || 0);
+    } catch (error: any) {
       console.error('[Library] Error fetching texts:', error);
-      setError('An unexpected error occurred while loading the library.');
+      setError(error.message || 'An unexpected error occurred while loading the library.');
       setTexts([]);
       setTotalCount(0);
     } finally {
       console.log('[Library] fetchTexts complete, setting loading to false');
       setLoading(false);
     }
-  }, [currentPage, searchQuery, filterValues]);
+  }, [currentPage, searchQuery, filterValues, user]);
 
   const handleFilterChange = (newValues: FilterValues) => {
     setFilterValues(newValues);
@@ -303,18 +255,43 @@ export default function LibraryPage() {
   };
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
     fetchFilterOptions();
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Safety timeout - if auth loading takes too long, try fetching anyway
+    let timeoutId: NodeJS.Timeout;
+    
+    if (!authLoading && user) {
+      // Auth is ready and user is logged in - fetch texts
+      console.log('[Library] Auth ready, user logged in - fetching texts');
       fetchTexts();
+    } else if (!authLoading && !user) {
+      // Auth is ready but no user - show error
+      console.log('[Library] Auth ready but no user - showing error');
+      setError('You must be logged in to view the library.');
+      setLoading(false);
+    } else if (authLoading) {
+      // Auth still loading - set a timeout to fetch anyway after 3 seconds
+      // This prevents the page from being stuck if auth hangs
+      console.log('[Library] Auth still loading, setting timeout fallback');
+      timeoutId = setTimeout(() => {
+        console.warn('[Library] Auth loading timeout - attempting to fetch texts anyway');
+        // Try to fetch if we have supabase client (might work even without user)
+        if (supabase) {
+          fetchTexts();
+        } else {
+          console.error('[Library] No supabase client available');
+          setError('Unable to connect to database.');
+          setLoading(false);
+        }
+      }, 3000);
     }
-  }, [isAuthenticated, fetchTexts]);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [authLoading, user, fetchTexts, supabase]);
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
@@ -344,7 +321,7 @@ export default function LibraryPage() {
               <div className="flex-1">
                 <h3 className="text-sm font-medium text-red-400 mb-1">Error Loading Library</h3>
                 <p className="text-sm text-red-300/80">{error}</p>
-                {!isAuthenticated && (
+                {!user && (
                   <Link
                     href="/login"
                     className="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -391,7 +368,7 @@ export default function LibraryPage() {
         </div>
 
         {/* Loading State */}
-        {!isAuthenticated ? null : loading ? (
+        {!user ? null : loading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(8)].map((_, i) => (
               <div

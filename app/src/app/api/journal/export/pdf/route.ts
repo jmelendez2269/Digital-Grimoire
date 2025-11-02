@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Browser, PDFOptions } from 'playwright-core';
+import type { Browser } from 'playwright-core';
 
 // Lazy import to keep cold start small
 async function getBrowser() {
@@ -88,14 +88,14 @@ export async function POST(req: NextRequest) {
     browser = await getBrowser();
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load' });
-    const pdfOptions: PDFOptions = {
+    const pdfOptions = {
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: `<div style="font-size:10px;padding-left:18mm;color:#6B7280;">${escapeHtml(title)}</div>`,
       footerTemplate: `<div style="font-size:10px;width:100%;text-align:right;padding-right:18mm;color:#6B7280;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>`,
       margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-      format: 'A4',
-    } as PDFOptions;
+      format: 'A4' as const,
+    };
     const pdf = await page.pdf(pdfOptions);
     await page.close();
 

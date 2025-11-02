@@ -29,23 +29,53 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || '';
     const domain = searchParams.get('domain');
     const type = searchParams.get('type');
+    const yearMin = searchParams.get('yearMin');
+    const yearMax = searchParams.get('yearMax');
+    const tags = searchParams.get('tags'); // Comma-separated
+    const lenses = searchParams.get('lenses'); // Comma-separated
 
     // Build query
     let query = supabase
       .from('texts')
       .select('*', { count: 'exact' });
 
-    // Apply filters
+    // Apply search filter
     if (search) {
       query = query.or(`title.ilike.%${search}%,author.ilike.%${search}%`);
     }
 
+    // Apply domain filter
     if (domain && domain !== 'all') {
       query = query.eq('domain', domain);
     }
 
+    // Apply type filter
     if (type && type !== 'all') {
       query = query.eq('type', type);
+    }
+
+    // Apply year range filter
+    if (yearMin) {
+      query = query.gte('year', parseInt(yearMin));
+    }
+    if (yearMax) {
+      query = query.lte('year', parseInt(yearMax));
+    }
+
+    // Apply tags filter
+    if (tags) {
+      const tagsArray = tags.split(',').filter(t => t.trim());
+      if (tagsArray.length > 0) {
+        query = query.overlaps('tags', tagsArray);
+      }
+    }
+
+    // Apply lenses filter
+    if (lenses) {
+      const lensesArray = lenses.split(',').filter(l => l.trim());
+      if (lensesArray.length > 0) {
+        query = query.overlaps('lenses', lensesArray);
+      }
     }
 
     // Apply pagination

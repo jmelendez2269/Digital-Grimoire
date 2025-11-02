@@ -14,7 +14,7 @@ const r2Client = new S3Client({
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -43,7 +43,7 @@ export async function DELETE(
       );
     }
 
-    const textId = params.id;
+    const { id: textId } = await params;
 
     // Get text metadata to find S3 key
     const { data: text, error: fetchError } = await supabase
