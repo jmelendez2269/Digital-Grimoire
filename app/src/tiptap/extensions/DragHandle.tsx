@@ -47,6 +47,9 @@ export const DragHandle = Extension.create({
   name: 'dragHandle',
 
   addProseMirrorPlugins() {
+    // Guard against SSR
+    if (typeof window === 'undefined') return [];
+    
     const editor = this.editor as Editor;
     const key = new PluginKey('drag-handle');
 
@@ -54,23 +57,55 @@ export const DragHandle = Extension.create({
       new Plugin({
         key,
         view(view) {
+          console.log('[DragHandle] Plugin view initializing');
           const handle = document.createElement('div');
           handle.setAttribute('data-drag-handle', 'true');
-          handle.className = 'absolute -ml-8 mt-1 text-zinc-400 hover:text-amber-400 cursor-grab select-none pointer-events-auto';
+          handle.className = 'absolute text-zinc-400 hover:text-amber-400 cursor-pointer select-none flex items-center justify-center';
           handle.innerText = '⋮⋮';
+          handle.style.zIndex = '50';
+          handle.style.width = '24px';
+          handle.style.height = '24px';
           handle.style.display = 'none';
-          handle.style.zIndex = '10';
+          handle.style.position = 'absolute'; // Ensure absolute positioning
+          handle.style.fontSize = '18px';
+          handle.style.lineHeight = '1';
+          handle.style.pointerEvents = 'auto';
+          handle.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // Temporary: make it visible for debugging
 
           let isHoveringEditor = false;
           let currentBlockElement: HTMLElement | null = null;
+          let parentContainer: HTMLElement | null = null;
 
           // Position the handle next to a specific block element
-          const updatePosition = (blockElement: HTMLElement) => {
-            const editorRect = (view.dom as HTMLElement).getBoundingClientRect();
+          const updatePosition = (blockElement: HTMLElement, container: HTMLElement) => {
+            const containerRect = container.getBoundingClientRect();
             const blockRect = blockElement.getBoundingClientRect();
-            handle.style.left = `${blockRect.left - editorRect.left - 32}px`;
-            handle.style.top = `${blockRect.top - editorRect.top}px`;
-            handle.style.display = 'block';
+            
+            // Calculate position accounting for container's padding (px-4 = 16px)
+            // Position handle 8px to the left of the block start
+            const leftPos = blockRect.left - containerRect.left - 24; // 16px padding + 8px spacing
+            const topPos = blockRect.top - containerRect.top + 2; // Small offset for alignment
+            
+            console.log('[DragHandle] updatePosition:', {
+              leftPos,
+              topPos,
+              blockRect: { left: blockRect.left, top: blockRect.top },
+              containerRect: { left: containerRect.left, top: containerRect.top },
+              containerTag: container.tagName,
+              blockTag: blockElement.tagName
+            });
+            
+            handle.style.left = `${leftPos}px`;
+            handle.style.top = `${topPos}px`;
+            handle.style.display = 'flex';
+            handle.style.position = 'absolute'; // Ensure absolute positioning
+            console.log('[DragHandle] Handle display set to flex, position:', handle.style.left, handle.style.top);
+            console.log('[DragHandle] Handle computed style:', {
+              display: window.getComputedStyle(handle).display,
+              visibility: window.getComputedStyle(handle).visibility,
+              opacity: window.getComputedStyle(handle).opacity,
+              zIndex: window.getComputedStyle(handle).zIndex
+            });
           };
 
           // Up/Down buttons on right-click for quick reorder
@@ -116,17 +151,109 @@ export const DragHandle = Extension.create({
 
           // Show handle on hover over blocks
           const editorElement = view.dom as HTMLElement;
+          console.log('[DragHandle] Editor element:', editorElement, editorElement.tagName);
           editorElement.style.position = 'relative';
-          editorElement.appendChild(handle);
+          
+          // Find the parent container (usually the wrapper div from JournalEditor)
+          let container = editorElement;
+          let depth = 0;
+          while (container.parentElement && container.parentElement !== document.body && depth < 10) {
+            const parent = container.parentElement;
+            console.log(`[DragHandle] Checking parent at depth ${depth}:`, parent.tagName, parent.className);
+            // Check if parent has the border class from JournalEditor
+            if (parent.classList.contains('border') || parent.classList.contains('rounded-lg')) {
+              parentContainer = parent as HTMLElement;
+              console.log('[DragHandle] Found container with border/rounded:', parentContainer);
+              break;
+            }
+            container = parent;
+            depth++;
+          }
+          if (!parentContainer) {
+            parentContainer = editorElement.parentElement || editorElement;
+            console.log('[DragHandle] Using fallback container:', parentContainer);
+          }
+          parentContainer.style.position = 'relative';
+          parentContainer.appendChild(handle);
+          console.log('[DragHandle] Handle appended to container:', parentContainer, handle.parentElement === parentContainer);
 
           const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            // Find the nearest block-level element (p, h1, h2, h3, li, etc.)
-            const block = target.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote');
-            if (block && block instanceof HTMLElement && editorElement.contains(block)) {
+            console.log('[DragHandle] MouseOver fired, target:', target?.tagName, target?.className);
+            
+            // Skip if hovering over the handle itself
+            if (target === handle || handle.contains(target)) {
+              console.log('[DragHandle] Ignoring - hovering over handle itself');
+              return;
+            }
+            
+            // Find the block element at the mouse position using ProseMirror's view API
+            let block: HTMLElement | null = null;
+            
+            if (target === editorElement || editorElement.contains(target)) {
+              // Use ProseMirror's posAtCoords to find the document position at mouse coordinates
+              const coords = { left: e.clientX, top: e.clientY };
+              const posAtCoords = view.posAtCoords(coords);
+              
+              if (posAtCoords) {
+                console.log('[DragHandle] ProseMirror posAtCoords:', posAtCoords);
+                // Get the DOM node at this position
+                const domAtPos = view.domAtPos(posAtCoords.pos);
+                console.log('[DragHandle] DOM at pos:', domAtPos.node.nodeName, domAtPos.offset);
+                
+                // The node from domAtPos might be a text node, so find the block element
+                let domNode: Node | null = domAtPos.node;
+                if (domNode.nodeType === Node.TEXT_NODE) {
+                  domNode = domNode.parentElement;
+                }
+                
+                if (domNode instanceof HTMLElement && editorElement.contains(domNode)) {
+                  // Use closest to find the block element
+                  block = domNode.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote, ul, ol') as HTMLElement;
+                  if (block) {
+                    console.log('[DragHandle] Found block via ProseMirror + closest:', block.tagName);
+                  }
+                }
+              }
+              
+              // Fallback: try DOM-based detection
+              if (!block) {
+                // Try closest first (for nested elements like spans inside paragraphs)
+                block = target.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote, ul, ol') as HTMLElement;
+                
+                if (!block) {
+                  const coords = { left: e.clientX, top: e.clientY };
+                  const elementAtPoint = document.elementFromPoint(coords.left, coords.top);
+                  if (elementAtPoint && editorElement.contains(elementAtPoint)) {
+                    block = (elementAtPoint.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote, ul, ol') || 
+                             elementAtPoint as HTMLElement) as HTMLElement;
+                    
+                    if (block) {
+                      const tagName = block.tagName.toLowerCase();
+                      if (!['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'pre', 'blockquote', 'ul', 'ol'].includes(tagName)) {
+                        block = null;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            
+            console.log('[DragHandle] Found block:', block?.tagName, block?.className);
+            console.log('[DragHandle] Block checks:', {
+              hasBlock: !!block,
+              isHTMLElement: block instanceof HTMLElement,
+              contains: block ? editorElement.contains(block) : false,
+              hasContainer: !!parentContainer
+            });
+            
+            if (block && block instanceof HTMLElement && editorElement.contains(block) && parentContainer) {
+              console.log('[DragHandle] All checks passed, updating position');
               currentBlockElement = block;
-              updatePosition(block);
+              updatePosition(block, parentContainer);
               isHoveringEditor = true;
+            } else {
+              console.log('[DragHandle] Block check failed, not showing handle');
             }
           };
 
@@ -163,16 +290,18 @@ export const DragHandle = Extension.create({
           });
 
           return {
-            update() {
-              // Only update position if handle is visible and we have a current block
-              if (currentBlockElement && handle.style.display !== 'none') {
-                updatePosition(currentBlockElement);
+            update(view, prevState) {
+              // Force update position on every update if we have a block
+              if (currentBlockElement && parentContainer) {
+                updatePosition(currentBlockElement, parentContainer);
               }
             },
             destroy() {
               editorElement.removeEventListener('mouseover', handleMouseOver);
               editorElement.removeEventListener('mouseout', handleMouseOut);
-              handle.remove();
+              if (handle.parentElement) {
+                handle.remove();
+              }
             },
           };
         },

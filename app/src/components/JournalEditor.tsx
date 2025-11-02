@@ -6,6 +6,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import { WikiLink } from '../tiptap/extensions/WikiLinkExtension';
+import { DragHandle } from '../tiptap/extensions/DragHandle';
+import { SlashMenu } from '../tiptap/extensions/SlashMenu';
 import {
   Bold,
   Italic,
@@ -45,6 +47,8 @@ export default function JournalEditor({
         placeholder,
       }),
       Typography,
+      DragHandle,
+      SlashMenu,
       WikiLink,
     ],
     editorProps: {
@@ -92,7 +96,7 @@ export default function JournalEditor({
   }
 
   return (
-    <div className="border border-zinc-700 rounded-lg bg-zinc-900/50 overflow-hidden">
+    <div className="border border-zinc-700 rounded-lg bg-zinc-900/50 overflow-visible">
       <div className="border-b border-zinc-700 bg-zinc-800/50 p-2 flex items-center gap-1 flex-wrap">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}

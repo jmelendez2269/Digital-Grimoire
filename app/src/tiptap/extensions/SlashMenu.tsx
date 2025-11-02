@@ -4,6 +4,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import ReactDOM from 'react-dom/client';
 
 type CommandItem = {
   title: string;
@@ -96,6 +97,8 @@ function SlashMenuComponent({ items, query, position, onSelect, onClose }: Slash
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log('[SlashMenu Component] Keydown:', e.key, 'selectedIndex:', selectedIndex, 'filtered length:', filtered.length);
+      
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex((prev) => (prev + 1) % filtered.length);
@@ -103,9 +106,13 @@ function SlashMenuComponent({ items, query, position, onSelect, onClose }: Slash
         e.preventDefault();
         setSelectedIndex((prev) => (prev - 1 + filtered.length) % filtered.length);
       } else if (e.key === 'Enter') {
+        console.log('[SlashMenu Component] Enter pressed, calling onSelect');
         e.preventDefault();
         if (filtered[selectedIndex]) {
+          console.log('[SlashMenu Component] Selected item:', filtered[selectedIndex].title);
           onSelect(filtered[selectedIndex]);
+        } else {
+          console.log('[SlashMenu Component] No item at selectedIndex:', selectedIndex);
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
@@ -113,8 +120,9 @@ function SlashMenuComponent({ items, query, position, onSelect, onClose }: Slash
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase to ensure we get the event before ProseMirror
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [filtered, selectedIndex, onSelect, onClose]);
 
   // Scroll selected item into view
@@ -191,6 +199,9 @@ export const SlashMenu = Extension.create<SlashMenuOptions>({
   },
 
   addProseMirrorPlugins() {
+    // Guard against SSR
+    if (typeof window === 'undefined') return [];
+    
     const editor = this.editor;
     const items = this.options.items || getDefaultCommands();
     
@@ -243,14 +254,25 @@ export const SlashMenu = Extension.create<SlashMenuOptions>({
           
           handleKeyDown(view, event) {
             const pluginState = pluginKey.getState(view.state);
+            console.log('[SlashMenu] handleKeyDown:', event.key, 'Menu active:', pluginState?.active);
             
             // If menu is not active, don't handle
             if (!pluginState?.active) return false;
             
-            // Let the React component handle arrow keys, Enter, and Escape
-            if (['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(event.key)) {
-              // The React component will handle these via its own event listener
+            // For Enter key, don't handle it here - let React component handle it
+            // But prevent default to stop ProseMirror from creating a new line
+            if (event.key === 'Enter') {
+              console.log('[SlashMenu] Enter key pressed, preventing default but letting React handle');
+              event.preventDefault();
+              // Don't stop propagation - let React component's document listener catch it
+              // Return false so ProseMirror doesn't handle it
               return false;
+            }
+            
+            // Prevent default for other navigation keys
+            if (['ArrowUp', 'ArrowDown', 'Escape'].includes(event.key)) {
+              event.preventDefault();
+              return false; // Let React component handle
             }
             
             return false;
@@ -264,6 +286,7 @@ export const SlashMenu = Extension.create<SlashMenuOptions>({
           return {
             update(view, prevState) {
               const pluginState = pluginKey.getState(view.state);
+              console.log('[SlashMenu] Plugin update, state:', pluginState);
               
               if (pluginState?.active) {
                 // Calculate position
@@ -282,15 +305,24 @@ export const SlashMenu = Extension.create<SlashMenuOptions>({
                   document.body.appendChild(menuRoot);
                 }
                 
-                // Use React 18 createRoot if available, otherwise legacy render
-                const React = require('react');
-                const ReactDOM = require('react-dom/client');
-                
                 const handleSelect = (item: CommandItem) => {
-                  const { from, to } = pluginState.range;
+                  console.log('[SlashMenu] handleSelect called with item:', item.title);
                   
-                  // Clean up menu first
+                  // Get fresh plugin state
+                  const currentState = pluginKey.getState(view.state);
+                  console.log('[SlashMenu] Current plugin state:', currentState);
+                  
+                  if (!currentState?.active) {
+                    console.log('[SlashMenu] Menu not active, returning');
+                    return;
+                  }
+                  
+                  const { from, to } = currentState.range;
+                  console.log('[SlashMenu] Deleting range:', { from, to });
+                  
+                  // Clean up menu first (before state changes)
                   if (menuRoot) {
+                    console.log('[SlashMenu] Cleaning up menu');
                     if (reactRoot) {
                       reactRoot.unmount();
                       reactRoot = null;
@@ -299,17 +331,21 @@ export const SlashMenu = Extension.create<SlashMenuOptions>({
                     menuRoot = null;
                   }
                   
-                  // Use Tiptap's API to delete the slash command text and execute the command
-                  // This ensures proper state synchronization
+                  // Execute delete + command in the same transaction chain
+                  // This ensures atomic execution
+                  console.log('[SlashMenu] Executing deleteRange');
                   editor.chain()
                     .focus()
                     .deleteRange({ from, to })
                     .run();
                   
-                  // Use setTimeout to ensure the deletion is complete before running the command
+                  // Execute command immediately after deletion (sync execution)
+                  // Use setTimeout with 0ms to let ProseMirror process the deletion first
                   setTimeout(() => {
+                    console.log('[SlashMenu] Executing command action:', item.title);
                     item.action(editor as Editor);
-                  }, 10);
+                    console.log('[SlashMenu] Command executed');
+                  }, 0);
                 };
                 
                 const handleClose = () => {
