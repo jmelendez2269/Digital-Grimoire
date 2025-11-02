@@ -30,9 +30,3 @@ create table if not exists public.convergence_relationships (
 
 create unique index if not exists idx_conv_unique_edge on public.convergence_relationships(source_id, target_id);
 
--- Optional: further constraints
-alter table public.convergence_relationships
-  add constraint if not exists convergence_relationships_similarity_range
-  check (similarity >= 0 and similarity <= 1);
-
-
