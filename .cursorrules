@@ -130,8 +130,8 @@ git push origin main
 
 #### ⚠️ IMPORTANT:
 
-- **Never commit without explicit user permission** for first commit in a session
-- **After that, proactively commit and push** completed work
+- **Ask the user if they're ready to commit** after completing successful changes
+- **Proactively offer to commit and push** when work is complete
 - **Group related changes** into logical commits
 - **Always pull before pushing** to avoid conflicts
 - **Verify sync success** with `git status`
