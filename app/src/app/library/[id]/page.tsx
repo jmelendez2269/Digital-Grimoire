@@ -110,26 +110,15 @@ export default function DocumentDetailPage() {
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [annotationsRefreshTrigger, setAnnotationsRefreshTrigger] = useState(0);
 
-  useEffect(() => {
-    if (documentId) {
-      fetchDocument();
-      fetchAnnotations();
-    }
-  }, [documentId]);
-
-  // Refetch annotations when trigger changes
-  useEffect(() => {
-    if (documentId && annotationsRefreshTrigger > 0) {
-      fetchAnnotations();
-    }
-  }, [annotationsRefreshTrigger, documentId]);
-
-  const fetchDocument = async () => {
+  const fetchDocument = useCallback(async () => {
     if (!documentId) return;
     
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
       const supabase = createClient();
+
+      console.log('[DocumentDetailPage] Fetching document:', documentId);
 
       // Fetch document metadata
       const { data, error: fetchError } = await supabase
@@ -138,33 +127,75 @@ export default function DocumentDetailPage() {
         .eq('id', documentId)
         .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('[DocumentDetailPage] Supabase error:', fetchError);
+        throw fetchError;
+      }
       
       if (!data) {
+        console.warn('[DocumentDetailPage] Document not found:', documentId);
         setError('Document not found');
         return;
       }
 
+      console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key);
       setDocument(data);
 
       // If document has S3 key, fetch the signed URL from R2
       if (data.s3_key && data.status === 'ready') {
-        const response = await fetch(`/api/documents/${documentId}`);
-        
-        if (response.ok) {
-          const { url } = await response.json();
-          setPdfUrl(url);
-        } else {
-          console.error('Failed to fetch document URL:', await response.text());
+        console.log('[DocumentDetailPage] Fetching signed URL for document');
+        try {
+          const response = await fetch(`/api/documents/${documentId}`);
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('[DocumentDetailPage] Signed URL received, length:', result.url?.length || 0);
+            setPdfUrl(result.url);
+          } else {
+            // Handle error response - try to parse as JSON, fallback to status text
+            let errorMessage = 'Failed to load document from storage';
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorMessage;
+              console.error('[DocumentDetailPage] API error response:', errorData);
+            } catch (e) {
+              // Response wasn't JSON, use status text
+              errorMessage = `${errorMessage}: ${response.statusText}`;
+              console.error('[DocumentDetailPage] Non-JSON error response:', response.statusText);
+            }
+            setError(errorMessage);
+          }
+        } catch (fetchError) {
+          console.error('[DocumentDetailPage] Error fetching document URL:', fetchError);
+          setError('Failed to connect to document service. Please try again.');
         }
+      } else {
+        console.log('[DocumentDetailPage] Document not ready for viewing:', {
+          hasS3Key: !!data.s3_key,
+          status: data.status
+        });
       }
     } catch (err) {
-      console.error('Error fetching document:', err);
+      console.error('[DocumentDetailPage] Error fetching document:', err);
       setError('Failed to load document');
     } finally {
       setLoading(false);
     }
-  };
+  }, [documentId]);
+
+  useEffect(() => {
+    if (documentId) {
+      fetchDocument();
+      fetchAnnotations();
+    }
+  }, [documentId, fetchDocument]);
+
+  // Refetch annotations when trigger changes
+  useEffect(() => {
+    if (documentId && annotationsRefreshTrigger > 0) {
+      fetchAnnotations();
+    }
+  }, [annotationsRefreshTrigger, documentId]);
 
   // Fetch annotations for this document
   const fetchAnnotations = async () => {
