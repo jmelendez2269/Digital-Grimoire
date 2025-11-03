@@ -1,177 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/lib/supabase/client";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, signOut, isAdmin: contextIsAdmin } = useAuth();
+  const { user, loading, signOut, isAdmin } = useAuth(); // Single source of truth
   const [menuOpen, setMenuOpen] = useState(false);
-  const [localIsAdmin, setLocalIsAdmin] = useState(false);
-
-  // Use context admin status immediately, then verify with direct check
-  // This ensures we don't miss showing admin links while the check runs
-  const isAdmin = contextIsAdmin || localIsAdmin;
-
-  // Double-check admin status directly to ensure it's always correct
-  useEffect(() => {
-    if (user && !loading) {
-      // Use context value immediately
-      if (contextIsAdmin) {
-        setLocalIsAdmin(true);
-      }
-
-      const checkAdmin = async () => {
-        try {
-          const supabase = createClient();
-          
-          // Verify session first
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          if (!currentSession) {
-            console.warn('[Header] No active session found');
-            setLocalIsAdmin(false);
-            return;
-          }
-          
-          // Verify user ID matches session
-          if (currentSession.user.id !== user.id) {
-            console.warn('[Header] User ID mismatch:', {
-              sessionUserId: currentSession.user.id,
-              contextUserId: user.id
-            });
-          }
-          
-          // Query profile - RLS policy "Users can view own profile" should automatically filter
-          // Try querying by current user ID first
-          const { data: profile, error, status } = await supabase
-            .from('users')
-            .select('role, id, email')
-            .eq('id', currentSession.user.id)
-            .maybeSingle(); // Use maybeSingle instead of single to handle missing records gracefully
-          
-          // If that fails, try a direct query letting RLS handle filtering
-          // (Some RLS setups prefer queries without explicit filters)
-          if (error || !profile) {
-            console.log('[Header] Primary query failed, trying alternative query method...');
-            const { data: altProfile, error: altError } = await supabase
-              .from('users')
-              .select('role, id, email')
-              .maybeSingle();
-            
-            if (altProfile && !altError) {
-              // Alternative query succeeded - use its result
-              const finalProfile = altProfile;
-              const userIsAdmin = finalProfile?.role === 'admin';
-              setLocalIsAdmin(userIsAdmin);
-              console.log('[Header] Alternative query succeeded:', { role: finalProfile?.role, isAdmin: userIsAdmin });
-              return;
-            }
-          }
-          
-          if (error) {
-            console.error('[Header] Error fetching profile:', {
-              message: error.message,
-              code: error.code,
-              details: error.details,
-              hint: error.hint,
-              status,
-              userId: user.id,
-              sessionUserId: currentSession.user.id,
-              userEmail: user.email,
-              rlsIssue: 'This might be an RLS policy issue. Check if the policy allows SELECT on users table.'
-            });
-            
-            // Check if it's a "not found" error (profile doesn't exist)
-            if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
-              console.warn('[Header] User profile does not exist in users table.');
-              console.warn('[Header] To fix: Run FIX_ADMIN_ACCESS.sql in Supabase SQL Editor, or check if auto-profile migration is installed.');
-              
-              // Try to auto-create the profile (may fail due to RLS, but worth trying)
-              try {
-                const { error: insertError } = await supabase
-                  .from('users')
-                  .insert({
-                    id: user.id,
-                    email: user.email,
-                    name: user.user_metadata?.username || user.email?.split('@')[0] || 'User',
-                    role: 'user', // Default to user, admin must be set manually in DB
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                  });
-                
-                if (!insertError) {
-                  console.log('[Header] Successfully created user profile');
-                  // Profile created, but role is 'user' by default
-                  // Admin role must be set in database manually
-                  setLocalIsAdmin(false);
-                  return;
-                } else {
-                  console.warn('[Header] Could not auto-create profile:', insertError.message);
-                }
-              } catch (createError) {
-                console.warn('[Header] Auto-create profile failed (expected if RLS prevents it):', createError);
-              }
-              
-              // Try to see if we can access auth.users metadata
-              const userMetadata = user.user_metadata;
-              if (userMetadata?.role === 'admin') {
-                console.log('[Header] Found admin role in user_metadata, using that');
-                setLocalIsAdmin(true);
-                return;
-              }
-            }
-            
-            // Keep context value if available
-            setLocalIsAdmin(contextIsAdmin || false);
-            return;
-          }
-          
-          // Handle case where profile doesn't exist (maybeSingle returns null)
-          if (!profile) {
-            console.warn('[Header] Profile query returned null/no data', {
-              userId: currentSession.user.id,
-              userEmail: user.email,
-              queryStatus: status,
-              errorMessage: error?.message
-            });
-            setLocalIsAdmin(contextIsAdmin || false);
-            return;
-          }
-          
-          const userIsAdmin = profile?.role === 'admin';
-          setLocalIsAdmin(userIsAdmin);
-          
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[Header] Direct admin check:', { 
-              userId: user.id,
-              sessionUserId: currentSession.user.id,
-              userEmail: user.email,
-              profileExists: !!profile,
-              profileId: profile?.id,
-              profileEmail: profile?.email,
-              role: profile?.role, 
-              userIsAdmin,
-              contextIsAdmin,
-              localIsAdmin: userIsAdmin,
-              finalIsAdmin: userIsAdmin || contextIsAdmin
-            });
-          }
-        } catch (error) {
-          console.error('[Header] Exception checking admin status:', error);
-          // Fallback to context value
-          setLocalIsAdmin(contextIsAdmin || false);
-        }
-      };
-      
-      checkAdmin();
-    } else {
-      setLocalIsAdmin(false);
-    }
-  }, [user, loading, contextIsAdmin]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -440,7 +278,7 @@ export default function Header() {
                     {/* Debug info - only in development */}
                     {process.env.NODE_ENV === 'development' && (
                       <div className="px-4 py-2 text-xs text-zinc-500 border-t border-zinc-800">
-                        Debug: isAdmin={String(isAdmin)}, contextIsAdmin={String(contextIsAdmin)}, localIsAdmin={String(localIsAdmin)}
+                        Debug: isAdmin={String(isAdmin)}
                       </div>
                     )}
 

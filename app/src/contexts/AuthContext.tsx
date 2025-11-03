@@ -20,14 +20,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [supabase] = useState(() => createClient());
 
+  // Check admin status via API (more reliable, bypasses RLS)
+  const checkAdminViaAPI = async (userId: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/auth/admin-status', {
+        credentials: 'include', // Important: include cookies for auth
+      });
+      
+      if (!response.ok) {
+        console.error('[AuthContext] API admin check failed:', response.status);
+        return false;
+      }
+      
+      const data = await response.json();
+      console.log('[AuthContext] API admin check result:', data);
+      return data.isAdmin === true;
+    } catch (error) {
+      console.error('[AuthContext] API admin check error:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
-    // Safety timeout - ensure loading never gets stuck
+    // Safety timeout
     const timeoutId = setTimeout(() => {
       console.warn('[AuthContext] Safety timeout - forcing loading to false');
       setLoading(false);
     }, 5000);
 
-    // Get initial session
     const initializeAuth = async () => {
       try {
         console.log('[AuthContext] Initializing authentication...');
@@ -41,58 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('[AuthContext] Session found:', session.user.email);
           setUser(session.user);
           
-          // Check admin status with timeout
-          try {
-            // Create a timeout promise
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Admin check timeout')), 3000)
-            );
-            
-            // Race between profile fetch and timeout
-            const profilePromise = supabase
-              .from('users')
-              .select('role, id, email')
-              .eq('id', session.user.id)
-              .maybeSingle(); // Use maybeSingle to handle missing records gracefully
-            
-            try {
-              const { data: profile, error: profileError } = await Promise.race([
-                profilePromise,
-                timeoutPromise
-              ]) as any;
-              
-              if (profileError) {
-                console.error('[AuthContext] Error fetching user profile:', {
-                  message: profileError.message,
-                  code: profileError.code,
-                  details: profileError.details,
-                  userId: session.user.id,
-                  userEmail: session.user.email
-                });
-                setIsAdmin(false);
-              } else if (!profile) {
-                console.warn('[AuthContext] User profile not found in users table', {
-                  userId: session.user.id,
-                  userEmail: session.user.email
-                });
-                setIsAdmin(false);
-              } else {
-                const isUserAdmin = profile?.role === 'admin';
-                console.log('[AuthContext] User role:', profile?.role, 'isAdmin:', isUserAdmin, {
-                  userId: profile.id,
-                  email: profile.email
-                });
-                setIsAdmin(isUserAdmin);
-              }
-            } catch (raceError) {
-              // Timeout or other error
-              console.warn('[AuthContext] Admin check timed out or failed, defaulting to false');
-              setIsAdmin(false);
-            }
-          } catch (err) {
-            console.error('[AuthContext] Error checking admin status:', err);
-            setIsAdmin(false);
-          }
+          // Check admin via API (more reliable)
+          const adminStatus = await checkAdminViaAPI(session.user.id);
+          setIsAdmin(adminStatus);
+          console.log('[AuthContext] Admin status set to:', adminStatus);
         } else {
           console.log('[AuthContext] No session found');
           setUser(null);
@@ -119,34 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           setUser(session.user);
           
-          // Update admin status
-          try {
-            const { data: profile, error: profileError } = await supabase
-              .from('users')
-              .select('role, id, email')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            
-            if (profileError) {
-              console.error('[AuthContext] Could not fetch user profile:', {
-                message: profileError.message,
-                code: profileError.code,
-                userId: session.user.id,
-                userEmail: session.user.email
-              });
-              setIsAdmin(false);
-            } else if (!profile) {
-              console.warn('[AuthContext] User profile not found in users table during auth state change');
-              setIsAdmin(false);
-            } else {
-              const isUserAdmin = profile?.role === 'admin';
-              console.log('[AuthContext] Auth state change - User role:', profile?.role, 'isAdmin:', isUserAdmin);
-              setIsAdmin(isUserAdmin);
-            }
-          } catch (err) {
-            console.error('[AuthContext] Error checking admin status:', err);
-            setIsAdmin(false);
-          }
+          // Check admin via API
+          const adminStatus = await checkAdminViaAPI(session.user.id);
+          setIsAdmin(adminStatus);
+          console.log('[AuthContext] Auth change - Admin status:', adminStatus);
         } else {
           setUser(null);
           setIsAdmin(false);
