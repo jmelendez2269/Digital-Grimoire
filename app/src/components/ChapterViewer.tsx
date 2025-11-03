@@ -47,8 +47,60 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
 
   // Format content for display (simple markdown-like rendering for plaintext)
   const formatContent = (content: string) => {
-    // Split into paragraphs
-    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    if (!content) return null;
+    
+    // Debug logging - always log to see if this is being called
+    console.log('[ChapterViewer] formatContent called, format:', format, 'content length:', content.length);
+    console.log('[ChapterViewer] First 300 chars:', content.substring(0, 300));
+    
+    // Normalize line breaks: handle different line break types
+    let normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
+    const hasLineBreaks = normalized.includes('\n');
+    console.log('[ChapterViewer] Has line breaks:', hasLineBreaks);
+    
+    // If content has no line breaks, add paragraph breaks more aggressively
+    if (!hasLineBreaks && normalized.length > 100) {
+      console.log('[ChapterViewer] Adding paragraph breaks...');
+      
+      // Strategy 1: Split on sentence endings (more aggressive)
+      normalized = normalized.replace(/([.!?])\s+([A-Z])/g, '$1\n\n$2');
+      
+      // Strategy 2: Split on periods with quotes or emphasis
+      normalized = normalized.replace(/(\.|!|\?)\s*["']\s*([A-Z])/g, '$1"$2');
+      normalized = normalized.replace(/\.\s+["']([^"']+)["']\s+([A-Z])/g, '.\n\n"$1"\n\n$2');
+      
+      // Strategy 3: Split before common paragraph starters (case insensitive)
+      const paragraphStarters = [
+        'In the', 'It was', 'The ', 'This ', 'That ', 'These ', 'Those ',
+        'However', 'Therefore', 'Moreover', 'Furthermore', 'Additionally',
+        'First', 'Second', 'Third', 'Finally', 'Also', 'Another',
+        'The Master', 'The student', 'The teacher', 'Hermetic', 'Kybalion'
+      ];
+      
+      paragraphStarters.forEach(starter => {
+        const regex = new RegExp(`\\s+(${starter})`, 'gi');
+        normalized = normalized.replace(regex, '\n\n$1');
+      });
+      
+      // Strategy 4: Split long paragraphs (every 300 chars after a sentence)
+      // But only if no breaks were added above
+      if (!normalized.includes('\n\n')) {
+        normalized = normalized.replace(/([.!?])\s+([^.!?]{200,})/g, (match, punct, text) => {
+          // Only add break if the following text is long enough
+          if (text.length > 200) {
+            return punct + '\n\n' + text;
+          }
+          return match;
+        });
+      }
+      
+      console.log('[ChapterViewer] After processing, has breaks:', normalized.includes('\n\n'));
+    }
+    
+    // Split into paragraphs by double line breaks
+    const paragraphs = normalized.split(/\n\n+/).filter(p => p.trim());
+    console.log('[ChapterViewer] Paragraphs created:', paragraphs.length);
     
     return paragraphs.map((para, index) => {
       const trimmed = para.trim();
@@ -69,16 +121,24 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
       // Check if it's a numbered list item
       if (/^\d+\.\s/.test(trimmed)) {
         return (
-          <p key={index} className="my-4 text-amber-100/80 leading-relaxed pl-4">
+          <p key={index} className="my-4 text-amber-100/80 leading-relaxed pl-4 whitespace-pre-line">
             {trimmed}
           </p>
         );
       }
       
-      // Regular paragraph
+      // Regular paragraph - manually render line breaks with <br /> tags
+      // This ensures line breaks always display even if CSS fails
+      const lines = trimmed.split('\n').filter(line => line.trim());
+      
       return (
         <p key={index} className="my-4 text-amber-100/80 leading-relaxed text-justify">
-          {trimmed}
+          {lines.map((line, lineIndex) => (
+            <span key={lineIndex}>
+              {lineIndex > 0 && <br />}
+              {line.trim()}
+            </span>
+          ))}
         </p>
       );
     });
@@ -87,13 +147,213 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
   // Render content based on format
   const renderContent = () => {
     if (!activeChapter) return null;
-
+    
+    console.log('[ChapterViewer] renderContent - format:', format, 'has content:', !!activeChapter.content);
+    
     if (format === 'html') {
+      // Use the sanitized HTML directly - it should already be well-formatted
+      // from the parser's cleanHtml function
+      let htmlToRender = sanitizedHtml;
+      
+      // Enhance the HTML structure if needed (client-side only)
+      if (typeof window !== 'undefined' && htmlToRender && htmlToRender.trim().length > 0) {
+        // If HTML lacks proper structure, try to fix it
+        if (!htmlToRender.includes('<p>') && !htmlToRender.includes('<div>') && !htmlToRender.includes('<h1>')) {
+          // Content might need paragraph wrapping
+          // Try to extract text and wrap in paragraphs
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = htmlToRender;
+          const textContent = tempDiv.textContent || tempDiv.innerText || '';
+          
+          if (textContent.trim() && !htmlToRender.trim().startsWith('<')) {
+            // It's likely plain text, wrap in paragraphs
+            const paragraphs = textContent
+              .split(/\n\n+/)
+              .filter(p => p.trim())
+              .map(p => `<p>${p.trim().replace(/\n/g, ' ')}</p>`)
+              .join('\n');
+            htmlToRender = paragraphs;
+            
+            // Re-sanitize after processing
+            htmlToRender = DOMPurify.sanitize(htmlToRender, {
+              ALLOWED_TAGS: [
+                'p', 'br', 'strong', 'em', 'u', 'i', 'b',
+                'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                'ul', 'ol', 'li',
+                'blockquote', 'pre', 'code',
+                'a', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+                'div', 'span',
+              ],
+              ALLOWED_ATTR: ['href', 'class'],
+            });
+          }
+        }
+      }
+      
       return (
-        <div 
-          className="chapter-content prose prose-invert prose-amber max-w-none"
-          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-        />
+        <>
+          <div 
+            className="chapter-html-content prose prose-invert prose-amber max-w-none"
+            dangerouslySetInnerHTML={{ __html: htmlToRender }}
+          />
+          {/* Comprehensive CSS styling similar to HTMLViewer */}
+          <style jsx global>{`
+            .chapter-html-content {
+              color: #fef3c7;
+              padding: 1rem 0;
+            }
+            
+            .chapter-html-content h1,
+            .chapter-html-content h2,
+            .chapter-html-content h3,
+            .chapter-html-content h4,
+            .chapter-html-content h5,
+            .chapter-html-content h6 {
+              color: #fbbf24;
+              margin-top: 1.5em;
+              margin-bottom: 0.5em;
+              font-weight: 600;
+            }
+            
+            .chapter-html-content h1 {
+              font-size: 2em;
+              border-bottom: 2px solid rgba(217, 119, 6, 0.3);
+              padding-bottom: 0.5em;
+            }
+            
+            .chapter-html-content h2 {
+              font-size: 1.5em;
+            }
+            
+            .chapter-html-content h3 {
+              font-size: 1.25em;
+            }
+            
+            .chapter-html-content p {
+              margin-bottom: 1em;
+              line-height: 1.7;
+              text-align: justify;
+              color: #fef3c7;
+            }
+            
+            .chapter-html-content p:first-child {
+              margin-top: 0;
+            }
+            
+            .chapter-html-content p:last-child {
+              margin-bottom: 0;
+            }
+            
+            .chapter-html-content a {
+              color: #f59e0b;
+              text-decoration: underline;
+              transition: color 0.2s;
+            }
+            
+            .chapter-html-content a:hover {
+              color: #fbbf24;
+            }
+            
+            .chapter-html-content img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 4px;
+              margin: 1em 0;
+            }
+            
+            .chapter-html-content table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 1em 0;
+            }
+            
+            .chapter-html-content table th,
+            .chapter-html-content table td {
+              border: 1px solid rgba(217, 119, 6, 0.3);
+              padding: 0.5em;
+            }
+            
+            .chapter-html-content table th {
+              background-color: rgba(217, 119, 6, 0.1);
+              color: #fbbf24;
+              font-weight: 600;
+            }
+            
+            .chapter-html-content blockquote {
+              border-left: 3px solid rgba(217, 119, 6, 0.5);
+              padding-left: 1em;
+              margin: 1.5em 0;
+              color: #fcd34d;
+              font-style: italic;
+            }
+            
+            .chapter-html-content code {
+              background-color: rgba(217, 119, 6, 0.1);
+              padding: 0.2em 0.4em;
+              border-radius: 3px;
+              font-family: 'Courier New', monospace;
+              color: #fcd34d;
+              font-size: 0.9em;
+            }
+            
+            .chapter-html-content pre {
+              background-color: rgba(24, 24, 27, 0.8);
+              border: 1px solid rgba(217, 119, 6, 0.3);
+              padding: 1em;
+              border-radius: 4px;
+              overflow-x: auto;
+              margin: 1em 0;
+            }
+            
+            .chapter-html-content pre code {
+              background-color: transparent;
+              padding: 0;
+              color: #fcd34d;
+            }
+            
+            .chapter-html-content ul,
+            .chapter-html-content ol {
+              margin: 1em 0;
+              padding-left: 2em;
+              color: #fef3c7;
+            }
+            
+            .chapter-html-content li {
+              margin: 0.5em 0;
+              line-height: 1.6;
+            }
+            
+            .chapter-html-content ul li {
+              list-style-type: disc;
+            }
+            
+            .chapter-html-content ol li {
+              list-style-type: decimal;
+            }
+            
+            .chapter-html-content strong,
+            .chapter-html-content b {
+              color: #fbbf24;
+              font-weight: 600;
+            }
+            
+            .chapter-html-content em,
+            .chapter-html-content i {
+              font-style: italic;
+              color: #fcd34d;
+            }
+            
+            .chapter-html-content hr {
+              border: none;
+              border-top: 1px solid rgba(217, 119, 6, 0.3);
+              margin: 2em 0;
+            }
+            
+            .chapter-html-content div {
+              margin: 0.5em 0;
+            }
+          `}</style>
+        </>
       );
     }
 
@@ -162,6 +422,7 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
     }
 
     // Default: plaintext format
+    console.log('[ChapterViewer] Using plaintext formatContent');
     return (
       <div className="chapter-content prose prose-invert prose-amber max-w-none">
         {formatContent(activeChapter.content)}

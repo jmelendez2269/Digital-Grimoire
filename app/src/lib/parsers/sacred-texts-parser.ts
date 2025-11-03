@@ -32,7 +32,30 @@ interface ChapterLink {
 }
 
 /**
- * Main function to parse sacred-texts.com URLs
+ * Main function to parse web texts from supported sources
+ * Currently only supports sacred-texts.com
+ */
+export async function parseWebText(
+  url: string,
+  format: 'html' | 'markdown' | 'plaintext' = 'html'
+): Promise<ParsedText> {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    
+    if (hostname.includes('sacred-texts.com')) {
+      return await parseSacredText(url, format);
+    } else {
+      throw new Error('Unsupported source. Currently only supports: sacred-texts.com. For other sources (Gutenberg, Archive.org), please use the file upload feature.');
+    }
+  } catch (error) {
+    console.error('Error parsing web text:', error);
+    throw new Error(`Failed to parse web text: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Parse sacred-texts.com URLs (original implementation)
+ * Kept for backward compatibility and as a helper function
  */
 export async function parseSacredText(
   url: string,
@@ -182,20 +205,31 @@ export async function fetchChapterContent(
     // Sacred-texts.com usually has content in the body or a specific container
     let contentHtml = '';
     
-    // Try different content selectors
+    // Try different content selectors in order of preference
+    // We want to preserve the full structure with headings, paragraphs, lists, etc.
     const contentSelectors = [
+      'body > h1, body > h2, body > h3, body > h4, body > p, body > blockquote, body > ul, body > ol, body > pre, body > table',
       'body > p',
-      'body > h1, body > h2, body > h3, body > p, body > blockquote, body > ul, body > ol',
-      '#content',
-      'main',
+      '#content > *',
+      'main > *',
+      'body > *',
     ];
 
     for (const selector of contentSelectors) {
       const elements = $(selector);
       if (elements.length > 0) {
+        // Preserve the structure by keeping all block elements
         contentHtml = elements
-          .map((_, el) => $.html(el))
+          .map((_, el) => {
+            const tagName = $(el).prop('tagName')?.toLowerCase();
+            // Only include block-level elements and inline elements that are part of formatting
+            if (tagName && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span', 'strong', 'em', 'i', 'b', 'a', 'br'].includes(tagName)) {
+              return $.html(el);
+            }
+            return '';
+          })
           .get()
+          .filter(html => html.trim().length > 0)
           .join('\n');
         
         if (contentHtml.trim().length > 100) break;
@@ -203,8 +237,15 @@ export async function fetchChapterContent(
     }
 
     if (!contentHtml || contentHtml.trim().length < 50) {
-      // Fallback: get all text from body
-      contentHtml = $('body').html() || '';
+      // Fallback: get all content from body but preserve structure
+      const bodyContent = $('body').html() || '';
+      if (bodyContent) {
+        // Try to extract just the meaningful content
+        const $body = cheerio.load(bodyContent);
+        // Remove navigation, ads, etc.
+        $body('script, style, noscript, iframe, nav, header, footer, .nav, .navigation, .ad, .advertisement').remove();
+        contentHtml = $body.html() || '';
+      }
     }
 
     // Clean and format based on desired output format
@@ -314,16 +355,57 @@ export function cleanHtml(html: string): string {
     ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class'],
   });
 
-  // Additional cleanup
+  // Additional cleanup and structure improvement
   const $ = cheerio.load(sanitized);
   
-  // Remove empty paragraphs
-  $('p:empty').remove();
+  // Remove empty paragraphs and elements
+  $('p:empty, div:empty, span:empty').remove();
   
   // Remove inline styles
   $('[style]').removeAttr('style');
   
-  return $.html();
+  // Extract body content if it exists, otherwise use the whole document
+  let content = '';
+  const body = $('body');
+  if (body.length > 0) {
+    content = body.html() || '';
+  } else {
+    // No body tag, use the root content
+    content = $.html();
+    // Remove the root wrapper if cheerio added one
+    const $content = cheerio.load(content);
+    if ($content('body').length > 0) {
+      content = $content('body').html() || content;
+    }
+  }
+  
+  // If we still don't have proper block structure, try to improve it
+  const $content = cheerio.load(content || '');
+  const hasBlockElements = $content('p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, pre, table').length > 0;
+  
+  if (!hasBlockElements && content && content.trim().length > 50) {
+    // Content exists but lacks block structure - wrap in paragraphs
+    // Split by double line breaks and wrap each section in <p>
+    const sections = content
+      .split(/\n\n+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    
+    if (sections.length > 0) {
+      content = sections.map(s => `<p>${s.replace(/\n/g, ' ')}</p>`).join('\n');
+    }
+  }
+  
+  // Final cleanup - remove very short paragraphs
+  const $final = cheerio.load(content || '');
+  $final('p').each((_, el) => {
+    const text = $final(el).text().trim();
+    if (!text || text.length < 3) {
+      $final(el).remove();
+    }
+  });
+  
+  return $final.html() || content || sanitized;
 }
 
 /**
