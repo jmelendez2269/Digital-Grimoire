@@ -27,10 +27,26 @@ async function seedKybalion() {
     .single();
 
   if (existing) {
-    console.log('⚠️  The Kybalion already exists in the database');
-    console.log(`   ID: ${existing.id}`);
-    console.log('   Use DELETE to remove it first if you want to re-seed\n');
-    return;
+    const forceFlag = process.argv.includes('--force') || process.argv.includes('-f');
+    
+    if (forceFlag) {
+      console.log('🗑️  Deleting existing Kybalion...');
+      const { error: deleteError } = await supabase
+        .from('texts')
+        .delete()
+        .eq('id', existing.id);
+      
+      if (deleteError) {
+        console.error('❌ Error deleting existing Kybalion:', deleteError);
+        throw deleteError;
+      }
+      console.log('✅ Deleted existing Kybalion\n');
+    } else {
+      console.log('⚠️  The Kybalion already exists in the database');
+      console.log(`   ID: ${existing.id}`);
+      console.log('   To re-seed, run: pnpm seed:kybalion --force\n');
+      return;
+    }
   }
 
   if (checkError && checkError.code !== 'PGRST116') {
@@ -57,6 +73,7 @@ async function seedKybalion() {
       source_url: 'https://www.sacred-texts.com/eso/kyb/',
       metadata: {
         isStructuredText: true,
+        format: 'plaintext', // Parser extracts plaintext content
         chapters: data.chapters,
         description: 'A Study of The Hermetic Philosophy of Ancient Egypt and Greece',
         dedication: 'To Hermes Trismegistus, known by the ancient Egyptians as "The Great Great" and "Master of Masters"'

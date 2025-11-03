@@ -56,7 +56,8 @@ export default function ImportSacredTextPage() {
   const validateUrl = (urlString: string): boolean => {
     try {
       const parsedUrl = new URL(urlString);
-      return parsedUrl.hostname.includes('sacred-texts.com');
+      const hostname = parsedUrl.hostname.toLowerCase();
+      return hostname.includes('sacred-texts.com');
     } catch {
       return false;
     }
@@ -65,19 +66,47 @@ export default function ImportSacredTextPage() {
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('[Import] Button clicked, URL:', url);
+    
     // Reset state
     setError(null);
     setPreview(null);
     setImportedTextId(null);
 
     // Validate URL
+    if (!url || url.trim() === '') {
+      setError('Please enter a URL');
+      setStatus('error');
+      return;
+    }
+
+    // Check if URL is valid and from a supported domain
+    let hostname = '';
+    try {
+      const parsedUrl = new URL(url.trim());
+      hostname = parsedUrl.hostname.toLowerCase();
+    } catch {
+      setError('Please enter a valid URL (e.g., https://www.sacred-texts.com/...)');
+      setStatus('error');
+      return;
+    }
+    
     if (!validateUrl(url)) {
-      setError('Please enter a valid sacred-texts.com URL');
+      // Provide helpful error message based on the domain
+      if (hostname.includes('gutenberg.org')) {
+        setError('Project Gutenberg is not supported via URL import. Please download the HTML file and use the Upload feature (Admin → Upload) to import Gutenberg texts.');
+      } else if (hostname.includes('archive.org')) {
+        setError('Internet Archive is not yet supported. Currently only supports: sacred-texts.com. Please use the Upload feature for texts from other sources.');
+      } else {
+        setError('Invalid URL. Currently only supports: sacred-texts.com. For other sources (Gutenberg, Archive.org), please use the Upload feature.');
+      }
+      setStatus('error');
       return;
     }
 
     try {
       setStatus('importing');
+      console.log('[Import] Starting import process...');
 
       // Prepare metadata overrides
       const metadata: any = {};
@@ -164,7 +193,7 @@ export default function ImportSacredTextPage() {
               <div className="flex items-center gap-3 mb-2">
                 <Globe className="w-8 h-8 text-amber-600" />
                 <h1 className="text-3xl font-bold text-amber-100">
-                  Import Sacred Text
+                  Import Web Text
                 </h1>
               </div>
               <p className="text-amber-100/60">
@@ -223,18 +252,34 @@ export default function ImportSacredTextPage() {
               <div className="mb-6 p-6 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-lg font-semibold text-red-400 mb-1">
                       Import Failed
                     </h3>
-                    <p className="text-sm text-amber-100/80">{error}</p>
+                    <p className="text-sm text-amber-100/80 mb-2">{error}</p>
+                    {(error.includes('Gutenberg') || error.includes('Archive') || error.includes('not supported') || error.includes('Upload')) ? (
+                      <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-200/90">
+                        <strong>Tip:</strong> To import texts from other sources, go to{' '}
+                        <Link href="/admin/upload" className="text-amber-400 hover:text-amber-300 underline">
+                          Admin → Upload
+                        </Link>
+                        {' '}and upload the HTML, PDF, or image file directly.
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
             )}
 
             {/* Import Form */}
-            <form onSubmit={handleImport} className="space-y-6">
+            <form 
+              onSubmit={(e) => {
+                console.log('[Import] Form onSubmit triggered');
+                handleImport(e);
+              }} 
+              className="space-y-6"
+              noValidate
+            >
               {/* URL Input */}
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h2 className="text-xl font-semibold text-amber-100 mb-4 flex items-center gap-2">
@@ -245,7 +290,7 @@ export default function ImportSacredTextPage() {
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="url" className="block text-sm font-medium text-amber-100/80 mb-2">
-                      Sacred Texts URL
+                      Source URL
                     </label>
                     <input
                       id="url"
@@ -258,7 +303,12 @@ export default function ImportSacredTextPage() {
                       disabled={status === 'importing'}
                     />
                     <p className="mt-2 text-xs text-amber-100/50">
-                      Enter the URL of an index page or single-page text from sacred-texts.com
+                      Enter a URL from sacred-texts.com (index pages or single pages)
+                      <br />
+                      <span className="text-amber-100/40">
+                        Supported source: <strong>sacred-texts.com</strong> only. 
+                        For other sources (Gutenberg, Archive.org), download the HTML file and use the Upload feature.
+                      </span>
                     </p>
                   </div>
 
@@ -489,8 +539,9 @@ export default function ImportSacredTextPage() {
 
                 <button
                   type="submit"
-                  disabled={status === 'importing' || !url}
-                  className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  disabled={status === 'importing' || !url || url.trim() === ''}
+                  className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  aria-label={!url || url.trim() === '' ? 'Enter a URL to enable import' : 'Import text from sacred-texts.com'}
                 >
                   {status === 'importing' ? (
                     <>
@@ -519,7 +570,7 @@ export default function ImportSacredTextPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-amber-600 font-bold mt-0.5">2.</span>
-                  <span>Copy the URL of the index page (e.g., /index.htm) or single text page</span>
+                  <span>Copy the URL (index page or single page)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-amber-600 font-bold mt-0.5">3.</span>

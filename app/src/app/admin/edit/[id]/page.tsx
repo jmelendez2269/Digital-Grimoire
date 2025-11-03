@@ -5,8 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Tag, Eye, BookOpen, Sparkles } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Tag, Eye, BookOpen, Sparkles, Crop } from 'lucide-react';
 import Link from 'next/link';
+import CoverCropModal from '@/components/CoverCropModal';
 
 interface DocumentData {
   id: string;
@@ -30,6 +31,8 @@ export default function EditDocumentPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [scrapingCover, setScrapingCover] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [document, setDocument] = useState<DocumentData | null>(null);
@@ -166,6 +169,69 @@ export default function EditDocumentPage() {
       setError('Failed to scrape cover. Please try again.');
     } finally {
       setScrapingCover(false);
+    }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!documentId) return;
+
+    setCropModalOpen(false);
+    setUploadingCover(true);
+    setError(null);
+
+    try {
+      // Convert blob to File
+      const file = new File([croppedBlob], `cover-${documentId}-${Date.now()}.jpg`, {
+        type: 'image/jpeg',
+      });
+
+      // Upload to Supabase Storage (similar to avatars)
+      // Create covers bucket if it doesn't exist, or use a generic storage approach
+      // For now, we'll convert to data URL and store that
+      // Or we could upload to R2 via presigned URL
+
+      // Convert to data URL (simple, works immediately)
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const dataUrl = reader.result as string;
+          if (!dataUrl) {
+            throw new Error('Failed to convert image to data URL');
+          }
+
+          setCoverImageUrl(dataUrl);
+          
+          // Save to database
+          const { error: updateError } = await supabase
+            .from('texts')
+            .update({
+              cover_image_url: dataUrl,
+            })
+            .eq('id', documentId);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+          await fetchDocument();
+        } catch (err) {
+          console.error('Error in crop upload callback:', err);
+          setError('Failed to upload cropped cover. Please try again.');
+          setUploadingCover(false);
+        }
+      };
+      reader.onerror = () => {
+        setError('Failed to read cropped image. Please try again.');
+        setUploadingCover(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error uploading cropped cover:', err);
+      setError('Failed to upload cropped cover. Please try again.');
+    } finally {
+      setUploadingCover(false);
     }
   };
 
@@ -320,36 +386,47 @@ export default function EditDocumentPage() {
               </p>
               {coverImageUrl && (
                 <>
-                  <div className="mt-3">
-                    <label className="block text-sm text-amber-100/80 mb-2">
-                      Image Position
-                    </label>
-                    <select
-                      value={coverPosition}
-                      onChange={(e) => setCoverPosition(e.target.value)}
-                      className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 focus:outline-none focus:border-amber-600/50"
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => setCropModalOpen(true)}
+                      disabled={uploadingCover}
+                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-amber-900/30 hover:border-amber-600/50 rounded-lg text-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Crop and position the cover image"
                     >
-                      <option value="center">Center</option>
-                      <option value="top">Top</option>
-                      <option value="bottom">Bottom</option>
-                      <option value="left">Left</option>
-                      <option value="right">Right</option>
-                      <option value="top left">Top Left</option>
-                      <option value="top right">Top Right</option>
-                      <option value="bottom left">Bottom Left</option>
-                      <option value="bottom right">Bottom Right</option>
-                    </select>
-                    <p className="text-xs text-amber-100/50 mt-1">
-                      Adjust which part of the image is visible when the cover doesn't match the container aspect ratio
-                    </p>
+                      <Crop className="w-4 h-4" />
+                      <span className="text-sm">Crop Cover</span>
+                    </button>
+                    <div className="flex-1">
+                      <label className="block text-sm text-amber-100/80 mb-2">
+                        Image Position
+                      </label>
+                      <select
+                        value={coverPosition}
+                        onChange={(e) => setCoverPosition(e.target.value)}
+                        className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 focus:outline-none focus:border-amber-600/50"
+                      >
+                        <option value="center">Center</option>
+                        <option value="top">Top</option>
+                        <option value="bottom">Bottom</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                        <option value="top left">Top Left</option>
+                        <option value="top right">Top Right</option>
+                        <option value="bottom left">Bottom Left</option>
+                        <option value="bottom right">Bottom Right</option>
+                      </select>
+                    </div>
                   </div>
+                  <p className="text-xs text-amber-100/50 mt-2">
+                    Use "Crop Cover" to crop the image to perfect 2:3 ratio, or adjust position to show the best part of the image.
+                  </p>
                   <div className="mt-3">
                     <p className="text-sm text-amber-100/80 mb-2">Preview:</p>
                     <div className="w-40 aspect-[2/3] bg-zinc-800 rounded-lg overflow-hidden">
                       <img
                         src={coverImageUrl}
                         alt="Cover preview"
-                        className="w-full h-full object-contain bg-zinc-900/30"
+                        className="w-full h-full object-cover"
                         style={{ objectPosition: coverPosition }}
                         onError={(e) => {
                           e.currentTarget.src = '';
@@ -524,6 +601,15 @@ export default function EditDocumentPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Cover Crop Modal */}
+      {cropModalOpen && coverImageUrl && (
+        <CoverCropModal
+          imageSrc={coverImageUrl}
+          onComplete={handleCropComplete}
+          onCancel={() => setCropModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

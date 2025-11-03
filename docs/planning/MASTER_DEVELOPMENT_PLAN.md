@@ -1,7 +1,7 @@
 # CONVERGENCE - MASTER DEVELOPMENT PLAN
 
 **Version:** 3.2  
-**Last Updated:** October 30, 2025  
+**Last Updated:** Latest Session  
 **Status:** Phase 1 - 95% Complete | Active Development  
 
 ---
@@ -85,7 +85,27 @@
 **Phase 1 Progress:** 95% complete (only seeding library content remains)  
 **Phase 2 Status:** Study Journal MVP complete (~40% of Phase 2 - 10/17 features)
 
-### Today's Updates (October 30, 2025)
+### Latest Session Updates (Current)
+
+**Document Management & HTML Support:**
+- ✅ **HTML File Upload Support** - Added ability to upload and process HTML files (sacred-texts.com format) with comprehensive styling
+- ✅ **HTML Viewer Component** - New `HTMLViewer.tsx` with fullscreen, zoom controls (25%-300%), text selection, and Dark Academia styling
+- ✅ **Chapter Viewer Enhancements** - Added fullscreen mode, zoom controls, and text highlighting with annotation support
+- ✅ **Cover Image Management** - Implemented cover image cropping/positioning with `CoverCropModal.tsx` component (2:3 aspect ratio)
+- ✅ **Cover Scraping Button** - Added "Scrape Cover" functionality in admin edit page for automatic cover image generation
+- ✅ **Cover Position Controls** - Admin can now adjust cover image positioning (center, top, bottom, left, right)
+
+**Admin Experience Improvements:**
+- ✅ **Reliable Admin Access Check** - Implemented server-side API route for admin status verification to prevent UI inconsistencies
+- ✅ **Admin Access Rules Documentation** - Added cursor rules and references to prevent future admin access issues
+- ✅ **Enhanced Admin Edit Page** - Improved cover image management workflow with crop/position controls
+
+**Technical Improvements:**
+- ✅ **Improved HTML Rendering** - Enhanced sacred-texts HTML styling with comprehensive CSS for tables, blockquotes, code blocks
+- ✅ **Text Selection & Annotation Integration** - ChapterViewer now supports text selection for annotation creation
+- ✅ **Component Architecture** - Created reusable `CoverCropModal` and `HTMLViewer` components following Dark Academia design system
+
+### Previous Updates (October 30, 2025)
 
 - Centralized all admin navigation in `Header.tsx` using a single `adminLinks` source; removed duplicate admin links elsewhere.
 - Documented and enforced the single-source-of-truth rule in `README.md`.

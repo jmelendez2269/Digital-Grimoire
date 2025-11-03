@@ -39,10 +39,11 @@ export default function AdminUploadPage() {
       'image/png',
       'image/jpeg',
       'image/jpg',
+      'text/html',
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      return 'Only PDF and image files (PNG, JPG) are allowed';
+      return 'Only PDF, image files (PNG, JPG), and HTML files are allowed';
     }
 
     if (file.size > maxSize) {
@@ -76,6 +77,7 @@ export default function AdminUploadPage() {
       'application/pdf': ['.pdf'],
       'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg'],
+      'text/html': ['.html', '.htm'],
     },
     multiple: true,
     maxSize: 52428800, // 50MB
@@ -370,7 +372,7 @@ export default function AdminUploadPage() {
             or click to browse your computer
           </p>
           <p className="text-xs text-amber-100/40">
-            Supported formats: PDF, PNG, JPG • Max size: 50MB per file
+            Supported formats: PDF, PNG, JPG, HTML • Max size: 50MB per file
           </p>
         </div>
 

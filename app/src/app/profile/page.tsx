@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AvatarCropModal from "@/components/AvatarCropModal";
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading, supabase } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [username, setUsername] = useState("");
@@ -21,27 +20,16 @@ export default function ProfilePage() {
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setUsername(session.user.user_metadata?.username || "");
-        setDisplayName(session.user.user_metadata?.display_name || "");
-        setBio(session.user.user_metadata?.bio || "");
-        setAvatarUrl(session.user.user_metadata?.avatar_url || "");
-      }
+    if (!authLoading && user) {
+      setUsername(user.user_metadata?.username || "");
+      setDisplayName(user.user_metadata?.display_name || "");
+      setBio(user.user_metadata?.bio || "");
+      setAvatarUrl(user.user_metadata?.avatar_url || "");
       setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, user]);
 
   // Helper: Compress image before upload
   const compressImage = (file: File): Promise<File> => {
@@ -144,8 +132,6 @@ export default function ProfilePage() {
     setUploading(true);
 
     try {
-      const supabase = createClient();
-
       // Convert blob to File
       let file = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
 
@@ -210,8 +196,6 @@ export default function ProfilePage() {
     setUploading(true);
 
     try {
-      const supabase = createClient();
-
       // Delete from storage
       const fileName = getAvatarFileName(avatarUrl);
       if (fileName) {
@@ -251,7 +235,6 @@ export default function ProfilePage() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
       const { error } = await supabase.auth.updateUser({
         data: {
           username,

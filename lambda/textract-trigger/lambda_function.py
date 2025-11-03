@@ -29,9 +29,14 @@ def lambda_handler(event, context):
             
             print(f"Processing: s3://{bucket}/{key}")
             
-            # Skip if not a supported file type
+            # Skip if not a supported file type (Textract doesn't process HTML)
             if not key.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg')):
                 print(f"Skipping unsupported file type: {key}")
+                continue
+            
+            # Skip HTML files (Textract doesn't process HTML, and we handle HTML separately)
+            if key.lower().endswith(('.html', '.htm')):
+                print(f"Skipping HTML file (not processed by Textract): {key}")
                 continue
             
             # Start Textract job

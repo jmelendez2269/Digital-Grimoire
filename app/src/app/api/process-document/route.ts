@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getR2Client, DeleteObjectCommand, CopyObjectCommand, PutObjectCommand, GetObjectCommand } from '@/lib/storage/r2-client';
+import { getR2Client, DeleteObjectCommand, PutObjectCommand, GetObjectCommand } from '@/lib/storage/r2-client';
 import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
 import { scrapeCover } from '@/lib/cover-scraper';
@@ -175,42 +175,165 @@ export async function POST(request: NextRequest) {
       coverResult = { success: false, error: String(coverError) };
     }
 
-    // Step 3: Rename file in R2 based on metadata
-    console.log('Step 3: Renaming file in R2 based on metadata...');
+    // Step 3: Validate and sanitize document type before storing in R2 and database
+    const validTypes = [
+      'book_esoteric', 'book_spiritual', 'book_psychology', 'book_science',
+      'article_scholarly', 'anthropology', 'reference_table', 'historical',
+      'mythology', 'medical_overview', 'commentary', 'webpage', 'dictionary',
+      'astrology', 'ritual_guide', 'diagram', 'transcript', 'summary',
+      'speculative', 'misc'
+    ];
+    
+    const sanitizedType = validTypes.includes(metadata.type) 
+      ? metadata.type 
+      : 'misc';
+    
+    if (sanitizedType !== metadata.type) {
+      console.warn(`⚠️ Invalid document type "${metadata.type}" received from AI, defaulting to "misc"`);
+    }
+
+    // Step 3.5: Rename file in R2 based on metadata
+    // For HTML files, we can skip renaming if it fails (non-critical)
+    console.log('Step 3.5: Renaming file in R2 based on metadata...');
     const finalExtension = isHtmlFile ? (fileExtension || 'html') : (fileExtension || 'pdf');
-    newKey = `library/${metadata.standardizedId}.${finalExtension}`;
-    console.log(`Renaming: ${key} -> ${newKey}`);
+    const desiredNewKey = `library/${metadata.standardizedId}.${finalExtension}`;
+    console.log(`Renaming: ${key} -> ${desiredNewKey}`);
+    
+    // Try to rename, but for HTML files we can continue with original key if rename fails
+    let renameSucceeded = false;
 
     try {
-      // Copy to new location with custom metadata attached
-      const copyCommand = new CopyObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
-        CopySource: `${process.env.R2_BUCKET_NAME || 'convergence-library'}/${key}`,
-        Key: newKey,
-        Metadata: {
-          'title': metadata.title,
-          'author': metadata.author || '',
-          'year': metadata.year?.toString() || '',
-          'type': metadata.type,
-          'domain': metadata.domain || '',
-          'tags': metadata.tags.join(','),
-          'confidence': metadata.confidence,
-          'standardized-id': metadata.standardizedId,
-        },
-        MetadataDirective: 'REPLACE',
-      });
-      await s3Client.send(copyCommand);
-
-      // Delete old file
-      const deleteOldCommand = new DeleteObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+      const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
+      
+      console.log(`Getting file from R2: ${bucketName}/${key}`);
+      
+      // For Cloudflare R2, use GetObject + PutObject instead of CopyObject to avoid signature issues
+      // First, get the file content
+      const getCommand = new GetObjectCommand({
+        Bucket: bucketName,
         Key: key,
       });
-      await s3Client.send(deleteOldCommand);
-      console.log('✅ File renamed successfully');
+      
+      let getResponse;
+      try {
+        getResponse = await s3Client.send(getCommand);
+      } catch (getError) {
+        console.error('GetObjectCommand failed:', getError);
+        throw new Error(`Failed to retrieve file from R2: ${getError instanceof Error ? getError.message : 'Unknown error'}`);
+      }
+      
+      if (!getResponse.Body) {
+        throw new Error('No file body returned from R2');
+      }
+
+      console.log('Reading file stream...');
+      // Convert stream to buffer for R2 compatibility
+      const chunks: Uint8Array[] = [];
+      const body = getResponse.Body;
+      
+      // Handle different body types (ReadableStream, Readable, etc.)
+      try {
+        if (body instanceof ReadableStream) {
+          const reader = body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) chunks.push(value);
+          }
+        } else if (body && typeof (body as any).on === 'function') {
+          // Node.js Readable stream
+          for await (const chunk of body as any) {
+            chunks.push(chunk);
+          }
+        } else if (body instanceof Uint8Array) {
+          chunks.push(body);
+        } else {
+          // Fallback: try to read as stream
+          const stream = body as any;
+          for await (const chunk of stream) {
+            chunks.push(chunk);
+          }
+        }
+      } catch (readError) {
+        console.error('Error reading stream:', readError);
+        throw new Error(`Failed to read file stream: ${readError instanceof Error ? readError.message : 'Unknown error'}`);
+      }
+      
+      const fileBuffer = Buffer.concat(chunks);
+      console.log(`File buffer size: ${fileBuffer.length} bytes`);
+
+      // Prepare metadata - R2 requires lowercase keys and may have restrictions
+      const r2Metadata: Record<string, string> = {};
+      if (metadata.title) r2Metadata['title'] = metadata.title.substring(0, 1024); // R2 metadata value limit
+      if (metadata.author) r2Metadata['author'] = metadata.author.substring(0, 1024);
+      if (metadata.year) r2Metadata['year'] = metadata.year.toString();
+      if (sanitizedType) r2Metadata['type'] = sanitizedType;
+      if (metadata.domain) r2Metadata['domain'] = metadata.domain.substring(0, 1024);
+      if (metadata.tags.length > 0) r2Metadata['tags'] = metadata.tags.join(',').substring(0, 1024);
+      if (metadata.confidence) r2Metadata['confidence'] = metadata.confidence;
+      if (metadata.standardizedId) r2Metadata['standardized-id'] = metadata.standardizedId;
+
+      console.log(`Uploading to new location: ${bucketName}/${desiredNewKey}`);
+      // Upload to new location with custom metadata
+      const putCommand = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: desiredNewKey,
+        Body: fileBuffer,
+        ContentType: getResponse.ContentType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+        Metadata: r2Metadata,
+      });
+      
+      try {
+        await s3Client.send(putCommand);
+        console.log('✅ File uploaded to new location');
+        newKey = desiredNewKey;
+        renameSucceeded = true;
+      } catch (putError) {
+        console.error('PutObjectCommand failed:', putError);
+        console.error('Error details:', JSON.stringify(putError, null, 2));
+        
+        // For HTML files, allow processing to continue with original key
+        if (isHtmlFile) {
+          console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+          newKey = key; // Keep original key
+          renameSucceeded = false;
+        } else {
+          throw new Error(`Failed to upload file to new location: ${putError instanceof Error ? putError.message : 'Unknown error'}`);
+        }
+      }
+
+      // Delete old file only after successful copy
+      if (renameSucceeded) {
+        console.log(`Deleting old file: ${bucketName}/${key}`);
+        try {
+          const deleteOldCommand = new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+          });
+          await s3Client.send(deleteOldCommand);
+          console.log('✅ Old file deleted');
+        } catch (deleteError) {
+          console.error('DeleteObjectCommand failed (non-fatal):', deleteError);
+          // Don't throw - the file was copied successfully, deletion failure is non-critical
+        }
+        console.log('✅ File renamed successfully');
+      } else {
+        console.log('⚠️ Skipping file rename (using original key)');
+      }
     } catch (r2Error) {
       console.error('R2 file operations failed:', r2Error);
-      throw new Error(`Failed to rename file in storage: ${r2Error instanceof Error ? r2Error.message : 'Unknown error'}`);
+      console.error('Error stack:', r2Error instanceof Error ? r2Error.stack : 'No stack trace');
+      console.error('Error name:', r2Error instanceof Error ? r2Error.name : 'Unknown');
+      
+      // For HTML files, skip rename and continue with original key
+      if (isHtmlFile) {
+        console.warn('⚠️ R2 rename failed for HTML file, continuing with original key');
+        newKey = key; // Use original key
+        renameSucceeded = false;
+      } else {
+        // For other file types, throw error
+        throw new Error(`Failed to rename file in storage: ${r2Error instanceof Error ? r2Error.message : 'Unknown error'}`);
+      }
     }
 
     // Step 4: Upload metadata JSON to R2
@@ -253,7 +376,7 @@ export async function POST(request: NextRequest) {
         short_summary: metadata.shortSummary,
         long_summary: metadata.longSummary,
         s3_key: newKey, // Use the new renamed key
-        type: metadata.type,
+        type: sanitizedType,
         author: metadata.author,
         year: metadata.year,
         publisher: metadata.publisher,
@@ -292,7 +415,7 @@ export async function POST(request: NextRequest) {
       success: true,
       documentId: textRecord.id,
       title: metadata.title,
-      type: metadata.type,
+      type: sanitizedType,
       pageCount: ocrResult.pageCount,
       lineCount: ocrResult.lineCount,
       metadata: {
@@ -300,7 +423,7 @@ export async function POST(request: NextRequest) {
         author: metadata.author,
         year: metadata.year,
         publisher: metadata.publisher,
-        type: metadata.type,
+        type: sanitizedType,
         domain: metadata.domain,
         tags: metadata.tags,
         lenses: metadata.lenses,

@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   X
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface BookmarkedText {
   id: string;
@@ -70,12 +71,13 @@ interface ReadingProgress {
 }
 
 export default function MyLibraryPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'bookmarks' | 'collections' | 'progress'>('bookmarks');
   const [bookmarks, setBookmarks] = useState<BookmarkedText[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [progress, setProgress] = useState<ReadingProgress[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -89,23 +91,12 @@ export default function MyLibraryPage() {
   });
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/library/my-library');
+    } else if (!authLoading && user) {
       fetchData();
     }
-  }, [user, activeTab]);
-
-  const checkAuth = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-    if (!user) {
-      window.location.href = '/login?redirect=/library/my-library';
-    }
-  };
+  }, [authLoading, user, activeTab, router]);
 
   const fetchData = async () => {
     setLoading(true);

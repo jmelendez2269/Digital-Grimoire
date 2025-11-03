@@ -1,7 +1,7 @@
 # CONVERGENCE - FEATURE BACKLOG & PRIORITIES
 
-**Last Updated:** October 30, 2025  
-**Version:** 1.4  
+**Last Updated:** Latest Session  
+**Version:** 1.5  
 
 ## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
 
@@ -22,6 +22,15 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 3 Complete (4h):** Document Processing Pipeline (Cloudflare R2 + Azure OCR + AI Metadata)  
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
+
+**Latest Session Updates:**
+- ✅ **HTML File Upload & Viewer** - Complete HTML document support with zoom, fullscreen, and styled rendering
+- ✅ **Cover Image Management** - Cover cropping modal with 2:3 aspect ratio and position controls
+- ✅ **Chapter Viewer Enhancements** - Fullscreen mode, zoom controls, and text highlighting for annotations
+- ✅ **Cover Scraping** - Admin tool to automatically fetch/generate cover images from external sources
+- ✅ **Admin Access Reliability** - Server-side admin check API route to prevent UI inconsistencies
+- ✅ **Improved HTML Styling** - Enhanced rendering for sacred-texts.com format with comprehensive CSS
+
 **Oct 30 Updates:**
 - Centralized admin navigation in `Header.tsx` via single `adminLinks` source (removed duplicates)
 - Added `QUICK_START.md` with server commands and quick reference
@@ -90,6 +99,11 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Document detail page | P0 | S | 4 | ✅ Complete | Metadata display with tabs |
 | **7 Convergence Lenses** | P0 | L | 4 | ✅ Complete | Classification & filtering system |
 | Pagination | P0 | S | 4 | ✅ Complete | 12 items per page |
+| **HTML file upload support** | **P1** | **M** | **Latest** | **✅ Complete** | **Sacred-texts.com format with AI cover generation** |
+| **HTML document viewer** | **P1** | **M** | **Latest** | **✅ Complete** | **Zoom (25%-300%), fullscreen, text selection** |
+| **Cover image management** | **P1** | **M** | **Latest** | **✅ Complete** | **Cropping modal (2:3 ratio), position controls** |
+| **Cover scraping tool** | **P1** | **S** | **Latest** | **✅ Complete** | **Admin tool to fetch/generate covers** |
+| **Chapter viewer enhancements** | **P1** | **M** | **Latest** | **✅ Complete** | **Fullscreen, zoom, text highlighting for annotations** |
 | Semantic search (vector) | P1 | L | 12 | ⬜ Planned | pgvector |
 | Advanced search (Boolean) | P1 | M | Post | ⬜ Planned | AND/OR/NOT |
 | OCR quality review | P1 | M | Post | ⬜ Planned | Human-in-loop |
@@ -458,6 +472,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 |---------|----------|--------|--------|--------|-------|
 | User management | P0 | M | 2 | ⬜ Planned | View, ban, delete |
 | Content moderation | P0 | M | Post | ⬜ Planned | Review queue |
+| **Reliable admin access check** | **P0** | **S** | **Latest** | **✅ Complete** | **Server-side API route for admin verification** |
 | Analytics dashboard | P1 | L | Post | ⬜ Planned | Revenue, users |
 | Feature flags | P1 | M | Post | ⬜ Planned | A/B tests |
 | Announcement system | P2 | M | Post | ⬜ Planned | In-app banners |

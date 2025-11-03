@@ -45,13 +45,14 @@ export async function POST(request: NextRequest) {
       'image/png',
       'image/jpeg',
       'image/jpg',
+      'text/html',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/msword',
     ];
 
     if (!allowedTypes.includes(fileType)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Allowed: PDF, images (PNG, JPG), DOCX' },
+        { error: 'Invalid file type. Allowed: PDF, images (PNG, JPG), HTML, DOCX' },
         { status: 400 }
       );
     }

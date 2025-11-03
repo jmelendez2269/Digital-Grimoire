@@ -427,7 +427,7 @@ export default function LibraryPage() {
                     <img
                       src={text.cover_image_url}
                       alt={text.title}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 bg-zinc-900/30"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       style={{
                         objectPosition: (text.metadata as any)?.cover_position || 'center',
                       }}

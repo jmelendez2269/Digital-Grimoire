@@ -60,6 +60,7 @@
     "microsoft-cognitiveservices-speech-sdk": "^1.40.0",
     "next": "16.0.0",
     "pdfjs-dist": "3.11.174",
+    "playwright-core": "^1.56.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-dropzone": "^14.3.8",

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
@@ -115,6 +115,66 @@ export async function DELETE(
     console.error('Unexpected error deleting text:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/texts/[id] - Fetch single document
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient();
+    
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+
+    // Fetch document with all fields
+    const { data: document, error: docError } = await supabase
+      .from('texts')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (docError) {
+      if (docError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: 'Document not found' },
+          { status: 404 }
+        );
+      }
+      console.error('[API] Error fetching document:', docError);
+      return NextResponse.json(
+        { error: 'Failed to fetch document', details: docError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!document) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ document });
+  } catch (error) {
+    console.error('[API] Unexpected error fetching document:', error);
+    return NextResponse.json(
+      { 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }

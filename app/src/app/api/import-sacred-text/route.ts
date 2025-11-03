@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { parseSacredText } from '@/lib/parsers/sacred-texts-parser';
+import { parseWebText } from '@/lib/parsers/sacred-texts-parser';
 import { extractMetadata } from '@/lib/claude-metadata';
 
 interface ImportRequestBody {
@@ -38,17 +38,25 @@ export async function POST(request: Request) {
     const body: ImportRequestBody = await request.json();
     const { url, format = 'html', useAI = true, metadata: manualMetadata } = body;
 
-    // Validate URL
-    if (!url || !url.includes('sacred-texts.com')) {
+    // Validate URL - check for supported domains
+    if (!url) {
       return NextResponse.json(
-        { error: 'Invalid URL. Must be from sacred-texts.com' },
+        { error: 'URL is required' },
         { status: 400 }
       );
     }
 
-    // Parse the sacred text
-    console.log('[Import API] Parsing sacred text from:', url);
-    const parsedText = await parseSacredText(url, format);
+    const hostname = new URL(url).hostname.toLowerCase();
+    if (!hostname.includes('sacred-texts.com')) {
+      return NextResponse.json(
+        { error: 'Invalid URL. Currently only supports: sacred-texts.com. For other sources (Gutenberg, Archive.org), please use the file upload feature.' },
+        { status: 400 }
+      );
+    }
+
+    // Parse the web text
+    console.log('[Import API] Parsing web text from:', url);
+    const parsedText = await parseWebText(url, format);
     console.log(`[Import API] Parsed ${parsedText.chapterCount} chapters`);
 
     // AI-enhanced metadata extraction (if enabled)
@@ -128,7 +136,7 @@ export async function POST(request: Request) {
         longSummary: finalMetadata.longSummary,
         aiEnhanced: useAI && aiMetadata !== null,
       },
-      // user_id is automatically set by RLS policy based on auth.uid()
+      uploaded_by: session.user.id,
     };
 
     // Insert into database

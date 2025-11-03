@@ -1,66 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    console.log('[Dashboard] Initializing...');
-    const supabase = createClient();
-    let isMounted = true;
-    
-    // Set a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (isMounted) {
-        console.warn('[Dashboard] Loading timeout - forcing load complete');
-        setLoading(false);
-      }
-    }, 3000); // 3 second timeout
-    
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (!isMounted) return;
-      
-      if (error) {
-        console.error('[Dashboard] Session error:', error);
-      } else {
-        console.log('[Dashboard] Session loaded:', { 
-          hasSession: !!session, 
-          user: session?.user?.email 
-        });
-      }
-      
-      setUser(session?.user ?? null);
-      setLoading(false);
-      clearTimeout(timeout);
-    }).catch((error) => {
-      if (!isMounted) return;
-      console.error('[Dashboard] Error getting session:', error);
-      setLoading(false);
-      clearTimeout(timeout);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
-      console.log('[Dashboard] Auth state changed:', { 
-        event: _event, 
-        hasSession: !!session 
-      });
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeout);
-      subscription.unsubscribe();
-    };
-  }, []);
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
