@@ -20,6 +20,7 @@ interface DocumentData {
   cover_image_url: string | null;
   short_summary: string | null;
   curator_note: string | null;
+  metadata?: any;
 }
 
 export default function EditDocumentPage() {
@@ -35,6 +36,7 @@ export default function EditDocumentPage() {
 
   // Form state
   const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [coverPosition, setCoverPosition] = useState('center');
   const [curatorNote, setCuratorNote] = useState('');
   const [shortSummary, setShortSummary] = useState('');
   const [domain, setDomain] = useState('');
@@ -76,6 +78,7 @@ export default function EditDocumentPage() {
 
       setDocument(data);
       setCoverImageUrl(data.cover_image_url || '');
+      setCoverPosition(data.metadata?.cover_position || 'center');
       setCuratorNote(data.curator_note || '');
       setShortSummary(data.short_summary || '');
       setDomain(data.domain || '');
@@ -95,6 +98,13 @@ export default function EditDocumentPage() {
       setError(null);
       setSuccess(false);
 
+      // Update metadata with cover position
+      const currentMetadata = document?.metadata || {};
+      const updatedMetadata = {
+        ...currentMetadata,
+        cover_position: coverPosition,
+      };
+
       const { error: updateError } = await supabase
         .from('texts')
         .update({
@@ -104,6 +114,7 @@ export default function EditDocumentPage() {
           domain: domain || null,
           tags,
           lenses,
+          metadata: updatedMetadata,
         })
         .eq('id', documentId);
 
@@ -308,20 +319,46 @@ export default function EditDocumentPage() {
                 Recommended: 400x600px or 2:3 aspect ratio. Click "Scrape Cover" to automatically find a cover from public sources.
               </p>
               {coverImageUrl && (
-                <div className="mt-3">
-                  <p className="text-sm text-amber-100/80 mb-2">Preview:</p>
-                  <div className="w-40 aspect-[2/3] bg-zinc-800 rounded-lg overflow-hidden">
-                    <img
-                      src={coverImageUrl}
-                      alt="Cover preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '';
-                        e.currentTarget.className = 'w-full h-full flex items-center justify-center bg-red-900/20';
-                      }}
-                    />
+                <>
+                  <div className="mt-3">
+                    <label className="block text-sm text-amber-100/80 mb-2">
+                      Image Position
+                    </label>
+                    <select
+                      value={coverPosition}
+                      onChange={(e) => setCoverPosition(e.target.value)}
+                      className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 focus:outline-none focus:border-amber-600/50"
+                    >
+                      <option value="center">Center</option>
+                      <option value="top">Top</option>
+                      <option value="bottom">Bottom</option>
+                      <option value="left">Left</option>
+                      <option value="right">Right</option>
+                      <option value="top left">Top Left</option>
+                      <option value="top right">Top Right</option>
+                      <option value="bottom left">Bottom Left</option>
+                      <option value="bottom right">Bottom Right</option>
+                    </select>
+                    <p className="text-xs text-amber-100/50 mt-1">
+                      Adjust which part of the image is visible when the cover doesn't match the container aspect ratio
+                    </p>
                   </div>
-                </div>
+                  <div className="mt-3">
+                    <p className="text-sm text-amber-100/80 mb-2">Preview:</p>
+                    <div className="w-40 aspect-[2/3] bg-zinc-800 rounded-lg overflow-hidden">
+                      <img
+                        src={coverImageUrl}
+                        alt="Cover preview"
+                        className="w-full h-full object-contain bg-zinc-900/30"
+                        style={{ objectPosition: coverPosition }}
+                        onError={(e) => {
+                          e.currentTarget.src = '';
+                          e.currentTarget.className = 'w-full h-full flex items-center justify-center bg-red-900/20';
+                        }}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>

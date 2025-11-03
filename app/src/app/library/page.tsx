@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,6 +35,7 @@ interface Text {
   cover_image_url: string | null;
   short_summary: string | null;
   curator_note: string | null;
+  metadata?: any;
 }
 
 interface FilterValues {
@@ -46,6 +48,7 @@ interface FilterValues {
 }
 
 export default function LibraryPage() {
+  const router = useRouter();
   const { user, loading: authLoading, supabase, isAdmin } = useAuth();
   const [texts, setTexts] = useState<Text[]>([]);
   const [loading, setLoading] = useState(true);
@@ -424,27 +427,35 @@ export default function LibraryPage() {
                     <img
                       src={text.cover_image_url}
                       alt={text.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 bg-zinc-900/30"
+                      style={{
+                        objectPosition: (text.metadata as any)?.cover_position || 'center',
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-900/20 to-zinc-900/50">
                       <BookOpen className="w-12 h-12 text-amber-600/30" />
                     </div>
                   )}
-                  {/* Action buttons overlay */}
-                  <div className="absolute top-2 right-2 z-10 flex gap-2">
+                  {/* Action buttons overlay - visible on hover */}
+                  <div className="absolute top-2 right-2 z-10 flex gap-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity duration-200">
                     {isAdmin && (
                       <>
-                        <Link
-                          href={`/admin/edit/${text.id}`}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            router.push(`/admin/edit/${text.id}`);
+                          }}
                           className="p-1.5 bg-zinc-900/90 hover:bg-zinc-800 border border-amber-600/30 hover:border-amber-600/50 rounded-lg transition-colors backdrop-blur-sm"
                           title="Edit document"
                         >
                           <Edit className="w-3.5 h-3.5 text-amber-400" />
-                        </Link>
+                        </button>
                         <button
                           onClick={(e) => {
                             e.preventDefault();
+                            e.stopPropagation();
                             deleteText(text.id, text.title);
                           }}
                           className="p-1.5 bg-zinc-900/90 hover:bg-red-900 border border-red-600/30 hover:border-red-600/50 rounded-lg transition-colors backdrop-blur-sm"
