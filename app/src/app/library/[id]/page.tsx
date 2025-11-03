@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -19,7 +19,9 @@ import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import TableOfContents, { TOCItem } from '@/components/TableOfContents';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
+import * as pdfjsLib from 'pdfjs-dist';
 
 // Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
 const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
@@ -66,6 +68,11 @@ const HTMLViewer = dynamic(() => import('@/components/HTMLViewer'), {
     </div>
   ),
 });
+
+// Initialize PDF.js worker
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf-worker/pdf.worker.min.js';
+}
 
 interface Chapter {
   id: string;
@@ -120,6 +127,11 @@ export default function DocumentDetailPage() {
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [annotationsRefreshTrigger, setAnnotationsRefreshTrigger] = useState(0);
+
+  // Table of Contents state
+  const [tocItems, setTocItems] = useState<TOCItem[]>([]);
+  const [activeTOCItemId, setActiveTOCItemId] = useState<string | undefined>(undefined);
+  const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
 
   const fetchDocument = useCallback(async () => {
     if (!documentId) return;
@@ -268,6 +280,270 @@ export default function DocumentDetailPage() {
     setNumPages(totalPages);
   }, []);
 
+  // Extract TOC from structured text (chapters)
+  const extractStructuredTextTOC = useCallback((chapters: Chapter[]): TOCItem[] => {
+    return chapters.map((chapter, index) => ({
+      id: chapter.id,
+      title: chapter.title.replace(/^Chapter\s+[IVX]+:\s*/i, '').trim() || `Chapter ${index + 1}`,
+      level: 1,
+    }));
+  }, []);
+
+  // Generate a slug from text for use as ID (must match HTMLViewer's implementation)
+  const generateSlug = (text: string, index: number): string => {
+    const slug = text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .substring(0, 50);
+    return slug || `heading-${index}`;
+  };
+
+  // Extract TOC from HTML content
+  const extractHTMLTOC = useCallback(async (htmlUrl: string): Promise<TOCItem[]> => {
+    try {
+      const response = await fetch(htmlUrl);
+      if (!response.ok) return [];
+      
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      
+      const headings: TOCItem[] = [];
+      const headingElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      const usedIds = new Set<string>();
+      
+      headingElements.forEach((heading, index) => {
+        const level = parseInt(heading.tagName.charAt(1));
+        let id = heading.id;
+        
+        // Generate ID if missing (using same logic as HTMLViewer)
+        if (!id) {
+          const text = heading.textContent?.trim() || '';
+          id = generateSlug(text, index);
+          
+          // Ensure uniqueness by appending index if duplicate
+          let uniqueId = id;
+          let counter = 0;
+          while (usedIds.has(uniqueId)) {
+            counter++;
+            uniqueId = `${id}-${counter}`;
+          }
+          id = uniqueId;
+        } else {
+          // Even if ID exists, ensure it's unique in our list
+          let uniqueId = id;
+          let counter = 0;
+          while (usedIds.has(uniqueId)) {
+            counter++;
+            uniqueId = `${id}-${counter}`;
+          }
+          id = uniqueId;
+        }
+        
+        usedIds.add(id);
+        
+        const title = heading.textContent?.trim() || `Heading ${index + 1}`;
+        if (title) {
+          headings.push({ id, title, level });
+        }
+      });
+      
+      return headings;
+    } catch (error) {
+      console.error('Error extracting HTML TOC:', error);
+      return [];
+    }
+  }, []);
+
+  // Extract TOC from PDF outline
+  const extractPDFTOC = useCallback(async (pdfUrl: string): Promise<TOCItem[]> => {
+    try {
+      const loadingTask = pdfjsLib.getDocument(pdfUrl);
+      const pdf = await loadingTask.promise;
+      const outline = await pdf.getOutline();
+      
+      if (!outline || outline.length === 0) {
+        return [];
+      }
+
+      const flattenOutline = async (items: any[], level: number = 1): Promise<TOCItem[]> => {
+        const result: TOCItem[] = [];
+        
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          // Get page number from destination
+          let pageNumber: number | undefined;
+          
+          if (item.dest) {
+            try {
+              if (typeof item.dest === 'string') {
+                // Named destination - resolve it
+                const dest = await pdf.getDestination(item.dest);
+                if (dest && Array.isArray(dest) && dest[0]) {
+                  const pageIndex = await pdf.getPageIndex(dest[0]);
+                  pageNumber = pageIndex + 1;
+                }
+              } else if (Array.isArray(item.dest) && item.dest[0]) {
+                // Direct page reference
+                const pageIndex = await pdf.getPageIndex(item.dest[0]);
+                pageNumber = pageIndex + 1;
+              }
+            } catch (err) {
+              console.warn('Error resolving PDF destination:', err);
+            }
+          }
+
+          const id = `pdf-outline-${result.length}`;
+          const title = item.title || `Section ${result.length + 1}`;
+          
+          result.push({
+            id,
+            title,
+            level,
+            pageNumber,
+          });
+
+          // Recursively process sub-items
+          if (item.items && item.items.length > 0) {
+            const subItems = await flattenOutline(item.items, level + 1);
+            result.push(...subItems);
+          }
+        }
+        
+        return result;
+      };
+
+      return await flattenOutline(outline);
+    } catch (error) {
+      console.error('Error extracting PDF outline:', error);
+      return [];
+    }
+  }, []);
+
+  // Extract TOC based on document type
+  useEffect(() => {
+    const extractTOC = async () => {
+      if (!document) {
+        setTocItems([]);
+        return;
+      }
+
+      // Structured text - extract from chapters
+      if (document.metadata?.isStructuredText && document.metadata.chapters) {
+        const items = extractStructuredTextTOC(document.metadata.chapters);
+        setTocItems(items);
+        if (items.length > 0) {
+          setActiveChapterId(items[0].id);
+          setActiveTOCItemId(items[0].id);
+        }
+        return;
+      }
+
+      // HTML document
+      if (htmlUrl && document.status === 'ready') {
+        const items = await extractHTMLTOC(htmlUrl);
+        setTocItems(items);
+        return;
+      }
+
+      // PDF document
+      if (pdfUrl && document.status === 'ready') {
+        const items = await extractPDFTOC(pdfUrl);
+        setTocItems(items);
+        return;
+      }
+
+      // No TOC available
+      setTocItems([]);
+    };
+
+    extractTOC();
+  }, [document, htmlUrl, pdfUrl, extractStructuredTextTOC, extractHTMLTOC, extractPDFTOC]);
+
+  // Handle TOC item click
+  const handleTOCItemClick = useCallback((item: TOCItem) => {
+    setActiveTOCItemId(item.id);
+
+    // Structured text - switch chapter
+    if (document?.metadata?.isStructuredText && document.metadata.chapters) {
+      setActiveChapterId(item.id);
+      return;
+    }
+
+    // HTML - scroll to heading
+    if (htmlUrl && document?.status === 'ready') {
+      // Ensure we're in the browser environment
+      if (typeof window === 'undefined') return;
+      
+      // Try to find the element in the HTML viewer's content
+      // The HTML viewer renders content in a div with class 'html-viewer-content'
+      setTimeout(() => {
+        // Use window.document to avoid conflict with the 'document' state variable
+        const domDocument = window.document;
+        if (!domDocument) return;
+        
+        // Find the viewer content container
+        const viewerContent = domDocument.querySelector('.html-viewer-content');
+        if (viewerContent) {
+          // Use attribute selector to handle IDs that start with numbers
+          // IDs starting with numbers are invalid CSS selectors (#2-...) but valid HTML IDs
+          let element: Element | null = null;
+          
+          try {
+            // Try attribute selector first (handles special characters and numbers)
+            element = viewerContent.querySelector(`[id="${CSS.escape(item.id)}"]`);
+          } catch (e) {
+            // Fallback: iterate through all elements with IDs
+            const allElements = viewerContent.querySelectorAll('[id]');
+            for (let i = 0; i < allElements.length; i++) {
+              if (allElements[i].id === item.id) {
+                element = allElements[i];
+                break;
+              }
+            }
+          }
+          
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        } else {
+          // Fallback: try in the main document
+          let element: Element | null = null;
+          
+          try {
+            element = domDocument.querySelector(`[id="${CSS.escape(item.id)}"]`) || 
+                      domDocument.getElementById(item.id);
+          } catch (e) {
+            // If CSS.escape fails, use getElementById which handles any ID
+            element = domDocument.getElementById(item.id);
+          }
+          
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }, 100);
+      return;
+    }
+
+    // PDF - navigate to page (if pageNumber available)
+    if (pdfUrl && item.pageNumber && document?.status === 'ready') {
+      // PDF viewer navigation will be handled separately
+      // For now, we'll rely on the PDF viewer's built-in navigation
+      console.log('[DocumentDetailPage] Navigate to PDF page', item.pageNumber);
+    }
+  }, [document, htmlUrl, pdfUrl]);
+
+  // Update active TOC item when chapter changes (for structured text)
+  useEffect(() => {
+    if (document?.metadata?.isStructuredText && activeChapterId) {
+      setActiveTOCItemId(activeChapterId);
+    }
+  }, [activeChapterId, document]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -388,6 +664,10 @@ export default function DocumentDetailPage() {
                     onTextSelected={handleTextSelected}
                     annotations={annotations}
                     onAnnotationClick={handleAnnotationClick}
+                    externalChapterId={activeChapterId}
+                    onChapterChange={(chapterId) => {
+                      setActiveChapterId(chapterId);
+                    }}
                   />
                 ) : htmlUrl && document.status === 'ready' ? (
                   <HTMLViewer 
@@ -569,6 +849,13 @@ export default function DocumentDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Table of Contents */}
+            <TableOfContents
+              items={tocItems}
+              activeItemId={activeTOCItemId}
+              onItemClick={handleTOCItemClick}
+            />
             
             <CollectionsPanel textId={documentId} />
           </div>

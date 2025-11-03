@@ -39,6 +39,8 @@ interface ChapterViewerProps {
   onTextSelected?: (selection: { text: string; position: any }) => void;
   annotations?: Annotation[];
   onAnnotationClick?: (annotation: Annotation) => void;
+  externalChapterId?: string | null;
+  onChapterChange?: (chapterId: string) => void;
 }
 
 // Highlight color mapping
@@ -59,15 +61,52 @@ export default function ChapterViewer({
   onTextSelected,
   annotations = [],
   onAnnotationClick,
+  externalChapterId,
+  onChapterChange,
 }: ChapterViewerProps) {
   const [activeChapterId, setActiveChapterId] = useState<string>(
     chapters[0]?.id || ''
   );
+
+  // Sync with external chapter ID if provided
+  useEffect(() => {
+    if (externalChapterId !== undefined && externalChapterId !== null) {
+      if (externalChapterId !== activeChapterId && chapters.find(ch => ch.id === externalChapterId)) {
+        setActiveChapterId(externalChapterId);
+        // Scroll to top when chapter changes externally
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (containerRef.current) {
+            containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 50);
+      }
+    }
+  }, [externalChapterId, chapters, activeChapterId]);
+
+  // Notify parent when chapter changes internally
+  const handleChapterChange = useCallback((chapterId: string) => {
+    setActiveChapterId(chapterId);
+    if (onChapterChange) {
+      onChapterChange(chapterId);
+    }
+    // Scroll the scrollable container to top
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Fallback to window scroll
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [onChapterChange]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const activeChapter = chapters.find(ch => ch.id === activeChapterId);
   const isFirstChapter = chapters[0]?.id === activeChapterId; // Check if viewing first chapter (title/index page)
@@ -592,10 +631,7 @@ export default function ChapterViewer({
           {chapters.map((chapter, index) => (
             <button
               key={chapter.id}
-              onClick={() => {
-                setActiveChapterId(chapter.id);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              onClick={() => handleChapterChange(chapter.id)}
               className={`text-left px-4 py-2 rounded-lg transition-colors ${
                 chapter.id === activeChapterId
                   ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
@@ -682,7 +718,7 @@ export default function ChapterViewer({
           {chapters.map((chapter) => (
             <button
               key={chapter.id}
-              onClick={() => setActiveChapterId(chapter.id)}
+              onClick={() => handleChapterChange(chapter.id)}
               className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${
                 activeChapterId === chapter.id
                   ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
@@ -717,7 +753,7 @@ export default function ChapterViewer({
               <button
                 key={chapter.id}
                 onClick={() => {
-                  setActiveChapterId(chapter.id);
+                  handleChapterChange(chapter.id);
                   setIsMobileMenuOpen(false);
                 }}
                 className={`w-full px-4 py-3 text-left text-sm transition-colors ${
@@ -734,7 +770,7 @@ export default function ChapterViewer({
       </div>
 
       {/* Chapter content */}
-      <div className="flex-1 overflow-y-auto bg-zinc-900/50 border border-amber-900/20 rounded-b-lg relative">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-zinc-900/50 border border-amber-900/20 rounded-b-lg relative">
         {activeChapter ? (
           <article 
             ref={contentRef}
@@ -815,8 +851,7 @@ export default function ChapterViewer({
                 onClick={() => {
                   const currentIndex = chapters.findIndex(ch => ch.id === activeChapterId);
                   if (currentIndex > 0) {
-                    setActiveChapterId(chapters[currentIndex - 1].id);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    handleChapterChange(chapters[currentIndex - 1].id);
                   }
                 }}
                 disabled={chapters.findIndex(ch => ch.id === activeChapterId) === 0}
@@ -833,8 +868,7 @@ export default function ChapterViewer({
                 onClick={() => {
                   const currentIndex = chapters.findIndex(ch => ch.id === activeChapterId);
                   if (currentIndex < chapters.length - 1) {
-                    setActiveChapterId(chapters[currentIndex + 1].id);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    handleChapterChange(chapters[currentIndex + 1].id);
                   }
                 }}
                 disabled={chapters.findIndex(ch => ch.id === activeChapterId) === chapters.length - 1}
