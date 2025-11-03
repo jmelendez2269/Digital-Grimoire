@@ -149,3 +149,19 @@ git push origin main
 
 See `Digital-Grimoire/docs/rules/WORKSPACE_STRUCTURE_RULES.md` for detailed information.
 
+## ⚠️ Admin Access Checking Rules (CRITICAL)
+
+**NEVER** create duplicate admin checks or query the users table directly from client components.
+
+**ALWAYS:**
+- Use `const { isAdmin } = useAuth()` from AuthContext as the single source of truth
+- Use server-side `/api/auth/admin-status` route for admin status checks
+- Follow the rules in `docs/rules/ADMIN_ACCESS_CHECKING_RULES.md`
+
+**NEVER:**
+- Add admin checking logic to Header.tsx or other UI components
+- Query `users` table directly from client-side code
+- Create multiple places that check admin status independently
+
+This prevents the recurring issue where admin buttons disappear. See `docs/rules/ADMIN_ACCESS_CHECKING_RULES.md` for complete rules.
+
