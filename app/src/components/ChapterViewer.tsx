@@ -16,13 +16,50 @@ interface Chapter {
   content: string;
 }
 
+interface Annotation {
+  id: string;
+  quote: string;
+  note: string | null;
+  highlight_color: 'yellow' | 'green' | 'blue' | 'pink' | 'red' | 'purple' | 'orange';
+  position?: {
+    chapterId?: string;
+    rects?: Array<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }>;
+  };
+}
+
 interface ChapterViewerProps {
   chapters: Chapter[];
   documentTitle?: string;
   format?: 'html' | 'markdown' | 'plaintext';
+  onTextSelected?: (selection: { text: string; position: any }) => void;
+  annotations?: Annotation[];
+  onAnnotationClick?: (annotation: Annotation) => void;
 }
 
-export default function ChapterViewer({ chapters, documentTitle, format = 'plaintext' }: ChapterViewerProps) {
+// Highlight color mapping
+const HIGHLIGHT_COLOR_MAP: Record<Annotation['highlight_color'], string> = {
+  yellow: 'rgba(234, 179, 8, 0.3)',
+  green: 'rgba(34, 197, 94, 0.3)',
+  blue: 'rgba(59, 130, 246, 0.3)',
+  pink: 'rgba(236, 72, 153, 0.3)',
+  red: 'rgba(239, 68, 68, 0.3)',
+  purple: 'rgba(168, 85, 247, 0.3)',
+  orange: 'rgba(249, 115, 22, 0.3)',
+};
+
+export default function ChapterViewer({ 
+  chapters, 
+  documentTitle, 
+  format = 'plaintext',
+  onTextSelected,
+  annotations = [],
+  onAnnotationClick,
+}: ChapterViewerProps) {
   const [activeChapterId, setActiveChapterId] = useState<string>(
     chapters[0]?.id || ''
   );
@@ -102,6 +139,41 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
       document.removeEventListener('msfullscreenchange', handleFullscreenChange);
     };
   }, []);
+
+  // Handle text selection
+  const handleTextSelection = useCallback(() => {
+    if (!onTextSelected || !contentRef.current) return;
+
+    // Small delay to ensure selection is captured
+    setTimeout(() => {
+      const selection = window.getSelection();
+      const selectedText = selection?.toString().trim();
+      
+      if (selectedText && selectedText.length > 0) {
+        const range = selection?.getRangeAt(0);
+        if (range && contentRef.current) {
+          const rect = range.getBoundingClientRect();
+          const containerRect = contentRef.current.getBoundingClientRect();
+          
+          // Calculate relative position (account for zoom by dividing by zoom scale)
+          const position = {
+            chapterId: activeChapterId,
+            rects: [{
+              x: (rect.left - containerRect.left) / zoom,
+              y: (rect.top - containerRect.top) / zoom,
+              width: rect.width / zoom,
+              height: rect.height / zoom,
+            }],
+          };
+          
+          onTextSelected({
+            text: selectedText,
+            position,
+          });
+        }
+      }
+    }, 100);
+  }, [onTextSelected, activeChapterId, zoom]);
 
   // Sanitize HTML content
   const sanitizedHtml = useMemo(() => {
@@ -662,18 +734,63 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
       </div>
 
       {/* Chapter content */}
-      <div className="flex-1 overflow-y-auto bg-zinc-900/50 border border-amber-900/20 rounded-b-lg">
+      <div className="flex-1 overflow-y-auto bg-zinc-900/50 border border-amber-900/20 rounded-b-lg relative">
         {activeChapter ? (
           <article 
             ref={contentRef}
-            className="max-w-4xl mx-auto px-6 py-8"
+            className="max-w-4xl mx-auto px-6 py-8 relative"
             style={{
               transform: `scale(${zoom})`,
               transformOrigin: 'top center',
               transition: 'transform 0.2s ease',
               width: `${100 / zoom}%`,
             }}
+            onMouseUp={handleTextSelection}
           >
+            {/* Render highlights for current chapter */}
+            {annotations
+              .filter((annotation) => annotation.position?.chapterId === activeChapterId)
+              .map((annotation) => {
+                if (!annotation.position?.rects || annotation.position.rects.length === 0) return null;
+                
+                const rect = annotation.position.rects[0];
+                const highlightColor = annotation.highlight_color 
+                  ? HIGHLIGHT_COLOR_MAP[annotation.highlight_color] 
+                  : 'rgba(251, 191, 36, 0.3)';
+                const borderColor = annotation.highlight_color 
+                  ? highlightColor.replace('0.3', '0.5') 
+                  : 'rgba(217, 119, 6, 0.5)';
+                
+                // Account for zoom when rendering highlights
+                const scaledX = rect.x * zoom;
+                const scaledY = rect.y * zoom;
+                const scaledWidth = rect.width * zoom;
+                const scaledHeight = rect.height * zoom;
+                
+                return (
+                  <div
+                    key={annotation.id}
+                    className="absolute cursor-pointer z-10 transition-opacity hover:opacity-80"
+                    style={{
+                      background: highlightColor,
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '2px',
+                      left: `${scaledX}px`,
+                      top: `${scaledY}px`,
+                      width: `${scaledWidth}px`,
+                      height: `${scaledHeight}px`,
+                      pointerEvents: 'auto',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onAnnotationClick) {
+                        onAnnotationClick(annotation);
+                      }
+                    }}
+                    title={annotation.note || annotation.quote}
+                  />
+                );
+              })}
             {/* Chapter title */}
             <header className="mb-8 pb-6 border-b border-amber-900/20">
               <h1 className="text-3xl font-bold text-amber-100 mb-2">

@@ -15,7 +15,6 @@ import {
   AlertCircle,
   Highlighter
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
@@ -58,6 +57,16 @@ const ChapterViewer = dynamic(() => import('@/components/ChapterViewer'), {
   ),
 });
 
+// Dynamically import HTMLViewer for HTML files
+const HTMLViewer = dynamic(() => import('@/components/HTMLViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+      <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+    </div>
+  ),
+});
+
 interface Chapter {
   id: string;
   title: string;
@@ -79,6 +88,7 @@ interface TextDocument {
   content: string | null;
   s3_key: string | null;
   file_size: number | null;
+  source_format: string | null;
   status: string;
   created_at: string;
   metadata?: {
@@ -99,6 +109,7 @@ export default function DocumentDetailPage() {
 
   const [document, setDocument] = useState<TextDocument | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [htmlUrl, setHtmlUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'notes'>('viewer');
@@ -115,42 +126,52 @@ export default function DocumentDetailPage() {
     
     try {
       setLoading(true);
-      setError(null); // Clear any previous errors
-      const supabase = createClient();
+      setError(null);
+      
+      console.log('[DocumentDetailPage] Fetching document via API:', documentId);
 
-      console.log('[DocumentDetailPage] Fetching document:', documentId);
-
-      // Fetch document metadata
-      const { data, error: fetchError } = await supabase
-        .from('texts')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-
-      if (fetchError) {
-        console.error('[DocumentDetailPage] Supabase error:', fetchError);
-        throw fetchError;
+      const response = await fetch(`/api/texts/${documentId}`);
+      
+      if (!response.ok) {
+        let errorMessage = 'Failed to load document';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `${errorMessage}: ${response.statusText}`;
+        }
+        console.error('[DocumentDetailPage] API error:', errorMessage);
+        setError(errorMessage);
+        return;
       }
+
+      const { document: data } = await response.json();
       
       if (!data) {
-        console.warn('[DocumentDetailPage] Document not found:', documentId);
         setError('Document not found');
         return;
       }
 
-      console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key);
+      console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key, 'Source format:', data.source_format);
       setDocument(data);
+
+      // Check if this is an HTML file (not structured text, source_format is html)
+      const isHtmlFile = data.source_format === 'html' && !data.metadata?.isStructuredText;
 
       // If document has S3 key, fetch the signed URL from R2
       if (data.s3_key && data.status === 'ready') {
-        console.log('[DocumentDetailPage] Fetching signed URL for document');
+        console.log('[DocumentDetailPage] Fetching signed URL for document', isHtmlFile ? '(HTML)' : '(PDF)');
         try {
           const response = await fetch(`/api/documents/${documentId}`);
           
           if (response.ok) {
             const result = await response.json();
             console.log('[DocumentDetailPage] Signed URL received, length:', result.url?.length || 0);
-            setPdfUrl(result.url);
+            if (isHtmlFile) {
+              setHtmlUrl(result.url);
+            } else {
+              setPdfUrl(result.url);
+            }
           } else {
             // Handle error response - try to parse as JSON, fallback to status text
             let errorMessage = 'Failed to load document from storage';
@@ -364,6 +385,16 @@ export default function DocumentDetailPage() {
                     chapters={document.metadata.chapters}
                     documentTitle={document.title}
                     format={document.metadata.format || 'plaintext'}
+                    onTextSelected={handleTextSelected}
+                    annotations={annotations}
+                    onAnnotationClick={handleAnnotationClick}
+                  />
+                ) : htmlUrl && document.status === 'ready' ? (
+                  <HTMLViewer 
+                    fileUrl={htmlUrl} 
+                    fileName={document.title}
+                    onDocumentLoad={handleDocumentLoad}
+                    onTextSelected={handleTextSelected}
                   />
                 ) : pdfUrl && document.status === 'ready' ? (
                   <PDFViewer 
