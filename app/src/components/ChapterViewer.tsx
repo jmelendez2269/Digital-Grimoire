@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { ChevronDown, BookOpen } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { ChevronDown, BookOpen, ZoomIn, ZoomOut, RotateCw, Maximize, Minimize } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import DOMPurify from 'dompurify';
+
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.0;
+const ZOOM_STEP = 0.1;
 
 interface Chapter {
   id: string;
@@ -23,9 +27,81 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
     chapters[0]?.id || ''
   );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoom, setZoom] = useState(1.0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const activeChapter = chapters.find(ch => ch.id === activeChapterId);
   const isFirstChapter = chapters[0]?.id === activeChapterId; // Check if viewing first chapter (title/index page)
+
+  // Handle zoom in
+  const handleZoomIn = useCallback(() => {
+    setZoom((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
+  }, []);
+
+  // Handle zoom out
+  const handleZoomOut = useCallback(() => {
+    setZoom((prev) => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
+  }, []);
+
+  // Handle reset zoom
+  const handleResetZoom = useCallback(() => {
+    setZoom(1.0);
+  }, []);
+
+  // Handle fullscreen toggle
+  const handleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
+
+    if (!isFullscreen) {
+      // Enter fullscreen
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen();
+      } else if ((containerRef.current as any).webkitRequestFullscreen) {
+        (containerRef.current as any).webkitRequestFullscreen();
+      } else if ((containerRef.current as any).mozRequestFullScreen) {
+        (containerRef.current as any).mozRequestFullScreen();
+      } else if ((containerRef.current as any).msRequestFullscreen) {
+        (containerRef.current as any).msRequestFullscreen();
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+    }
+  }, [isFullscreen]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(
+        !!document.fullscreenElement ||
+        !!(document as any).webkitFullscreenElement ||
+        !!(document as any).mozFullScreenElement ||
+        !!(document as any).msFullscreenElement
+      );
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   // Sanitize HTML content
   const sanitizedHtml = useMemo(() => {
@@ -468,7 +544,66 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div 
+      ref={containerRef}
+      className="h-full flex flex-col"
+    >
+      {/* Toolbar with zoom and fullscreen controls */}
+      <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/80 border-b border-amber-900/20">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-100/60 text-sm font-medium">
+            {documentTitle || 'Document'}
+          </span>
+          <span className="text-amber-100/40 text-xs">
+            {(zoom * 100).toFixed(0)}%
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Zoom controls */}
+          <button
+            onClick={handleZoomOut}
+            disabled={zoom <= MIN_ZOOM}
+            className="p-2 hover:bg-zinc-700 rounded text-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={handleResetZoom}
+            className="px-3 py-2 hover:bg-zinc-700 rounded text-amber-100 text-sm transition-colors"
+            title="Reset Zoom"
+          >
+            <RotateCw className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={handleZoomIn}
+            disabled={zoom >= MAX_ZOOM}
+            className="p-2 hover:bg-zinc-700 rounded text-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          
+          <div className="w-px h-6 bg-amber-900/20 mx-1" />
+          
+          {/* Fullscreen toggle */}
+          <button
+            onClick={handleFullscreen}
+            className="p-2 hover:bg-zinc-700 rounded text-amber-100 transition-colors"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+          >
+            {isFullscreen ? (
+              <Minimize className="w-4 h-4" />
+            ) : (
+              <Maximize className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Desktop: Horizontal tabs */}
       <div className="hidden md:block border-b border-amber-900/20 bg-zinc-900/30 overflow-x-auto">
         <div className="flex gap-1 px-4 py-2 min-w-max">
@@ -529,7 +664,16 @@ export default function ChapterViewer({ chapters, documentTitle, format = 'plain
       {/* Chapter content */}
       <div className="flex-1 overflow-y-auto bg-zinc-900/50 border border-amber-900/20 rounded-b-lg">
         {activeChapter ? (
-          <article className="max-w-4xl mx-auto px-6 py-8">
+          <article 
+            ref={contentRef}
+            className="max-w-4xl mx-auto px-6 py-8"
+            style={{
+              transform: `scale(${zoom})`,
+              transformOrigin: 'top center',
+              transition: 'transform 0.2s ease',
+              width: `${100 / zoom}%`,
+            }}
+          >
             {/* Chapter title */}
             <header className="mb-8 pb-6 border-b border-amber-900/20">
               <h1 className="text-3xl font-bold text-amber-100 mb-2">
