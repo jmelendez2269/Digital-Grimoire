@@ -14,6 +14,7 @@ export interface DocumentMetadata {
   confidence: 'established' | 'interpretive' | 'speculative' | 'tradition';
   shortSummary: string;
   longSummary: string;
+  curatorNote?: string; // Explanation of why this document is significant
 }
 
 export async function extractMetadata(
@@ -83,6 +84,7 @@ Always respond with valid JSON only.`
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
 - shortSummary (string, required): A concise 2-3 sentence description of what this document is about
 - longSummary (string, required): A detailed 1-2 paragraph summary covering the document's main themes, content, and significance
+- curatorNote (string, optional): A brief explanation of why this document is significant and why it belongs in the Digital Grimoire collection. Should explain its value, uniqueness, or contribution to knowledge synthesis. 1-2 sentences.
 
 OCR Text (first 3000 chars):
 ${ocrText.substring(0, 3000)}

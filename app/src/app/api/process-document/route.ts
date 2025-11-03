@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getR2Client, DeleteObjectCommand, CopyObjectCommand, PutObjectCommand } from '@/lib/storage/r2-client';
+import { getR2Client, DeleteObjectCommand, CopyObjectCommand, PutObjectCommand, GetObjectCommand } from '@/lib/storage/r2-client';
 import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
+import { scrapeCover } from '@/lib/cover-scraper';
+import { generateBookCover } from '@/lib/nano-banana-cover';
 import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
 
 // Initialize R2 client for cleanup on error
@@ -39,28 +41,83 @@ export async function POST(request: NextRequest) {
   let rawAiOutput: string = ''; // Store raw AI response
   
   try {
-    // Build file URL for Azure OCR
-    const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+    const filename = key.split('/').pop() || 'document';
+    const fileExtension = filename.split('.').pop()?.toLowerCase() || '';
+    const isHtmlFile = fileExtension === 'html' || fileExtension === 'htm';
     
-    console.log('Starting document processing for:', key);
-
-    // Step 1: Perform OCR
-    console.log('Step 1: Running Azure OCR...');
+    console.log('Starting document processing for:', key, 'Type:', isHtmlFile ? 'HTML' : 'PDF/Image');
+    
     let ocrResult;
-    try {
-      ocrResult = await performOCR(fileUrl, userId);
-      console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
-    } catch (ocrError) {
-      console.error('OCR failed:', ocrError);
-      throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+    let extractedText = '';
+
+    if (isHtmlFile) {
+      // For HTML files: Extract text directly, skip OCR
+      console.log('Step 1: Extracting text from HTML file...');
+      
+      try {
+        // Fetch HTML file from R2
+        const getCommand = new GetObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+          Key: key,
+        });
+        
+        const response = await s3Client.send(getCommand);
+        const htmlContent = await response.Body?.transformToString() || '';
+        
+        // Extract plain text from HTML (simple regex-based extraction)
+        // Remove script and style content
+        extractedText = htmlContent
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+          // Replace HTML tags with spaces
+          .replace(/<[^>]+>/g, ' ')
+          // Decode common HTML entities
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          // Clean up whitespace
+          .replace(/\s+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+        
+        // Estimate page and line count for HTML (rough estimate)
+        const estimatedLineCount = extractedText.split('\n').length;
+        const estimatedPageCount = Math.max(1, Math.ceil(extractedText.length / 3000)); // ~3000 chars per page
+        
+        ocrResult = {
+          text: extractedText,
+          lineCount: estimatedLineCount,
+          pageCount: estimatedPageCount,
+        };
+        
+        console.log(`HTML text extraction complete: ${ocrResult.lineCount} lines, estimated ${ocrResult.pageCount} pages`);
+      } catch (htmlError) {
+        console.error('HTML text extraction failed:', htmlError);
+        throw new Error(`HTML processing failed: ${htmlError instanceof Error ? htmlError.message : 'Unknown error'}`);
+      }
+    } else {
+      // For PDF/Images: Perform OCR
+      console.log('Step 1: Running Azure OCR...');
+      const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+      
+      try {
+        ocrResult = await performOCR(fileUrl, userId);
+        console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
+      } catch (ocrError) {
+        console.error('OCR failed:', ocrError);
+        throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+      }
     }
 
     // Step 2: Extract metadata with OpenAI
     console.log('Step 2: Extracting metadata...');
-    const filename = key.split('/').pop() || 'document';
     let metadata;
     try {
-      const result = await extractMetadata(ocrResult.text, filename, userId);
+      const result = await extractMetadata(ocrResult.text, filename || 'document', userId);
       metadata = result.metadata;
       rawAiOutput = result.rawOutput; // Store for response
       console.log('Metadata extracted:', metadata.title);
@@ -69,10 +126,59 @@ export async function POST(request: NextRequest) {
       throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
     }
 
+    // Step 2.5: Scrape book cover (non-blocking)
+    console.log('Step 2.5: Scraping book cover...');
+    let coverResult;
+    let coverSource: 'scraped' | 'ai-generated' | null = null; // Track database source value
+    try {
+      coverResult = await scrapeCover(metadata.title, metadata.author || '');
+      if (coverResult.success) {
+        console.log(`✅ Cover scraped successfully: ${coverResult.imageUrl} (source: ${coverResult.source})`);
+        coverSource = 'scraped';
+      } else {
+        console.log(`⚠️ Cover scraping failed: ${coverResult.error}`);
+        
+        // Step 2.6: Fallback to AI generation if scraping failed (and API key is configured)
+        if (!coverResult.success && process.env.NANO_BANANA_API_KEY && metadata.domain) {
+          console.log('Step 2.6: Attempting AI cover generation as fallback...');
+          try {
+            const aiResult = await generateBookCover(
+              metadata.title,
+              metadata.author || 'Unknown',
+              metadata.domain,
+              metadata.tags
+            );
+            
+            if (aiResult.success) {
+              console.log(`✅ AI cover generated successfully: ${aiResult.imageUrl}`);
+              coverResult = {
+                success: true,
+                imageUrl: aiResult.imageUrl,
+              };
+              coverSource = 'ai-generated';
+            } else {
+              console.log(`⚠️ AI cover generation failed: ${aiResult.error}`);
+            }
+          } catch (aiError) {
+            console.error('AI cover generation error (non-blocking):', aiError);
+            // Continue processing even if AI generation fails
+          }
+        } else if (!coverResult.success && !process.env.NANO_BANANA_API_KEY) {
+          console.log('⚠️ Skipping AI generation: NANO_BANANA_API_KEY not configured');
+        } else if (!coverResult.success && !metadata.domain) {
+          console.log('⚠️ Skipping AI generation: document domain not available');
+        }
+      }
+    } catch (coverError) {
+      console.error('Cover scraping error (non-blocking):', coverError);
+      // Continue processing even if cover scraping fails
+      coverResult = { success: false, error: String(coverError) };
+    }
+
     // Step 3: Rename file in R2 based on metadata
     console.log('Step 3: Renaming file in R2 based on metadata...');
-    const fileExtension = filename.split('.').pop() || 'pdf';
-    newKey = `library/${metadata.standardizedId}.${fileExtension}`;
+    const finalExtension = isHtmlFile ? (fileExtension || 'html') : (fileExtension || 'pdf');
+    newKey = `library/${metadata.standardizedId}.${finalExtension}`;
     console.log(`Renaming: ${key} -> ${newKey}`);
 
     try {
@@ -155,8 +261,12 @@ export async function POST(request: NextRequest) {
         confidence: metadata.confidence,
         tags: metadata.tags,
         lenses: metadata.lenses, // The 7 Convergence Machine lenses
+        curator_note: metadata.curatorNote || null,
+        cover_image_url: coverResult?.success ? coverResult.imageUrl : null,
+        cover_source: coverSource,
         status: 'ready',
         uploaded_by: userId || null,
+        source_format: isHtmlFile ? 'html' : null, // Set source format for HTML files
         metadata: {
           standardizedId: metadata.standardizedId,
           pageCount: ocrResult.pageCount,
