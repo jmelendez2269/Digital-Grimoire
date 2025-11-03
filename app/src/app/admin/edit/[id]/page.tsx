@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Tag, Eye, BookOpen } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Tag, Eye, BookOpen, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 interface DocumentData {
@@ -28,6 +28,7 @@ export default function EditDocumentPage() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [scrapingCover, setScrapingCover] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [document, setDocument] = useState<DocumentData | null>(null);
@@ -115,6 +116,45 @@ export default function EditDocumentPage() {
       setError(err instanceof Error ? err.message : 'Failed to update document');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleScrapeCover = async () => {
+    if (!document || !document.title || !document.author) {
+      setError('Title and author are required to scrape cover');
+      return;
+    }
+
+    try {
+      setScrapingCover(true);
+      setError(null);
+
+      const response = await fetch('/api/covers/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          textId: documentId,
+          title: document.title,
+          author: document.author,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setCoverImageUrl(result.imageUrl);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        // Refresh document to get updated cover
+        await fetchDocument();
+      } else {
+        setError(result.error || 'Failed to scrape cover from any source');
+      }
+    } catch (err) {
+      console.error('Error scraping cover:', err);
+      setError('Failed to scrape cover. Please try again.');
+    } finally {
+      setScrapingCover(false);
     }
   };
 
@@ -230,21 +270,43 @@ export default function EditDocumentPage() {
               <h3 className="text-lg font-semibold text-amber-100">Cover Image</h3>
             </div>
             <div className="space-y-3">
-              <div>
-                <label className="block text-sm text-amber-100/80 mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="url"
-                  value={coverImageUrl}
-                  onChange={(e) => setCoverImageUrl(e.target.value)}
-                  placeholder="https://example.com/cover-image.jpg"
-                  className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50"
-                />
-                <p className="text-xs text-amber-100/50 mt-1">
-                  Recommended: 400x600px or 2:3 aspect ratio
-                </p>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-sm text-amber-100/80 mb-2">
+                    Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={coverImageUrl}
+                    onChange={(e) => setCoverImageUrl(e.target.value)}
+                    placeholder="https://example.com/cover-image.jpg"
+                    className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={handleScrapeCover}
+                    disabled={scrapingCover || !document?.author}
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+                    title={!document?.author ? 'Author required to scrape cover' : 'Automatically find cover from Open Library, Internet Archive, or Google Books'}
+                  >
+                    {scrapingCover ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="hidden sm:inline">Scraping...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span className="hidden sm:inline">Scrape Cover</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
+              <p className="text-xs text-amber-100/50">
+                Recommended: 400x600px or 2:3 aspect ratio. Click "Scrape Cover" to automatically find a cover from public sources.
+              </p>
               {coverImageUrl && (
                 <div className="mt-3">
                   <p className="text-sm text-amber-100/80 mb-2">Preview:</p>
