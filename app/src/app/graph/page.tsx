@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import GraphView from "@/components/graph/GraphView";
 import EntityDetails from "@/components/graph/EntityDetails";
+
+// Dynamically import FloatingAISearch
+const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface Entity {
   id: string;
@@ -95,6 +102,10 @@ export default function GraphPage() {
           </div>
         </div>
       </main>
+      
+      {/* Floating AI Search */}
+      <FloatingAISearch defaultCollapsed={true} />
+      
       <Footer />
     </div>
   );

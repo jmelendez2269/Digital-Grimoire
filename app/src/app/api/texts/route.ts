@@ -33,6 +33,8 @@ export async function GET(request: Request) {
     const yearMax = searchParams.get('yearMax');
     const tags = searchParams.get('tags'); // Comma-separated
     const lenses = searchParams.get('lenses'); // Comma-separated
+    const sortBy = searchParams.get('sortBy') || 'created_at';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     // Build query
     let query = supabase
@@ -83,8 +85,11 @@ export async function GET(request: Request) {
     const to = from + limit - 1;
     query = query.range(from, to);
 
-    // Order by created_at
-    query = query.order('created_at', { ascending: false });
+    // Apply sorting
+    const ascending = sortOrder === 'asc';
+    const validSortFields = ['title', 'author', 'year', 'created_at', 'domain', 'type'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'created_at';
+    query = query.order(sortField, { ascending, nullsFirst: false });
 
     const { data, error, count } = await query;
 

@@ -11,16 +11,25 @@ import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
 const s3Client = getR2Client();
 
 /**
- * Sanitizes a string for use in HTTP headers (S3 metadata).
- * Removes control characters, newlines, and other invalid header characters.
- * Preserves UTF-8 characters that are valid in HTTP headers.
+ * Sanitizes a string for use in HTTP headers (S3/R2 metadata).
+ * AWS S3/R2 metadata values can ONLY contain printable ASCII characters (32-126).
+ * All other characters are removed or replaced.
  */
 function sanitizeMetadataValue(value: string): string {
   return value
-    // Remove control characters (ASCII 0-31 and 127) except space (32)
-    .replace(/[\x00-\x1F\x7F]/g, '')
-    // Replace newlines and carriage returns with spaces
-    .replace(/[\r\n]+/g, ' ')
+    // Only keep printable ASCII characters (32-126)
+    // This includes: space, !, ", #, $, %, &, ', (, ), *, +, comma, -, ., /, 0-9, :, ;, <, =, >, ?, @, A-Z, [, \, ], ^, _, `, a-z, {, |, }, ~
+    .split('')
+    .map(char => {
+      const code = char.charCodeAt(0);
+      // Only allow printable ASCII (32-126)
+      if (code >= 32 && code <= 126) {
+        return char;
+      }
+      // Replace non-ASCII with space
+      return ' ';
+    })
+    .join('')
     // Collapse multiple spaces into one
     .replace(/\s+/g, ' ')
     .trim();
@@ -280,17 +289,50 @@ export async function POST(request: NextRequest) {
 
       // Prepare metadata - R2 requires lowercase keys and may have restrictions
       // HTTP headers cannot contain control characters, newlines, or certain special characters
+      // AWS S3/R2 metadata values can ONLY contain printable ASCII (32-126)
       const r2Metadata: Record<string, string> = {};
-      if (metadata.title) r2Metadata['title'] = sanitizeMetadataValue(metadata.title).substring(0, 1024); // R2 metadata value limit
-      if (metadata.author) r2Metadata['author'] = sanitizeMetadataValue(metadata.author).substring(0, 1024);
-      if (metadata.year) r2Metadata['year'] = sanitizeMetadataValue(metadata.year.toString());
-      if (sanitizedType) r2Metadata['type'] = sanitizeMetadataValue(sanitizedType);
-      if (metadata.domain) r2Metadata['domain'] = sanitizeMetadataValue(metadata.domain).substring(0, 1024);
-      if (metadata.tags.length > 0) r2Metadata['tags'] = sanitizeMetadataValue(metadata.tags.join(',')).substring(0, 1024);
-      if (metadata.confidence) r2Metadata['confidence'] = sanitizeMetadataValue(metadata.confidence);
-      if (metadata.standardizedId) r2Metadata['standardized-id'] = sanitizeMetadataValue(metadata.standardizedId);
+      if (metadata.title) {
+        const originalTitle = metadata.title;
+        const sanitizedTitle = sanitizeMetadataValue(originalTitle).substring(0, 1024);
+        if (sanitizedTitle) {
+          r2Metadata['title'] = sanitizedTitle;
+          if (originalTitle !== sanitizedTitle) {
+            console.log(`⚠️ Title sanitized: "${originalTitle}" -> "${sanitizedTitle}"`);
+          }
+        }
+      }
+      if (metadata.author) {
+        const sanitized = sanitizeMetadataValue(metadata.author).substring(0, 1024);
+        if (sanitized) r2Metadata['author'] = sanitized;
+      }
+      if (metadata.year) {
+        const sanitized = sanitizeMetadataValue(metadata.year.toString());
+        if (sanitized) r2Metadata['year'] = sanitized;
+      }
+      if (sanitizedType) {
+        const sanitized = sanitizeMetadataValue(sanitizedType);
+        if (sanitized) r2Metadata['type'] = sanitized;
+      }
+      if (metadata.domain) {
+        const sanitized = sanitizeMetadataValue(metadata.domain).substring(0, 1024);
+        if (sanitized) r2Metadata['domain'] = sanitized;
+      }
+      if (metadata.tags.length > 0) {
+        const sanitized = sanitizeMetadataValue(metadata.tags.join(',')).substring(0, 1024);
+        if (sanitized) r2Metadata['tags'] = sanitized;
+      }
+      if (metadata.confidence) {
+        const sanitized = sanitizeMetadataValue(metadata.confidence);
+        if (sanitized) r2Metadata['confidence'] = sanitized;
+      }
+      if (metadata.standardizedId) {
+        const sanitized = sanitizeMetadataValue(metadata.standardizedId);
+        if (sanitized) r2Metadata['standardized-id'] = sanitized;
+      }
 
       console.log(`Uploading to new location: ${bucketName}/${desiredNewKey}`);
+      console.log(`Metadata being set:`, JSON.stringify(r2Metadata, null, 2));
+      
       // Upload to new location with custom metadata
       const putCommand = new PutObjectCommand({
         Bucket: bucketName,
@@ -309,13 +351,42 @@ export async function POST(request: NextRequest) {
         console.error('PutObjectCommand failed:', putError);
         console.error('Error details:', JSON.stringify(putError, null, 2));
         
-        // For HTML files, allow processing to continue with original key
-        if (isHtmlFile) {
-          console.warn('⚠️ Failed to rename HTML file, continuing with original key');
-          newKey = key; // Keep original key
-          renameSucceeded = false;
+        // If error is related to metadata, try uploading without metadata
+        const errorMessage = putError instanceof Error ? putError.message : String(putError);
+        if (errorMessage.includes('header') || errorMessage.includes('metadata') || errorMessage.includes('Invalid character')) {
+          console.warn('⚠️ Metadata caused upload failure, retrying without metadata...');
+          try {
+            const putCommandWithoutMetadata = new PutObjectCommand({
+              Bucket: bucketName,
+              Key: desiredNewKey,
+              Body: fileBuffer,
+              ContentType: getResponse.ContentType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+              // No Metadata field
+            });
+            await s3Client.send(putCommandWithoutMetadata);
+            console.log('✅ File uploaded to new location (without metadata)');
+            newKey = desiredNewKey;
+            renameSucceeded = true;
+          } catch (retryError) {
+            console.error('PutObjectCommand retry failed:', retryError);
+            // Continue to original error handling
+            if (isHtmlFile) {
+              console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+              newKey = key;
+              renameSucceeded = false;
+            } else {
+              throw new Error(`Failed to upload file to new location: ${retryError instanceof Error ? retryError.message : 'Unknown error'}`);
+            }
+          }
         } else {
-          throw new Error(`Failed to upload file to new location: ${putError instanceof Error ? putError.message : 'Unknown error'}`);
+          // For HTML files, allow processing to continue with original key
+          if (isHtmlFile) {
+            console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+            newKey = key; // Keep original key
+            renameSucceeded = false;
+          } else {
+            throw new Error(`Failed to upload file to new location: ${putError instanceof Error ? putError.message : 'Unknown error'}`);
+          }
         }
       }
 

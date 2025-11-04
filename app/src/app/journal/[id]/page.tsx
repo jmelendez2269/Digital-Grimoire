@@ -9,6 +9,13 @@ import EmojiPicker, { Theme } from 'emoji-picker-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import useWikiLinkActivation from '@/hooks/useWikiLinkActivation';
+import dynamic from 'next/dynamic';
+
+// Dynamically import FloatingAISearch
+const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface JournalPage {
   id: string;
@@ -594,6 +601,10 @@ export default function JournalPageEditor() {
           </div>
         </div>
       </main>
+      
+      {/* Floating AI Search */}
+      <FloatingAISearch defaultCollapsed={true} />
+      
       <Footer />
       {showWikiLinkActions && activeLink && (
         <div className="fixed bottom-6 right-6 z-50 w-72 rounded-lg border border-amber-500/40 bg-zinc-900/95 p-4 shadow-lg shadow-amber-500/20">

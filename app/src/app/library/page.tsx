@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2 } from 'lucide-react';
+import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
@@ -18,6 +18,12 @@ const AdvancedFilters = dynamic(() => import('@/components/AdvancedFilters'), {
   loading: () => (
     <div className="h-20 bg-zinc-900/30 border border-amber-900/20 rounded-lg animate-pulse" />
   ),
+});
+
+// Dynamically import FloatingAISearch
+const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
+  ssr: false,
+  loading: () => null,
 });
 
 interface Text {
@@ -59,6 +65,11 @@ export default function LibraryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 12;
+
+  // Sort state
+  const [sortBy, setSortBy] = useState<'title' | 'author' | 'year' | 'created_at' | 'domain' | 'type'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   // Advanced filter state
   const [filterValues, setFilterValues] = useState<FilterValues>({
@@ -174,6 +185,12 @@ export default function LibraryPage() {
       if (filterValues.lenses.length > 0) {
         params.append('lenses', filterValues.lenses.join(','));
       }
+      if (sortBy) {
+        params.append('sortBy', sortBy);
+      }
+      if (sortOrder) {
+        params.append('sortOrder', sortOrder);
+      }
 
       console.log('[Library] Calling API route with params:', params.toString());
 
@@ -213,7 +230,7 @@ export default function LibraryPage() {
       console.log('[Library] fetchTexts complete, setting loading to false');
       setLoading(false);
     }
-  }, [currentPage, searchQuery, filterValues, user]);
+  }, [currentPage, searchQuery, filterValues, sortBy, sortOrder, user]);
 
   const handleFilterChange = (newValues: FilterValues) => {
     setFilterValues(newValues);
@@ -228,6 +245,26 @@ export default function LibraryPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSortChange = (newSortBy: typeof sortBy, newSortOrder: typeof sortOrder) => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1); // Reset to first page when sort changes
+    setShowSortDropdown(false);
+  };
+
+  const getSortLabel = () => {
+    const labels: Record<typeof sortBy, string> = {
+      title: 'Title',
+      author: 'Author',
+      year: 'Year',
+      created_at: 'Date Added',
+      domain: 'Domain',
+      type: 'Type',
+    };
+    const orderLabel = sortOrder === 'asc' ? 'Ascending' : 'Descending';
+    return `${labels[sortBy]} (${orderLabel})`;
   };
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -365,9 +402,81 @@ export default function LibraryPage() {
           />
         </div>
 
-        {/* Results Count */}
-        <div className="mb-6 text-sm text-amber-100/60">
-          Showing {texts.length} of {totalCount} texts
+        {/* Results Count and Sort */}
+        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+          <div className="text-sm text-amber-100/60">
+            Showing {texts.length} of {totalCount} texts
+          </div>
+          
+          {/* Sort Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 text-sm hover:bg-zinc-800/50 hover:border-amber-600/50 transition-colors"
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              <span>Sort: {getSortLabel()}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showSortDropdown && (
+              <>
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowSortDropdown(false)}
+                />
+                
+                {/* Dropdown Menu */}
+                <div className="absolute right-0 z-20 mt-2 w-64 bg-zinc-900 border border-amber-900/20 rounded-lg shadow-xl shadow-black/50 overflow-hidden">
+                  <div className="p-2">
+                    <div className="px-3 py-2 text-xs font-medium text-amber-100/60 uppercase tracking-wide">
+                      Sort By
+                    </div>
+                    
+                    {/* Sort Options */}
+                    {(['title', 'author', 'year', 'created_at', 'domain', 'type'] as const).map((field) => {
+                      const labels: Record<typeof field, string> = {
+                        title: 'Title',
+                        author: 'Author',
+                        year: 'Year',
+                        created_at: 'Date Added',
+                        domain: 'Domain',
+                        type: 'Type',
+                      };
+                      
+                      return (
+                        <div key={field} className="py-1">
+                          <button
+                            onClick={() => {
+                              // If clicking the same field, toggle order; otherwise set to desc
+                              if (sortBy === field) {
+                                handleSortChange(field, sortOrder === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                handleSortChange(field, 'desc');
+                              }
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${
+                              sortBy === field
+                                ? 'bg-amber-600/20 text-amber-400'
+                                : 'text-amber-100/80 hover:bg-zinc-800/50'
+                            }`}
+                          >
+                            <span>{labels[field]}</span>
+                            {sortBy === field && (
+                              <span className="text-xs text-amber-400/60">
+                                {sortOrder === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Loading State */}
@@ -571,6 +680,10 @@ export default function LibraryPage() {
         )}
         </div>
       </main>
+      
+      {/* Floating AI Search */}
+      <FloatingAISearch defaultCollapsed={true} />
+      
       <Footer />
     </div>
   );

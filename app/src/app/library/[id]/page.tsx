@@ -54,6 +54,12 @@ const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
   loading: () => null,
 });
 
+// Dynamically import FloatingAISearch
+const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
+  ssr: false,
+  loading: () => null,
+});
+
 // Dynamically import ChapterViewer for structured text documents
 const ChapterViewer = dynamic(() => import('@/components/ChapterViewer'), {
   ssr: false,
@@ -1123,6 +1129,9 @@ export default function DocumentDetailPage() {
           defaultCollapsed={true}
         />
       )}
+
+      {/* Floating AI Search */}
+      <FloatingAISearch defaultCollapsed={true} />
         </div>
       </main>
       <Footer />
