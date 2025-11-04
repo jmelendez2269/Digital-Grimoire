@@ -1,0 +1,39 @@
+{
+  "budgets": [
+    {
+      "path": "/",
+      "firstLoadJS": 300000,
+      "firstLoadCSS": 50000,
+      "totalPageSize": 500000
+    },
+    {
+      "path": "/library",
+      "firstLoadJS": 350000,
+      "firstLoadCSS": 50000,
+      "totalPageSize": 600000
+    },
+    {
+      "path": "/library/[id]",
+      "firstLoadJS": 400000,
+      "firstLoadCSS": 50000,
+      "totalPageSize": 700000
+    },
+    {
+      "path": "/convergence-machine",
+      "firstLoadJS": 350000,
+      "firstLoadCSS": 50000,
+      "totalPageSize": 600000
+    },
+    {
+      "path": "/journal",
+      "firstLoadJS": 300000,
+      "firstLoadCSS": 50000,
+      "totalPageSize": 500000
+    }
+  ],
+  "global": {
+    "maxTotalSize": 1000000,
+    "warningThreshold": 0.9
+  }
+}
+

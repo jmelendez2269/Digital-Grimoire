@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { useQueryClient } from '@tanstack/react-query';
 import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2, ArrowUpDown, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Pagination from '@/components/Pagination';
@@ -11,6 +12,8 @@ import BookmarkButton from '@/components/BookmarkButton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { formatFileSize, formatDate, getStatusColor } from '@/lib/utils/formatting';
+import { useLibraryTexts, useLibraryFilterOptions, type FilterValues } from '@/hooks/useLibrary';
+import LibraryGrid from '@/components/LibraryGrid';
 
 // Lazy load AdvancedFilters - not needed on initial render
 const AdvancedFilters = dynamic(() => import('@/components/AdvancedFilters'), {
@@ -26,45 +29,17 @@ const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), 
   loading: () => null,
 });
 
-interface Text {
-  id: string;
-  title: string;
-  author: string | null;
-  year: number | null;
-  type: string | null;
-  domain: string | null;
-  tags: string[] | null;
-  lenses: string[] | null;
-  file_size: number | null;
-  status: string;
-  created_at: string;
-  cover_image_url: string | null;
-  short_summary: string | null;
-  curator_note: string | null;
-  metadata?: any;
-}
-
-interface FilterValues {
-  domain: string;
-  type: string;
-  yearMin: number | null;
-  yearMax: number | null;
-  tags: string[];
-  lenses: string[];
-}
+// Types are now imported from useLibrary hook
 
 export default function LibraryPage() {
   const router = useRouter();
-  const { user, loading: authLoading, supabase, isAdmin } = useAuth();
-  const [texts, setTexts] = useState<Text[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [error, setError] = useState<string | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const itemsPerPage = 12;
+  const itemsPerPage = 48; // Increased from 12 to 48 for better virtualization
 
   // Sort state
   const [sortBy, setSortBy] = useState<'title' | 'author' | 'year' | 'created_at' | 'domain' | 'type'>('created_at');
@@ -81,156 +56,29 @@ export default function LibraryPage() {
     lenses: [],
   });
 
-  // Filter options
-  const [allDomains, setAllDomains] = useState<string[]>([]);
-  const [allTypes, setAllTypes] = useState<string[]>([]);
-  const [allTags, setAllTags] = useState<string[]>([]);
-  const [allLenses, setAllLenses] = useState<string[]>([]);
-
-  const fetchFilterOptions = async () => {
-    try {
-      
-      // Fetch all documents to extract unique values
-      const { data, error } = await supabase
-        .from('texts')
-        .select('domain, type, tags, lenses');
-
-      if (error) throw error;
-
-      if (data) {
-        // Extract unique domains
-        const domains = Array.from(
-          new Set(data.map((t) => t.domain).filter(Boolean))
-        ) as string[];
-        setAllDomains(domains.sort());
-
-        // Extract unique types
-        const types = Array.from(
-          new Set(data.map((t) => t.type).filter(Boolean))
-        ) as string[];
-        setAllTypes(types.sort());
-
-        // Extract unique tags
-        const tagsSet = new Set<string>();
-        data.forEach((t) => {
-          if (t.tags && Array.isArray(t.tags)) {
-            t.tags.forEach((tag) => tagsSet.add(tag));
-          }
-        });
-        setAllTags(Array.from(tagsSet).sort());
-
-        // Extract unique lenses (use all 7 lenses by default)
-        const lensesSet = new Set<string>();
-        data.forEach((t) => {
-          if (t.lenses && Array.isArray(t.lenses)) {
-            t.lenses.forEach((lens) => lensesSet.add(lens));
-          }
-        });
-        
-        // Always show all 7 lenses in a specific order
-        const allSevenLenses = [
-          'scientific',
-          'psychological',
-          'philosophical',
-          'religious_spiritual',
-          'historical_anthropological',
-          'symbolic_occult',
-          'mathematical'
-        ];
-        setAllLenses(allSevenLenses);
-      }
-    } catch (error) {
-      console.error('Error fetching filter options:', error);
-    }
+  // Use React Query hooks for data fetching
+  const filterOptionsQuery = useLibraryFilterOptions();
+  const filterOptions = filterOptionsQuery.data || {
+    domains: [],
+    types: [],
+    allTags: [],
+    allLenses: [],
   };
 
-  const fetchTexts = useCallback(async () => {
-    console.log('[Library] Starting fetchTexts via API route...');
-    console.log('[Library] User from context:', user?.email);
-    
-    // Don't proceed if no user - API route will handle auth
-    if (!user) {
-      console.log('[Library] No user in context, waiting...');
-      return;
-    }
+  const textsQuery = useLibraryTexts({
+    page: currentPage,
+    limit: itemsPerPage,
+    searchQuery,
+    filterValues,
+    sortBy,
+    sortOrder,
+    enabled: !authLoading && !!user,
+  });
 
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Build query parameters for API route
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: itemsPerPage.toString(),
-      });
-
-      if (searchQuery) {
-        params.append('search', searchQuery);
-      }
-      if (filterValues.domain !== 'all') {
-        params.append('domain', filterValues.domain);
-      }
-      if (filterValues.type !== 'all') {
-        params.append('type', filterValues.type);
-      }
-      if (filterValues.yearMin !== null) {
-        params.append('yearMin', filterValues.yearMin.toString());
-      }
-      if (filterValues.yearMax !== null) {
-        params.append('yearMax', filterValues.yearMax.toString());
-      }
-      if (filterValues.tags.length > 0) {
-        params.append('tags', filterValues.tags.join(','));
-      }
-      if (filterValues.lenses.length > 0) {
-        params.append('lenses', filterValues.lenses.join(','));
-      }
-      if (sortBy) {
-        params.append('sortBy', sortBy);
-      }
-      if (sortOrder) {
-        params.append('sortOrder', sortOrder);
-      }
-
-      console.log('[Library] Calling API route with params:', params.toString());
-
-      // Use API route instead of direct Supabase query
-      const response = await fetch(`/api/texts?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('[Library] API error:', errorData);
-        setError(errorData.error || `Failed to load library (${response.status})`);
-        setTexts([]);
-        setTotalCount(0);
-        return;
-      }
-
-      const data = await response.json();
-      console.log('[Library] API response:', { 
-        count: data.total, 
-        dataLength: data.texts?.length,
-        page: data.page,
-        totalPages: data.totalPages
-      });
-
-      setTexts(data.texts || []);
-      setTotalCount(data.total || 0);
-    } catch (error: any) {
-      console.error('[Library] Error fetching texts:', error);
-      setError(error.message || 'An unexpected error occurred while loading the library.');
-      setTexts([]);
-      setTotalCount(0);
-    } finally {
-      console.log('[Library] fetchTexts complete, setting loading to false');
-      setLoading(false);
-    }
-  }, [currentPage, searchQuery, filterValues, sortBy, sortOrder, user]);
+  const texts = textsQuery.data?.texts || [];
+  const totalCount = textsQuery.data?.total || 0;
+  const loading = textsQuery.isLoading || filterOptionsQuery.isLoading;
+  const error = textsQuery.error?.message || filterOptionsQuery.error?.message || null;
 
   const handleFilterChange = (newValues: FilterValues) => {
     setFilterValues(newValues);
@@ -281,9 +129,9 @@ export default function LibraryPage() {
       });
 
       if (response.ok) {
-        // Remove from local state
-        setTexts(texts.filter((t) => t.id !== textId));
-        setTotalCount(totalCount - 1);
+        // Invalidate and refetch library queries
+        queryClient.invalidateQueries({ queryKey: ['library', 'texts'] });
+        queryClient.invalidateQueries({ queryKey: ['library', 'filterOptions'] });
         alert('Document deleted successfully');
       } else {
         const data = await response.json();
@@ -294,45 +142,6 @@ export default function LibraryPage() {
       alert('An error occurred while deleting the document');
     }
   };
-
-  useEffect(() => {
-    fetchFilterOptions();
-  }, []);
-
-  useEffect(() => {
-    // Safety timeout - if auth loading takes too long, try fetching anyway
-    let timeoutId: NodeJS.Timeout;
-    
-    if (!authLoading && user) {
-      // Auth is ready and user is logged in - fetch texts
-      console.log('[Library] Auth ready, user logged in - fetching texts');
-      fetchTexts();
-    } else if (!authLoading && !user) {
-      // Auth is ready but no user - show error
-      console.log('[Library] Auth ready but no user - showing error');
-      setError('You must be logged in to view the library.');
-      setLoading(false);
-    } else if (authLoading) {
-      // Auth still loading - set a timeout to fetch anyway after 3 seconds
-      // This prevents the page from being stuck if auth hangs
-      console.log('[Library] Auth still loading, setting timeout fallback');
-      timeoutId = setTimeout(() => {
-        console.warn('[Library] Auth loading timeout - attempting to fetch texts anyway');
-        // Try to fetch if we have supabase client (might work even without user)
-        if (supabase) {
-          fetchTexts();
-        } else {
-          console.error('[Library] No supabase client available');
-          setError('Unable to connect to database.');
-          setLoading(false);
-        }
-      }, 3000);
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [authLoading, user, fetchTexts, supabase]);
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
@@ -353,7 +162,7 @@ export default function LibraryPage() {
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 py-8">
         {/* Error Alert */}
-        {error && (
+        {error && !authLoading && (
           <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
             <div className="flex items-start gap-3">
               <svg className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -392,12 +201,7 @@ export default function LibraryPage() {
         {/* Advanced Filters */}
         <div className="mb-6">
           <AdvancedFilters
-            options={{
-              domains: allDomains,
-              types: allTypes,
-              allTags: allTags,
-              allLenses: allLenses,
-            }}
+            options={filterOptions}
             values={filterValues}
             onChange={handleFilterChange}
           />
@@ -524,148 +328,12 @@ export default function LibraryPage() {
           </div>
         ) : (
           <>
-            {/* Document Grid - Horizontal Cards */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-              {texts.map((text) => (
-              <div
-                key={text.id}
-                className="group bg-zinc-900/50 border border-amber-900/20 rounded-xl overflow-hidden hover:border-amber-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-900/20 flex flex-col md:flex-row"
-              >
-                {/* Book Cover */}
-                <Link href={`/library/${text.id}`} className="relative md:w-40 md:h-56 w-full h-48 bg-zinc-800/50 overflow-hidden flex-shrink-0">
-                  {text.cover_image_url ? (
-                    <img
-                      src={text.cover_image_url}
-                      alt={text.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      style={{
-                        objectPosition: (text.metadata as any)?.cover_position || 'center',
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-900/20 to-zinc-900/50">
-                      <BookOpen className="w-12 h-12 text-amber-600/30" />
-                    </div>
-                  )}
-                  {/* Action buttons overlay - visible on hover */}
-                  <div className="absolute top-2 right-2 z-10 flex gap-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity duration-200">
-                    {isAdmin && (
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            router.push(`/admin/edit/${text.id}`);
-                          }}
-                          className="p-1.5 bg-zinc-900/90 hover:bg-zinc-800 border border-amber-600/30 hover:border-amber-600/50 rounded-lg transition-colors backdrop-blur-sm"
-                          title="Edit document"
-                        >
-                          <Edit className="w-3.5 h-3.5 text-amber-400" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            deleteText(text.id, text.title);
-                          }}
-                          className="p-1.5 bg-zinc-900/90 hover:bg-red-900 border border-red-600/30 hover:border-red-600/50 rounded-lg transition-colors backdrop-blur-sm"
-                          title="Delete document"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                        </button>
-                      </>
-                    )}
-                    <BookmarkButton textId={text.id} size="sm" />
-                  </div>
-                </Link>
-
-                {/* Card Content - Scrollable */}
-                <div className="flex-1 p-4 overflow-y-auto max-h-56 space-y-3">
-                  {/* Title & Author */}
-                  <div>
-                    <Link href={`/library/${text.id}`}>
-                      <h3 className="text-base font-bold text-amber-100 mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
-                        {text.title}
-                      </h3>
-                    </Link>
-                    {text.author && (
-                      <p className="text-xs text-amber-100/60 flex items-center gap-1.5">
-                        <User className="w-3 h-3" />
-                        {text.author}
-                        {text.year && <span className="ml-1">({text.year})</span>}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Domain */}
-                  {text.domain && (
-                    <div className="flex items-center gap-2">
-                      <div className="px-2 py-0.5 bg-amber-600/10 border border-amber-600/20 rounded-md text-xs font-medium text-amber-400">
-                        {text.domain}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Lenses */}
-                  {text.lenses && text.lenses.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1 text-xs text-amber-100/50">
-                        <Eye className="w-3 h-3" />
-                        <span className="font-medium">Lenses</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {text.lenses.map((lens) => (
-                          <span
-                            key={lens}
-                            className="px-1.5 py-0.5 bg-zinc-800/50 border border-amber-900/30 rounded text-xs text-amber-100/70"
-                          >
-                            {lens.replace(/_/g, ' ')}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  {text.tags && text.tags.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1 text-xs text-amber-100/50">
-                        <Tag className="w-3 h-3" />
-                        <span className="font-medium">Tags</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {text.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-1.5 py-0.5 bg-zinc-800/50 border border-amber-900/30 rounded text-xs text-amber-100/70"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Collection Reason */}
-                  {text.curator_note && (
-                    <div className="pt-2 border-t border-amber-900/20">
-                      <p className="text-xs text-amber-100/70 leading-relaxed">
-                        {text.curator_note}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* View Button */}
-                  <Link
-                    href={`/library/${text.id}`}
-                    className="block w-full py-2 text-center bg-amber-600/10 hover:bg-amber-600 text-amber-400 hover:text-white rounded-lg text-xs font-medium transition-all duration-200"
-                  >
-                    View Document
-                  </Link>
-                </div>
-              </div>
-              ))}
-            </div>
+            {/* Document Grid - Virtualized */}
+            <LibraryGrid
+              texts={texts}
+              isAdmin={isAdmin}
+              onDelete={deleteText}
+            />
 
             {/* Pagination */}
             {totalPages > 1 && (

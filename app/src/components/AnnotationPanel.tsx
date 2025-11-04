@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Highlighter, MessageSquare, Trash2, Edit3, Save, X, Sparkles } from 'lucide-react';
 import { formatDate } from '@/lib/utils/formatting';
 
@@ -191,12 +192,23 @@ export default function AnnotationPanel({
     );
   }
 
+  // Filter annotations based on category
+  const filteredAnnotations = useMemo(
+    () => annotations.filter((a) => filterCategory === 'all' || a.category === filterCategory),
+    [annotations, filterCategory]
+  );
+
   return (
     <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-amber-100 flex items-center gap-2">
           <Highlighter className="w-5 h-5 text-amber-600" />
           Annotations & Highlights
+          {filteredAnnotations.length > 0 && (
+            <span className="text-sm text-amber-100/60 font-normal">
+              ({filteredAnnotations.length})
+            </span>
+          )}
         </h3>
         <button
           onClick={() => {
@@ -429,119 +441,184 @@ export default function AnnotationPanel({
         </div>
       )}
 
-      {/* Annotations List */}
-      {annotations.length === 0 ? (
+      {/* Annotations List - Virtualized */}
+      {filteredAnnotations.length === 0 ? (
         <div className="text-center py-8">
           <Highlighter className="w-12 h-12 mx-auto mb-3 text-amber-100/20" />
           <p className="text-sm text-amber-100/60">
-            No annotations yet. Highlight text and add your notes while reading.
+            {filterCategory === 'all' 
+              ? 'No annotations yet. Highlight text and add your notes while reading.'
+              : 'No annotations in this category.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {annotations
-            .filter((a) => filterCategory === 'all' || a.category === filterCategory)
-            .map((annotation) => {
-              const categoryInfo = ANNOTATION_CATEGORIES.find((c) => c.value === annotation.category);
-              const categoryColor = categoryInfo?.color || 'gray';
-              
-              return (
-            <div
-              key={annotation.id}
-              className="p-4 bg-zinc-800/30 border border-amber-900/10 rounded-lg space-y-2"
-            >
-              {/* Category Badge */}
-              <div className="flex items-center justify-between">
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                    categoryColor === 'red' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                    categoryColor === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                    categoryColor === 'yellow' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
-                    categoryColor === 'purple' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                    categoryColor === 'green' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                    categoryColor === 'orange' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-                    'bg-zinc-700/50 text-zinc-400 border border-zinc-600/20'
-                  }`}
-                >
-                  {categoryInfo?.label}
-                </span>
-              </div>
-              
-              {/* Quoted Text */}
-              <div className="pl-3 border-l-2 border-amber-600/50">
-                <p className="text-sm text-amber-100/90 italic">
-                  "{annotation.quote}"
-                </p>
-              </div>
+        <VirtualizedAnnotationList
+          annotations={filteredAnnotations}
+          editingId={editingId}
+          editNote={editNote}
+          setEditingId={setEditingId}
+          setEditNote={setEditNote}
+          updateAnnotation={updateAnnotation}
+          deleteAnnotation={deleteAnnotation}
+        />
+      )}
+    </div>
+  );
+}
 
-              {/* Note */}
-              {editingId === annotation.id ? (
-                <div className="space-y-2">
-                  <textarea
-                    value={editNote}
-                    onChange={(e) => setEditNote(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-md text-amber-100 text-sm resize-none"
-                    rows={2}
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => updateAnnotation(annotation.id, editNote)}
-                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium flex items-center gap-1"
-                    >
-                      <Save className="w-3 h-3" />
-                      Save
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingId(null);
-                        setEditNote('');
-                      }}
-                      className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-amber-100 rounded text-xs font-medium flex items-center gap-1"
-                    >
-                      <X className="w-3 h-3" />
-                      Cancel
-                    </button>
-                  </div>
+// Virtualized Annotation List Component
+interface VirtualizedAnnotationListProps {
+  annotations: Annotation[];
+  editingId: string | null;
+  editNote: string;
+  setEditingId: (id: string | null) => void;
+  setEditNote: (note: string) => void;
+  updateAnnotation: (id: string, note: string) => Promise<void>;
+  deleteAnnotation: (id: string) => Promise<void>;
+}
+
+function VirtualizedAnnotationList({
+  annotations,
+  editingId,
+  editNote,
+  setEditingId,
+  setEditNote,
+  updateAnnotation,
+  deleteAnnotation,
+}: VirtualizedAnnotationListProps) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: annotations.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 180, // Approximate height of an annotation card
+    overscan: 3, // Render 3 extra items above and below
+  });
+
+  return (
+    <div
+      ref={parentRef}
+      className="space-y-4"
+      style={{ height: '500px', overflow: 'auto' }}
+    >
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const annotation = annotations[virtualItem.index];
+          const categoryInfo = ANNOTATION_CATEGORIES.find((c) => c.value === annotation.category);
+          const categoryColor = categoryInfo?.color || 'gray';
+
+          return (
+            <div
+              key={virtualItem.key}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${virtualItem.size}px`,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+              className="mb-4"
+            >
+              <div className="p-4 bg-zinc-800/30 border border-amber-900/10 rounded-lg space-y-2">
+                {/* Category Badge */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      categoryColor === 'red' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                      categoryColor === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                      categoryColor === 'yellow' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                      categoryColor === 'purple' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                      categoryColor === 'green' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                      categoryColor === 'orange' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
+                      'bg-zinc-700/50 text-zinc-400 border border-zinc-600/20'
+                    }`}
+                  >
+                    {categoryInfo?.label}
+                  </span>
                 </div>
-              ) : annotation.note ? (
-                <div className="flex items-start gap-2">
-                  <MessageSquare className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-amber-100/70 flex-1">
-                    {annotation.note}
+                
+                {/* Quoted Text */}
+                <div className="pl-3 border-l-2 border-amber-600/50">
+                  <p className="text-sm text-amber-100/90 italic">
+                    "{annotation.quote}"
                   </p>
                 </div>
-              ) : null}
 
-              {/* Actions & Date */}
-              <div className="flex items-center justify-between pt-2 border-t border-amber-900/10">
-                <span className="text-xs text-amber-100/40">
-                  {formatDate(annotation.created_at)}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingId(annotation.id);
-                      setEditNote(annotation.note || '');
-                    }}
-                    className="text-amber-400 hover:text-amber-300 transition-colors"
-                    title="Edit note"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => deleteAnnotation(annotation.id)}
-                    className="text-red-400 hover:text-red-300 transition-colors"
-                    title="Delete annotation"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                {/* Note */}
+                {editingId === annotation.id ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editNote}
+                      onChange={(e) => setEditNote(e.target.value)}
+                      className="w-full px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-md text-amber-100 text-sm resize-none"
+                      rows={2}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => updateAnnotation(annotation.id, editNote)}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium flex items-center gap-1"
+                      >
+                        <Save className="w-3 h-3" />
+                        Save
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditNote('');
+                        }}
+                        className="px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-amber-100 rounded text-xs font-medium flex items-center gap-1"
+                      >
+                        <X className="w-3 h-3" />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : annotation.note ? (
+                  <div className="flex items-start gap-2">
+                    <MessageSquare className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-amber-100/70 flex-1">
+                      {annotation.note}
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Actions & Date */}
+                <div className="flex items-center justify-between pt-2 border-t border-amber-900/10">
+                  <span className="text-xs text-amber-100/40">
+                    {formatDate(annotation.created_at)}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingId(annotation.id);
+                        setEditNote(annotation.note || '');
+                      }}
+                      className="text-amber-400 hover:text-amber-300 transition-colors"
+                      title="Edit note"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => deleteAnnotation(annotation.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                      title="Delete annotation"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           );
         })}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
