@@ -81,6 +81,8 @@ interface Chapter {
   id: string;
   title: string;
   content: string;
+  volume?: 'science' | 'religion';
+  titleGenerated?: boolean;
 }
 
 interface TextDocument {
@@ -393,6 +395,8 @@ export default function DocumentDetailPage() {
       id: chapter.id,
       title: chapter.title.replace(/^Chapter\s+[IVX]+:\s*/i, '').trim() || `Chapter ${index + 1}`,
       level: 1,
+      volume: chapter.volume, // Preserve volume information
+      titleGenerated: chapter.titleGenerated, // Preserve AI generation flag
     }));
   }, []);
 
@@ -569,6 +573,42 @@ export default function DocumentDetailPage() {
 
     extractTOC();
   }, [document, htmlUrl, pdfUrl, extractStructuredTextTOC, extractHTMLTOC, extractPDFTOC]);
+
+  // Handle TOC items update (when admin saves chapter names)
+  const handleTOCItemsUpdate = useCallback((updatedItems: TOCItem[]) => {
+    // Update the sidebar TOC items
+    setTocItems(updatedItems);
+    
+    // If admin saved, update the document metadata to reflect saved changes
+    if (isAdmin && document?.metadata?.isStructuredText && document.metadata.chapters) {
+      const updatedChapters = document.metadata.chapters.map((chapter) => {
+        const updatedItem = updatedItems.find(item => item.id === chapter.id);
+        if (updatedItem) {
+          return {
+            ...chapter,
+            title: updatedItem.title,
+            volume: updatedItem.volume || chapter.volume,
+            titleGenerated: updatedItem.titleGenerated || false,
+          };
+        }
+        return chapter;
+      });
+      
+      // Update document with saved chapter titles
+      setDocument({
+        ...document,
+        metadata: {
+          ...document.metadata,
+          chapters: updatedChapters,
+        },
+      });
+      
+      // Refresh the document to get the latest from database (with a small delay to avoid race conditions)
+      setTimeout(() => {
+        fetchDocument();
+      }, 500);
+    }
+  }, [isAdmin, document, fetchDocument]);
 
   // Handle TOC item click
   const handleTOCItemClick = useCallback((item: TOCItem) => {
@@ -1022,6 +1062,11 @@ export default function DocumentDetailPage() {
               items={tocItems}
               activeItemId={activeTOCItemId}
               onItemClick={handleTOCItemClick}
+              chapters={document?.metadata?.isStructuredText ? document.metadata.chapters : undefined}
+              documentTitle={document?.title}
+              textId={documentId}
+              isAdmin={isAdmin}
+              onItemsUpdate={handleTOCItemsUpdate}
             />
             
             <CollectionsPanel textId={documentId} />

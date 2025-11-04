@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Globe, 
   Loader2, 
@@ -52,6 +52,10 @@ export default function ImportSacredTextPage() {
   const [importedTextId, setImportedTextId] = useState<string | null>(null);
   const [aiEnhanced, setAiEnhanced] = useState(false);
   const [importWarning, setImportWarning] = useState<string | null>(null);
+  
+  // Progress state
+  const [progress, setProgress] = useState(0);
+  const [progressStage, setProgressStage] = useState<string>('');
 
   const validateUrl = (urlString: string): boolean => {
     try {
@@ -62,6 +66,60 @@ export default function ImportSacredTextPage() {
       return false;
     }
   };
+
+  // Simulate progress during import
+  useEffect(() => {
+    if (status !== 'importing') {
+      setProgress(0);
+      setProgressStage('');
+      return;
+    }
+
+    // Reset progress
+    setProgress(0);
+    setProgressStage('Validating URL...');
+
+    // Stage 1: Validating (0-10%)
+    const stage1 = setTimeout(() => {
+      setProgress(10);
+      setProgressStage('Parsing web content...');
+    }, 300);
+
+    // Stage 2: Parsing (10-40%)
+    const stage2 = setTimeout(() => {
+      setProgress(40);
+      setProgressStage('Extracting chapters...');
+    }, 1500);
+
+    // Stage 3: Extracting (40-60%)
+    const stage3 = setTimeout(() => {
+      setProgress(60);
+      if (useAI) {
+        setProgressStage('Analyzing with AI...');
+      } else {
+        setProgressStage('Preparing metadata...');
+      }
+    }, 2500);
+
+    // Stage 4: AI Analysis or Metadata (60-90%)
+    const stage4 = setTimeout(() => {
+      setProgress(90);
+      setProgressStage('Saving to database...');
+    }, useAI ? 6000 : 3500);
+
+    // Stage 5: Finalizing (90-95%, will complete when API returns)
+    const stage5 = setTimeout(() => {
+      setProgress(95);
+    }, useAI ? 8000 : 4000);
+
+    return () => {
+      clearTimeout(stage1);
+      clearTimeout(stage2);
+      clearTimeout(stage3);
+      clearTimeout(stage4);
+      clearTimeout(stage5);
+    };
+  }, [status, useAI]);
 
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +199,8 @@ export default function ImportSacredTextPage() {
       }
 
       // Success!
+      setProgress(100);
+      setProgressStage('Complete!');
       setStatus('success');
       setImportedTextId(data.textId);
       setAiEnhanced(data.aiEnhanced || false);
@@ -155,6 +215,8 @@ export default function ImportSacredTextPage() {
 
     } catch (err) {
       console.error('Import error:', err);
+      setProgress(0);
+      setProgressStage('');
       setStatus('error');
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     }
@@ -170,6 +232,8 @@ export default function ImportSacredTextPage() {
     setImportedTextId(null);
     setAiEnhanced(false);
     setImportWarning(null);
+    setProgress(0);
+    setProgressStage('');
     setTitle('');
     setAuthor('');
     setYear('');
@@ -359,6 +423,26 @@ export default function ImportSacredTextPage() {
                 </div>
               </div>
 
+              {/* Progress Bar */}
+              {status === 'importing' && (
+                <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-amber-100">
+                      {progressStage}
+                    </span>
+                    <span className="text-sm text-amber-100/60">
+                      {Math.round(progress)}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-600 to-amber-500 transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Submit Button */}
               <div className="flex items-center justify-between">
                 <Link
@@ -377,7 +461,7 @@ export default function ImportSacredTextPage() {
                   {status === 'importing' ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      {useAI ? 'Importing and analyzing...' : 'Importing...'}
+                      Importing...
                     </>
                   ) : (
                     <>

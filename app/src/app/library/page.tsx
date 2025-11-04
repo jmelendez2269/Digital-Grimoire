@@ -504,7 +504,7 @@ export default function LibraryPage() {
                         <span className="font-medium">Lenses</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {text.lenses.slice(0, 2).map((lens) => (
+                        {text.lenses.map((lens) => (
                           <span
                             key={lens}
                             className="px-1.5 py-0.5 bg-zinc-800/50 border border-amber-900/30 rounded text-xs text-amber-100/70"
@@ -512,11 +512,6 @@ export default function LibraryPage() {
                             {lens.replace(/_/g, ' ')}
                           </span>
                         ))}
-                        {text.lenses.length > 2 && (
-                          <span className="px-1.5 py-0.5 text-xs text-amber-100/50">
-                            +{text.lenses.length - 2}
-                          </span>
-                        )}
                       </div>
                     </div>
                   )}
@@ -529,19 +524,14 @@ export default function LibraryPage() {
                         <span className="font-medium">Tags</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {text.tags.slice(0, 2).map((tag) => (
+                        {text.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="px-1.5 py-0.5 bg-zinc-800/50 border border-zinc-700/50 rounded text-xs text-amber-100/60"
+                            className="px-1.5 py-0.5 bg-zinc-800/50 border border-amber-900/30 rounded text-xs text-amber-100/70"
                           >
                             {tag}
                           </span>
                         ))}
-                        {text.tags.length > 2 && (
-                          <span className="px-1.5 py-0.5 text-xs text-amber-100/50">
-                            +{text.tags.length - 2}
-                          </span>
-                        )}
                       </div>
                     </div>
                   )}

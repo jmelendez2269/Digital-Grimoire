@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Tag, Eye, BookOpen, Sparkles, Crop } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Image as ImageIcon, FileText, Tag, Eye, BookOpen, Sparkles, Crop, Edit, X } from 'lucide-react';
 import Link from 'next/link';
 import CoverCropModal from '@/components/CoverCropModal';
 
@@ -38,6 +38,13 @@ export default function EditDocumentPage() {
   const [document, setDocument] = useState<DocumentData | null>(null);
 
   // Form state
+  const [isEditingInfo, setIsEditingInfo] = useState(false);
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [year, setYear] = useState<number | null>(null);
+  const [originalTitle, setOriginalTitle] = useState('');
+  const [originalAuthor, setOriginalAuthor] = useState('');
+  const [originalYear, setOriginalYear] = useState<number | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [coverPosition, setCoverPosition] = useState('center');
   const [curatorNote, setCuratorNote] = useState('');
@@ -46,6 +53,9 @@ export default function EditDocumentPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [lenses, setLenses] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
+  const [generatingCuratorNote, setGeneratingCuratorNote] = useState(false);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
+  const [generatingDomain, setGeneratingDomain] = useState(false);
 
   const availableLenses = [
     'scientific',
@@ -80,6 +90,15 @@ export default function EditDocumentPage() {
       if (!data) throw new Error('Document not found');
 
       setDocument(data);
+      const titleValue = data.title || '';
+      const authorValue = data.author || '';
+      const yearValue = data.year || null;
+      setTitle(titleValue);
+      setAuthor(authorValue);
+      setYear(yearValue);
+      setOriginalTitle(titleValue);
+      setOriginalAuthor(authorValue);
+      setOriginalYear(yearValue);
       setCoverImageUrl(data.cover_image_url || '');
       setCoverPosition(data.metadata?.cover_position || 'center');
       setCuratorNote(data.curator_note || '');
@@ -111,6 +130,9 @@ export default function EditDocumentPage() {
       const { error: updateError } = await supabase
         .from('texts')
         .update({
+          title: title.trim() || null,
+          author: author.trim() || null,
+          year: year || null,
           cover_image_url: coverImageUrl || null,
           curator_note: curatorNote || null,
           short_summary: shortSummary || null,
@@ -123,6 +145,32 @@ export default function EditDocumentPage() {
 
       if (updateError) throw updateError;
 
+      // Update document state to reflect changes
+      if (document) {
+        const updatedTitle = title.trim() || '';
+        const updatedAuthor = author.trim() || null;
+        const updatedYear = year || null;
+        setDocument({
+          ...document,
+          title: updatedTitle,
+          author: updatedAuthor,
+          year: updatedYear,
+          cover_image_url: coverImageUrl || null,
+          curator_note: curatorNote || null,
+          short_summary: shortSummary || null,
+          domain: domain || null,
+          tags,
+          lenses,
+          metadata: updatedMetadata,
+        });
+        // Update original values if info was edited
+        setOriginalTitle(updatedTitle);
+        setOriginalAuthor(updatedAuthor);
+        setOriginalYear(updatedYear);
+        // Exit edit mode if it was active
+        setIsEditingInfo(false);
+      }
+
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
@@ -134,7 +182,7 @@ export default function EditDocumentPage() {
   };
 
   const handleScrapeCover = async () => {
-    if (!document || !document.title || !document.author) {
+    if (!title.trim() || !author.trim()) {
       setError('Title and author are required to scrape cover');
       return;
     }
@@ -148,8 +196,8 @@ export default function EditDocumentPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           textId: documentId,
-          title: document.title,
-          author: document.author,
+          title: title.trim(),
+          author: author.trim(),
         }),
       });
 
@@ -254,6 +302,67 @@ export default function EditDocumentPage() {
     }
   };
 
+  const handleStartEditInfo = () => {
+    setIsEditingInfo(true);
+  };
+
+  const handleCancelEditInfo = () => {
+    // Restore original values
+    setTitle(originalTitle);
+    setAuthor(originalAuthor);
+    setYear(originalYear);
+    setIsEditingInfo(false);
+  };
+
+  const handleSaveInfo = async () => {
+    if (!title.trim()) {
+      setError('Title is required');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(false);
+
+      const { error: updateError } = await supabase
+        .from('texts')
+        .update({
+          title: title.trim() || null,
+          author: author.trim() || null,
+          year: year || null,
+        })
+        .eq('id', documentId);
+
+      if (updateError) throw updateError;
+
+      // Update document state and original values
+      if (document) {
+        const updatedTitle = title.trim() || '';
+        const updatedAuthor = author.trim() || null;
+        const updatedYear = year || null;
+        setDocument({
+          ...document,
+          title: updatedTitle,
+          author: updatedAuthor,
+          year: updatedYear,
+        });
+        setOriginalTitle(updatedTitle);
+        setOriginalAuthor(updatedAuthor);
+        setOriginalYear(updatedYear);
+      }
+
+      setIsEditingInfo(false);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error updating document info:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update document info');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 text-amber-50">
@@ -319,22 +428,110 @@ export default function EditDocumentPage() {
           </div>
         )}
 
-        {/* Document Info */}
+        {/* Document Info - Title and Author */}
         {document && (
           <div className="mb-6 bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-            <div className="flex items-start gap-4">
-              <BookOpen className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold text-amber-100 mb-1">
-                  {document.title}
-                </h2>
-                {document.author && (
-                  <p className="text-sm text-amber-100/60">
-                    by {document.author} {document.year && `(${document.year})`}
-                  </p>
-                )}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-amber-600" />
+                <h3 className="text-lg font-semibold text-amber-100">Document Information</h3>
               </div>
+              {!isEditingInfo && (
+                <button
+                  onClick={handleStartEditInfo}
+                  className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-amber-900/30 hover:border-amber-600/50 rounded-lg text-amber-100 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                  <span className="text-sm">Edit</span>
+                </button>
+              )}
             </div>
+            
+            {isEditingInfo ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-amber-100/80 mb-2">
+                    Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter document title"
+                    className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-amber-100/80 mb-2">
+                      Author
+                    </label>
+                    <input
+                      type="text"
+                      value={author}
+                      onChange={(e) => setAuthor(e.target.value)}
+                      placeholder="Enter author name"
+                      className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-amber-100/80 mb-2">
+                      Year
+                    </label>
+                    <input
+                      type="number"
+                      value={year || ''}
+                      onChange={(e) => setYear(e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="e.g., 1877"
+                      min="0"
+                      max="9999"
+                      className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={handleCancelEditInfo}
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-amber-900/30 hover:border-amber-600/50 rounded-lg text-amber-100 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Cancel</span>
+                  </button>
+                  <button
+                    onClick={handleSaveInfo}
+                    disabled={!title.trim() || saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        <span>Save Info</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div>
+                  <h2 className="text-xl font-semibold text-amber-100 mb-1">
+                    {title || 'Untitled'}
+                  </h2>
+                  {(author || year) && (
+                    <p className="text-sm text-amber-100/60">
+                      {author && `by ${author}`}
+                      {year && ` (${year})`}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -363,9 +560,9 @@ export default function EditDocumentPage() {
                 <div className="flex items-end">
                   <button
                     onClick={handleScrapeCover}
-                    disabled={scrapingCover || !document?.author}
+                    disabled={scrapingCover || !author.trim()}
                     className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
-                    title={!document?.author ? 'Author required to scrape cover' : 'Automatically find cover from Open Library, Internet Archive, or Google Books'}
+                    title={!author.trim() ? 'Author required to scrape cover' : 'Automatically find cover from Open Library, Internet Archive, or Google Books'}
                   >
                     {scrapingCover ? (
                       <>
@@ -442,9 +639,56 @@ export default function EditDocumentPage() {
 
           {/* Curator Note */}
           <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="w-5 h-5 text-amber-600" />
-              <h3 className="text-lg font-semibold text-amber-100">Curator's Note</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-amber-600" />
+                <h3 className="text-lg font-semibold text-amber-100">Curator's Note</h3>
+              </div>
+              {!curatorNote && (
+                <button
+                  onClick={async () => {
+                    setGeneratingCuratorNote(true);
+                    try {
+                      const response = await fetch('/api/documents/generate-metadata', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          textId: documentId,
+                          field: 'curatorNote',
+                        }),
+                      });
+                      
+                      if (!response.ok) {
+                        const error = await response.json().catch(() => ({}));
+                        throw new Error(error.error || 'Failed to generate curator note');
+                      }
+                      
+                      const data = await response.json();
+                      setCuratorNote(data.text);
+                    } catch (error: any) {
+                      console.error('Error generating curator note:', error);
+                      alert(`Failed to generate curator note: ${error.message}`);
+                    } finally {
+                      setGeneratingCuratorNote(false);
+                    }
+                  }}
+                  disabled={generatingCuratorNote}
+                  className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  title="Generate curator note using AI"
+                >
+                  {generatingCuratorNote ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Generate
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <div>
               <label className="block text-sm text-amber-100/80 mb-2">
@@ -465,9 +709,56 @@ export default function EditDocumentPage() {
 
           {/* Short Summary */}
           <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="w-5 h-5 text-amber-600" />
-              <h3 className="text-lg font-semibold text-amber-100">Brief Summary</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-amber-600" />
+                <h3 className="text-lg font-semibold text-amber-100">Brief Summary</h3>
+              </div>
+              {!shortSummary && (
+                <button
+                  onClick={async () => {
+                    setGeneratingSummary(true);
+                    try {
+                      const response = await fetch('/api/documents/generate-metadata', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          textId: documentId,
+                          field: 'shortSummary',
+                        }),
+                      });
+                      
+                      if (!response.ok) {
+                        const error = await response.json().catch(() => ({}));
+                        throw new Error(error.error || 'Failed to generate summary');
+                      }
+                      
+                      const data = await response.json();
+                      setShortSummary(data.text);
+                    } catch (error: any) {
+                      console.error('Error generating summary:', error);
+                      alert(`Failed to generate summary: ${error.message}`);
+                    } finally {
+                      setGeneratingSummary(false);
+                    }
+                  }}
+                  disabled={generatingSummary}
+                  className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  title="Generate brief summary using AI"
+                >
+                  {generatingSummary ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Generate
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <div>
               <label className="block text-sm text-amber-100/80 mb-2">
@@ -485,9 +776,56 @@ export default function EditDocumentPage() {
 
           {/* Domain */}
           <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen className="w-5 h-5 text-amber-600" />
-              <h3 className="text-lg font-semibold text-amber-100">Domain</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-amber-600" />
+                <h3 className="text-lg font-semibold text-amber-100">Domain</h3>
+              </div>
+              {!domain && (
+                <button
+                  onClick={async () => {
+                    setGeneratingDomain(true);
+                    try {
+                      const response = await fetch('/api/documents/generate-metadata', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          textId: documentId,
+                          field: 'domain',
+                        }),
+                      });
+                      
+                      if (!response.ok) {
+                        const error = await response.json().catch(() => ({}));
+                        throw new Error(error.error || 'Failed to generate domain');
+                      }
+                      
+                      const data = await response.json();
+                      setDomain(data.text);
+                    } catch (error: any) {
+                      console.error('Error generating domain:', error);
+                      alert(`Failed to generate domain: ${error.message}`);
+                    } finally {
+                      setGeneratingDomain(false);
+                    }
+                  }}
+                  disabled={generatingDomain}
+                  className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  title="Generate domain using AI"
+                >
+                  {generatingDomain ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Generate
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <div>
               <label className="block text-sm text-amber-100/80 mb-2">

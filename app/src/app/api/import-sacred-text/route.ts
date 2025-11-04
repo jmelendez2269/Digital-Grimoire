@@ -105,7 +105,9 @@ export async function POST(request: Request) {
       tags: manualMetadata?.tags?.length ? manualMetadata.tags : (aiMetadata?.tags || []),
       lenses: manualMetadata?.lenses?.length ? manualMetadata.lenses : (aiMetadata?.lenses || []),
       summary: manualMetadata?.summary || aiMetadata?.shortSummary || parsedText.metadata.description,
+      shortSummary: manualMetadata?.summary || aiMetadata?.shortSummary || parsedText.metadata.description,
       longSummary: aiMetadata?.longSummary || null,
+      curatorNote: aiMetadata?.curatorNote || null,
     };
 
     // Prepare text record for database
@@ -119,6 +121,8 @@ export async function POST(request: Request) {
       tags: finalMetadata.tags,
       lenses: finalMetadata.lenses,
       summary: finalMetadata.summary,
+      short_summary: finalMetadata.shortSummary || null,
+      curator_note: finalMetadata.curatorNote || null,
       status: 'ready',
       content: null, // We store content in metadata.chapters
       s3_key: null, // No S3 storage for web-imported texts

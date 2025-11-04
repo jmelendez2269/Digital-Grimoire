@@ -14,6 +14,8 @@ interface Chapter {
   id: string;
   title: string;
   content: string;
+  volume?: 'science' | 'religion';
+  titleGenerated?: boolean;
 }
 
 interface Annotation {
