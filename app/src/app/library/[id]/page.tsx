@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { 
@@ -13,7 +13,9 @@ import {
   FileText,
   Loader2,
   AlertCircle,
-  Highlighter
+  Highlighter,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
@@ -21,6 +23,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TableOfContents, { TOCItem } from '@/components/TableOfContents';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
+import { useAuth } from '@/contexts/AuthContext';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
@@ -112,7 +115,9 @@ interface TextDocument {
 export default function DocumentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const documentId = params.id as string;
+  const { isAdmin } = useAuth();
 
   const [document, setDocument] = useState<TextDocument | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -132,6 +137,14 @@ export default function DocumentDetailPage() {
   const [tocItems, setTocItems] = useState<TOCItem[]>([]);
   const [activeTOCItemId, setActiveTOCItemId] = useState<string | undefined>(undefined);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
+
+  // Chunk navigation state
+  const [targetChunkId, setTargetChunkId] = useState<string | null>(null);
+  const [targetChunkIndex, setTargetChunkIndex] = useState<number | null>(null);
+  const [chunkContent, setChunkContent] = useState<string | null>(null);
+  const [reimporting, setReimporting] = useState(false);
+  const [reimportError, setReimportError] = useState<string | null>(null);
+  const [reimportSuccess, setReimportSuccess] = useState(false);
 
   const fetchDocument = useCallback(async () => {
     if (!documentId) return;
@@ -223,6 +236,61 @@ export default function DocumentDetailPage() {
     }
   }, [documentId, fetchDocument]);
 
+  // Handle chunk navigation from URL params
+  useEffect(() => {
+    const chunkParam = searchParams.get('chunk');
+    const chunkIndexParam = searchParams.get('chunkIndex');
+    
+    if (chunkParam) {
+      setTargetChunkId(chunkParam);
+      fetchChunkContent(chunkParam);
+    } else if (chunkIndexParam) {
+      const index = parseInt(chunkIndexParam, 10);
+      if (!isNaN(index)) {
+        setTargetChunkIndex(index);
+        // For structured text, try to match chunk index to chapter
+        if (document?.metadata?.isStructuredText && document.metadata.chapters) {
+          // Approximate: chunk index might correspond to chapter index
+          // This is a heuristic - actual mapping would require chunk-to-chapter mapping
+          const chapterIndex = Math.min(index, document.metadata.chapters.length - 1);
+          if (chapterIndex >= 0) {
+            setActiveChapterId(document.metadata.chapters[chapterIndex].id);
+          }
+        }
+      }
+    }
+  }, [searchParams, document]);
+
+  // Fetch chunk content by chunk ID
+  const fetchChunkContent = useCallback(async (chunkId: string) => {
+    try {
+      const response = await fetch(`/api/convergence/chunk/${chunkId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setChunkContent(data.chunk.content);
+        
+        // For structured text, try to find matching chapter
+        if (document?.metadata?.isStructuredText && document.metadata.chapters) {
+          // Search for chunk content in chapters
+          const matchingChapter = document.metadata.chapters.find(ch => 
+            ch.content.includes(data.chunk.content.substring(0, 100))
+          );
+          if (matchingChapter) {
+            setActiveChapterId(matchingChapter.id);
+          } else if (data.chunk.chunk_index !== undefined) {
+            // Fallback: use chunk index as chapter index approximation
+            const chapterIndex = Math.min(data.chunk.chunk_index, document.metadata.chapters.length - 1);
+            if (chapterIndex >= 0) {
+              setActiveChapterId(document.metadata.chapters[chapterIndex].id);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching chunk content:', error);
+    }
+  }, [document]);
+
   // Refetch annotations when trigger changes
   useEffect(() => {
     if (documentId && annotationsRefreshTrigger > 0) {
@@ -260,6 +328,45 @@ export default function DocumentDetailPage() {
     setSelectedText(null);
     setSelectedPosition(null);
   }, []);
+
+  // Handle re-import content
+  const handleReimport = async () => {
+    if (!documentId || !document) return;
+    
+    setReimporting(true);
+    setReimportError(null);
+    setReimportSuccess(false);
+    
+    try {
+      const response = await fetch('/api/reimport-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ textId: documentId }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to re-import content');
+      }
+      
+      const data = await response.json();
+      setReimportSuccess(true);
+      
+      // Refresh the document to show new content
+      setTimeout(() => {
+        fetchDocument();
+        setReimportSuccess(false);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error re-importing content:', error);
+      setReimportError(error instanceof Error ? error.message : 'Failed to re-import content');
+    } finally {
+      setReimporting(false);
+    }
+  };
 
   // Handle annotation added
   const handleAnnotationAdded = useCallback(() => {
@@ -592,6 +699,17 @@ export default function DocumentDetailPage() {
             </Link>
 
             <div className="flex items-center gap-3">
+              {isAdmin && document.metadata?.isStructuredText && document.metadata?.sourceUrl && (
+                <button
+                  onClick={handleReimport}
+                  disabled={reimporting}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-600/20 text-amber-300 border border-amber-600/30 hover:bg-amber-600/30 hover:border-amber-600/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Re-fetch content from source URL"
+                >
+                  <RefreshCw className={`w-4 h-4 ${reimporting ? 'animate-spin' : ''}`} />
+                  {reimporting ? 'Re-importing...' : 'Re-import Content'}
+                </button>
+              )}
               <BookmarkButton textId={documentId} size="md" showLabel />
               <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                 document.status === 'ready' 
@@ -608,6 +726,19 @@ export default function DocumentDetailPage() {
           <h1 className="text-2xl font-bold text-amber-100 mb-2">
             {document.title}
           </h1>
+
+          {/* Re-import status messages */}
+          {reimportSuccess && (
+            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm">
+              Content successfully re-imported! The page will refresh shortly.
+            </div>
+          )}
+          {reimportError && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {reimportError}
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex gap-2 mt-4">
@@ -655,6 +786,42 @@ export default function DocumentDetailPage() {
           <div className="lg:col-span-2">
             {activeTab === 'viewer' && (
               <div className="h-[calc(100vh-250px)]">
+                {/* Chunk Navigation Indicator */}
+                {(targetChunkId || targetChunkIndex !== null) && (
+                  <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Sparkles className="w-4 h-4 text-purple-400" />
+                          <span className="text-sm font-medium text-purple-300">
+                            Viewing section from Convergence Machine
+                          </span>
+                        </div>
+                        {targetChunkIndex !== null && (
+                          <p className="text-xs text-amber-100/70">
+                            Section {targetChunkIndex + 1}
+                          </p>
+                        )}
+                        {chunkContent && (
+                          <p className="text-xs text-amber-100/60 mt-2 line-clamp-2">
+                            {chunkContent.substring(0, 150)}...
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setTargetChunkId(null);
+                          setTargetChunkIndex(null);
+                          setChunkContent(null);
+                          router.replace(`/library/${documentId}`, { scroll: false });
+                        }}
+                        className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {/* Show ChapterViewer for structured text documents */}
                 {document.metadata?.isStructuredText && document.metadata.chapters ? (
                   <ChapterViewer 

@@ -359,6 +359,35 @@ export default function ImportSacredTextPage() {
                 </div>
               </div>
 
+              {/* Submit Button */}
+              <div className="flex items-center justify-between">
+                <Link
+                  href="/admin"
+                  className="text-amber-100/60 hover:text-amber-100 transition-colors"
+                >
+                  ← Back to Admin
+                </Link>
+
+                <button
+                  type="submit"
+                  disabled={status === 'importing' || !url || url.trim() === ''}
+                  className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  aria-label={!url || url.trim() === '' ? 'Enter a URL to enable import' : 'Import text from sacred-texts.com'}
+                >
+                  {status === 'importing' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      {useAI ? 'Importing and analyzing...' : 'Importing...'}
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-5 h-5" />
+                      Import Text
+                    </>
+                  )}
+                </button>
+              </div>
+
               {/* Metadata Overrides */}
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <h2 className="text-xl font-semibold text-amber-100 mb-4 flex items-center gap-2">
@@ -526,35 +555,6 @@ export default function ImportSacredTextPage() {
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex items-center justify-between">
-                <Link
-                  href="/admin"
-                  className="text-amber-100/60 hover:text-amber-100 transition-colors"
-                >
-                  ← Back to Admin
-                </Link>
-
-                <button
-                  type="submit"
-                  disabled={status === 'importing' || !url || url.trim() === ''}
-                  className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                  aria-label={!url || url.trim() === '' ? 'Enter a URL to enable import' : 'Import text from sacred-texts.com'}
-                >
-                  {status === 'importing' ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      {useAI ? 'Importing and analyzing...' : 'Importing...'}
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-5 h-5" />
-                      Import Text
-                    </>
-                  )}
-                </button>
               </div>
             </form>
 

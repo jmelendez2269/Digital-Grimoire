@@ -71,6 +71,16 @@ export default function Header() {
             📝 Journal
           </Link>
           <Link
+            href="/convergence-machine"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/convergence-machine")
+                ? "text-amber-400"
+                : "text-zinc-400 hover:text-amber-300"
+            }`}
+          >
+            ⚡ Convergence Machine
+          </Link>
+          <Link
             href="/correspondences"
             className={`text-sm font-medium transition-colors ${
               isActive("/correspondences")

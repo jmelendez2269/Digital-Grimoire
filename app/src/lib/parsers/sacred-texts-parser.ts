@@ -95,11 +95,30 @@ export async function parseSacredText(
       metadata = await extractMetadata(url);
       const content = await fetchChapterContent(url, format);
       
-      chapters = [{
-        id: 'chapter-1',
-        title: metadata.title,
-        content: content,
-      }];
+      console.log(`[parseSacredText] Single page - extracted content length: ${content.length}`);
+      console.log(`[parseSacredText] First 200 chars: ${content.substring(0, 200)}`);
+      
+      // If content is very short or empty, try to extract sections from the page
+      if (!content || content.trim().length < 100) {
+        console.log('[parseSacredText] Content is too short, trying to extract sections...');
+        const sections = await extractSectionsFromPage(url, format);
+        if (sections.length > 0) {
+          chapters = sections;
+          console.log(`[parseSacredText] Extracted ${sections.length} sections instead`);
+        } else {
+          chapters = [{
+            id: 'chapter-1',
+            title: metadata.title,
+            content: content,
+          }];
+        }
+      } else {
+        chapters = [{
+          id: 'chapter-1',
+          title: metadata.title,
+          content: content,
+        }];
+      }
     }
 
     // Calculate total length
@@ -195,23 +214,57 @@ export async function fetchChapterContent(
     const $ = cheerio.load(html);
 
     // Remove unwanted elements (navigation, ads, etc.)
-    $('script, style, noscript, iframe, header, footer, nav').remove();
+    $('script, style, noscript, iframe, header, footer').remove();
     
-    // Remove common navigation elements
-    $('a[href*="index.htm"]').parent().remove();
+    // Remove navigation elements more carefully
+    // First, identify and remove navigation centers/tables
+    $('center').each((_, el) => {
+      const $el = $(el);
+      const text = $el.text().toLowerCase();
+      // Check if this center element contains navigation
+      if (text.includes('previous') && text.includes('next') || 
+          text.includes('index') && (text.includes('previous') || text.includes('next')) ||
+          text.includes('sacred-texts') && text.includes('esoteric')) {
+        $el.remove();
+      }
+    });
+    
+    // Remove navigation tables
+    $('table').each((_, el) => {
+      const $el = $(el);
+      const text = $el.text().toLowerCase();
+      if (text.includes('previous') && text.includes('next') && text.includes('index')) {
+        $el.remove();
+      }
+    });
+    
+    // Remove navigation links but keep content links
+    $('a[href*="index.htm"]').each((_, el) => {
+      const $el = $(el);
+      const text = $el.text().toLowerCase();
+      if (text === 'index' || text.includes('contents')) {
+        $el.parent().filter('center, p, td').remove();
+      }
+    });
+    
     $('hr').remove();
     
     // Try to find the main content
-    // Sacred-texts.com usually has content in the body or a specific container
+    // Sacred-texts.com uses various structures: direct body children, center tags, divs, etc.
     let contentHtml = '';
     
     // Try different content selectors in order of preference
     // We want to preserve the full structure with headings, paragraphs, lists, etc.
     const contentSelectors = [
-      'body > h1, body > h2, body > h3, body > h4, body > p, body > blockquote, body > ul, body > ol, body > pre, body > table',
+      // Direct body children (most common)
+      'body > h1, body > h2, body > h3, body > h4, body > h5, body > h6, body > p, body > blockquote, body > ul, body > ol, body > pre, body > table, body > div',
+      // Content in center tags (sacred-texts.com often uses center for main content)
+      'body > center > h1, body > center > h2, body > center > h3, body > center > h4, body > center > p, body > center > blockquote, body > center > ul, body > center > ol, body > center > pre, body > center > table, body > center > div',
+      // Just paragraphs
       'body > p',
       '#content > *',
       'main > *',
+      // All body children (including center)
       'body > *',
     ];
 
@@ -221,15 +274,30 @@ export async function fetchChapterContent(
         // Preserve the structure by keeping all block elements
         contentHtml = elements
           .map((_, el) => {
-            const tagName = $(el).prop('tagName')?.toLowerCase();
+            const $el = $(el);
+            const tagName = $el.prop('tagName')?.toLowerCase();
+            const text = $el.text().toLowerCase();
+            
+            // Skip navigation elements
+            if (text.includes('previous') && text.includes('next') && text.includes('index')) {
+              return '';
+            }
+            if (text.includes('sacred-texts') && text.includes('esoteric') && text.length < 50) {
+              return '';
+            }
+            
             // Only include block-level elements and inline elements that are part of formatting
-            if (tagName && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span', 'strong', 'em', 'i', 'b', 'a', 'br'].includes(tagName)) {
+            if (tagName && ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span', 'strong', 'em', 'i', 'b', 'a', 'br', 'center'].includes(tagName)) {
+              // For center tags, extract their content
+              if (tagName === 'center') {
+                return $el.html() || '';
+              }
               return $.html(el);
             }
             return '';
           })
           .get()
-          .filter(html => html.trim().length > 0)
+          .filter(html => html && html.trim().length > 0)
           .join('\n');
         
         if (contentHtml.trim().length > 100) break;
@@ -244,9 +312,36 @@ export async function fetchChapterContent(
         const $body = cheerio.load(bodyContent);
         // Remove navigation, ads, etc.
         $body('script, style, noscript, iframe, nav, header, footer, .nav, .navigation, .ad, .advertisement').remove();
-        contentHtml = $body.html() || '';
+        
+        // Remove navigation centers
+        $body('center').each((_, el) => {
+          const $el = $body(el);
+          const text = $el.text().toLowerCase();
+          if (text.includes('previous') && text.includes('next') || 
+              text.includes('index') && (text.includes('previous') || text.includes('next'))) {
+            $el.remove();
+          }
+        });
+        
+        // Try to get content more aggressively - look for any text content
+        const textContent = $body('body').text() || $body.text();
+        if (textContent && textContent.trim().length > 100) {
+          // If we have text but no HTML structure, try to reconstruct it
+          // Split by double line breaks and wrap in paragraphs
+          const paragraphs = textContent
+            .split(/\n\n+/)
+            .filter(p => p.trim().length > 10)
+            .map(p => `<p>${p.trim().replace(/\n/g, ' ')}</p>`)
+            .join('\n');
+          contentHtml = paragraphs;
+          console.log(`[fetchChapterContent] Fallback: Created ${paragraphs.split('</p>').length - 1} paragraphs from text`);
+        } else {
+          contentHtml = $body.html() || '';
+        }
       }
     }
+    
+    console.log(`[fetchChapterContent] Final content length: ${contentHtml.trim().length}`);
 
     // Clean and format based on desired output format
     if (format === 'html') {
@@ -342,6 +437,7 @@ export function cleanHtml(html: string): string {
   const purify = DOMPurify(window as any);
   
   // Sanitize HTML to prevent XSS
+  // Note: We allow 'center' temporarily so we can extract its content, then unwrap it
   const sanitized = purify.sanitize(html, {
     ALLOWED_TAGS: [
       'p', 'br', 'strong', 'em', 'u', 'i', 'b',
@@ -350,13 +446,25 @@ export function cleanHtml(html: string): string {
       'blockquote', 'pre', 'code',
       'a', 'img',
       'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'div', 'span',
+      'div', 'span', 'center',
     ],
     ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class'],
   });
 
   // Additional cleanup and structure improvement
   const $ = cheerio.load(sanitized);
+  
+  // Unwrap center tags - extract their content and replace with div
+  // This preserves content while removing deprecated center tags
+  $('center').each((_, el) => {
+    const $el = $(el);
+    const content = $el.html();
+    if (content) {
+      $el.replaceWith(`<div>${content}</div>`);
+    } else {
+      $el.remove();
+    }
+  });
   
   // Remove empty paragraphs and elements
   $('p:empty, div:empty, span:empty').remove();
@@ -440,6 +548,143 @@ export function htmlToPlaintext(html: string): string {
     .trim();
   
   return text;
+}
+
+/**
+ * Extract sections from a single page that has multiple headings/sections
+ * This is useful for pages like the Emerald Tablet that have multiple major sections
+ */
+async function extractSectionsFromPage(
+  url: string,
+  format: 'html' | 'markdown' | 'plaintext'
+): Promise<Chapter[]> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch page: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Remove unwanted elements
+    $('script, style, noscript, iframe, header, footer, nav').remove();
+    
+    // Remove navigation elements
+    $('center').each((_, el) => {
+      const $el = $(el);
+      const text = $el.text().toLowerCase();
+      if (text.includes('previous') && text.includes('next') || 
+          text.includes('index') && (text.includes('previous') || text.includes('next')) ||
+          text.includes('sacred-texts') && text.includes('esoteric')) {
+        $el.remove();
+      }
+    });
+    
+    $('table').each((_, el) => {
+      const $el = $(el);
+      const text = $el.text().toLowerCase();
+      if (text.includes('previous') && text.includes('next') && text.includes('index')) {
+        $el.remove();
+      }
+    });
+    
+    $('hr').remove();
+
+    const sections: Chapter[] = [];
+    let currentSection: { title: string; content: string[] } | null = null;
+
+    // Find all headings and content between them
+    // Try to find h1, h2, h3, h4, or strong elements that look like section headers
+    const bodyElements = $('body > *').toArray();
+    
+    for (let i = 0; i < bodyElements.length; i++) {
+      const el = bodyElements[i];
+      const $el = $(el);
+      const tagName = $el.prop('tagName')?.toLowerCase();
+      const text = $el.text().trim();
+      
+      // Skip navigation
+      if (text.toLowerCase().includes('previous') && text.toLowerCase().includes('next')) {
+        continue;
+      }
+      
+      // Check if this is a heading or section marker
+      const isHeading = tagName && ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName);
+      const isStrongHeading = tagName === 'strong' && text.length < 100 && text.length > 5;
+      const isBoldHeading = tagName === 'b' && text.length < 100 && text.length > 5;
+      const looksLikeHeading = isHeading || isStrongHeading || isBoldHeading;
+      
+      if (looksLikeHeading && text.length > 0) {
+        // Save previous section
+        if (currentSection && currentSection.content.length > 0) {
+          const sectionContent = currentSection.content.join('\n\n');
+          if (sectionContent.trim().length > 50) {
+            sections.push({
+              id: `section-${sections.length + 1}`,
+              title: currentSection.title,
+              content: format === 'html' 
+                ? cleanHtml(sectionContent)
+                : format === 'markdown'
+                ? htmlToMarkdown(sectionContent)
+                : htmlToPlaintext(sectionContent),
+            });
+          }
+        }
+        
+        // Start new section
+        currentSection = {
+          title: text,
+          content: [],
+        };
+      } else if (currentSection) {
+        // Add content to current section
+        const htmlContent = $.html(el);
+        if (htmlContent && htmlContent.trim().length > 0) {
+          currentSection.content.push(htmlContent);
+        }
+      } else {
+        // Before first section - collect as introduction
+        if (!currentSection) {
+          currentSection = {
+            title: 'Introduction',
+            content: [],
+          };
+        }
+        const htmlContent = $.html(el);
+        if (htmlContent && htmlContent.trim().length > 0) {
+          currentSection.content.push(htmlContent);
+        }
+      }
+    }
+    
+    // Save last section
+    if (currentSection && currentSection.content.length > 0) {
+      const sectionContent = currentSection.content.join('\n\n');
+      if (sectionContent.trim().length > 50) {
+        sections.push({
+          id: `section-${sections.length + 1}`,
+          title: currentSection.title,
+          content: format === 'html' 
+            ? cleanHtml(sectionContent)
+            : format === 'markdown'
+            ? htmlToMarkdown(sectionContent)
+            : htmlToPlaintext(sectionContent),
+        });
+      }
+    }
+
+    // If we found sections, return them; otherwise return empty array
+    if (sections.length > 0) {
+      console.log(`[extractSectionsFromPage] Extracted ${sections.length} sections`);
+      return sections;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error extracting sections from page:', error);
+    return [];
+  }
 }
 
 /**
