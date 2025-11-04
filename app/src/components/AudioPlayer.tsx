@@ -281,7 +281,7 @@ export default function AudioPlayer({
       {!isExpanded && (
         <button
           onClick={() => setIsExpanded(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+          className="fixed bottom-24 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
           aria-label="Open Read Aloud player"
         >
           <Volume className="w-5 h-5" />

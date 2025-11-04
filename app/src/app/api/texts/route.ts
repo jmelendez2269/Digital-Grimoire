@@ -80,34 +80,82 @@ export async function GET(request: Request) {
       }
     }
 
-    // Apply pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    query = query.range(from, to);
-
     // Apply sorting
     const ascending = sortOrder === 'asc';
     const validSortFields = ['title', 'author', 'year', 'created_at', 'domain', 'type'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'created_at';
-    query = query.order(sortField, { ascending, nullsFirst: false });
+    
+    // Special handling for title sorting to ignore articles (a, an, the)
+    if (sortField === 'title') {
+      // Since Supabase order() doesn't support expressions, we'll sort after fetching
+      // Fetch all matching records (without pagination) to sort properly
+      const { data: allData, error: fetchError, count } = await query.select('*', { count: 'exact' });
+      
+      if (fetchError) {
+        console.error('Database error:', fetchError);
+        return NextResponse.json(
+          { error: 'Database error', details: fetchError.message },
+          { status: 500 }
+        );
+      }
+      
+      // Sort by title with articles ignored
+      const sortedData = (allData || []).sort((a, b) => {
+        const stripArticles = (title: string | null): string => {
+          if (!title) return '';
+          const lowerTitle = title.toLowerCase().trim();
+          // Remove leading articles: "a ", "an ", "the "
+          const withoutArticles = lowerTitle.replace(/^(a|an|the)\s+/i, '');
+          return withoutArticles;
+        };
+        
+        const titleA = stripArticles(a.title);
+        const titleB = stripArticles(b.title);
+        
+        if (ascending) {
+          return titleA.localeCompare(titleB);
+        } else {
+          return titleB.localeCompare(titleA);
+        }
+      });
+      
+      // Apply pagination after sorting
+      const from = (page - 1) * limit;
+      const to = from + limit;
+      const paginatedData = sortedData.slice(from, to);
+      
+      return NextResponse.json({
+        texts: paginatedData || [],
+        total: count || 0,
+        page,
+        limit,
+        totalPages: Math.ceil((count || 0) / limit),
+      });
+    } else {
+      // For non-title sorting, use normal database sorting with pagination
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      query = query.range(from, to);
+      query = query.order(sortField, { ascending, nullsFirst: false });
 
-    const { data, error, count } = await query;
+      const { data, error, count } = await query;
 
-    if (error) {
-      console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Database error', details: error.message },
-        { status: 500 }
-      );
+      if (error) {
+        console.error('Database error:', error);
+        return NextResponse.json(
+          { error: 'Database error', details: error.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        texts: data || [],
+        total: count || 0,
+        page,
+        limit,
+        totalPages: Math.ceil((count || 0) / limit),
+      });
     }
-
-    return NextResponse.json({
-      texts: data || [],
-      total: count || 0,
-      page,
-      limit,
-      totalPages: Math.ceil((count || 0) / limit),
-    });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(

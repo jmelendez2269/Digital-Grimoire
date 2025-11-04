@@ -12,7 +12,7 @@ export default function FloatingAISearch({ defaultCollapsed = true }: FloatingAI
   const [isExpanded, setIsExpanded] = useState(!defaultCollapsed);
 
   // If collapsed, show floating button
-  // Position it higher to avoid conflicts with other floating elements (like WikiLinkActions)
+  // Position at bottom-6 right-6 (lower position, Read Aloud will be above)
   if (!isExpanded) {
     return (
       <button
