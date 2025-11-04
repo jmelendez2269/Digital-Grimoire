@@ -6,6 +6,7 @@ import { extractMetadata } from '@/lib/claude-metadata';
 import { scrapeCover } from '@/lib/cover-scraper';
 import { generateBookCover } from '@/lib/nano-banana-cover';
 import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
+import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
 
 // Initialize R2 client for cleanup on error
 const s3Client = getR2Client();
@@ -149,6 +150,30 @@ export async function POST(request: NextRequest) {
     } catch (metadataError) {
       console.error('Metadata extraction failed:', metadataError);
       throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
+    }
+
+    // Step 2.25: Check for similar/duplicate documents
+    console.log('Step 2.25: Checking for similar documents...');
+    let similarDocuments: any[] = [];
+    try {
+      const supabaseForCheck = await createClient();
+      similarDocuments = await findSimilarDocuments(
+        supabaseForCheck,
+        metadata.title,
+        metadata.author,
+        metadata.year,
+        metadata.standardizedId,
+        ocrResult.text
+      );
+      
+      if (similarDocuments.length > 0) {
+        console.log(`⚠️ Found ${similarDocuments.length} similar document(s):`, similarDocuments.map(d => d.title));
+      } else {
+        console.log('✅ No similar documents found');
+      }
+    } catch (similarityError) {
+      console.error('Similarity check failed (non-blocking):', similarityError);
+      // Continue processing even if similarity check fails
     }
 
     // Step 2.5: Scrape book cover (non-blocking)
@@ -521,6 +546,8 @@ export async function POST(request: NextRequest) {
       shortSummary: metadata.shortSummary,
       longSummary: metadata.longSummary,
       rawAiOutput: rawAiOutput,
+      similarDocuments: similarDocuments.length > 0 ? similarDocuments : undefined,
+      hasDuplicates: shouldWarnAboutDuplicate(similarDocuments),
     });
 
   } catch (error) {

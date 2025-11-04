@@ -254,7 +254,8 @@ export default function LibraryPage() {
     setShowSortDropdown(false);
   };
 
-  const getSortLabel = () => {
+  // Memoize getSortLabel function to avoid recreating on every render
+  const getSortLabel = useCallback(() => {
     const labels: Record<typeof sortBy, string> = {
       title: 'Title',
       author: 'Author',
@@ -265,7 +266,7 @@ export default function LibraryPage() {
     };
     const orderLabel = sortOrder === 'asc' ? 'Ascending' : 'Descending';
     return `${labels[sortBy]} (${orderLabel})`;
-  };
+  }, [sortBy, sortOrder]);
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 

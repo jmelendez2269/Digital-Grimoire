@@ -4,7 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import AIChatModal from './AIChatModal';
+import dynamic from 'next/dynamic';
+
+// Lazy load AIChatModal - only needed when user opens it
+const AIChatModal = dynamic(() => import('./AIChatModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 type Model = 'auto' | 'claude' | 'gpt' | 'gemini' | 'convergence';
 

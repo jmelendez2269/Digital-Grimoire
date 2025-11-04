@@ -1,18 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Sparkles, Send, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LensSlider from '@/components/convergence/LensSlider';
 import LensPresets from '@/components/convergence/LensPresets';
 import ResponseLengthSlider from '@/components/convergence/ResponseLengthSlider';
-import ResponseStream from '@/components/convergence/ResponseStream';
 import RateLimitDisplay from '@/components/convergence/RateLimitDisplay';
 import PremiumGate from '@/components/convergence/PremiumGate';
 import { LensWeights, getAllLenses } from '@/lib/convergence/lenses';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Dynamically import ResponseStream to reduce initial bundle size
+const ResponseStream = dynamic(() => import('@/components/convergence/ResponseStream'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 bg-zinc-900/50 border border-amber-900/20 rounded-lg animate-pulse flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+    </div>
+  ),
+});
 
 const DEFAULT_WEIGHTS: LensWeights = {
   scientific: 14,
@@ -182,8 +192,14 @@ export default function ConvergenceMachinePage() {
     }));
   }
 
-  const lenses = getAllLenses();
-  const totalWeight = Object.values(lensWeights).reduce((sum, w) => sum + w, 0);
+  // Memoize lenses array - getAllLenses() returns a new array on every call
+  const lenses = useMemo(() => getAllLenses(), []);
+  
+  // Memoize totalWeight calculation - recalculated on every render otherwise
+  const totalWeight = useMemo(
+    () => Object.values(lensWeights).reduce((sum, w) => sum + w, 0),
+    [lensWeights]
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">

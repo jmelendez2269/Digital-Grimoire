@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+// Server component - no client-side JavaScript needed
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 

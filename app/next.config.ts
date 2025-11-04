@@ -8,8 +8,22 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
   },
+  // Optimize images
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.cloudflare.com',
+      },
+    ],
+  },
+  // Compress output
+  compress: true,
+  // Production source maps disabled for smaller bundle
+  productionBrowserSourceMaps: false,
   webpack: (config, { isServer, webpack }) => {
     // Completely ignore canvas module
     config.plugins.push(

@@ -1,7 +1,7 @@
 # CONVERGENCE - BRAND GUIDELINES
 
-**Version:** 1.0  
-**Last Updated:** October 25, 2025  
+**Version:** 1.1  
+**Last Updated:** November 2025  
 **Status:** Official Brand Documentation  
 
 ---
@@ -83,20 +83,28 @@ A searchable repository of esoteric, mystical, religious, and philosophical text
 - Free tier: Full access to all texts
 
 #### 2. Study Journal
-**Tagline:** *"Your personal space for synthesis and discovery"*
+**Tagline:** *"Document your discoveries as you read"*
 
-Private Notion-like workspace for creating personal research notebooks.
+Private Notion-like workspace for creating personal research notebooks. Seamlessly integrated with the library, allowing you to clip passages, add your own insights, and build interconnected knowledge networks.
 
 **Key Features:**
-- Clip passages from library
-- Wikilinks for interconnected notes
-- Export to multiple formats
-- Freemium: 25 pages free, unlimited premium
+- **Direct Text Clipping:** Select any passage from library texts and clip it instantly into your journal with automatic citations and source linking
+- **Document Findings:** Take notes while reading, with auto-save ensuring you never lose an insight
+- **Wiki-Links:** Create connections between concepts using `[[double brackets]]` syntax, building your personal knowledge network
+- **Rich Text Editor:** Add your own text, insights, and analysis alongside clipped passages
+- **Auto-Save:** Automatic saving every few seconds—no manual save required
+- **Export Options:** Export to Markdown, HTML, PDF, or import directly into Notion
+- **Freemium:** 25 pages free, unlimited premium
+
+**Use Cases:**
+- Reading *The Kybalion* and discover a connection to quantum physics? Clip the passage and document your insights immediately
+- Build a comprehensive research document combining clipped passages from multiple texts with your own synthesis
+- Create interconnected notes linking concepts like "Hermetic Principles" → "Alchemy" → "Qabalah"
 
 #### 3. Correspondence Tables
 **Tagline:** *"Traditional esoteric wisdom visualized"*
 
-Interactive knowledge graph of traditional esoteric symbolic relationships.
+Interactive knowledge graph of traditional esoteric symbolic relationships. **Coming in Phase 2** - Interactive visualization of how traditional esoteric systems connect.
 
 **What It Shows:** Planets → Elements → Deities → Metals → Crystals → Herbs → Colors → Numbers
 
@@ -106,18 +114,28 @@ Interactive knowledge graph of traditional esoteric symbolic relationships.
 - **Table View** - Sortable reference for systematic research
 - **Graph View** - Visual network for serendipitous discovery
 
+**Roadmap:** Phase 2 feature - Build anticipation for interactive esoteric relationships and symbolic correspondences.
+
 #### 4. The Convergence Graph
 **Tagline:** *"See how all wisdom paths meet"*
 
-Cross-tradition conceptual unity visualization showing how different cultures express the same fundamental truths.
+Cross-tradition conceptual unity visualization showing how different cultures express the same fundamental truths. **Coming in Phase 3** - Visual connections revealing hidden patterns across all wisdom traditions.
 
 **What It Shows:** How concepts like "divine unity," "emptiness," and "consciousness" appear across traditions
 
 **Example:** Buddhist "Emptiness" ↔ Quantum "Zero-point field" ↔ Christian "Void" ↔ Taoist "Wu"
 
+**Concept Clusters:**
+- **Emptiness/Void Cluster:** Śūnyatā, Wu, Zero-Point Field, Ain, Apophatic Theology
+- **Unity/Oneness Cluster:** Brahman, Tawhid, The One, Unified Field Theory, Great Spirit
+- **Consciousness Cluster:** Atman, Buddha-nature, Soul, Self, Quantum Observer
+- **Path/Way Cluster:** Tao, Dharma, Logos, Sharia, Scientific Method
+
 **Dual Interface:**
 - **Comparative Table** - Side-by-side comparison across traditions
 - **Convergence Network** - Visual map of conceptual unity
+
+**Roadmap:** Phase 3 feature - Generate excitement for visual knowledge graphs that reveal how all traditions converge.
 
 #### 5. The Convergence Machine
 **Tagline:** *"Understanding through seven perspectives"*
@@ -140,6 +158,53 @@ Proprietary 7-lens AI reasoning system with **adjustable perspective weighting**
 - Scholar researching historical context → Boost Historical/Anthropological to 40%
 - Practitioner planning ritual → Boost Symbolic/Occult to 50%, Religious/Spiritual to 30%
 - Scientist exploring consciousness → Boost Scientific to 40%, Psychological to 30%
+
+### AI Model Strategy
+
+**Dual-Tier Approach:** Convergence offers both familiar AI models and specialized esoteric reasoning.
+
+#### Universal AI Search (Popular Models)
+**Tagline:** *"Access Claude, GPT, Gemini for familiar AI assistance"*
+
+**What It Offers:**
+- Access to Claude, GPT, Gemini—the most popular AI models
+- General-purpose question answering
+- Fast, reliable responses
+- No learning curve—use the AI you already know
+
+**Best For:**
+- Quick answers and summaries
+- General research questions
+- Users who want familiar AI tools
+
+**Example Queries:**
+- "What does The Kybalion say about the principle of correspondence?"
+- "Summarize the main ideas in The Bhagavad Gita"
+- "Explain the concept of emptiness in Buddhism"
+
+#### The Convergence Machine (Specialized System)
+**Tagline:** *"Go deeper with our specialized 7-lens system"*
+
+**What It Offers:**
+- Proprietary 7-lens AI reasoning system (as described above)
+- Adjustable lens weighting (0-100% per lens)
+- Deep synthesis across perspectives
+- Esoteric-specific reasoning
+
+**Best For:**
+- Deep esoteric inquiry
+- Cross-tradition synthesis
+- Practitioners and scholars seeking multi-perspective analysis
+
+**Example Queries:**
+- "How do different traditions understand the concept of unity?"
+- "What does The Emerald Tablet mean from scientific, alchemical, and philosophical perspectives?"
+- "Compare the psychological and spiritual aspects of mystical experience"
+
+**Why Both?**
+- **Flexibility:** Use familiar models for quick answers, or specialized system for deep inquiry
+- **Choice:** General AI assistance OR specialized esoteric reasoning—the choice is yours
+- **Accessibility:** Popular models for everyone, specialized system for deep researchers
 
 #### 6. Community Token Economy
 **Tagline:** *"Collective ownership of collective wisdom"*
@@ -378,8 +443,37 @@ Avoid:
 
 ---
 
+## ROADMAP PREVIEW
+
+### Phase Timeline
+
+**Phase 1 (Current):**
+- Library with full-text search
+- Study Journal with clipping and wiki-links
+- Basic AI search (popular models)
+- Convergence Machine (7-lens system)
+
+**Phase 2 (Roadmap):**
+- Correspondence Tables (interactive esoteric relationships)
+- Enhanced AI features
+- Improved metadata and search
+
+**Phase 3 (Future):**
+- Convergence Graph (cross-tradition unity visualization)
+- Visual knowledge networks
+- Advanced synthesis tools
+
+**Messaging Strategy:**
+- **Current features:** Emphasize immediate value (Study Journal, Library, AI)
+- **Phase 2:** Build anticipation for Correspondence Tables
+- **Phase 3:** Create excitement for Convergence Graph
+- **Never promise:** Don't commit to specific timelines, but show vision
+
+---
+
 ## VERSION HISTORY
 
+- **v1.1** - November 2025 - Enhanced Study Journal descriptions, AI model strategy, roadmap preview
 - **v1.0** - October 25, 2025 - Initial brand guidelines with 7-lens system and Convergence rebrand
 
 ---

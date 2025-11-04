@@ -1,7 +1,7 @@
 # CONVERGENCE - FEATURE BACKLOG & PRIORITIES
 
-**Last Updated:** Latest Session  
-**Version:** 1.5  
+**Last Updated:** November 3, 2025  
+**Version:** 1.6  
 
 ## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
 
@@ -23,7 +23,19 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
-**Latest Session Updates (Convergence Machine MVP):**
+**Latest Session Updates (November 3, 2025 - Universal AI Search & Chat):**
+- ✅ **Floating AI Search Bar** - Expandable floating search component accessible from all pages
+- ✅ **Smart Model Selection** - Auto-selects least-used AI model (Claude, GPT, Gemini) based on usage stats
+- ✅ **AI Chat Modal** - Full-featured chat interface supporting Claude, GPT, and Gemini
+- ✅ **Multi-Model AI API Routes** - New endpoints for Claude, GPT, and Gemini (`/api/ai/claude`, `/api/ai/gpt`, `/api/ai/gemini`)
+- ✅ **AI Usage Tracking** - API route tracks monthly usage per model for load balancing
+- ✅ **Chapter Management APIs** - Generate and update chapter names via API routes
+- ✅ **Document Metadata Generation** - New API route for automated metadata extraction
+- ✅ **Full Curator Notes Display** - Library cards now show complete curator notes
+- ✅ **Enhanced Library Integration** - Floating AI search integrated across Library, Graph, Journal, and Document pages
+- ✅ **Homepage AI Search** - AI search bar added to homepage for immediate access
+
+**Previous Session Updates (Convergence Machine MVP):**
 - ✅ **Convergence Machine MVP Complete** - Full 7-lens AI reasoning system with hybrid retrieval
 - ✅ **Database Schema** - Migrations 021 (convergence tables) + 022 (subscription status)
 - ✅ **Embedding System** - Text chunking, embedding generation, vector search (pgvector)
@@ -62,10 +74,11 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - ✅ **Annotation Export** (Markdown & CSV with filtering)
 
 **Total Velocity:** 23x faster than traditional development with AI assistance! 🚀  
-**Total Development Time:** ~35 hours (including Convergence Machine MVP)  
+**Total Development Time:** ~40 hours (including Convergence Machine MVP + Universal AI Search)  
 **Phase 1 Status:** 95% complete (Sprint 1-5 done, library seeding remains)  
 **Phase 2 Status:** Study Journal MVP complete (30% of Phase 2)  
-**Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)
+**Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)  
+**New Feature:** Universal AI Search & Chat System complete (100% - ready for use!)
 
 ---
 
@@ -287,6 +300,40 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - Example: Practitioner planning ritual → boost Symbolic/Occult to 50%, Religious/Spiritual to 30%
 - Weights determine: retrieval strategy emphasis, token allocation in prompt, answer section prominence
 - Saved presets available for common research patterns
+
+### 5B. UNIVERSAL AI SEARCH & CHAT SYSTEM - ✅ COMPLETE (November 3, 2025)
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| Floating AI Search Bar | P1 | M | Latest | ✅ Complete | Expandable floating component accessible from all pages |
+| Smart Model Selection | P1 | M | Latest | ✅ Complete | Auto-selects least-used model (Claude, GPT, Gemini) |
+| AI Chat Modal | P1 | L | Latest | ✅ Complete | Full-featured chat interface with conversation history |
+| Claude API Integration | P1 | M | Latest | ✅ Complete | `/api/ai/claude` endpoint with streaming support |
+| GPT API Integration | P1 | M | Latest | ✅ Complete | `/api/ai/gpt` endpoint with streaming support |
+| Gemini API Integration | P1 | M | Latest | ✅ Complete | `/api/ai/gemini` endpoint with streaming support |
+| AI Usage Tracking | P1 | M | Latest | ✅ Complete | `/api/ai/usage` tracks monthly usage per model |
+| Chapter Name Generation | P1 | M | Latest | ✅ Complete | `/api/chapters/generate-names` for automated chapter naming |
+| Chapter Name Updates | P1 | S | Latest | ✅ Complete | `/api/chapters/update-names` for batch updates |
+| Document Metadata Generation | P1 | M | Latest | ✅ Complete | `/api/documents/generate-metadata` for automated extraction |
+| Full Curator Notes Display | P1 | XS | Latest | ✅ Complete | Library cards show complete curator notes |
+| Homepage AI Search | P1 | XS | Latest | ✅ Complete | AI search bar on homepage |
+| Library Integration | P1 | XS | Latest | ✅ Complete | Floating search on library page |
+| Graph Integration | P1 | XS | Latest | ✅ Complete | Floating search on graph page |
+| Journal Integration | P1 | XS | Latest | ✅ Complete | Floating search on journal pages |
+| Document Viewer Integration | P1 | XS | Latest | ✅ Complete | Floating search on document detail pages |
+| Model-specific conversation history | P1 | M | Post | ⬜ Planned | Per-model conversation tracking |
+| Conversation export | P1 | S | Post | ⬜ Planned | Export chat history to Markdown |
+| Search result highlighting | P2 | M | Post | ⬜ Planned | Highlight search terms in results |
+| Voice input for search | P2 | M | Post | ⬜ Planned | Whisper API integration |
+| Search suggestions | P2 | M | Post | ⬜ Planned | AI-powered query suggestions |
+| Multi-language support | P2 | L | Post | ⬜ Planned | Translate queries/responses |
+
+**Technical Highlights:**
+- Smart model selection balances load across AI providers automatically
+- Usage tracking prevents API quota exhaustion by routing to least-used model
+- Floating UI provides consistent AI access across all pages without navigation
+- Modular architecture supports easy addition of new AI models
+- Full conversation history with model-specific tracking
 
 ### 6. COMMUNITY & TOKENOMICS
 

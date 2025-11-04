@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function Header() {
+function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, signOut, isAdmin } = useAuth(); // Single source of truth
@@ -331,4 +331,6 @@ export default function Header() {
     </header>
   );
 }
+
+export default memo(Header);
 

@@ -2,7 +2,20 @@
 
 import { useState, useEffect, memo, useCallback } from 'react';
 import { Bookmark } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+// Extract size constants outside component to avoid recreation on every render
+const SIZE_CLASSES = {
+  sm: 'w-4 h-4',
+  md: 'w-5 h-5',
+  lg: 'w-6 h-6',
+} as const;
+
+const BUTTON_SIZE_CLASSES = {
+  sm: 'p-1.5',
+  md: 'p-2',
+  lg: 'p-3',
+} as const;
 
 interface BookmarkButtonProps {
   textId: string;
@@ -17,27 +30,13 @@ function BookmarkButton({
   showLabel = false,
   onBookmarkChange,
 }: BookmarkButtonProps) {
+  const { user } = useAuth(); // Use AuthContext instead of creating separate client
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      checkBookmarkStatus();
-    }
-  }, [user, textId]);
-
-  const checkAuth = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
-
-  const checkBookmarkStatus = async () => {
+  const checkBookmarkStatus = useCallback(async () => {
+    if (!user) return;
+    
     try {
       const response = await fetch(`/api/bookmarks?text_id=${textId}`);
       if (response.ok) {
@@ -48,7 +47,14 @@ function BookmarkButton({
     } catch (error) {
       console.error('Error checking bookmark status:', error);
     }
-  };
+  }, [user, textId]);
+
+  // Combined useEffect - check bookmark status when user or textId changes
+  useEffect(() => {
+    if (user) {
+      checkBookmarkStatus();
+    }
+  }, [user, textId, checkBookmarkStatus]);
 
   const toggleBookmark = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -92,18 +98,6 @@ function BookmarkButton({
     }
   };
 
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
-  };
-
-  const buttonSizeClasses = {
-    sm: 'p-1.5',
-    md: 'p-2',
-    lg: 'p-3',
-  };
-
   if (!user) {
     return null; // Or show a disabled state
   }
@@ -113,7 +107,7 @@ function BookmarkButton({
       onClick={toggleBookmark}
       disabled={loading}
       className={`
-        ${buttonSizeClasses[size]}
+        ${BUTTON_SIZE_CLASSES[size]}
         rounded-lg
         transition-all duration-200
         ${isBookmarked
@@ -126,7 +120,7 @@ function BookmarkButton({
       title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
     >
       <Bookmark
-        className={`${sizeClasses[size]} ${isBookmarked ? 'fill-current' : ''}`}
+        className={`${SIZE_CLASSES[size]} ${isBookmarked ? 'fill-current' : ''}`}
       />
       {showLabel && (
         <span className="text-sm font-medium">

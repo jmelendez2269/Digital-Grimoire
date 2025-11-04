@@ -42,11 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Safety timeout
+    // Safety timeout - reduced to 3s for faster initial render
     const timeoutId = setTimeout(() => {
       console.warn('[AuthContext] Safety timeout - forcing loading to false');
       setLoading(false);
-    }, 5000);
+    }, 3000);
 
     const initializeAuth = async () => {
       try {
@@ -57,14 +57,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('[AuthContext] Session error:', error);
           setUser(null);
           setIsAdmin(false);
+          setLoading(false);
+          clearTimeout(timeoutId);
+          return;
         } else if (session?.user) {
           console.log('[AuthContext] Session found:', session.user.email);
           setUser(session.user);
+          setLoading(false); // Set loading false immediately for better UX
           
-          // Check admin via API (more reliable)
-          const adminStatus = await checkAdminViaAPI(session.user.id);
-          setIsAdmin(adminStatus);
-          console.log('[AuthContext] Admin status set to:', adminStatus);
+          // Check admin via API asynchronously (non-blocking)
+          checkAdminViaAPI(session.user.id).then((adminStatus) => {
+            setIsAdmin(adminStatus);
+            console.log('[AuthContext] Admin status set to:', adminStatus);
+          }).catch((err) => {
+            console.error('[AuthContext] Error checking admin status:', err);
+            setIsAdmin(false);
+          });
         } else {
           console.log('[AuthContext] No session found');
           setUser(null);

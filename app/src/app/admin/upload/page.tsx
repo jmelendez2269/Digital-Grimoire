@@ -8,6 +8,16 @@ import { DocumentMetadata } from '@/lib/claude-metadata';
 import Link from 'next/link';
 import Header from '@/components/Header';
 
+interface SimilarDocument {
+  id: string;
+  title: string;
+  author?: string;
+  year?: number;
+  standardizedId?: string;
+  similarityScore: number;
+  matchReason: string;
+}
+
 interface UploadFile {
   id: string;
   file: File;
@@ -22,6 +32,8 @@ interface UploadFile {
   lineCount?: number;
   lenses?: string[];
   previewUrl?: string;
+  similarDocuments?: SimilarDocument[];
+  hasDuplicates?: boolean;
 }
 
 export default function AdminUploadPage() {
@@ -246,6 +258,8 @@ export default function AdminUploadPage() {
                 pageCount: processData.pageCount,
                 lineCount: processData.lineCount,
                 lenses: processData.metadata?.lenses || [],
+                similarDocuments: processData.similarDocuments,
+                hasDuplicates: processData.hasDuplicates,
               }
             : f
         )
@@ -469,6 +483,12 @@ export default function AdminUploadPage() {
                             {uploadFile.error}
                           </p>
                         )}
+                        {uploadFile.status === 'success' && uploadFile.hasDuplicates && (
+                          <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Possible duplicate detected - expand for details
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -499,7 +519,13 @@ export default function AdminUploadPage() {
                       )}
                       {uploadFile.status === 'success' && (
                         <>
-                          <Check className="w-4 h-4 text-emerald-400" />
+                          {uploadFile.hasDuplicates ? (
+                            <div title="Possible duplicate detected">
+                              <AlertCircle className="w-4 h-4 text-amber-500" />
+                            </div>
+                          ) : (
+                            <Check className="w-4 h-4 text-emerald-400" />
+                          )}
                           <button
                             onClick={() => removeFile(uploadFile.id)}
                             className="text-amber-100/40 hover:text-amber-100 transition-colors"
@@ -558,6 +584,63 @@ export default function AdminUploadPage() {
 
                       {expandedFiles.has(uploadFile.id) && (
                         <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                          {/* Duplicate Warning */}
+                          {uploadFile.hasDuplicates && uploadFile.similarDocuments && uploadFile.similarDocuments.length > 0 && (
+                            <div className="bg-amber-950/50 border-2 border-amber-600/50 rounded-lg p-4">
+                              <div className="flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                  <h4 className="text-sm font-semibold text-amber-200 mb-2">
+                                    ⚠️ Possible Duplicate Detected
+                                  </h4>
+                                  <p className="text-xs text-amber-100/70 mb-3">
+                                    We found {uploadFile.similarDocuments.length} similar document{uploadFile.similarDocuments.length > 1 ? 's' : ''} that may be duplicates:
+                                  </p>
+                                  <div className="space-y-2">
+                                    {uploadFile.similarDocuments.map((similar, idx) => (
+                                      <div
+                                        key={similar.id}
+                                        className="bg-zinc-900/50 border border-amber-900/30 rounded-md p-3"
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex-1 min-w-0">
+                                            <Link
+                                              href={`/library/${similar.id}`}
+                                              target="_blank"
+                                              className="text-sm font-medium text-amber-200 hover:text-amber-100 transition-colors block truncate"
+                                            >
+                                              {similar.title}
+                                            </Link>
+                                            {similar.author && (
+                                              <p className="text-xs text-amber-100/60 mt-0.5">
+                                                by {similar.author}
+                                                {similar.year && ` (${similar.year})`}
+                                              </p>
+                                            )}
+                                            <p className="text-xs text-amber-100/50 mt-1">
+                                              {similar.matchReason} • {Math.round(similar.similarityScore * 100)}% match
+                                            </p>
+                                          </div>
+                                          <Link
+                                            href={`/library/${similar.id}`}
+                                            target="_blank"
+                                            className="text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
+                                            title="View document"
+                                          >
+                                            <Eye className="w-4 h-4" />
+                                          </Link>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <p className="text-xs text-amber-100/60 mt-3 italic">
+                                    The document was uploaded successfully. If this is a duplicate, you may want to delete it.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Short Summary */}
                           {uploadFile.shortSummary && (
                             <div className="bg-amber-950/30 border border-amber-900/30 rounded-md p-4">

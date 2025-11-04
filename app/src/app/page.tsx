@@ -1,6 +1,20 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import AISearchBar from "@/components/AISearchBar";
+import dynamic from "next/dynamic";
+
+// Lazy load AISearchBar to reduce initial bundle size
+const AISearchBar = dynamic(() => import("@/components/AISearchBar"), {
+  ssr: true, // Keep SSR for SEO, but code-split
+  loading: () => (
+    <div className="mb-12 w-full max-w-3xl">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 h-12 bg-zinc-900/50 border border-amber-900/20 rounded-lg animate-pulse" />
+        <div className="h-12 w-32 bg-zinc-900/50 border border-amber-900/20 rounded-lg animate-pulse" />
+        <div className="h-12 w-20 bg-zinc-900/50 border border-amber-900/20 rounded-lg animate-pulse" />
+      </div>
+    </div>
+  ),
+});
 
 export default function Home() {
   return (
@@ -31,7 +45,7 @@ export default function Home() {
           A Collaborative Esoteric Library
         </p>
 
-        {/* AI Search Bar */}
+        {/* AI Search Bar - Lazy loaded */}
         <div className="mb-12 w-full max-w-3xl">
           <AISearchBar />
         </div>

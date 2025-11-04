@@ -1,8 +1,9 @@
 # CONVERGENCE - MASTER DEVELOPMENT PLAN
 
 **Version:** 3.2  
-**Last Updated:** Latest Session  
+**Last Updated:** November 3, 2025  
 **Status:** Phase 1 - 95% Complete | Active Development  
+**Latest:** Universal AI Search & Chat System Complete  
 
 ---
 
@@ -88,16 +89,37 @@
 - **Journal Navigation** - Header integration, search, grid layout
 - **Total:** 9 files created, 2 modified, 3 documentation files, 1,563 lines of code
 
-**📊 Total Development Time:** ~35 hours (including Convergence Machine MVP)  
-**Traditional Estimate:** ~800 hours  
+**📊 Total Development Time:** ~40 hours (including Convergence Machine MVP + Universal AI Search)  
+**Traditional Estimate:** ~900 hours  
 **Velocity:** 23x faster with AI-assisted development  
 **Phase 1 Progress:** 95% complete (only seeding library content remains)  
 **Phase 2 Status:** Study Journal MVP complete (~40% of Phase 2 - 10/17 features)  
-**Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)
+**Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)  
+**New Feature:** Universal AI Search & Chat System complete (100% - ready for use!)
 
-### Latest Session Updates (Current) - Convergence Machine MVP Complete! 🎉
+### Latest Session Updates (November 3, 2025) - Universal AI Search & Chat System! 🎉
 
-**The Convergence Machine - Full MVP Implementation:**
+**🚀 MAJOR UPDATE: Universal AI Search & Chat System Complete!**
+- ✅ **Floating AI Search Bar** - Expandable floating search component accessible from all pages (Library, Graph, Journal, Document Viewer)
+- ✅ **Smart Model Selection** - Auto-selects least-used AI model (Claude, GPT, Gemini) based on usage statistics
+- ✅ **AI Chat Modal** - Full-featured chat interface supporting Claude, GPT, and Gemini with conversation history
+- ✅ **Multi-Model AI API Routes** - New endpoints for Claude (`/api/ai/claude`), GPT (`/api/ai/gpt`), and Gemini (`/api/ai/gemini`)
+- ✅ **AI Usage Tracking** - API route (`/api/ai/usage`) tracks monthly usage per model for intelligent load balancing
+- ✅ **Chapter Management APIs** - Generate (`/api/chapters/generate-names`) and update (`/api/chapters/update-names`) chapter names
+- ✅ **Document Metadata Generation** - New API route (`/api/documents/generate-metadata`) for automated metadata extraction
+- ✅ **Full Curator Notes Display** - Library cards now display complete curator notes (previously truncated)
+- ✅ **Enhanced Library Integration** - Floating AI search integrated across Library, Graph, Journal, and Document detail pages
+- ✅ **Homepage AI Search** - AI search bar added to homepage for immediate access
+
+**Technical Highlights:**
+- Smart model selection balances load across AI providers automatically
+- Usage tracking prevents API quota exhaustion by routing to least-used model
+- Floating UI provides consistent AI access across all pages without navigation
+- Modular architecture supports easy addition of new AI models
+- Full conversation history with model-specific tracking
+
+**Previous Session Updates (Convergence Machine MVP):**
+- ✅ **The Convergence Machine - Full MVP Implementation** - 7-lens AI reasoning system with hybrid retrieval
 - ✅ **Database Infrastructure** - Migrations 021 & 022: text_chunks, convergence_queries, convergence_responses, subscription_status
 - ✅ **Embedding System** - Text chunking with paragraph boundaries, OpenAI embedding generation, chunk storage
 - ✅ **Hybrid Retrieval** - Vector search (pgvector) + PostgreSQL FTS with RRF (Reciprocal Rank Fusion) merging
@@ -109,13 +131,6 @@
 - ✅ **Complete UI** - Main page (/convergence-machine) with query input, 7 lens sliders, 4 presets, streaming display, rate limit indicator
 - ✅ **API Endpoints** - Query (SSE), history (list + individual), rate-limit status, embedding generation (admin)
 - ✅ **18 New Files** - Complete backend services + UI components
-
-**Technical Highlights:**
-- Hybrid retrieval combines semantic (vector) and keyword (FTS) search for optimal recall
-- Smart text chunking maintains context with overlap between chunks
-- RRF algorithm merges results from multiple retrieval methods
-- Premium system ready for Stripe integration (subscription_status column in place)
-- Full conversation history with sources and lens contributions stored
 
 **Previous Session Updates (Document Management & HTML Support):**
 - ✅ **HTML File Upload Support** - Added ability to upload and process HTML files (sacred-texts.com format) with comprehensive styling
