@@ -104,15 +104,24 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
         </div>
         <div className="flex items-center gap-2">
           {activeFilterCount > 0 && (
-            <button
+            <div
               onClick={(e) => {
                 e.stopPropagation();
                 clearFilters();
               }}
-              className="text-xs text-amber-400 hover:text-amber-300 px-2 py-1 rounded hover:bg-amber-600/10 transition-colors"
+              className="text-xs text-amber-400 hover:text-amber-300 px-2 py-1 rounded hover:bg-amber-600/10 transition-colors cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  clearFilters();
+                }
+              }}
             >
               Clear all
-            </button>
+            </div>
           )}
           {isExpanded ? (
             <ChevronUp className="w-5 h-5 text-amber-100/60" />
