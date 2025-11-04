@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Sparkles, Send, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -25,7 +26,9 @@ const DEFAULT_WEIGHTS: LensWeights = {
 
 export default function ConvergenceMachinePage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
+  const queryInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [lensWeights, setLensWeights] = useState<LensWeights>(DEFAULT_WEIGHTS);
   const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('short');
   const [response, setResponse] = useState<any>(null);
@@ -41,6 +44,24 @@ export default function ConvergenceMachinePage() {
   useEffect(() => {
     fetchRateLimit();
   }, []);
+
+  // Read query from URL params on mount
+  useEffect(() => {
+    const urlQuery = searchParams.get('query');
+    if (urlQuery) {
+      const decodedQuery = decodeURIComponent(urlQuery);
+      setQuery(decodedQuery);
+      // Auto-focus the textarea after a short delay to ensure it's rendered
+      setTimeout(() => {
+        const textarea = document.getElementById('query') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+          // Move cursor to end of text
+          textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+      }, 100);
+    }
+  }, [searchParams]);
 
   async function fetchRateLimit() {
     try {
@@ -260,6 +281,7 @@ export default function ConvergenceMachinePage() {
                   </label>
                   <textarea
                     id="query"
+                    ref={queryInputRef}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     disabled={isStreaming}

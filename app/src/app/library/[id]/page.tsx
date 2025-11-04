@@ -16,7 +16,8 @@ import {
   Highlighter,
   Sparkles,
   RefreshCw,
-  Edit
+  Edit,
+  Trash2
 } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
@@ -368,6 +369,33 @@ export default function DocumentDetailPage() {
       setReimportError(error instanceof Error ? error.message : 'Failed to re-import content');
     } finally {
       setReimporting(false);
+    }
+  };
+
+  // Handle delete document
+  const handleDelete = async () => {
+    if (!document || !documentId) return;
+    
+    if (!confirm(`Are you sure you want to permanently delete "${document.title}"?\n\nThis will remove the document and all associated data (bookmarks, annotations, etc.). This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/texts/${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        alert('Document deleted successfully');
+        // Redirect to library after deletion
+        router.push('/library');
+      } else {
+        const data = await response.json();
+        alert(`Failed to delete document: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('An error occurred while deleting the document');
     }
   };
 
@@ -762,15 +790,16 @@ export default function DocumentDetailPage() {
                 </button>
               )}
               <BookmarkButton textId={documentId} size="md" showLabel />
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                document.status === 'ready' 
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : document.status === 'processing'
-                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
-              }`}>
-                {document.status}
-              </span>
+              {isAdmin && (
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-red-600/20 text-red-300 border border-red-600/30 hover:bg-red-600/30 hover:border-red-600/50 transition-colors"
+                  title="Delete document"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
             </div>
           </div>
 

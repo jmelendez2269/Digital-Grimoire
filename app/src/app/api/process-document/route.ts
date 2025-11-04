@@ -10,6 +10,22 @@ import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
 // Initialize R2 client for cleanup on error
 const s3Client = getR2Client();
 
+/**
+ * Sanitizes a string for use in HTTP headers (S3 metadata).
+ * Removes control characters, newlines, and other invalid header characters.
+ * Preserves UTF-8 characters that are valid in HTTP headers.
+ */
+function sanitizeMetadataValue(value: string): string {
+  return value
+    // Remove control characters (ASCII 0-31 and 127) except space (32)
+    .replace(/[\x00-\x1F\x7F]/g, '')
+    // Replace newlines and carriage returns with spaces
+    .replace(/[\r\n]+/g, ' ')
+    // Collapse multiple spaces into one
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export async function POST(request: NextRequest) {
   let body;
   try {
@@ -263,15 +279,16 @@ export async function POST(request: NextRequest) {
       console.log(`File buffer size: ${fileBuffer.length} bytes`);
 
       // Prepare metadata - R2 requires lowercase keys and may have restrictions
+      // HTTP headers cannot contain control characters, newlines, or certain special characters
       const r2Metadata: Record<string, string> = {};
-      if (metadata.title) r2Metadata['title'] = metadata.title.substring(0, 1024); // R2 metadata value limit
-      if (metadata.author) r2Metadata['author'] = metadata.author.substring(0, 1024);
-      if (metadata.year) r2Metadata['year'] = metadata.year.toString();
-      if (sanitizedType) r2Metadata['type'] = sanitizedType;
-      if (metadata.domain) r2Metadata['domain'] = metadata.domain.substring(0, 1024);
-      if (metadata.tags.length > 0) r2Metadata['tags'] = metadata.tags.join(',').substring(0, 1024);
-      if (metadata.confidence) r2Metadata['confidence'] = metadata.confidence;
-      if (metadata.standardizedId) r2Metadata['standardized-id'] = metadata.standardizedId;
+      if (metadata.title) r2Metadata['title'] = sanitizeMetadataValue(metadata.title).substring(0, 1024); // R2 metadata value limit
+      if (metadata.author) r2Metadata['author'] = sanitizeMetadataValue(metadata.author).substring(0, 1024);
+      if (metadata.year) r2Metadata['year'] = sanitizeMetadataValue(metadata.year.toString());
+      if (sanitizedType) r2Metadata['type'] = sanitizeMetadataValue(sanitizedType);
+      if (metadata.domain) r2Metadata['domain'] = sanitizeMetadataValue(metadata.domain).substring(0, 1024);
+      if (metadata.tags.length > 0) r2Metadata['tags'] = sanitizeMetadataValue(metadata.tags.join(',')).substring(0, 1024);
+      if (metadata.confidence) r2Metadata['confidence'] = sanitizeMetadataValue(metadata.confidence);
+      if (metadata.standardizedId) r2Metadata['standardized-id'] = sanitizeMetadataValue(metadata.standardizedId);
 
       console.log(`Uploading to new location: ${bucketName}/${desiredNewKey}`);
       // Upload to new location with custom metadata

@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AISearchBar from "@/components/AISearchBar";
 
 export default function Home() {
   return (
@@ -29,6 +30,11 @@ export default function Home() {
         <p className="mb-8 max-w-2xl text-xl text-amber-200/70">
           A Collaborative Esoteric Library
         </p>
+
+        {/* AI Search Bar */}
+        <div className="mb-12 w-full max-w-3xl">
+          <AISearchBar />
+        </div>
 
         {/* Description */}
         <div className="mb-12 max-w-3xl space-y-4 text-lg text-zinc-400">
