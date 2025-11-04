@@ -408,10 +408,31 @@ export default function EditDocumentPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Admin
           </Link>
-          <h1 className="text-3xl font-bold text-amber-100 mb-2">Edit Document</h1>
-          <p className="text-amber-100/60">
-            Update library card display settings and metadata
-          </p>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-amber-100 mb-2">Edit Document</h1>
+              <p className="text-amber-100/60">
+                Update library card display settings and metadata
+              </p>
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  Save Changes
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Success Alert */}

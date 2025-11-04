@@ -33,7 +33,7 @@ interface ChapterLink {
 
 /**
  * Main function to parse web texts from supported sources
- * Currently only supports sacred-texts.com
+ * Supports sacred-texts.com and generic websites
  */
 export async function parseWebText(
   url: string,
@@ -45,7 +45,8 @@ export async function parseWebText(
     if (hostname.includes('sacred-texts.com')) {
       return await parseSacredText(url, format);
     } else {
-      throw new Error('Unsupported source. Currently only supports: sacred-texts.com. For other sources (Gutenberg, Archive.org), please use the file upload feature.');
+      // Use generic parser for other websites
+      return await parseGenericWebPage(url, format);
     }
   } catch (error) {
     console.error('Error parsing web text:', error);
@@ -685,6 +686,338 @@ async function extractSectionsFromPage(
     console.error('Error extracting sections from page:', error);
     return [];
   }
+}
+
+/**
+ * Generic parser for web pages from any source
+ * Attempts to intelligently extract main content from HTML pages
+ */
+export async function parseGenericWebPage(
+  url: string,
+  format: 'html' | 'markdown' | 'plaintext' = 'html'
+): Promise<ParsedText> {
+  try {
+    console.log('[parseGenericWebPage] Parsing:', url);
+    
+    // Fetch the page
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch page: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Remove unwanted elements
+    $('script, style, noscript, iframe, header, footer, nav, aside, .nav, .navigation, .sidebar, .ad, .advertisement, .social, .share, .comments, .related').remove();
+
+    // Extract metadata
+    const metadata = await extractGenericMetadata(url, $);
+
+    // Try to find main content area using common patterns
+    let contentHtml = '';
+    
+    // Common content selectors (in order of preference)
+    const contentSelectors = [
+      'article', // HTML5 article tag
+      'main', // HTML5 main tag
+      '#content', // ID content
+      '.content', // Class content
+      '#main', // ID main
+      '.main', // Class main
+      '#article', // ID article
+      '.article', // Class article
+      '#post', // ID post (common in blogs)
+      '.post', // Class post
+      '[role="main"]', // ARIA role main
+      'body > div:not(.header):not(.footer):not(.nav):not(.sidebar)', // Direct body divs
+    ];
+
+    for (const selector of contentSelectors) {
+      const elements = $(selector);
+      if (elements.length > 0) {
+        contentHtml = elements.first().html() || '';
+        if (contentHtml.trim().length > 200) {
+          console.log(`[parseGenericWebPage] Found content using selector: ${selector}`);
+          break;
+        }
+      }
+    }
+
+    // If no main content area found, try to extract from body
+    if (!contentHtml || contentHtml.trim().length < 200) {
+      console.log('[parseGenericWebPage] No main content area found, extracting from body');
+      
+      // Remove navigation and other non-content elements
+      $('body > nav, body > header, body > footer, body > .nav, body > .header, body > .footer').remove();
+      
+      // Get all block elements from body
+      const bodyElements = $('body > *').toArray();
+      const contentElements: string[] = [];
+      
+      for (const el of bodyElements) {
+        const $el = $(el);
+        const tagName = $el.prop('tagName')?.toLowerCase();
+        const text = $el.text().trim();
+        const className = $el.attr('class') || '';
+        const id = $el.attr('id') || '';
+        
+        // Skip navigation, headers, footers
+        if (id.toLowerCase().includes('nav') || 
+            id.toLowerCase().includes('header') || 
+            id.toLowerCase().includes('footer') ||
+            className.toLowerCase().includes('nav') ||
+            className.toLowerCase().includes('header') ||
+            className.toLowerCase().includes('footer') ||
+            className.toLowerCase().includes('sidebar') ||
+            className.toLowerCase().includes('menu')) {
+          continue;
+        }
+        
+        // Skip empty or very short elements
+        if (text.length < 10) {
+          continue;
+        }
+        
+        // Include block-level elements
+        if (tagName && ['div', 'section', 'article', 'main', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'blockquote', 'pre', 'table'].includes(tagName)) {
+          contentElements.push($.html(el));
+        }
+      }
+      
+      contentHtml = contentElements.join('\n');
+    }
+
+    // If still no content, try to extract all text content
+    if (!contentHtml || contentHtml.trim().length < 100) {
+      console.log('[parseGenericWebPage] Fallback: extracting all text content');
+      const textContent = $('body').text().trim();
+      if (textContent && textContent.length > 100) {
+        // Split into paragraphs
+        const paragraphs = textContent
+          .split(/\n\n+/)
+          .map(p => p.trim())
+          .filter(p => p.length > 20)
+          .map(p => `<p>${p.replace(/\n/g, ' ')}</p>`)
+          .join('\n');
+        contentHtml = paragraphs;
+      }
+    }
+
+    if (!contentHtml || contentHtml.trim().length < 50) {
+      throw new Error('Could not extract meaningful content from the page');
+    }
+
+    // Try to split content into sections/chapters
+    const chapters = extractSectionsFromGenericContent(contentHtml, metadata.title, format);
+
+    // Calculate total length
+    const totalLength = chapters.reduce((sum, ch) => sum + ch.content.length, 0);
+
+    console.log(`[parseGenericWebPage] Extracted ${chapters.length} chapters, total length: ${totalLength}`);
+
+    return {
+      metadata,
+      chapters,
+      format,
+      chapterCount: chapters.length,
+      totalLength,
+    };
+  } catch (error) {
+    console.error('Error parsing generic web page:', error);
+    throw new Error(`Failed to parse web page: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Extract metadata from a generic web page
+ */
+async function extractGenericMetadata(url: string, $: cheerio.CheerioAPI): Promise<ParsedTextMetadata> {
+  // Extract title
+  let title = $('title').text().trim();
+  if (!title || title.length < 3) {
+    title = $('h1').first().text().trim();
+  }
+  if (!title) {
+    title = $('meta[property="og:title"]').attr('content') || '';
+  }
+  // Clean up title
+  title = title.replace(/\s*[-:]\s*(Index|Contents|Home|Page).*$/i, '').trim();
+  if (!title) {
+    title = 'Untitled Document';
+  }
+
+  // Try to find author
+  let author: string | null = null;
+  const authorPatterns = [
+    $('meta[name="author"]').attr('content'),
+    $('[rel="author"]').text().trim(),
+    $('.author').first().text().trim(),
+    $('[class*="author"]').first().text().trim(),
+    $('body').text().match(/by\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i)?.[1],
+    $('body').text().match(/author[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i)?.[1],
+  ];
+  
+  for (const pattern of authorPatterns) {
+    if (pattern && typeof pattern === 'string' && pattern.trim().length > 2 && pattern.trim().length < 100) {
+      author = pattern.trim();
+      break;
+    }
+  }
+
+  // Try to find year
+  let year: number | null = null;
+  const yearMatch = $('body').text().match(/\b(1[6-9]\d{2}|20[0-2]\d)\b/);
+  if (yearMatch) {
+    year = parseInt(yearMatch[1], 10);
+  }
+
+  // Try to find publisher
+  let publisher: string | null = null;
+  const publisherMatch = $('body').text().match(/(?:published by|publisher[:\s]+)([^,\n]+)/i);
+  if (publisherMatch) {
+    publisher = publisherMatch[1].trim();
+  }
+
+  // Extract description
+  let description: string | null = null;
+  description = $('meta[name="description"]').attr('content') || 
+                $('meta[property="og:description"]').attr('content') || 
+                null;
+  
+  if (!description) {
+    const firstParagraph = $('p').first().text().trim();
+    if (firstParagraph && firstParagraph.length > 50 && firstParagraph.length < 500) {
+      description = firstParagraph;
+    }
+  }
+
+  return {
+    title,
+    author,
+    year,
+    publisher,
+    description,
+    sourceUrl: url,
+  };
+}
+
+/**
+ * Extract sections/chapters from generic HTML content
+ * Attempts to identify headings and split content accordingly
+ */
+function extractSectionsFromGenericContent(
+  html: string,
+  defaultTitle: string,
+  format: 'html' | 'markdown' | 'plaintext'
+): Chapter[] {
+  const $ = cheerio.load(html);
+  const sections: Chapter[] = [];
+  let currentSection: { title: string; content: string[] } | null = null;
+
+  // Get all top-level elements (direct children of body or main container)
+  const bodyElements = $('body > *, article > *, main > *, #content > *, .content > *').toArray();
+
+  for (let i = 0; i < bodyElements.length; i++) {
+    const el = bodyElements[i];
+    const $el = $(el);
+    const tagName = $el.prop('tagName')?.toLowerCase();
+    const text = $el.text().trim();
+    
+    // Skip navigation and empty elements
+    if (text.length < 3) {
+      continue;
+    }
+    
+    // Check if this is a heading
+    const isHeading = tagName && ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName);
+    const isStrongHeading = tagName === 'strong' && text.length > 5 && text.length < 150 && 
+                            ($el.parent().prop('tagName')?.toLowerCase() === 'p' || 
+                             $el.parent().prop('tagName')?.toLowerCase() === 'div');
+    
+    if (isHeading || isStrongHeading) {
+      // Save previous section
+      if (currentSection && currentSection.content.length > 0) {
+        const sectionContent = currentSection.content.join('\n');
+        if (sectionContent.trim().length > 50) {
+          sections.push({
+            id: `section-${sections.length + 1}`,
+            title: currentSection.title,
+            content: format === 'html' 
+              ? cleanHtml(sectionContent)
+              : format === 'markdown'
+              ? htmlToMarkdown(sectionContent)
+              : htmlToPlaintext(sectionContent),
+          });
+        }
+      }
+      
+      // Start new section
+      currentSection = {
+        title: text,
+        content: [],
+      };
+    } else if (currentSection) {
+      // Add content to current section
+      const htmlContent = $.html(el);
+      if (htmlContent && htmlContent.trim().length > 0) {
+        // Only include block-level elements
+        if (tagName && ['p', 'div', 'ul', 'ol', 'blockquote', 'pre', 'table', 'section', 'article', 'li'].includes(tagName)) {
+          currentSection.content.push(htmlContent);
+        }
+      }
+    } else {
+      // Before first section - collect as introduction
+      if (!currentSection) {
+        currentSection = {
+          title: 'Introduction',
+          content: [],
+        };
+      }
+      const htmlContent = $.html(el);
+      if (htmlContent && htmlContent.trim().length > 0) {
+        if (tagName && ['p', 'div', 'ul', 'ol', 'blockquote', 'pre', 'table', 'section', 'article', 'li'].includes(tagName)) {
+          currentSection.content.push(htmlContent);
+        }
+      }
+    }
+  }
+  
+  // Save last section
+  if (currentSection && currentSection.content.length > 0) {
+    const sectionContent = currentSection.content.join('\n');
+    if (sectionContent.trim().length > 50) {
+      sections.push({
+        id: `section-${sections.length + 1}`,
+        title: currentSection.title,
+        content: format === 'html' 
+          ? cleanHtml(sectionContent)
+          : format === 'markdown'
+          ? htmlToMarkdown(sectionContent)
+          : htmlToPlaintext(sectionContent),
+      });
+    }
+  }
+
+  // If no sections found, create a single chapter
+  if (sections.length === 0) {
+    sections.push({
+      id: 'chapter-1',
+      title: defaultTitle,
+      content: format === 'html' 
+        ? cleanHtml(html)
+        : format === 'markdown'
+        ? htmlToMarkdown(html)
+        : htmlToPlaintext(html),
+    });
+  }
+
+  return sections;
 }
 
 /**

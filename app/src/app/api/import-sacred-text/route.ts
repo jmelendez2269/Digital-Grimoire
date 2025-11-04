@@ -46,10 +46,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const hostname = new URL(url).hostname.toLowerCase();
-    if (!hostname.includes('sacred-texts.com')) {
+    // Validate URL format only - allow any valid HTTP/HTTPS URL
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        return NextResponse.json(
+          { error: 'Invalid URL. Please provide a valid HTTP or HTTPS URL.' },
+          { status: 400 }
+        );
+      }
+    } catch {
       return NextResponse.json(
-        { error: 'Invalid URL. Currently only supports: sacred-texts.com. For other sources (Gutenberg, Archive.org), please use the file upload feature.' },
+        { error: 'Invalid URL format. Please provide a valid URL.' },
         { status: 400 }
       );
     }
@@ -223,9 +231,18 @@ export async function GET(request: Request) {
       );
     }
 
-    if (!url.includes('sacred-texts.com')) {
+    // Validate URL format only
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        return NextResponse.json(
+          { error: 'Invalid URL protocol. Please provide a valid HTTP or HTTPS URL.' },
+          { status: 400 }
+        );
+      }
+    } catch {
       return NextResponse.json(
-        { error: 'URL must be from sacred-texts.com' },
+        { error: 'Invalid URL format.' },
         { status: 400 }
       );
     }

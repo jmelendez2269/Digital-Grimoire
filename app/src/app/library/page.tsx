@@ -302,7 +302,7 @@ export default function LibraryPage() {
       <main className="flex-1">
         {/* Page Header */}
         <div className="border-b border-amber-900/20 bg-zinc-900/50">
-          <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="max-w-screen-2xl mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold text-amber-100 mb-2">
               The Convergence Library
             </h1>
@@ -313,7 +313,7 @@ export default function LibraryPage() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-screen-2xl mx-auto px-4 py-8">
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
@@ -372,7 +372,7 @@ export default function LibraryPage() {
 
         {/* Loading State */}
         {!user ? null : loading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
@@ -415,7 +415,7 @@ export default function LibraryPage() {
         ) : (
           <>
             {/* Document Grid - Horizontal Cards */}
-            <div className="grid gap-6 lg:grid-cols-2 mb-8">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
               {texts.map((text) => (
               <div
                 key={text.id}

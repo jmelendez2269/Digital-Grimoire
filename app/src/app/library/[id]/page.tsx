@@ -15,7 +15,8 @@ import {
   AlertCircle,
   Highlighter,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Edit
 } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
@@ -739,6 +740,16 @@ export default function DocumentDetailPage() {
             </Link>
 
             <div className="flex items-center gap-3">
+              {isAdmin && (
+                <Link
+                  href={`/admin/edit/${documentId}`}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/30 hover:bg-blue-600/30 hover:border-blue-600/50 transition-colors"
+                  title="Edit document metadata and content"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Link>
+              )}
               {isAdmin && document.metadata?.isStructuredText && document.metadata?.sourceUrl && (
                 <button
                   onClick={handleReimport}

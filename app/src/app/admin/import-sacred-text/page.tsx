@@ -60,8 +60,8 @@ export default function ImportSacredTextPage() {
   const validateUrl = (urlString: string): boolean => {
     try {
       const parsedUrl = new URL(urlString);
-      const hostname = parsedUrl.hostname.toLowerCase();
-      return hostname.includes('sacred-texts.com');
+      // Allow any valid HTTP/HTTPS URL
+      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
     } catch {
       return false;
     }
@@ -150,14 +150,7 @@ export default function ImportSacredTextPage() {
     }
     
     if (!validateUrl(url)) {
-      // Provide helpful error message based on the domain
-      if (hostname.includes('gutenberg.org')) {
-        setError('Project Gutenberg is not supported via URL import. Please download the HTML file and use the Upload feature (Admin → Upload) to import Gutenberg texts.');
-      } else if (hostname.includes('archive.org')) {
-        setError('Internet Archive is not yet supported. Currently only supports: sacred-texts.com. Please use the Upload feature for texts from other sources.');
-      } else {
-        setError('Invalid URL. Currently only supports: sacred-texts.com. For other sources (Gutenberg, Archive.org), please use the Upload feature.');
-      }
+      setError('Please enter a valid URL (e.g., https://www.example.com/...)');
       setStatus('error');
       return;
     }
@@ -261,7 +254,7 @@ export default function ImportSacredTextPage() {
                 </h1>
               </div>
               <p className="text-amber-100/60">
-                Import texts from sacred-texts.com into your library
+                Import texts from web pages into your library
               </p>
             </div>
 
@@ -367,11 +360,10 @@ export default function ImportSacredTextPage() {
                       disabled={status === 'importing'}
                     />
                     <p className="mt-2 text-xs text-amber-100/50">
-                      Enter a URL from sacred-texts.com (index pages or single pages)
+                      Enter a URL from any website (sacred-texts.com, tarrdaniel.com, etc.)
                       <br />
                       <span className="text-amber-100/40">
-                        Supported source: <strong>sacred-texts.com</strong> only. 
-                        For other sources (Gutenberg, Archive.org), download the HTML file and use the Upload feature.
+                        The system will attempt to extract and parse the main content from the page.
                       </span>
                     </p>
                   </div>
@@ -456,7 +448,7 @@ export default function ImportSacredTextPage() {
                   type="submit"
                   disabled={status === 'importing' || !url || url.trim() === ''}
                   className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                  aria-label={!url || url.trim() === '' ? 'Enter a URL to enable import' : 'Import text from sacred-texts.com'}
+                  aria-label={!url || url.trim() === '' ? 'Enter a URL to enable import' : 'Import text from web page'}
                 >
                   {status === 'importing' ? (
                     <>
@@ -650,7 +642,7 @@ export default function ImportSacredTextPage() {
               <ul className="space-y-2 text-sm text-amber-100/70">
                 <li className="flex items-start gap-2">
                   <span className="text-amber-600 font-bold mt-0.5">1.</span>
-                  <span>Find a text on <a href="https://www.sacred-texts.com" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 underline">sacred-texts.com</a></span>
+                  <span>Find a text on any website (sacred-texts.com, tarrdaniel.com, etc.)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-amber-600 font-bold mt-0.5">2.</span>

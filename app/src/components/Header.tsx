@@ -31,7 +31,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="border-b border-zinc-800 bg-zinc-900/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
+    <header className="relative z-50 border-b border-zinc-800 bg-zinc-900/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
@@ -172,12 +172,12 @@ export default function Header() {
                 <>
                   {/* Backdrop */}
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-[9998]"
                     onClick={() => setMenuOpen(false)}
                   />
                   
                   {/* Menu */}
-                  <div className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/50 overflow-hidden">
+                  <div className="absolute right-0 z-[9999] mt-2 w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/50 overflow-hidden">
                     {/* User Info Header */}
                     <div className="border-b border-zinc-800 bg-zinc-800/50 px-4 py-3">
                       <div className="flex items-center gap-3">

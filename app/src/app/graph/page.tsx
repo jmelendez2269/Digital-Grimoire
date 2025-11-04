@@ -59,7 +59,7 @@ export default function GraphPage() {
       <Header />
       <main className="flex-1">
         <div className="min-h-screen bg-zinc-950 text-amber-50">
-          <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="max-w-screen-2xl mx-auto px-4 py-8">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-amber-100">Knowledge Graph</h1>
               <p className="text-amber-100/60">Explore correspondences and conceptual connections.</p>
