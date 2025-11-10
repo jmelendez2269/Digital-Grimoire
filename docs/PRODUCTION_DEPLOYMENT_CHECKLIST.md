@@ -1,8 +1,9 @@
 # Production Deployment Checklist
 
-**Last Updated:** October 26, 2025  
+**Last Updated:** November 2025  
 **Status:** Pre-Production Planning  
 **Owner:** Development Team  
+**Domain:** convergencelibrary.com  
 
 ---
 
@@ -18,20 +19,21 @@ This checklist ensures all critical infrastructure and configurations are in pla
 
 **Status:** ⬜ Not Started  
 **Time Estimate:** 4-6 hours  
-**Reference:** `docs/SUPABASE_PASSWORD_RESET_SETUP.md`
+**Reference:** `docs/Setup Docs/SENDGRID_SETUP.md`, `docs/Setup Docs/SUPABASE_PASSWORD_RESET_SETUP.md`
 
 - [ ] **SendGrid Account Setup**
-  - [ ] Account created and verified
-  - [ ] Domain authenticated (yourdomain.com)
+  - [x] Account created and verified
+  - [ ] Domain authenticated (convergencelibrary.com)
   - [ ] SPF record added to DNS
-  - [ ] DKIM record added to DNS
+  - [ ] DKIM records added to DNS (s1._domainkey, s2._domainkey)
   - [ ] DMARC policy configured
+  - [ ] Link branding configured (url1708, 57219658)
   - [ ] API key generated and stored securely in password manager
   
 - [ ] **Supabase SMTP Configuration**
   - [ ] Custom SMTP enabled in Supabase
   - [ ] SendGrid credentials configured
-  - [ ] Sender email set: `noreply@yourdomain.com`
+  - [ ] Sender email set: `noreply@convergencelibrary.com`
   - [ ] Sender name set: `Convergence`
   - [ ] Test email sent successfully from Supabase
   
@@ -80,7 +82,7 @@ This checklist ensures all critical infrastructure and configurations are in pla
   - [ ] `AWS_S3_BUCKET` (production bucket name)
   - [ ] `ANTHROPIC_API_KEY` (if using AI features)
   - [ ] `OPENAI_API_KEY` (if using AI features)
-  - [ ] `NEXT_PUBLIC_APP_URL` (production domain)
+  - [ ] `NEXT_PUBLIC_APP_URL` (production domain: https://convergencelibrary.com)
   - [ ] `SENDGRID_API_KEY` (documented but stored in Supabase)
 
 - [ ] **Secrets Security Verified**
@@ -98,7 +100,7 @@ This checklist ensures all critical infrastructure and configurations are in pla
 **Time Estimate:** 2-3 hours
 
 - [ ] **Domain Setup**
-  - [ ] Domain registered (yourdomain.com)
+  - [x] Domain registered (convergencelibrary.com)
   - [ ] DNS records configured
   - [ ] A/AAAA records pointing to Vercel
   - [ ] CNAME records set up correctly
@@ -111,8 +113,8 @@ This checklist ensures all critical infrastructure and configurations are in pla
   - [ ] SSL Labs test passed (A+ rating)
 
 - [ ] **Subdomain Configuration**
-  - [ ] www.yourdomain.com redirects to yourdomain.com
-  - [ ] Email subdomain configured (if needed)
+  - [ ] www.convergencelibrary.com redirects to convergencelibrary.com
+  - [ ] Email subdomain configured (noreply@convergencelibrary.com)
 
 ---
 
@@ -296,7 +298,8 @@ This checklist ensures all critical infrastructure and configurations are in pla
 
 ## 📚 REFERENCE DOCUMENTATION
 
-- Email Setup: `docs/SUPABASE_PASSWORD_RESET_SETUP.md`
+- Email Setup: `docs/Setup Docs/SENDGRID_SETUP.md`
+- Password Reset: `docs/Setup Docs/SUPABASE_PASSWORD_RESET_SETUP.md`
 - Password Reset: `docs/PASSWORD_RESET_FLOW.md`
 - Master Plan: `docs/planning/MASTER_DEVELOPMENT_PLAN.md`
 - Feature Backlog: `docs/planning/FEATURE_BACKLOG.md`

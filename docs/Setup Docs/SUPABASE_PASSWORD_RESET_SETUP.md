@@ -148,10 +148,10 @@ http://localhost:3000/reset-password
 http://localhost:3000/*
 ```
 
-**Production (replace with your domain):**
+**Production:**
 ```
-https://yourdomain.com/reset-password
-https://yourdomain.com/*
+https://convergencelibrary.com/reset-password
+https://convergencelibrary.com/*
 ```
 
 ### Configure Site URL
@@ -165,7 +165,7 @@ http://localhost:3000
 
 **Production:**
 ```
-https://yourdomain.com
+https://convergencelibrary.com
 ```
 
 ---
@@ -193,9 +193,11 @@ SMTP Host: smtp.sendgrid.net
 SMTP Port: 587
 SMTP Username: apikey
 SMTP Password: [Your SendGrid API Key]
-Sender Email: noreply@yourdomain.com
-Sender Name: Digital Grimoire
+Sender Email: noreply@convergencelibrary.com
+Sender Name: Convergence
 ```
+
+**Note:** See `docs/Setup Docs/SENDGRID_SETUP.md` for complete SendGrid configuration including DNS records for domain authentication and link branding.
 
 **Example with AWS SES:**
 ```
@@ -203,8 +205,8 @@ SMTP Host: email-smtp.us-east-1.amazonaws.com
 SMTP Port: 587
 SMTP Username: [Your SES SMTP Username]
 SMTP Password: [Your SES SMTP Password]
-Sender Email: noreply@yourdomain.com
-Sender Name: Digital Grimoire
+Sender Email: noreply@convergencelibrary.com
+Sender Name: Convergence
 ```
 
 ---
@@ -367,10 +369,11 @@ SMTP_PASS=your-smtp-password
 ## Security Best Practices
 
 ### Email Security
-- Use SPF/DKIM/DMARC records
-- Verified sender domain
+- Use SPF/DKIM/DMARC records (see `docs/Setup Docs/SENDGRID_SETUP.md` for DNS configuration)
+- Verified sender domain (convergencelibrary.com)
 - Secure SMTP connection (TLS)
 - Monitor bounce rates
+- Link branding configured for better deliverability
 
 ### Token Security
 - Short expiration times (1 hour recommended)
@@ -413,7 +416,8 @@ Before going live, ensure:
 - [SMTP Setup](https://supabase.com/docs/guides/auth/auth-smtp)
 
 ### Email Provider Guides
-- [SendGrid Setup](https://docs.sendgrid.com/)
+- [SendGrid Setup Guide](../Setup Docs/SENDGRID_SETUP.md) - Complete setup for convergencelibrary.com
+- [SendGrid Documentation](https://docs.sendgrid.com/)
 - [AWS SES Setup](https://docs.aws.amazon.com/ses/)
 - [Mailgun Setup](https://documentation.mailgun.com/)
 
