@@ -182,7 +182,44 @@ Complete all critical infrastructure and testing required for production launch.
 
 ## ⚡ IMPORTANT (P1 - Should Complete Before Launch)
 
-### 6. Content Seeding
+### 6. Google OAuth Configuration
+
+**Status:** ⬜ Not Started  
+**Time Estimate:** 30-45 minutes  
+**Priority:** P1 - Important for launch (enhances user experience)
+
+**Reference:** `docs/Setup Docs/GOOGLE_OAUTH_SETUP.md`
+
+- [ ] **Google Cloud Console Setup** (15-20 minutes)
+  - [ ] Create/select Google Cloud project
+  - [ ] Configure OAuth consent screen
+  - [ ] Create OAuth client ID
+  - [ ] Add authorized JavaScript origins (localhost + production domain)
+  - [ ] Add authorized redirect URI (Supabase callback URL)
+  - [ ] Copy Client ID and Client Secret
+
+- [ ] **Supabase Configuration** (10-15 minutes)
+  - [ ] Enable Google provider in Supabase
+  - [ ] Configure OAuth credentials (Client ID and Secret)
+  - [ ] Add redirect URLs (localhost + production domain)
+  - [ ] Verify configuration saved
+
+- [ ] **Testing** (10 minutes)
+  - [ ] Test Google sign-in from login page (localhost)
+  - [ ] Test Google sign-in from register page (localhost)
+  - [ ] Verify user profile creation
+  - [ ] Verify redirect to dashboard works
+  - [ ] Test error handling (user cancellation)
+
+- [ ] **Production Setup** (5-10 minutes)
+  - [ ] Publish OAuth consent screen in Google Cloud Console
+  - [ ] Verify production domain added to authorized origins
+  - [ ] Verify production redirect URL configured in Supabase
+  - [ ] Test Google sign-in on production domain
+
+---
+
+### 7. Content Seeding
 
 **Status:** ⬜ Not Started  
 **Time Estimate:** 6-8 hours  
@@ -203,7 +240,7 @@ Complete all critical infrastructure and testing required for production launch.
 
 ---
 
-### 7. Testing & QA
+### 8. Testing & QA
 
 **Status:** ⬜ Not Started  
 **Time Estimate:** 8-10 hours  
@@ -241,7 +278,7 @@ Complete all critical infrastructure and testing required for production launch.
 
 ---
 
-### 8. Monitoring & Error Tracking
+### 9. Monitoring & Error Tracking
 
 **Status:** ⬜ Not Started  
 **Time Estimate:** 2-3 hours  
@@ -262,7 +299,7 @@ Complete all critical infrastructure and testing required for production launch.
 
 ---
 
-### 9. SEO & Analytics
+### 10. SEO & Analytics
 
 **Status:** ⬜ Not Started  
 **Time Estimate:** 2-3 hours  
@@ -313,6 +350,7 @@ Complete all critical infrastructure and testing required for production launch.
 **Total P0 Progress:** ~27% complete
 
 ### Important Items (P1)
+- [ ] Google OAuth Configuration (⬜ 0% complete)
 - [ ] Content Seeding (⬜ 0% complete)
 - [ ] Testing & QA (⬜ 0% complete)
 - [ ] Monitoring & Error Tracking (⬜ 0% complete)
@@ -339,6 +377,7 @@ Complete all critical infrastructure and testing required for production launch.
 ## 📚 Reference Documentation
 
 - **Domain & SSL Setup:** `docs/Setup Docs/HOSTINGER_DOMAIN_SSL_SETUP.md` ⭐ **NEW - Step-by-step guide**
+- **Google OAuth Setup:** `docs/Setup Docs/GOOGLE_OAUTH_SETUP.md` ⭐ **NEW - Step-by-step guide**
 - **Email Setup:** `docs/Setup Docs/SENDGRID_SETUP.md`
 - **Email Templates:** `docs/Setup Docs/EMAIL_TEMPLATES_COMPLETE.md`
 - **Email Monitoring:** `docs/Setup Docs/EMAIL_MONITORING_SETUP.md`
