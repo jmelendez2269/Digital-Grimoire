@@ -156,33 +156,13 @@ export function LoginForm() {
         </button>
 
         {/* Forgot Password */}
-        <div className="relative z-10 text-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              console.log("🔗 Forgot password button clicked!");
-              console.log("🚀 Attempting router.push navigation...");
-              
-              try {
-                router.push("/forgot-password");
-                console.log("✅ router.push executed");
-                
-                // Force hard navigation as last resort
-                setTimeout(() => {
-                  console.log("⚠️ Router navigation timeout - trying window.location");
-                  window.location.href = "/forgot-password";
-                }, 1000);
-              } catch (err) {
-                console.error("❌ Router push failed:", err);
-                console.log("🔄 Falling back to window.location");
-                window.location.href = "/forgot-password";
-              }
-            }}
-            className="relative cursor-pointer text-sm text-amber-400 transition-colors hover:text-amber-300 hover:underline focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 bg-transparent border-none p-0"
+        <div className="text-center">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-amber-400 transition-colors hover:text-amber-300 hover:underline focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
           >
             Forgot your password?
-          </button>
+          </Link>
         </div>
       </form>
 

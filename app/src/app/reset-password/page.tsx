@@ -34,6 +34,37 @@ export default function ResetPasswordPage() {
     checkSession();
   }, []);
 
+  // Password validation helpers
+  const checkPasswordRequirements = (pwd: string) => {
+    const hasLowercase = /[a-z]/.test(pwd);
+    const hasUppercase = /[A-Z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pwd);
+    const hasMinLength = pwd.length >= 8;
+
+    return {
+      hasLowercase,
+      hasUppercase,
+      hasNumber,
+      hasSpecial,
+      hasMinLength,
+      missing: [] as string[],
+    };
+  };
+
+  const getMissingRequirements = (pwd: string) => {
+    const checks = checkPasswordRequirements(pwd);
+    const missing: string[] = [];
+
+    if (!checks.hasLowercase) missing.push("lowercase letter");
+    if (!checks.hasUppercase) missing.push("uppercase letter");
+    if (!checks.hasNumber) missing.push("number");
+    if (!checks.hasSpecial) missing.push("special character");
+    if (!checks.hasMinLength) missing.push("at least 8 characters");
+
+    return missing;
+  };
+
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -51,6 +82,14 @@ export default function ResetPasswordPage() {
     if (password.length < 8) {
       console.warn("⚠️ Password too short");
       setError("Password must be at least 8 characters");
+      return;
+    }
+
+    // Check password complexity
+    const missing = getMissingRequirements(password);
+    if (missing.length > 0) {
+      const missingList = missing.join(", ");
+      setError(`Password is missing: ${missingList}`);
       return;
     }
 
@@ -246,13 +285,32 @@ export default function ResetPasswordPage() {
               {/* Password Strength Indicator */}
               <div className="rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3">
                 <p className="mb-2 text-xs font-medium text-zinc-400">Password Requirements:</p>
-                <ul className="space-y-1 text-xs text-zinc-500">
-                  <li className={password.length >= 8 ? "text-green-400" : ""}>
-                    {password.length >= 8 ? "✓" : "○"} At least 8 characters
-                  </li>
-                  <li className={password === confirmPassword && password.length > 0 ? "text-green-400" : ""}>
-                    {password === confirmPassword && password.length > 0 ? "✓" : "○"} Passwords match
-                  </li>
+                <ul className="space-y-1 text-xs">
+                  {(() => {
+                    const checks = checkPasswordRequirements(password);
+                    return (
+                      <>
+                        <li className={checks.hasMinLength ? "text-green-400" : "text-zinc-500"}>
+                          {checks.hasMinLength ? "✓" : "○"} At least 8 characters
+                        </li>
+                        <li className={checks.hasLowercase ? "text-green-400" : "text-zinc-500"}>
+                          {checks.hasLowercase ? "✓" : "○"} Lowercase letter
+                        </li>
+                        <li className={checks.hasUppercase ? "text-green-400" : "text-zinc-500"}>
+                          {checks.hasUppercase ? "✓" : "○"} Uppercase letter
+                        </li>
+                        <li className={checks.hasNumber ? "text-green-400" : "text-zinc-500"}>
+                          {checks.hasNumber ? "✓" : "○"} Number
+                        </li>
+                        <li className={checks.hasSpecial ? "text-green-400" : "text-zinc-500"}>
+                          {checks.hasSpecial ? "✓" : "○"} Special character
+                        </li>
+                        <li className={password === confirmPassword && password.length > 0 ? "text-green-400" : "text-zinc-500"}>
+                          {password === confirmPassword && password.length > 0 ? "✓" : "○"} Passwords match
+                        </li>
+                      </>
+                    );
+                  })()}
                 </ul>
               </div>
 
