@@ -4,7 +4,7 @@ import { getR2Client, DeleteObjectCommand, PutObjectCommand, GetObjectCommand } 
 import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
 import { scrapeCover } from '@/lib/cover-scraper';
-import { generateBookCover } from '@/lib/nano-banana-cover';
+import { generateBookCover } from '@/lib/getimg-cover';
 import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
 import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
 
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
         console.log(`⚠️ Cover scraping failed: ${coverResult.error}`);
         
         // Step 2.6: Fallback to AI generation if scraping failed (and API key is configured)
-        if (!coverResult.success && process.env.NANO_BANANA_API_KEY && metadata.domain) {
+        if (!coverResult.success && process.env.GETIMG_API_KEY && metadata.domain) {
           console.log('Step 2.6: Attempting AI cover generation as fallback...');
           try {
             const aiResult = await generateBookCover(
@@ -213,8 +213,8 @@ export async function POST(request: NextRequest) {
             console.error('AI cover generation error (non-blocking):', aiError);
             // Continue processing even if AI generation fails
           }
-        } else if (!coverResult.success && !process.env.NANO_BANANA_API_KEY) {
-          console.log('⚠️ Skipping AI generation: NANO_BANANA_API_KEY not configured');
+        } else if (!coverResult.success && !process.env.GETIMG_API_KEY) {
+          console.log('⚠️ Skipping AI generation: GETIMG_API_KEY not configured');
         } else if (!coverResult.success && !metadata.domain) {
           console.log('⚠️ Skipping AI generation: document domain not available');
         }

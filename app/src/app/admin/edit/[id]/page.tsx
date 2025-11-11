@@ -31,6 +31,7 @@ export default function EditDocumentPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [scrapingCover, setScrapingCover] = useState(false);
+  const [generatingAICover, setGeneratingAICover] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -201,22 +202,152 @@ export default function EditDocumentPage() {
         }),
       });
 
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        let errorMessage = 'Failed to scrape cover';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = `Error: ${response.status} ${response.statusText}`;
+        }
+        setError(errorMessage);
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
+        // Update state immediately for instant UI feedback
         setCoverImageUrl(result.imageUrl);
+        
+        // Update document state to reflect the new cover
+        if (document) {
+          setDocument({
+            ...document,
+            cover_image_url: result.imageUrl,
+          });
+        }
+        
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
-        // Refresh document to get updated cover
-        await fetchDocument();
+        
+        // Optionally refresh document after a short delay to ensure database is updated
+        // But don't wait for it since we've already updated the state
+        setTimeout(async () => {
+          await fetchDocument();
+        }, 500);
       } else {
         setError(result.error || 'Failed to scrape cover from any source');
       }
     } catch (err) {
       console.error('Error scraping cover:', err);
-      setError('Failed to scrape cover. Please try again.');
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Failed to scrape cover. Please check your connection and try again.';
+      setError(errorMessage);
     } finally {
       setScrapingCover(false);
+    }
+  };
+
+  const handleGenerateAICover = async () => {
+    if (!title.trim() || !author.trim() || !domain.trim()) {
+      setError('Title, author, and domain are required to generate AI cover');
+      return;
+    }
+
+    try {
+      setGeneratingAICover(true);
+      setError(null);
+
+      const response = await fetch('/api/covers/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          textId: documentId,
+          title: title.trim(),
+          author: author.trim(),
+          domain: domain.trim(),
+          tags: tags.length > 0 ? tags : undefined,
+        }),
+      });
+
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        let errorMessage = 'Failed to generate AI cover';
+        let errorDetails = null;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          errorDetails = errorData;
+          console.error('[Frontend] API error response:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+          });
+        } catch (parseError) {
+          // If response is not JSON, try to get text
+          try {
+            const errorText = await response.text();
+            errorMessage = `Error ${response.status}: ${errorText || response.statusText}`;
+            console.error('[Frontend] Non-JSON error response:', errorText);
+          } catch {
+            errorMessage = `Error: ${response.status} ${response.statusText}`;
+          }
+        }
+        console.error('[Frontend] Full error details:', {
+          url: '/api/covers/generate',
+          status: response.status,
+          statusText: response.statusText,
+          errorMessage,
+          errorDetails,
+        });
+        setError(errorMessage);
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update state immediately for instant UI feedback
+        setCoverImageUrl(result.imageUrl);
+        
+        // Update document state to reflect the new cover
+        if (document) {
+          setDocument({
+            ...document,
+            cover_image_url: result.imageUrl,
+          });
+        }
+        
+        // Show warning if database update failed but cover was generated
+        if (result.warning) {
+          setError(result.warning);
+          setTimeout(() => setError(null), 5000);
+        } else {
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        }
+        
+        // Optionally refresh document after a short delay to ensure database is updated
+        // But don't wait for it since we've already updated the state
+        setTimeout(async () => {
+          await fetchDocument();
+        }, 500);
+      } else {
+        setError(result.error || 'Failed to generate AI cover');
+      }
+    } catch (err) {
+      console.error('[Frontend] Exception generating AI cover:', err);
+      console.error('[Frontend] Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+      const errorMessage = err instanceof Error 
+        ? `Network error: ${err.message}` 
+        : 'Failed to generate AI cover. Please check your connection and try again.';
+      setError(errorMessage);
+    } finally {
+      setGeneratingAICover(false);
     }
   };
 
@@ -578,10 +709,10 @@ export default function EditDocumentPage() {
                     className="w-full px-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50"
                   />
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-end gap-2">
                   <button
                     onClick={handleScrapeCover}
-                    disabled={scrapingCover || !author.trim()}
+                    disabled={scrapingCover || generatingAICover || !author.trim()}
                     className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
                     title={!author.trim() ? 'Author required to scrape cover' : 'Automatically find cover from Open Library, Internet Archive, or Google Books'}
                   >
@@ -597,10 +728,28 @@ export default function EditDocumentPage() {
                       </>
                     )}
                   </button>
+                  <button
+                    onClick={handleGenerateAICover}
+                    disabled={generatingAICover || scrapingCover || !title.trim() || !author.trim() || !domain.trim()}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+                    title={!domain.trim() ? 'Domain required to generate AI cover' : 'Generate a unique AI cover using getimg.ai'}
+                  >
+                    {generatingAICover ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="hidden sm:inline">Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span className="hidden sm:inline">Generate AI Cover</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
               <p className="text-xs text-amber-100/50">
-                Recommended: 400x600px or 2:3 aspect ratio. Click "Scrape Cover" to automatically find a cover from public sources.
+                Recommended: 400x600px or 2:3 aspect ratio. Click "Scrape Cover" to automatically find a cover from public sources, or "Generate AI Cover" to create a unique AI-generated cover.
               </p>
               {coverImageUrl && (
                 <>

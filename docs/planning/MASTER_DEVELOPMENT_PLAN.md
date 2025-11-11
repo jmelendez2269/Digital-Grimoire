@@ -787,6 +787,12 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Comment system on texts
 - [ ] "Upload Events" scheduling
 - [ ] Moderation tools
+- [ ] Social media integration (GitHub, Twitter/X, Discord)
+  - [ ] Footer social links implementation
+  - [ ] GitHub repository integration
+  - [ ] Twitter/X account setup and feed
+  - [ ] Discord server integration
+  - [ ] Social sharing buttons for library texts
 
 #### Week 33-34: Smart Contract Development
 - [ ] Choose Layer 2 blockchain (Polygon/Solana)
@@ -850,10 +856,22 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 
 #### Premium Enhancements
 - [ ] Bi-directional Notion sync
-- [ ] API access for developers
+- [ ] Public API for developers
+  - [ ] RESTful API documentation
+  - [ ] API key management system
+  - [ ] Rate limiting and quotas
+  - [ ] Webhook support
+  - [ ] API usage analytics
 - [ ] Custom AI training on user docs
 - [ ] Bulk operations interface
 - [ ] Advanced analytics dashboard
+- [ ] Blog platform
+  - [ ] Content management system for blog posts
+  - [ ] SEO-optimized article publishing
+  - [ ] Author profiles and attribution
+  - [ ] Comment system
+  - [ ] RSS feed generation
+  - [ ] Category and tag management
 
 ---
 

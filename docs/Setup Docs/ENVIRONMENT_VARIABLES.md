@@ -58,25 +58,29 @@ ANTHROPIC_API_KEY=sk-ant-your_key_here
 
 ---
 
-### Nano Banana AI (Book Cover Generation)
+### Replicate (Book Cover Generation)
 ```env
-NANO_BANANA_API_KEY=your_nano_banana_key_here
+REPLICATE_API_TOKEN=your_replicate_api_token_here
 ```
 
 **What it does:**
-- AI-powered book cover generation using Google's Gemini 2.5 Flash
+- AI-powered book cover generation using FLUX.1 [schnell] model
 - Automatically generates vintage Dark Academia style covers when scraping fails
 - Fallback for documents without existing covers
+- Fast, affordable, and reliable image generation
 
 **Where to find:**
-- Go to [Nano Banana](https://nano-banana.ai)
-- Sign up for free (includes 5 free credits = 2 images)
-- Navigate to dashboard and copy your API key
+- Go to [Replicate](https://replicate.com/)
+- Sign up with GitHub account (free)
+- Navigate to [API Tokens](https://replicate.com/account/api-tokens)
+- Create a new API token and copy it (store it securely)
 
 **Pricing:**
-- Basic: $9.99/month = 100 credits (50 images)
-- 2 credits per image generation
-- One-time credit packs also available
+- **No minimum payment required** - perfect for testing!
+- **Pay-per-use**: ~$0.002-0.01 per image (varies by model and size)
+- **FLUX.1 schnell**: ~$0.003 per image at 768×1152 (very affordable!)
+- No subscriptions, no hidden fees - only pay for what you use
+- Add credits as needed: $5, $10, $20, or custom amounts
 
 **Note:** This is optional. If not configured, the system will only attempt to scrape covers from public sources (Open Library, Internet Archive, Google Books).
 
@@ -115,9 +119,9 @@ AZURE_VISION_KEY=your_azure_vision_key
 ANTHROPIC_API_KEY=sk-ant-your_key_here
 
 # ============================================
-# Nano Banana AI (Book Cover Generation) - OPTIONAL
+# Replicate (Book Cover Generation) - OPTIONAL
 # ============================================
-NANO_BANANA_API_KEY=your_nano_banana_key_here
+REPLICATE_API_TOKEN=your_replicate_api_token_here
 ```
 
 ---

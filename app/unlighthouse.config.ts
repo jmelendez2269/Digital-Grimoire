@@ -5,15 +5,15 @@ export default {
     // Automatically discover and scan all pages
     dynamicSampling: 10, // Sample up to 10 pages per route pattern
     
-    // Scan these routes
+    // Scan these key routes
     samples: [
       '/',
       '/library',
       '/search',
       '/upload',
       '/settings',
-      '/auth/login',
-      '/auth/signup',
+      '/login',
+      '/register',
     ],
     
     // Skip these patterns
@@ -37,12 +37,12 @@ export default {
 
   // Chrome options
   chrome: {
-    useSystem: false, // Use bundled Chromium
+    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   },
 
   // CI mode settings
   ci: {
-    buildStatic: true, // Generate static HTML reports
+    buildStatic: true,
   },
 
   // Performance budgets
@@ -58,18 +58,19 @@ export default {
 
   // Report configuration
   reporter: {
-    // Generate both JSON and HTML reports
     jsonExpanded: true,
     generateBadges: true,
   },
 
-  // Cookies for authenticated routes (set these in CI)
+  // Cookies for authenticated routes (optional - for testing protected routes)
+  // To test protected routes, get your auth cookie from browser DevTools and set:
+  // UNLIGHTHOUSE_AUTH_COOKIE="your-supabase-session-cookie"
   cookies: process.env.UNLIGHTHOUSE_AUTH_COOKIE 
     ? [
         {
-          name: 'auth-token',
+          name: 'sb-access-token', // Supabase uses this cookie name
           value: process.env.UNLIGHTHOUSE_AUTH_COOKIE,
-          domain: new URL(process.env.UNLIGHTHOUSE_SITE_URL || 'http://localhost:3000').hostname,
+          domain: 'localhost',
         },
       ]
     : undefined,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -458,6 +459,22 @@ export default function ProfilePage() {
                   {/* Journal Name Preference */}
                   <div className="border-t border-zinc-800 pt-6">
                     <JournalNamePreference />
+                  </div>
+
+                  {/* Privacy & Data */}
+                  <div className="border-t border-zinc-800 pt-6">
+                    <h3 className="mb-4 text-lg font-semibold text-amber-200">Privacy & Data</h3>
+                    <div className="space-y-3">
+                      <Link
+                        href="/settings/privacy"
+                        className="block rounded-md border border-zinc-600 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700 text-center"
+                      >
+                        Privacy Settings
+                      </Link>
+                      <p className="text-xs text-zinc-500">
+                        Manage your data, export your information, or delete your account
+                      </p>
+                    </div>
                   </div>
 
                   {/* Save Button */}
