@@ -176,7 +176,7 @@ export function LoginForm() {
       {/* Register Link */}
       <div className="text-center">
         <p className="text-sm text-zinc-400">
-          New to Digital Grimoire?{" "}
+          New to Convergence?{" "}
           <Link
             href="/register"
             className="font-semibold text-amber-400 hover:text-amber-300"

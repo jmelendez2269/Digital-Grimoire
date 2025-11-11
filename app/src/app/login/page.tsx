@@ -22,7 +22,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-amber-100">Welcome Back</h1>
           <p className="mt-2 text-sm text-zinc-400">
-            Sign in to your Digital Grimoire
+            Sign in to Convergence
           </p>
         </div>
 

@@ -6,6 +6,8 @@ import { Plus, Search, Archive, FileText, Clock, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/contexts/AuthContext';
+import JournalNameSetupModal from '@/components/JournalNameSetupModal';
 
 interface JournalPage {
   id: string;
@@ -19,11 +21,20 @@ interface JournalPage {
 
 export default function JournalHomePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [pages, setPages] = useState<JournalPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [creatingPage, setCreatingPage] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+
+  // Check if journal name is set on mount
+  useEffect(() => {
+    if (user && !user.user_metadata?.journal_name) {
+      setShowSetupModal(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchPages();
@@ -88,7 +99,7 @@ export default function JournalHomePage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-4xl font-bold text-amber-400 mb-2">
-                📖 Study Journal
+                📖 {user?.user_metadata?.journal_name || 'Digital Grimoire'}
               </h1>
               <p className="text-zinc-400">
                 Your personal space for notes, reflections, and ideas
@@ -167,6 +178,17 @@ export default function JournalHomePage() {
         </div>
       </main>
       <Footer />
+      
+      {/* Journal Name Setup Modal */}
+      {showSetupModal && (
+        <JournalNameSetupModal
+          onComplete={() => {
+            setShowSetupModal(false);
+            // Refresh page to update journal name
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 }

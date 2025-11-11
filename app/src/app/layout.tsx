@@ -22,8 +22,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Digital Grimoire | Esoteric Library & Knowledge Network",
-  description: "A collaborative esoteric library with AI-powered indexing, correspondence tables, personal grimoires, and knowledge graph visualization.",
+  title: "Convergence | Multi-Lens Library & Knowledge Network",
+  description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
 };
 
 export default function RootLayout({

@@ -180,7 +180,7 @@ export default function Footer() {
                 <circle cx="50" cy="50" r="3" fill="currentColor" />
               </svg>
               <p className="text-sm text-zinc-500">
-                © {currentYear} Digital Grimoire. All rights reserved.
+                © {currentYear} Convergence. All rights reserved.
               </p>
             </div>
 

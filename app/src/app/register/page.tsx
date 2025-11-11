@@ -84,9 +84,9 @@ export default function RegisterPage() {
               <circle cx="50" cy="50" r="3" fill="currentColor" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-amber-100">Join the Grimoire</h1>
+          <h1 className="text-3xl font-bold text-amber-100">Join Convergence</h1>
           <p className="mt-2 text-sm text-zinc-400">
-            Begin your esoteric journey
+            Begin your journey of discovery
           </p>
         </div>
 

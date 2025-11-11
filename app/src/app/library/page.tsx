@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useQueryClient } from '@tanstack/react-query';
 import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2, ArrowUpDown, ChevronDown } from 'lucide-react';
@@ -31,11 +31,20 @@ const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), 
 
 // Types are now imported from useLibrary hook
 
-export default function LibraryPage() {
+function LibraryPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Read search query from URL params on mount
+  useEffect(() => {
+    const urlSearch = searchParams.get('search');
+    if (urlSearch) {
+      setSearchQuery(decodeURIComponent(urlSearch));
+    }
+  }, [searchParams]);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -355,6 +364,24 @@ export default function LibraryPage() {
       
       <Footer />
     </div>
+  );
+}
+
+export default function LibraryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+          <Header />
+          <div className="flex flex-1 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
+          </div>
+          <Footer />
+        </div>
+      }
+    >
+      <LibraryPageContent />
+    </Suspense>
   );
 }
 

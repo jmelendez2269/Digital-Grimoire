@@ -1,15 +1,20 @@
 "use client";
 
-import { useState, memo, useMemo } from "react";
+import { useState, memo, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import FeedbackModal from "./FeedbackModal";
+import { ChevronDown } from "lucide-react";
 
 function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, signOut, isAdmin } = useAuth(); // Single source of truth
   const [menuOpen, setMenuOpen] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
     await signOut();
@@ -19,6 +24,23 @@ function Header() {
 
   const isActive = (path: string) => pathname === path;
 
+  // Close more menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setMoreMenuOpen(false);
+      }
+    }
+
+    if (moreMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [moreMenuOpen]);
+
   // --- Admin Navigation Config ---
   // All admin navigation must exist only in this array, and only inside the profile dropdown.
   // Do not add admin links to the main navigation bar; new admin pages must be added to this array.
@@ -27,6 +49,7 @@ function Header() {
     { label: "Admin Panel", icon: "🔐", href: "/admin" },
     { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
     { label: "Import Sacred Text", icon: "🌐", href: "/admin/import-sacred-text" },
+    { label: "Feedback", icon: "💬", href: "/admin/feedback" },
     // To add new admin pages, add entries here!
   ];
 
@@ -45,7 +68,7 @@ function Header() {
             <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" />
             <circle cx="50" cy="50" r="3" fill="currentColor" />
           </svg>
-          <span className="text-xl font-bold text-amber-100">Digital Grimoire</span>
+          <span className="text-xl font-bold text-amber-100">Convergence</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -68,7 +91,7 @@ function Header() {
                 : "text-zinc-400 hover:text-amber-300"
             }`}
           >
-            📝 Journal
+            📝 {user?.user_metadata?.journal_name || "Journal"}
           </Link>
           <Link
             href="/convergence-machine"
@@ -80,40 +103,49 @@ function Header() {
           >
             ⚡ Convergence Machine
           </Link>
-          <Link
-            href="/correspondences"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/correspondences")
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
-          >
-            🔮 Correspondences
-          </Link>
-          <Link
-            href="/grimoire"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/grimoire")
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
-          >
-            📖 My Grimoire
-          </Link>
-          <Link
-            href="/rituals"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/rituals")
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
-          >
-            ⚗️ Rituals
-          </Link>
+
+          {/* More Menu - Coming Soon Features */}
+          <div className="relative" ref={moreMenuRef}>
+            <button
+              onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+              className="flex items-center gap-1 text-sm font-medium text-zinc-400 transition-colors hover:text-amber-300"
+            >
+              More
+              <ChevronDown className={`w-4 h-4 transition-transform ${moreMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {moreMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl py-2 z-50">
+                <div className="px-3 py-2 text-xs font-semibold text-amber-500/70 uppercase tracking-wider">
+                  Coming Soon
+                </div>
+                <div className="px-3 py-1.5 text-sm text-zinc-500">
+                  <div className="flex items-center gap-2 py-1">
+                    <span>🔮</span>
+                    <span>Correspondences</span>
+                  </div>
+                  <div className="flex items-center gap-2 py-1">
+                    <span>⚗️</span>
+                    <span>Ritual Machine</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Auth Buttons / User Menu */}
         <div className="flex items-center gap-4">
+          {/* Feedback Button - Always accessible */}
+          <button
+            onClick={() => setFeedbackModalOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-medium text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+            aria-label="Send Feedback"
+          >
+            <span className="text-base">💬</span>
+            <span className="hidden sm:inline">Feedback</span>
+          </button>
+
           {/* Debug info - remove after testing */}
           {process.env.NODE_ENV === 'development' && (
             <div className="text-xs text-zinc-500">
@@ -243,7 +275,7 @@ function Header() {
                         onClick={() => setMenuOpen(false)}
                       >
                         <span className="text-base">📝</span>
-                        <span>Study Journal</span>
+                        <span>{user?.user_metadata?.journal_name || "Journal"}</span>
                       </Link>
                       <Link
                         href="/annotations/search"
@@ -261,6 +293,24 @@ function Header() {
                         <span className="text-base">⚙️</span>
                         <span>Settings</span>
                       </Link>
+                    </div>
+
+                    {/* Coming Soon Section */}
+                    <hr className="my-1 border-zinc-800" />
+                    <div className="py-1">
+                      <div className="px-4 py-1 text-xs font-semibold text-amber-500/70 uppercase tracking-wider">
+                        Coming Soon
+                      </div>
+                      <div className="px-4 py-2 text-sm text-zinc-500">
+                        <div className="flex items-center gap-3 py-1">
+                          <span className="text-base">🔮</span>
+                          <span>Correspondences</span>
+                        </div>
+                        <div className="flex items-center gap-3 py-1">
+                          <span className="text-base">⚗️</span>
+                          <span>Ritual Machine</span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Admin Section - Always render for admins */}
@@ -328,6 +378,12 @@ function Header() {
           )}
         </div>
       </nav>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+      />
     </header>
   );
 }

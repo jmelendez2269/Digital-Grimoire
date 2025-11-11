@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AvatarCropModal from "@/components/AvatarCropModal";
+import JournalNamePreference from "@/components/JournalNamePreference";
 
 export default function ProfilePage() {
   const { user, loading: authLoading, supabase } = useAuth();
@@ -452,6 +453,11 @@ export default function ProfilePage() {
                       className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                       placeholder="Share a bit about your esoteric journey..."
                     />
+                  </div>
+
+                  {/* Journal Name Preference */}
+                  <div className="border-t border-zinc-800 pt-6">
+                    <JournalNamePreference />
                   </div>
 
                   {/* Save Button */}

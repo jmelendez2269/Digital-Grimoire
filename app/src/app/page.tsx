@@ -37,12 +37,12 @@ export default function Home() {
 
         {/* Title */}
         <h1 className="mb-4 text-6xl font-bold tracking-tight text-amber-100">
-          Digital Grimoire
+          Convergence
         </h1>
         
         {/* Subtitle */}
         <p className="mb-8 max-w-2xl text-xl text-amber-200/70">
-          A Collaborative Esoteric Library
+          Where Hidden Wisdom Reveals Our Unity
         </p>
 
         {/* AI Search Bar - Lazy loaded */}

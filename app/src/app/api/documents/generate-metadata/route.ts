@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     const domain = document.domain || 'the subject matter';
 
     if (field === 'curatorNote') {
-      const prompt = `You are analyzing "${title}"${author} for the Digital Grimoire collection.
+      const prompt = `You are analyzing "${title}"${author} for the Convergence collection.
 
 This is a collection focused on synthesizing knowledge across traditions - esoteric, religious, philosophical, scientific, and wisdom texts.
 
@@ -168,7 +168,7 @@ Respond with ONLY the summary text, no additional explanation or formatting.`;
     } else if (field === 'domain') {
       const prompt = `Analyze "${title}"${author} and determine its primary subject domain.
 
-This document is part of the Digital Grimoire collection, which focuses on synthesizing knowledge across esoteric, religious, philosophical, scientific, and wisdom traditions.
+This document is part of the Convergence collection, which focuses on synthesizing knowledge across esoteric, religious, philosophical, scientific, and wisdom traditions.
 
 Based on the content, identify the primary subject domain. Common domains include but are not limited to:
 - astrology, alchemy, hermeticism, qabalah, tarot, mysticism
