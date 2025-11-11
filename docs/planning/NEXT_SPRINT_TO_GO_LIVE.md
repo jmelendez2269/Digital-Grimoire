@@ -64,6 +64,8 @@ Complete all critical infrastructure and testing required for production launch.
 
 **Note:** Hostinger provides free Lifetime SSL certificates that are automatically installed. DNS configuration is managed through Hostinger's hPanel control panel.
 
+**📖 Detailed Step-by-Step Guide:** See `docs/Setup Docs/HOSTINGER_DOMAIN_SSL_SETUP.md` for complete instructions.
+
 - [ ] **Domain DNS Configuration**
   - [ ] Access Hostinger hPanel (control panel)
   - [ ] Navigate to Domain → DNS Zone Editor
@@ -336,6 +338,7 @@ Complete all critical infrastructure and testing required for production launch.
 
 ## 📚 Reference Documentation
 
+- **Domain & SSL Setup:** `docs/Setup Docs/HOSTINGER_DOMAIN_SSL_SETUP.md` ⭐ **NEW - Step-by-step guide**
 - **Email Setup:** `docs/Setup Docs/SENDGRID_SETUP.md`
 - **Email Templates:** `docs/Setup Docs/EMAIL_TEMPLATES_COMPLETE.md`
 - **Email Monitoring:** `docs/Setup Docs/EMAIL_MONITORING_SETUP.md`
