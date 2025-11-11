@@ -82,18 +82,30 @@ If you see "Module not found: Can't resolve '<package>'":
 
 ## Git Repository Sync Rules
 
+### ⚠️ MANDATORY COMPLETION CHECKLIST
+
+**After completing ANY task, you MUST:**
+
+1. ✅ **Review what was created/changed** - List all files that were created or modified
+2. ✅ **Proactively offer to commit** - Say: "I've completed [task description]. Would you like me to commit and push these changes?"
+3. ✅ **If user approves and you have tools:** Execute git commands (pull, add, commit, push)
+4. ✅ **If in ask mode:** Provide exact git commands for user to run
+5. ✅ **Verify commit success** - Check `git status` after push to confirm
+
+**This checklist is MANDATORY and must be completed before marking any task as done. DO NOT SKIP THIS STEP.**
+
 ### Periodic Git Sync (MANDATORY)
 
 The AI assistant **MUST** periodically sync code with the remote repository:
 
 #### When to Sync:
 
-1. **After completing any feature** or significant change
-2. **After creating/updating documentation**
-3. **After fixing bugs** or resolving issues
-4. **At the end of each work session**
+1. **After completing any feature** or significant change ⚠️ **ALWAYS OFFER TO COMMIT**
+2. **After creating/updating documentation** ⚠️ **ALWAYS OFFER TO COMMIT**
+3. **After fixing bugs** or resolving issues ⚠️ **ALWAYS OFFER TO COMMIT**
+4. **At the end of each work session** ⚠️ **ALWAYS OFFER TO COMMIT**
 5. **When asked by the user** to commit/push
-6. **After making multiple file changes** (every 5-10 files)
+6. **After making multiple file changes** (every 5-10 files) ⚠️ **ALWAYS OFFER TO COMMIT**
 
 #### Sync Process:
 
@@ -128,14 +140,14 @@ git push origin main
 - `chore:` - Maintenance tasks
 - `db:` - Database migrations
 
-#### ⚠️ IMPORTANT:
+#### ⚠️ CRITICAL - DO NOT SKIP:
 
-- **Ask the user if they're ready to commit** after completing successful changes
-- **Proactively offer to commit and push** when work is complete
-- **Push commits to remote immediately after user approval** to ensure work is backed up
-- **Group related changes** into logical commits
-- **Always pull before pushing** to avoid conflicts
-- **Verify sync success** with `git status`
+- **MANDATORY:** After completing work, proactively offer to commit with: "I've completed [task description]. Would you like me to commit and push these changes?"
+- **MANDATORY:** If user approves, execute git commands (or provide them if in ask mode)
+- **MANDATORY:** Always pull before pushing to avoid conflicts
+- **MANDATORY:** Verify sync success with `git status`
+- **MANDATORY:** Group related changes into logical commits
+- **MANDATORY:** Push commits to remote immediately after user approval to ensure work is backed up
 
 #### Why This Rule Exists:
 
