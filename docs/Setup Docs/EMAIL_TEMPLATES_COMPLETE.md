@@ -651,10 +651,19 @@ Reauthentication Required - Convergence Library
     
     <p>Greetings, Scholar.</p>
     
-    <p>For security purposes, you need to reauthenticate your account to complete a sensitive action. Click the button below to verify your identity:</p>
+    <p>For security purposes, you need to reauthenticate your account to complete a sensitive action. Use the verification code below or click the button to verify your identity:</p>
+    
+    <div class="warning" style="text-align: center; padding: 24px; margin: 24px 0;">
+      <p style="margin: 0; color: #fef3c7; font-size: 18px; font-weight: 600; letter-spacing: 4px; font-family: monospace;">
+        {{ .Token }}
+      </p>
+      <p style="margin: 12px 0 0; color: #a1a1aa; font-size: 14px;">
+        Enter this code to complete reauthentication
+      </p>
+    </div>
     
     <div class="button-container">
-      <a href="{{ .ConfirmationURL }}" class="button">Reauthenticate</a>
+      <a href="{{ .ConfirmationURL }}" class="button">Or Click Here to Reauthenticate</a>
     </div>
     
     <p style="text-align: center; color: #71717a; font-size: 14px;">
@@ -665,7 +674,7 @@ Reauthentication Required - Convergence Library
     <div class="warning">
       <p style="margin: 0; color: #fef3c7;"><strong>Security Notice:</strong></p>
       <p style="margin: 8px 0 0; color: #a1a1aa;">
-        This link is required for sensitive account operations. 
+        This code and link are required for sensitive account operations. 
         If you didn't initiate this request, please secure your account immediately.
       </p>
     </div>
@@ -858,9 +867,9 @@ After configuring each template:
 ### Step 4: Verify Variables
 
 Ensure these Supabase template variables are preserved:
-- `{{ .ConfirmationURL }}` - The confirmation/action link
-- `{{ .Email }}` - User's email address (in change email template)
-- `{{ .Token }}` - Token (if used)
+- `{{ .ConfirmationURL }}` - The confirmation/action link (used in most templates)
+- `{{ .Email }}` - User's email address (used in change email template)
+- `{{ .Token }}` - Token code (used in reauthentication template - users enter this code manually)
 - `{{ .TokenHash }}` - Token hash (if used)
 
 ---

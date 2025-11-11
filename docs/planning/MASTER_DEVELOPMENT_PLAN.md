@@ -853,7 +853,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 
 #### n8n Agent Workflows
 - [ ] n8n installation (self-hosted or cloud)
-- [ ] 15 AI agent workflows:
+- [ ] 16 AI agent workflows:
   - Document OCR processor
   - Metadata classifier
   - Correspondence extractor
@@ -869,6 +869,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
   - Error monitor
   - Usage tracker
   - Token distributor
+  - **Email Monitoring Agent** - Automated bounce rate review and troubleshooting
 
 #### Advanced Graph Features
 - [ ] Global graph view (with anti-hairball filters)
@@ -1160,6 +1161,7 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 13. **Blockchain Agent** - Token smart contracts
 14. **Legal Agent** - Compliance and ToS
 15. **Prompt Engineer Agent** - AI instruction optimization
+16. **Email Monitoring Agent** - Email deliverability monitoring, bounce rate analysis, and automated troubleshooting
 
 **Implementation via n8n:**
 - Each agent = dedicated workflow
@@ -1167,6 +1169,71 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 - Shared knowledge base (Supabase)
 - Human-in-the-loop for critical decisions
 - Weekly agent reports to Vision Agent
+
+### Email Monitoring Agent (Agent #16) - Detailed Responsibilities
+
+**Primary Functions:**
+1. **Automated Bounce Rate Review**
+   - Daily analysis of email_events table for bounce patterns
+   - Categorize bounces (hard vs soft, by reason code)
+   - Identify bounce clusters (specific providers, email types, user segments)
+   - Generate bounce rate reports with trend analysis
+
+2. **Automated Troubleshooting Workflows**
+   - **High Bounce Rate (>5%)**: 
+     - Query email_events for bounce reasons
+     - Check for invalid email patterns in database
+     - Review email validation logic
+     - Remove hard bounces from user list automatically
+     - Generate remediation report for admin review
+   
+   - **Spam Complaint Rate (>0.1%)**:
+     - Analyze complaint patterns
+     - Review email content and subject lines
+     - Check sender reputation metrics
+     - Flag emails for content review
+   
+   - **Delivery Failure Rate (>10%)**:
+     - Verify SMTP configuration status
+     - Check DNS records (SPF, DKIM, DMARC) via API
+     - Monitor domain reputation scores
+     - Alert Engineering Agent if infrastructure issues detected
+
+3. **Proactive Email List Hygiene**
+   - Daily cleanup of hard bounces from user database
+   - Weekly review of soft bounces (convert to hard after 3 attempts)
+   - Monthly email validation audit
+   - Quarterly comprehensive list cleanup
+
+4. **Automated Reporting**
+   - Daily metrics summary (delivery rate, bounce rate, spam rate)
+   - Weekly trend analysis with recommendations
+   - Monthly comprehensive email health report
+   - Alert notifications when thresholds exceeded
+
+**Workflow Triggers:**
+- **Scheduled:** Daily at 9 AM UTC (bounce review), Weekly on Mondays (trend analysis)
+- **Event-Driven:** SendGrid webhook events (bounce, spamreport, dropped)
+- **Threshold-Based:** Alert-triggered workflows when metrics exceed thresholds
+
+**Integration Points:**
+- **SendGrid API:** Fetch bounce details, suppression lists, domain reputation
+- **Supabase Database:** Query email_events, update user records, log actions
+- **Engineering Agent:** Escalate infrastructure issues
+- **Admin Dashboard:** Post reports and alerts
+
+**Human-in-the-Loop Checkpoints:**
+- Before removing >100 users from database
+- Before changing email validation rules
+- Before escalating to Engineering Agent
+- When bounce rate >10% (critical threshold)
+
+**Success Metrics:**
+- Bounce rate maintained <5%
+- 95%+ delivery rate
+- <0.1% spam complaint rate
+- Automated resolution of 80%+ bounce issues
+- Zero manual intervention for routine bounce cleanup
 
 ---
 
