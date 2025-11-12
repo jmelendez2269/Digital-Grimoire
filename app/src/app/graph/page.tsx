@@ -15,7 +15,7 @@ const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), 
 
 interface Entity {
   id: string;
-  slug: string;
+  slug?: string;
   name: string;
   category: string;
   aliases?: string[];
