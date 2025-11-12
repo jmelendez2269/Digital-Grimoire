@@ -166,7 +166,7 @@ export default function EditDocumentPage() {
         });
         // Update original values if info was edited
         setOriginalTitle(updatedTitle);
-        setOriginalAuthor(updatedAuthor);
+        setOriginalAuthor(updatedAuthor || '');
         setOriginalYear(updatedYear);
         // Exit edit mode if it was active
         setIsEditingInfo(false);
@@ -479,7 +479,7 @@ export default function EditDocumentPage() {
           year: updatedYear,
         });
         setOriginalTitle(updatedTitle);
-        setOriginalAuthor(updatedAuthor);
+        setOriginalAuthor(updatedAuthor || '');
         setOriginalYear(updatedYear);
       }
 
