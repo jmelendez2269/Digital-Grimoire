@@ -88,9 +88,10 @@ This checklist ensures all critical infrastructure and configurations are in pla
 - [ ] **Secrets Security Verified**
   - [ ] No secrets committed to git
   - [ ] `.env.local` in `.gitignore`
-  - [ ] Production secrets stored in Vercel dashboard
-  - [ ] Team has access to 1Password/vault for shared secrets
+  - [ ] Production secrets stored in Hostinger hPanel (`.env.production` file with 600 permissions) or Hostinger environment variable management
+  - [ ] Personal password vault set up for backup (optional but recommended)
   - [ ] Emergency access procedures documented
+  - [ ] See `docs/SECURITY_VERIFICATION_REPORT.md` for detailed verification
 
 ---
 
@@ -102,12 +103,12 @@ This checklist ensures all critical infrastructure and configurations are in pla
 - [ ] **Domain Setup**
   - [x] Domain registered (convergencelibrary.com)
   - [ ] DNS records configured
-  - [ ] A/AAAA records pointing to Vercel
+  - [ ] A/AAAA records pointing to Hostinger
   - [ ] CNAME records set up correctly
-  - [ ] Domain verified in Vercel
+  - [ ] Domain verified in Hostinger hPanel
 
 - [ ] **SSL/TLS Certificate**
-  - [ ] SSL certificate provisioned (Vercel auto)
+  - [ ] SSL certificate provisioned (Hostinger Lifetime SSL - automatic)
   - [ ] HTTPS redirect enabled
   - [ ] Certificate auto-renewal confirmed
   - [ ] SSL Labs test passed (A+ rating)
@@ -153,7 +154,7 @@ This checklist ensures all critical infrastructure and configurations are in pla
   - [ ] Team notification channels set up
 
 - [ ] **Application Monitoring**
-  - [ ] Vercel Analytics enabled
+  - [ ] Application analytics enabled (Hostinger or third-party)
   - [ ] Performance metrics tracked
   - [ ] Core Web Vitals monitored
   - [ ] Uptime monitoring configured (Pingdom/UptimeRobot)
@@ -285,10 +286,10 @@ This checklist ensures all critical infrastructure and configurations are in pla
 - **SendGrid Support:** support@sendgrid.com
 - **Supabase Support:** support@supabase.io
 - **AWS Support:** [Support Plan Link]
-- **Vercel Support:** support@vercel.com
+- **Hostinger Support:** [Support contact from hPanel]
 
 **Escalation Path:**
-1. Check status pages (Supabase, Vercel, AWS, SendGrid)
+1. Check status pages (Supabase, Hostinger, AWS, SendGrid)
 2. Review recent deployments
 3. Check monitoring dashboards
 4. Contact relevant support if needed

@@ -147,11 +147,11 @@ The `.env.local` file is already in `.gitignore`. Keep it that way.
 
 ### Best Practices:
 1. ✅ Use `.env.local` for local development
-2. ✅ Use Vercel/hosting platform environment variables for production
+2. ✅ Use Hostinger `.env.production` file for production (see [HOSTINGER_PRODUCTION_SECRETS.md](./HOSTINGER_PRODUCTION_SECRETS.md))
 3. ✅ Rotate API keys every 90 days
 4. ✅ Use separate keys for development and production
 5. ❌ Never hardcode credentials in source code
-6. ❌ Never share `.env.local` file
+6. ❌ Never share `.env.local` or `.env.production` files
 
 ---
 
