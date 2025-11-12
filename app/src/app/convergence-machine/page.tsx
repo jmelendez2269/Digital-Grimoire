@@ -154,7 +154,7 @@ export default function ConvergenceMachinePage() {
                 setIsStreaming(false);
               } else if (data.type === 'synthesis') {
                 // Update synthesis immediately
-                setResponse(prev => ({
+                setResponse((prev: any) => ({
                   ...(prev || { query, responses: [], sources: [], synthesis: '' }),
                   query: query, // Ensure query is set
                   synthesis: data.content || '',
