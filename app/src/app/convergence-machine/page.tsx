@@ -11,7 +11,8 @@ import LensPresets from '@/components/convergence/LensPresets';
 import ResponseLengthSlider from '@/components/convergence/ResponseLengthSlider';
 import RateLimitDisplay from '@/components/convergence/RateLimitDisplay';
 import PremiumGate from '@/components/convergence/PremiumGate';
-import { LensWeights, getAllLenses } from '@/lib/convergence/lenses';
+import { getAllLenses } from '@/lib/convergence/lenses';
+import { LensWeights } from '@/lib/convergence/lens-orchestrator';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Dynamically import ResponseStream to reduce initial bundle size
