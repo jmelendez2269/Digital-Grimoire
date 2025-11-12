@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { chunkId: string } }
+  { params }: { params: Promise<{ chunkId: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -25,7 +25,7 @@ export async function GET(
       );
     }
 
-    const { chunkId } = params;
+    const { chunkId } = await params;
 
     if (!chunkId) {
       return new Response(

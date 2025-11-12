@@ -16,7 +16,7 @@ import { getLens } from '@/lib/convergence/lenses';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { lensId: string } | Promise<{ lensId: string }> }
+  { params }: { params: Promise<{ lensId: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -34,9 +34,7 @@ export async function POST(
       );
     }
 
-    // Handle both sync and async params (Next.js version compatibility)
-    const resolvedParams = params instanceof Promise ? await params : params;
-    const { lensId } = resolvedParams;
+    const { lensId } = await params;
 
     // Parse request body
     const body = await request.json();
