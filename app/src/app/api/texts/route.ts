@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     // Build query
     let query = supabase
       .from('texts')
-      .select('*', { count: 'exact' } as any);
+      .select('*', { count: 'exact' } as any) as any;
 
     // Apply search filter
     if (search) {
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
     if (sortField === 'title') {
       // Since Supabase order() doesn't support expressions, we'll sort after fetching
       // Fetch all matching records (without pagination) to sort properly
-      const { data: allData, error: fetchError, count } = await query.select('*', { count: 'exact' } as any);
+      const { data: allData, error: fetchError, count } = await (query as any).select('*', { count: 'exact' });
       
       if (fetchError) {
         console.error('Database error:', fetchError);
