@@ -119,6 +119,7 @@ interface TextDocument {
     isStructuredText?: boolean;
     chapters?: Chapter[];
     format?: 'html' | 'markdown' | 'plaintext';
+    sourceUrl?: string;
   };
 }
 
@@ -188,7 +189,7 @@ export default function DocumentDetailPage() {
       }
 
       console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key, 'Source format:', data.source_format);
-      setDocument(data);
+      setDocument(data as TextDocument);
 
       // Check if this is an HTML file (not structured text, source_format is html)
       const isHtmlFile = data.source_format === 'html' && !data.metadata?.isStructuredText;
@@ -784,7 +785,7 @@ export default function DocumentDetailPage() {
                   Edit
                 </Link>
               )}
-              {isAdmin && document.metadata?.isStructuredText && document.metadata?.sourceUrl && (
+              {isAdmin && document.metadata?.isStructuredText && (document.metadata as TextDocument['metadata'])?.sourceUrl && (
                 <button
                   onClick={handleReimport}
                   disabled={reimporting}
