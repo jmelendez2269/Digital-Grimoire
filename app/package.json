@@ -62,6 +62,7 @@
     "lucide-react": "^0.548.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.40.0",
     "next": "16.0.0",
+    "openai": "^6.8.1",
     "pdfjs-dist": "3.11.174",
     "playwright-core": "^1.56.1",
     "react": "19.2.0",
