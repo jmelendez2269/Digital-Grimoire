@@ -100,7 +100,7 @@ export async function GET(request: Request) {
       }
       
       // Sort by title with articles ignored
-      const sortedData = (allData || []).sort((a, b) => {
+      const sortedData = (allData || []).sort((a: any, b: any) => {
         const stripArticles = (title: string | null): string => {
           if (!title) return '';
           const lowerTitle = title.toLowerCase().trim();
