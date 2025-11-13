@@ -71,18 +71,18 @@ export default function JournalEditor({
     }
 
     if (!content) {
-      editor.commands.setContent('', false);
+      editor.commands.setContent('', { emitUpdate: false });
       lastAppliedContentRef.current = '';
       return;
     }
 
     try {
       const parsed = JSON.parse(content);
-      editor.commands.setContent(parsed, false);
+      editor.commands.setContent(parsed, { emitUpdate: false });
       lastAppliedContentRef.current = content;
       return;
     } catch {
-      editor.commands.setContent(content, false);
+      editor.commands.setContent(content, { emitUpdate: false });
       lastAppliedContentRef.current = content;
     }
   }, [content, editor]);
