@@ -2,7 +2,80 @@
 
 **Last Updated:** November 2025  
 **Status:** Active Production Workflow  
-**Domain:** convergencelibrary.com
+**Domain:** convergencelibrary.com  
+**Development Environment:** Cursor IDE
+
+---
+
+## 📁 Understanding Your Local Files & Git Sync
+
+### What Are Your Local Files?
+
+Your **local files** (in `C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire\`) are:
+
+- ✅ **Your working copy** - Where you edit code in Cursor
+- ✅ **The source of truth** - Your actual project files
+- ✅ **Synced to OneDrive** - Automatically backed up to cloud
+- ✅ **Connected to Git** - Changes get committed and pushed to GitHub
+
+### How Local Files Flow to Production
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. LOCAL FILES (Cursor)                                      │
+│    📁 Digital-Grimoire/app/src/...                          │
+│    → You edit files here in Cursor                          │
+│    → Files are on your computer + OneDrive backup           │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        │ git add + git commit + git push
+                        ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 2. GIT REPOSITORY (Local)                                    │
+│    📦 .git/ folder tracks changes                            │
+│    → Git version control on your machine                    │
+│    → Tracks what changed, when, and why                     │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        │ git push origin <branch>
+                        ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 3. GITHUB (Remote Repository)                                │
+│    🌐 github.com/jmelendez2269/Digital-Grimoire             │
+│    → Cloud backup of your code                              │
+│    → Version history and collaboration                      │
+│    → Triggers Vercel deployment automatically              │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        │ Automatic webhook
+                        ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 4. VERCEL (Live Deployment)                                  │
+│    🚀 convergencelibrary.com (production)                   │
+│    🧪 Preview URL (development)                              │
+│    → Builds and deploys your code                           │
+│    → Makes it accessible on the internet                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Points About Local Files
+
+1. **Local files are where you work** - All editing happens in Cursor on your local machine
+2. **Git tracks changes** - When you commit, Git saves a snapshot of your local files
+3. **GitHub stores history** - Pushing to GitHub backs up your code and triggers deployments
+4. **Vercel deploys from GitHub** - Vercel reads from GitHub, not your local files directly
+5. **OneDrive provides backup** - Your files are also synced to OneDrive automatically
+
+### What Happens When You Edit in Cursor?
+
+1. **You edit a file** in Cursor → File changes on your local disk
+2. **File is saved** → Saved to local disk + synced to OneDrive
+3. **Git sees the change** → File shows as "modified" in git status
+4. **You commit** → Git creates a snapshot of your local files
+5. **You push** → Local Git sends changes to GitHub
+6. **Vercel detects push** → Automatically builds and deploys from GitHub
+
+**Important:** Your local files are the **source** - nothing deploys until you commit and push!
 
 ---
 
@@ -28,65 +101,89 @@ feature/* (local)     → Your local feature branches
 
 ---
 
-## 🚀 How to Work with Branches
+## 🚀 How to Work with Branches in Cursor
 
-### Starting Development
+### Starting Development in Cursor
 
-**Always start from `develop`:**
+**Always start from `develop` branch:**
 
-```powershell
-# Navigate to repo
-cd "C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire"
+1. **Open Cursor** - Your workspace is already set to the project folder
+2. **Check current branch** - Look at bottom status bar or ask AI: "What branch am I on?"
+3. **Switch to develop** (if not already there):
+   - Ask AI: "Switch to develop branch"
+   - Or use terminal in Cursor: `git checkout develop`
+4. **Pull latest changes**:
+   - Ask AI: "Pull latest from develop"
+   - Or: `git pull origin develop`
 
-# Switch to develop branch
-git checkout develop
+**Your local files in Cursor are now synced with the `develop` branch.**
 
-# Pull latest changes
-git pull origin develop
+### Working in Cursor
 
-# Create feature branch (optional, or work directly on develop)
-git checkout -b feature/your-feature-name
-```
+**Daily workflow:**
+1. **Edit files** in Cursor - Make your changes normally
+2. **Files save automatically** - Changes are on your local disk
+3. **See changes** - Cursor shows modified files with indicators
+4. **Test locally** - Run `pnpm dev` to test in browser
+5. **Commit when ready** - Tell AI to commit your changes
 
-### Committing to Development
+### Committing to Development from Cursor
 
-**When you want to commit your work to the development branch:**
+**When you want to save your local changes to the development branch:**
 
-Just say to the AI:
+Just say to the AI in Cursor:
 - ✅ **"Commit this to develop"**
 - ✅ **"Commit to dev branch"**
 - ✅ **"Save this to develop"**
+- ✅ **"Commit and push to develop"**
 
 The AI will:
-1. Stage your changes
-2. Commit to `develop` branch
-3. Push to `origin/develop`
+1. Stage your **local file changes** (from Cursor)
+2. Commit to `develop` branch (saves snapshot to local Git)
+3. Push to `origin/develop` (sends to GitHub)
 4. Trigger Vercel preview deployment automatically
 
-**Manual command:**
+**What this means:**
+- Your **local files** in Cursor get committed to **local Git**
+- Local Git pushes to **GitHub** (cloud backup)
+- GitHub triggers **Vercel** to build and deploy
+
+**Manual command (in Cursor terminal):**
 ```powershell
 git add .
 git commit -m "feat: your description"
 git push origin develop
 ```
 
-### Deploying to Production
+### Deploying to Production from Cursor
 
-**When you're ready to deploy to production (convergencelibrary.com):**
+**When you're ready to deploy your local changes to production (convergencelibrary.com):**
 
-Just say to the AI:
+**First, make sure your local changes are committed to `develop`:**
+- If you have uncommitted changes, say: "Commit this to develop"
+- Test on Vercel preview URL first!
+
+**Then deploy to production:**
+
+Just say to the AI in Cursor:
 - ✅ **"Push develop to main"**
 - ✅ **"Deploy to production"**
 - ✅ **"Merge and deploy"**
 - ✅ **"Merge develop to main"**
 
 The AI will:
-1. Switch to `main` branch
-2. Merge `develop` into `main`
-3. Push to `origin/main`
+1. Switch your **local Git** to `main` branch
+2. Merge `develop` into `main` (combines your local commits)
+3. Push to `origin/main` (sends to GitHub)
 4. Vercel automatically deploys to production
 
-**Manual command:**
+**What happens:**
+- Your **local Git** merges branches
+- Pushes merged code to **GitHub**
+- **Vercel** detects the push and deploys to `convergencelibrary.com`
+- Your **local files** in Cursor remain unchanged (still on `develop`)
+
+**Manual command (in Cursor terminal):**
 ```powershell
 git checkout main
 git pull origin main
@@ -117,73 +214,120 @@ git push origin main
 ### Deployment Process
 
 ```
-Your Code → Git Push → GitHub → Vercel Webhook → Build → Deploy → Live
+Your Local Files (Cursor)
+    ↓ (git add + commit)
+Local Git Repository
+    ↓ (git push)
+GitHub (Remote Repository)
+    ↓ (automatic webhook)
+Vercel Build & Deploy
+    ↓
+Live Website (convergencelibrary.com)
 ```
 
-**No manual steps needed!** Vercel handles everything automatically.
+**No manual steps needed!** Vercel handles everything automatically once you push to GitHub.
+
+**Important:** Your local files in Cursor are the starting point - they must be committed and pushed to trigger deployments.
 
 ---
 
-## 📋 Common Workflow Scenarios
+## 📋 Common Workflow Scenarios in Cursor
 
-### Scenario 1: Daily Development
+### Scenario 1: Daily Development in Cursor
 
-```powershell
-# 1. Start your day
-git checkout develop
-git pull origin develop
+**In Cursor IDE:**
 
-# 2. Make your changes
-# ... edit files ...
+1. **Start your day**
+   - Open Cursor (project folder is already open)
+   - Ask AI: "What branch am I on?" or check status bar
+   - If not on `develop`, say: "Switch to develop branch"
+   - Say: "Pull latest from develop"
 
-# 3. Commit to develop (tell AI: "commit to develop")
-git add .
-git commit -m "feat: added new feature"
-git push origin develop
+2. **Make your changes**
+   - Edit files normally in Cursor
+   - Files save automatically to your local disk
+   - Test locally with `pnpm dev` if needed
 
-# 4. Vercel creates preview URL automatically
-# Check Vercel dashboard for preview link
-```
+3. **Commit your local changes**
+   - Tell AI: **"Commit this to develop"**
+   - AI stages, commits, and pushes your local files
+   - Or manually in terminal:
+     ```powershell
+     git add .
+     git commit -m "feat: added new feature"
+     git push origin develop
+     ```
 
-### Scenario 2: Ready for Production
+4. **Vercel creates preview URL automatically**
+   - Check Vercel dashboard for preview link
+   - Test your changes on the preview URL
+   - Your local files are now backed up on GitHub and deployed!
 
-```powershell
-# 1. Make sure develop is tested and working
-# Test on Vercel preview URL first!
+### Scenario 2: Ready for Production from Cursor
 
-# 2. Deploy to production (tell AI: "deploy to production")
-git checkout main
-git pull origin main
-git merge develop
-git push origin main
+**In Cursor IDE:**
 
-# 3. Vercel automatically deploys to convergencelibrary.com
-# Monitor Vercel dashboard for deployment status
-```
+1. **Make sure develop is tested and working**
+   - Test on Vercel preview URL first!
+   - Verify all your local changes work correctly
+   - Ensure all local files are committed to `develop`
 
-### Scenario 3: Hotfix (Urgent Production Fix)
+2. **Deploy to production**
+   - Tell AI in Cursor: **"Deploy to production"** or **"Push develop to main"**
+   - AI will merge your local `develop` branch into `main` and push
+   - Or manually in terminal:
+     ```powershell
+     git checkout main
+     git pull origin main
+     git merge develop
+     git push origin main
+     ```
 
-```powershell
-# 1. Create hotfix branch from main
-git checkout main
-git pull origin main
-git checkout -b hotfix/critical-bug
+3. **Vercel automatically deploys**
+   - Vercel detects the push to `main` on GitHub
+   - Automatically builds and deploys to `convergencelibrary.com`
+   - Monitor Vercel dashboard for deployment status
+   - Your local files in Cursor stay on `develop` branch
 
-# 2. Fix the issue
-# ... make changes ...
+### Scenario 3: Hotfix (Urgent Production Fix) in Cursor
 
-# 3. Commit and merge directly to main
-git add .
-git commit -m "fix: critical bug fix"
-git checkout main
-git merge hotfix/critical-bug
-git push origin main
+**In Cursor IDE:**
 
-# 4. Also merge back to develop
-git checkout develop
-git merge main
-git push origin develop
-```
+1. **Create hotfix branch from main**
+   - Tell AI: "Create hotfix branch from main"
+   - Or manually:
+     ```powershell
+     git checkout main
+     git pull origin main
+     git checkout -b hotfix/critical-bug
+     ```
+
+2. **Fix the issue in Cursor**
+   - Edit files normally in Cursor
+   - Make the critical fix
+   - Test locally if possible
+
+3. **Commit and merge directly to main**
+   - Tell AI: "Commit this hotfix and deploy to production"
+   - Or manually:
+     ```powershell
+     git add .
+     git commit -m "fix: critical bug fix"
+     git checkout main
+     git merge hotfix/critical-bug
+     git push origin main
+     ```
+
+4. **Also merge back to develop**
+   - Tell AI: "Merge main back to develop"
+   - Or manually:
+     ```powershell
+     git checkout develop
+     git merge main
+     git push origin develop
+     ```
+
+**Your local files in Cursor are now synced across all branches.**
 
 ---
 
@@ -226,24 +370,39 @@ Every push triggers automated checks:
 
 ---
 
-## 🔍 Checking Current Status
+## 🔍 Checking Current Status in Cursor
 
 ### See Current Branch
 
+**In Cursor:**
+- Check the status bar at bottom of Cursor window
+- Or ask AI: **"What branch am I on?"**
+
+**In terminal:**
 ```powershell
 git branch
 # Shows: * develop (current branch)
 ```
 
-### See What Changed
+### See What Changed in Your Local Files
 
+**In Cursor:**
+- Modified files show with indicators in the file explorer
+- Or ask AI: **"What files have changed?"**
+
+**In terminal:**
 ```powershell
 git status
-# Shows modified files
+# Shows modified files in your local workspace
 ```
 
 ### See Recent Commits
 
+**In Cursor:**
+- Ask AI: **"Show recent commits"**
+- Or use Git extension in Cursor
+
+**In terminal:**
 ```powershell
 git log --oneline -10
 # Shows last 10 commits
@@ -251,12 +410,23 @@ git log --oneline -10
 
 ### See Branch Differences
 
+**In Cursor terminal:**
 ```powershell
 # See what's in develop but not in main
 git log main..develop
 
 # See what's in main but not in develop
 git log develop..main
+```
+
+### Understanding Local vs Remote
+
+**Check if local files are synced with GitHub:**
+```powershell
+# See if local branch is ahead/behind remote
+git status
+# Shows: "Your branch is ahead of 'origin/develop' by 1 commit"
+# This means you have local commits not yet pushed to GitHub
 ```
 
 ---
@@ -285,16 +455,19 @@ git push origin main --force  # ⚠️ Use with caution!
 
 ---
 
-## 📞 Quick Reference
+## 📞 Quick Reference for Cursor
 
-### AI Commands
+### AI Commands in Cursor
 
-| What You Want | What to Say |
-|---------------|-------------|
-| Commit to development | "Commit this to develop" |
+| What You Want | What to Say to AI |
+|---------------|-------------------|
+| Commit local changes to development | "Commit this to develop" |
 | Deploy to production | "Deploy to production" or "Push develop to main" |
 | Check current branch | "What branch am I on?" |
-| See what changed | "What files have changed?" |
+| See what local files changed | "What files have changed?" |
+| Switch to develop branch | "Switch to develop branch" |
+| Pull latest from GitHub | "Pull latest from develop" |
+| See uncommitted changes | "Show me uncommitted changes" |
 
 ### Git Commands
 
@@ -316,13 +489,32 @@ git push origin main --force  # ⚠️ Use with caution!
 
 ---
 
-## 📝 Notes
+## 📝 Important Notes
+
+### About Your Local Files
+
+- **Your local files in Cursor** are where all development happens
+- **Local files are synced to OneDrive** automatically (backup)
+- **Git tracks changes** to your local files
+- **GitHub stores history** - pushing backs up your code
+- **Vercel deploys from GitHub** - not directly from your local files
+
+### About Deployments
 
 - **Vercel automatically handles:** Building, deploying, SSL certificates, CDN
 - **No manual deployment needed** - just push to the right branch
 - **Preview URLs** are created automatically for `develop` branch
 - **Production deploys** happen automatically when you push to `main`
 - **Monitor deployments** in Vercel dashboard for status
+
+### Workflow Summary
+
+1. **Edit in Cursor** → Changes saved to local files
+2. **Commit locally** → Git saves snapshot of your local files
+3. **Push to GitHub** → Backs up code and triggers Vercel
+4. **Vercel deploys** → Builds from GitHub and makes it live
+
+**Remember:** Your local files in Cursor are the source - nothing deploys until you commit and push!
 
 ---
 
