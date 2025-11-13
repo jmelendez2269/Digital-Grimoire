@@ -426,6 +426,7 @@ export default function DocumentDetailPage() {
   }, []);
 
   // Handle HTML document load - wrapper for HTMLViewer (no parameters)
+  // This handler matches HTMLViewer's expected signature: () => void
   const handleHTMLDocumentLoad = useCallback(() => {
     console.log('[DocumentDetailPage] HTML document loaded');
     // HTML doesn't have pages, so we set it to 1
