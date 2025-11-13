@@ -425,6 +425,13 @@ export default function DocumentDetailPage() {
     setNumPages(totalPages);
   }, []);
 
+  // Handle HTML document load - wrapper for HTMLViewer (no parameters)
+  const handleHTMLDocumentLoad = useCallback(() => {
+    console.log('[DocumentDetailPage] HTML document loaded');
+    // HTML doesn't have pages, so we set it to 1
+    setNumPages(1);
+  }, []);
+
   // Extract TOC from structured text (chapters)
   const extractStructuredTextTOC = useCallback((chapters: Chapter[]): TOCItem[] => {
     return chapters.map((chapter, index) => ({
@@ -928,7 +935,7 @@ export default function DocumentDetailPage() {
                   <HTMLViewer 
                     fileUrl={htmlUrl} 
                     fileName={document.title}
-                    onDocumentLoad={handleDocumentLoad}
+                    onDocumentLoad={handleHTMLDocumentLoad}
                     onTextSelected={handleTextSelected}
                   />
                 ) : pdfUrl && document.status === 'ready' ? (
