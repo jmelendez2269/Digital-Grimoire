@@ -127,6 +127,120 @@ feature/* (local)     → Your local feature branches
 4. **Test locally** - Run `pnpm dev` to test in browser
 5. **Commit when ready** - Tell AI to commit your changes
 
+---
+
+## 🧪 Testing Workflow: Localhost → Preview → Production
+
+### Recommended Testing Flow
+
+**Always test in this order for best results:**
+
+```
+1. Test Locally (localhost:3000)
+   ↓ (if it works)
+2. Commit to develop → Vercel Preview
+   ↓ (test preview)
+3. Deploy to production → Live Site
+```
+
+### Step 1: Test Locally First (localhost:3000)
+
+**Before committing, test your changes locally:**
+
+```powershell
+# In Cursor terminal, navigate to app directory
+cd "C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire\app"
+
+# Start development server
+pnpm dev
+```
+
+**What happens:**
+- Opens at `http://localhost:3000`
+- **Fast feedback** - See changes instantly (hot reload)
+- **No deployment needed** - Test without pushing to GitHub
+- **Catch bugs early** - Fix issues before they reach preview/production
+- **Save build time** - Don't waste Vercel build minutes on broken code
+
+**When to test locally:**
+- ✅ **Always** for code changes
+- ✅ **Always** for new features
+- ✅ **Always** for bug fixes
+- ✅ **Always** when unsure if it works
+- ⚠️ **Optional** for simple text/documentation changes
+
+**Benefits:**
+- **Instant feedback** - No waiting for builds
+- **Free** - No build minutes used
+- **Private** - Only you see it
+- **Fast iteration** - Make changes, see results immediately
+
+### Step 2: Commit to Develop (Creates Preview)
+
+**After localhost testing works, commit to create a preview:**
+
+Tell AI: **"Commit this to develop"**
+
+**What happens:**
+1. Your local changes get committed to `develop` branch
+2. Pushed to GitHub
+3. **Vercel automatically creates a preview URL**
+4. Check Vercel dashboard for the preview link
+
+**Why test on preview:**
+- ✅ **Production-like environment** - Closer to real deployment
+- ✅ **Verify build works** - Ensures code builds correctly
+- ✅ **Test on different devices** - See how it looks on mobile/tablet
+- ✅ **Share with others** - Get feedback before production
+- ✅ **Catch build issues** - Some issues only appear in production builds
+
+### Step 3: Deploy to Production
+
+**After preview testing looks good:**
+
+Tell AI: **"Deploy to production"**
+
+**What happens:**
+1. Merges `develop` → `main`
+2. Pushes to GitHub
+3. Vercel automatically deploys to `convergencelibrary.com`
+4. **Live for all users!**
+
+---
+
+### Quick Testing Checklist
+
+**For every change:**
+
+- [ ] **Test on localhost** (`pnpm dev` → `http://localhost:3000`)
+  - Does it work?
+  - Does it look right?
+  - Any errors in console?
+  
+- [ ] **Commit to develop** (creates preview)
+  - Check Vercel dashboard for preview URL
+  - Test preview on different browsers/devices
+  
+- [ ] **Deploy to production** (only if preview is good)
+  - Monitor Vercel deployment status
+  - Verify live site works correctly
+
+### When to Skip Localhost Testing
+
+**You can skip localhost for:**
+- Simple documentation updates
+- Text-only changes
+- Comments in code
+- Changes you're 100% confident about
+
+**But always test locally for:**
+- Code changes
+- New features
+- Bug fixes
+- Anything that could break functionality
+
+---
+
 ### Committing to Development from Cursor
 
 **When you want to save your local changes to the development branch:**
@@ -246,9 +360,10 @@ Live Website (convergencelibrary.com)
 2. **Make your changes**
    - Edit files normally in Cursor
    - Files save automatically to your local disk
-   - Test locally with `pnpm dev` if needed
+   - **Test locally first** - Run `pnpm dev` and test at `http://localhost:3000`
+   - Fix any issues before committing
 
-3. **Commit your local changes**
+3. **Commit your local changes** (after localhost testing)
    - Tell AI: **"Commit this to develop"**
    - AI stages, commits, and pushes your local files
    - Or manually in terminal:
@@ -260,7 +375,8 @@ Live Website (convergencelibrary.com)
 
 4. **Vercel creates preview URL automatically**
    - Check Vercel dashboard for preview link
-   - Test your changes on the preview URL
+   - **Test your changes on the preview URL** (production-like environment)
+   - Verify everything works correctly
    - Your local files are now backed up on GitHub and deployed!
 
 ### Scenario 2: Ready for Production from Cursor
@@ -355,6 +471,7 @@ Every push triggers automated checks:
 ### ✅ DO:
 
 - ✅ Always work on `develop` for daily development
+- ✅ **Test on localhost first** (`pnpm dev`) before committing
 - ✅ Test on Vercel preview before merging to `main`
 - ✅ Write clear commit messages: `feat:`, `fix:`, `docs:`, etc.
 - ✅ Pull latest changes before starting work
@@ -363,6 +480,7 @@ Every push triggers automated checks:
 ### ❌ DON'T:
 
 - ❌ Don't push directly to `main` (except hotfixes)
+- ❌ Don't skip localhost testing for code changes
 - ❌ Don't skip testing on preview
 - ❌ Don't commit broken code to `develop`
 - ❌ Don't forget to pull before pushing
@@ -510,11 +628,15 @@ git push origin main --force  # ⚠️ Use with caution!
 ### Workflow Summary
 
 1. **Edit in Cursor** → Changes saved to local files
-2. **Commit locally** → Git saves snapshot of your local files
-3. **Push to GitHub** → Backs up code and triggers Vercel
-4. **Vercel deploys** → Builds from GitHub and makes it live
+2. **Test on localhost** → Run `pnpm dev` and test at `http://localhost:3000`
+3. **Commit locally** → Git saves snapshot of your local files
+4. **Push to GitHub** → Backs up code and triggers Vercel preview
+5. **Test on preview** → Verify it works in production-like environment
+6. **Deploy to production** → Merge to `main` and deploy to live site
 
-**Remember:** Your local files in Cursor are the source - nothing deploys until you commit and push!
+**Remember:** 
+- Your local files in Cursor are the source - nothing deploys until you commit and push!
+- **Always test locally first** - Catch bugs before they reach preview/production!
 
 ---
 
