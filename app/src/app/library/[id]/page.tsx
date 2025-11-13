@@ -785,7 +785,7 @@ export default function DocumentDetailPage() {
                   Edit
                 </Link>
               )}
-              {isAdmin && document.metadata?.isStructuredText && (document.metadata as TextDocument['metadata'])?.sourceUrl && (
+              {isAdmin && document.metadata?.isStructuredText && (document.metadata as any)?.sourceUrl && (
                 <button
                   onClick={handleReimport}
                   disabled={reimporting}
