@@ -5,8 +5,13 @@ export async function updateSession(request: NextRequest) {
   // MAINTENANCE MODE CHECK - Check at the beginning
   const maintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
   
+  // Always allow access to maintenance page - return early to prevent redirect loops
+  if (request.nextUrl.pathname === '/maintenance') {
+    return NextResponse.next();
+  }
+  
   // Allow access to maintenance page itself and static assets
-  if (maintenanceMode && request.nextUrl.pathname !== '/maintenance') {
+  if (maintenanceMode) {
     // Create a minimal Supabase client to check if user is admin
     let maintenanceSupabaseResponse = NextResponse.next({
       request,
@@ -100,7 +105,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Define public routes that don't require authentication
-  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password"];
+  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance"];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
   );
