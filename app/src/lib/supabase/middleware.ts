@@ -2,6 +2,68 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+  // MAINTENANCE MODE CHECK - Check at the beginning
+  const maintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
+  
+  // Allow access to maintenance page itself and static assets
+  if (maintenanceMode && request.nextUrl.pathname !== '/maintenance') {
+    // Create a minimal Supabase client to check if user is admin
+    let maintenanceSupabaseResponse = NextResponse.next({
+      request,
+    });
+
+    const maintenanceSupabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            maintenanceSupabaseResponse = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              maintenanceSupabaseResponse.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await maintenanceSupabase.auth.getUser();
+
+    // If user exists, check if they're admin
+    if (user) {
+      const { data: profile } = await maintenanceSupabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      // Allow admins to bypass maintenance mode
+      if (profile?.role === 'admin') {
+        // Continue with normal flow below
+      } else {
+        // Redirect non-admin users to maintenance page
+        const url = request.nextUrl.clone();
+        url.pathname = '/maintenance';
+        return NextResponse.redirect(url);
+      }
+    } else {
+      // No user, redirect to maintenance page
+      const url = request.nextUrl.clone();
+      url.pathname = '/maintenance';
+      return NextResponse.redirect(url);
+    }
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
