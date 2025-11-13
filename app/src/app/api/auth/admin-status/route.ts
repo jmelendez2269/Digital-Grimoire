@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       console.error('[API] Auth error:', {
         error: userError,
         message: userError?.message,
-        hint: userError?.hint,
+        status: userError?.status,
         code: userError?.code
       });
       return NextResponse.json({ isAdmin: false, error: "Not authenticated" }, { status: 401 });
