@@ -163,4 +163,6 @@ jobs:
         uses: 'vercel/repository-dispatch/actions/status@v1'
         with:
           name: Vercel - digital-grimoire-96dg: Performance Testing
+          status: ${{ job.status }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 

@@ -49,6 +49,8 @@ jobs:
         uses: 'vercel/repository-dispatch/actions/status@v1'
         with:
           name: Vercel - digital-grimoire-96dg: Lint & Type Check
+          status: ${{ job.status }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     name: Build Application
@@ -94,6 +96,8 @@ jobs:
         uses: 'vercel/repository-dispatch/actions/status@v1'
         with:
           name: Vercel - digital-grimoire-96dg: Build Application
+          status: ${{ job.status }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   # Vercel handles deployment automatically via GitHub integration
   # This job is just for verification
