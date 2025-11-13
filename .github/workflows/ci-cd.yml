@@ -45,6 +45,11 @@ jobs:
         run: pnpm exec tsc --noEmit
         continue-on-error: true # Don't fail if typecheck isn't configured
 
+      - name: 'notify vercel'
+        uses: 'vercel/repository-dispatch/actions/status@v1'
+        with:
+          name: Vercel - digital-grimoire-96dg: Lint & Type Check
+
   build:
     name: Build Application
     runs-on: ubuntu-latest
@@ -85,6 +90,11 @@ jobs:
           path: Digital-Grimoire/app/.next
           retention-days: 7
 
+      - name: 'notify vercel'
+        uses: 'vercel/repository-dispatch/actions/status@v1'
+        with:
+          name: Vercel - digital-grimoire-96dg: Build Application
+
   # Vercel handles deployment automatically via GitHub integration
   # This job is just for verification
   verify-deployment:
@@ -112,4 +122,3 @@ jobs:
           else
             echo "🔧 This will deploy to PREVIEW (Vercel preview URL)"
           fi
-
