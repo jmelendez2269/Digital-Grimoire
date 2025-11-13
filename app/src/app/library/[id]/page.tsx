@@ -785,6 +785,7 @@ export default function DocumentDetailPage() {
                   Edit
                 </Link>
               )}
+              {/* Re-import button for structured text with source URL */}
               {isAdmin && document.metadata?.isStructuredText && (document.metadata as any)?.sourceUrl && (
                 <button
                   onClick={handleReimport}
