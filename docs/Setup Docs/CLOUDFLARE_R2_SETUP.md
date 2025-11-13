@@ -50,7 +50,9 @@ CORS must be configured to allow uploads from your web app.
   {
     "AllowedOrigins": [
       "http://localhost:3000",
-      "https://yourdomain.com"
+      "http://127.0.0.1:3000",
+      "https://convergencelibrary.com",
+      "https://www.convergencelibrary.com"
     ],
     "AllowedMethods": [
       "GET",
@@ -70,7 +72,13 @@ CORS must be configured to allow uploads from your web app.
 ]
 ```
 
-4. Replace `https://yourdomain.com` with your production domain
+**Important Notes:**
+- Default development port is `localhost:3000`
+- Replace production domains with your actual domain
+- CORS must be configured in Cloudflare R2 dashboard (not just in local config files)
+- After updating CORS, it may take a few minutes to propagate
+
+4. Replace production domains with your actual domain
 5. Click **Save**
 
 ## Step 5: Enable Public Access (Optional)
@@ -121,9 +129,13 @@ Expected output:
 - Ensure endpoint URL uses your correct Account ID
 
 ### Error: "CORS Policy Blocked"
-- Add your development/production URLs to CORS AllowedOrigins
-- Ensure CORS policy includes PUT method
+- **Most Common Issue**: CORS not configured in Cloudflare R2 dashboard
+- Add your development/production URLs to CORS AllowedOrigins in R2 dashboard
+- Default development URL is `http://localhost:3000`
+- Ensure CORS policy includes GET, PUT, POST, DELETE, HEAD methods
+- Verify the origin in the error matches exactly (including http vs https, port number)
 - Clear browser cache and try again
+- **Note**: CORS must be configured in Cloudflare R2 dashboard, not just in local config files
 
 ### Error: "Network Error"
 - Check that R2_ENDPOINT is correct format

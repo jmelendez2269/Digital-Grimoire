@@ -21,8 +21,7 @@ You're seeing **"Failed to fetch"** when uploading PDFs because your AWS S3 buck
     "AllowedHeaders": ["*"],
     "AllowedMethods": ["GET", "PUT", "POST", "DELETE"],
     "AllowedOrigins": [
-      "http://localhost:3000",
-      "http://localhost:3001"
+      "http://localhost:3000"
     ],
     "ExposeHeaders": ["ETag"],
     "MaxAgeSeconds": 3000

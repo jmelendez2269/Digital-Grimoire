@@ -1,7 +1,12 @@
 [
   {
     "allowed": {
-      "origins": ["http://localhost:3000", "http://127.0.0.1:3000", "https://yourdomain.com"],
+      "origins": [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://convergencelibrary.com",
+        "https://www.convergencelibrary.com"
+      ],
       "methods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
       "headers": ["*"]
     },

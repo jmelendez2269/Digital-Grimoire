@@ -7,7 +7,9 @@ This guide explains how to use the **LIBRARY_SEED_100_TEXTS.csv** file to popula
 
 ---
 
-## 📁 CSV Structure
+## 📁 CSV Structure (Pipe-Delimited Format)
+
+**Format:** Files use pipe character `|` as delimiter (not comma) to avoid conflicts with comma-separated values in the Lenses field.
 
 ### Column Definitions
 
@@ -23,6 +25,11 @@ This guide explains how to use the **LIBRARY_SEED_100_TEXTS.csv** file to popula
 | **Priority** | Implementation priority (1-4) | 1 |
 | **Status** | Tracking status | "queued" |
 | **Why_Chosen** | Value proposition - why this text matters | "Foundational hermetic principles..." |
+
+**Example Row:**
+```
+The Kybalion|Three Initiates|1908|book_esoteric|hermeticism|symbolic_occult,philosophical,historical_anthropological|https://www.sacred-texts.com/eso/kyb/index.htm|1|queued|Foundational hermetic principles - Seven Universal Laws. Short (70 pages) and accessible for new users. Bridges occult and philosophical perspectives perfectly.
+```
 
 ### Two CSV Versions
 

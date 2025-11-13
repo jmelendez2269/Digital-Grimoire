@@ -99,6 +99,7 @@ If port 3000 is already in use, you can specify a different port:
 ```bash
 pnpm dev -- -p 3001
 ```
+**Note:** The application is configured to use port 3000 by default. If you need to use a different port, make sure to update CORS configurations and redirect URLs in Supabase/Google OAuth accordingly.
 
 ## Documentation
 

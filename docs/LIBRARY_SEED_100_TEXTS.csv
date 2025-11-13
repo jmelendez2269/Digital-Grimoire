@@ -1,101 +1,100 @@
-Title,Author,Year,Type,Domain,Lenses,Source_URL,Priority,Status
-The Kybalion,Three Initiates,1908,book_esoteric,hermeticism,"symbolic_occult,philosophical,historical_anthropological",https://www.sacred-texts.com/eso/kyb/index.htm,1,queued
-Meditations,Marcus Aurelius,180,book_philosophical,stoicism,"philosophical,psychological",https://www.gutenberg.org/ebooks/2680,1,queued
-The Bhagavad Gita,Vyasa,500BCE,book_spiritual,hinduism,"religious_spiritual,philosophical,historical_anthropological",https://www.gutenberg.org/ebooks/2388,1,queued
-The Tao Te Ching,Lao Tzu,600BCE,book_spiritual,taoism,"religious_spiritual,philosophical,symbolic_occult",https://www.gutenberg.org/ebooks/216,1,queued
-On the Origin of Species,Charles Darwin,1859,book_science,evolution,"scientific,historical_anthropological",https://www.gutenberg.org/ebooks/1228,1,queued
-The Interpretation of Dreams,Sigmund Freud,1900,book_psychology,psychoanalysis,"psychological,scientific",https://www.gutenberg.org/ebooks/56657,1,queued
-The Republic,Plato,380BCE,book_philosophical,political_philosophy,"philosophical,historical_anthropological",https://www.gutenberg.org/ebooks/1497,1,queued
-Thus Spoke Zarathustra,Friedrich Nietzsche,1883,book_philosophical,existentialism,"philosophical,psychological,religious_spiritual",https://www.gutenberg.org/ebooks/1998,1,queued
-The Secret Doctrine Volume 1,Helena Blavatsky,1888,book_esoteric,theosophy,"symbolic_occult,philosophical,religious_spiritual",https://www.sacred-texts.com/the/sd/index.htm,1,queued
-The Varieties of Religious Experience,William James,1902,book_psychology,religious_psychology,"psychological,religious_spiritual,philosophical",https://www.gutenberg.org/ebooks/621,1,queued
-The Golden Bough,James George Frazer,1890,anthropology,comparative_religion,"historical_anthropological,religious_spiritual",https://www.gutenberg.org/ebooks/3623,1,queued
-The Principles of Psychology Vol 1,William James,1890,book_psychology,psychology,"psychological,scientific,philosophical",https://www.gutenberg.org/ebooks/57628,1,queued
-The Confessions,St. Augustine,397,book_spiritual,christianity,"religious_spiritual,philosophical,psychological",https://www.gutenberg.org/ebooks/3296,1,queued
-Cosmic Consciousness,Richard Maurice Bucke,1901,book_psychology,consciousness,"psychological,religious_spiritual,philosophical",https://www.gutenberg.org/ebooks/8819,1,queued
-The Elements Book I,Euclid,300BCE,reference_table,geometry,"mathematical,philosophical",https://www.gutenberg.org/ebooks/21076,1,queued
-The Emerald Tablet,Hermes Trismegistus,150CE,book_esoteric,hermeticism,"symbolic_occult,philosophical,historical_anthropological",https://www.sacred-texts.com/alc/emerald.htm,1,queued
-The Book of the Sacred Magic of Abramelin,Abraham of Worms,1458,ritual_guide,ceremonial_magic,"symbolic_occult,religious_spiritual",https://www.sacred-texts.com/grim/abr/index.htm,1,queued
-The Secret Teachings of All Ages,Manly P. Hall,1928,book_esoteric,mystery_traditions,"symbolic_occult,philosophical,historical_anthropological",https://www.sacred-texts.com/eso/sta/index.htm,1,queued
-Isis Unveiled Volume 1,Helena Blavatsky,1877,book_esoteric,theosophy,"symbolic_occult,philosophical,religious_spiritual,historical_anthropological",https://www.sacred-texts.com/the/iu/index.htm,1,queued
-The Upanishads,Various Sages,800BCE,book_spiritual,hinduism,"religious_spiritual,philosophical,psychological",https://www.gutenberg.org/ebooks/3283,1,queued
-Transcendental Magic,Éliphas Lévi,1856,book_esoteric,ceremonial_magic,"symbolic_occult,philosophical",https://www.sacred-texts.com/eso/tm/index.htm,2,queued
-The Chemical Wedding of Christian Rosenkreutz,Johann Valentin Andreae,1616,book_esoteric,rosicrucianism,"symbolic_occult,philosophical,religious_spiritual",https://www.sacred-texts.com/sro/rhr/index.htm,2,queued
-Sepher Yetzirah,Rabbi Akiba ben Joseph,200CE,book_esoteric,qabalah,"symbolic_occult,philosophical,mathematical",https://www.sacred-texts.com/jud/yetzirah.htm,2,queued
-The Kabbalah Unveiled,S.L. MacGregor Mathers,1887,book_esoteric,qabalah,"symbolic_occult,philosophical,religious_spiritual",https://www.sacred-texts.com/jud/tku/index.htm,2,queued
-The Zohar Volume 1,Moses de Leon,1290,book_esoteric,qabalah,"religious_spiritual,symbolic_occult,philosophical",https://www.sacred-texts.com/jud/zdm/index.htm,2,queued
-Christian Astrology,William Lilly,1647,book_esoteric,astrology,"symbolic_occult,historical_anthropological",https://www.sacred-texts.com/astro/ca/index.htm,2,queued
-Tetrabiblos,Claudius Ptolemy,150,reference_table,astrology,"symbolic_occult,mathematical,scientific",https://www.sacred-texts.com/astro/ptb/index.htm,2,queued
-The Pictorial Key to the Tarot,Arthur Edward Waite,1910,book_esoteric,tarot,"symbolic_occult,psychological",https://www.sacred-texts.com/tarot/pkt/index.htm,2,queued
-The Tarot of the Bohemians,Papus,1889,book_esoteric,tarot,"symbolic_occult,philosophical",https://www.sacred-texts.com/tarot/tob/index.htm,2,queued
-I Ching,Anonymous,1000BCE,book_esoteric,divination,"symbolic_occult,philosophical,religious_spiritual",https://www.sacred-texts.com/ich/index.htm,2,queued
-Magic White and Black,Franz Hartmann,1888,book_esoteric,occultism,"symbolic_occult,philosophical,religious_spiritual",https://www.sacred-texts.com/eso/mwb/index.htm,2,queued
-The Hermetic Museum Volume 1,Arthur Edward Waite,1893,book_esoteric,alchemy,"symbolic_occult,philosophical,historical_anthropological",https://www.sacred-texts.com/alc/hm1/index.htm,2,queued
-The Dhammapada,Buddha,500BCE,book_spiritual,buddhism,"religious_spiritual,philosophical,psychological",https://www.gutenberg.org/ebooks/2017,2,queued
-The Analects,Confucius,500BCE,book_philosophical,confucianism,"philosophical,historical_anthropological,religious_spiritual",https://www.gutenberg.org/ebooks/3330,2,queued
-The Art of War,Sun Tzu,500BCE,book_philosophical,strategy,"philosophical,historical_anthropological",https://www.gutenberg.org/ebooks/132,2,queued
-The Enneads,Plotinus,270,book_philosophical,neoplatonism,"philosophical,religious_spiritual",https://www.gutenberg.org/ebooks/55317,2,queued
-Beyond Good and Evil,Friedrich Nietzsche,1886,book_philosophical,existentialism,"philosophical,psychological",https://www.gutenberg.org/ebooks/4363,2,queued
-The World as Will and Representation,Arthur Schopenhauer,1818,book_philosophical,idealism,"philosophical,psychological",https://www.gutenberg.org/ebooks/40097,2,queued
-The Gay Science,Friedrich Nietzsche,1882,book_philosophical,existentialism,"philosophical,psychological",https://www.gutenberg.org/ebooks/52914,2,queued
-Self-Reliance and Other Essays,Ralph Waldo Emerson,1844,book_philosophical,transcendentalism,"philosophical,religious_spiritual",https://www.gutenberg.org/ebooks/16643,2,queued
-The Metaphysics,Aristotle,350BCE,book_philosophical,metaphysics,"philosophical,scientific",https://www.gutenberg.org/ebooks/54448,2,queued
-The Discourses,Epictetus,108,book_philosophical,stoicism,"philosophical,psychological",https://www.gutenberg.org/ebooks/871,2,queued
-The Symposium,Plato,385BCE,book_philosophical,ethics,"philosophical,psychological",https://www.gutenberg.org/ebooks/1600,2,queued
-Ethics,Baruch Spinoza,1677,book_philosophical,rationalism,"philosophical,religious_spiritual",https://www.gutenberg.org/ebooks/3800,2,queued
-The Problems of Philosophy,Bertrand Russell,1912,book_philosophical,epistemology,"philosophical,scientific",https://www.gutenberg.org/ebooks/5827,2,queued
-The Interior Castle,Teresa of Ávila,1577,book_spiritual,mysticism,"religious_spiritual,psychological",https://www.gutenberg.org/ebooks/8120,2,queued
-The Cloud of Unknowing,Anonymous,1370,book_spiritual,mysticism,"religious_spiritual,philosophical",https://www.gutenberg.org/ebooks/9347,2,queued
-The Imitation of Christ,Thomas à Kempis,1418,book_spiritual,christianity,"religious_spiritual,philosophical,psychological",https://www.gutenberg.org/ebooks/1653,2,queued
-The Way of a Pilgrim,Anonymous,1884,book_spiritual,eastern_christianity,"religious_spiritual,psychological",https://www.gutenberg.org/ebooks/53425,2,queued
-The Yoga Sutras of Patanjali,Patanjali,400BCE,book_spiritual,yoga,"religious_spiritual,philosophical,psychological",https://www.sacred-texts.com/hin/yogasutr.htm,2,queued
-The Tibetan Book of the Dead,Padmasambhava,800,book_spiritual,tibetan_buddhism,"religious_spiritual,philosophical,symbolic_occult",https://www.sacred-texts.com/bud/tib/index.htm,2,queued
-The Conference of the Birds,Farid ud-Din Attar,1177,book_spiritual,sufism,"religious_spiritual,philosophical,symbolic_occult",https://www.gutenberg.org/ebooks/28688,2,queued
-The Masnavi Book 1,Jalal ad-Din Rumi,1258,book_spiritual,sufism,"religious_spiritual,philosophical,psychological",https://www.sacred-texts.com/isl/masnavi/index.htm,3,queued
-The Alchemy of Happiness,Al-Ghazali,1105,book_spiritual,sufism,"religious_spiritual,philosophical,psychological",https://www.gutenberg.org/ebooks/48206,3,queued
-The Divine Pymander,Hermes Trismegistus,300CE,book_esoteric,hermeticism,"symbolic_occult,religious_spiritual,philosophical",https://www.sacred-texts.com/eso/pym/index.htm,3,queued
-Mysticism,Evelyn Underhill,1911,book_spiritual,mysticism,"religious_spiritual,psychological,philosophical",https://www.gutenberg.org/ebooks/18428,3,queued
-The Gospel of Buddha,Paul Carus,1894,book_spiritual,buddhism,"religious_spiritual,philosophical,historical_anthropological",https://www.gutenberg.org/ebooks/48361,3,queued
-Psychology of the Unconscious,Carl Jung,1912,book_psychology,depth_psychology,"psychological,philosophical,symbolic_occult",https://www.gutenberg.org/ebooks/47942,3,queued
-The Ego and the Id,Sigmund Freud,1923,book_psychology,psychoanalysis,"psychological,philosophical",https://www.gutenberg.org/ebooks/52694,3,queued
-Beyond the Pleasure Principle,Sigmund Freud,1920,book_psychology,psychoanalysis,"psychological,philosophical",https://www.gutenberg.org/ebooks/44565,3,queued
-The Art of Worldly Wisdom,Baltasar Gracián,1647,book_philosophical,practical_philosophy,"philosophical,psychological",https://www.gutenberg.org/ebooks/5690,3,queued
-Human Nature and Conduct,John Dewey,1922,book_psychology,pragmatism,"psychological,philosophical,scientific",https://www.gutenberg.org/ebooks/41386,3,queued
-The Descent of Man,Charles Darwin,1871,book_science,evolution,"scientific,historical_anthropological,philosophical",https://www.gutenberg.org/ebooks/2300,3,queued
-The Voyage of the Beagle,Charles Darwin,1839,book_science,natural_history,"scientific,historical_anthropological",https://www.gutenberg.org/ebooks/944,3,queued
-Relativity: The Special and General Theory,Albert Einstein,1920,book_science,physics,"scientific,philosophical,mathematical",https://www.gutenberg.org/ebooks/5001,3,queued
-The Nature of the Physical World,Arthur Eddington,1928,book_science,physics,"scientific,philosophical",https://www.gutenberg.org/ebooks/48934,3,queued
-Man's Place in Nature,Thomas Huxley,1863,book_science,evolution,"scientific,philosophical,historical_anthropological",https://www.gutenberg.org/ebooks/2931,3,queued
-The Principles of Light and Color,Edwin Babbitt,1878,book_science,optics,"scientific,symbolic_occult,philosophical",https://www.sacred-texts.com/eso/ihas/index.htm,3,queued
-The Mechanism of the Heavens,Mary Somerville,1831,book_science,astronomy,"scientific,mathematical,philosophical",https://archive.org/details/mechanismofheave00some,3,queued
-Science and the Modern World,Alfred North Whitehead,1925,book_science,philosophy_of_science,"scientific,philosophical",https://archive.org/details/sciencemodernwor00whit,3,queued
-Myths and Legends of Ancient Greece and Rome,E.M. Berens,1880,mythology,greco_roman,"historical_anthropological,symbolic_occult,religious_spiritual",https://www.gutenberg.org/ebooks/22381,3,queued
-Bulfinch's Mythology,Thomas Bulfinch,1855,mythology,comparative_mythology,"historical_anthropological,symbolic_occult,philosophical",https://www.gutenberg.org/ebooks/4928,3,queued
-The Age of Fable,Thomas Bulfinch,1855,mythology,greco_roman,"historical_anthropological,symbolic_occult",https://www.gutenberg.org/ebooks/3327,3,queued
-Primitive Culture Volume 1,Edward Burnett Tylor,1871,anthropology,cultural_anthropology,"historical_anthropological,philosophical,religious_spiritual",https://archive.org/details/primitiveculture01tylouoft,3,queued
-The Elementary Forms of Religious Life,Émile Durkheim,1912,anthropology,sociology_of_religion,"historical_anthropological,religious_spiritual,philosophical",https://archive.org/details/elementaryformso00durk,3,queued
-Totem and Taboo,Sigmund Freud,1913,book_psychology,psychoanalysis,"psychological,historical_anthropological,symbolic_occult",https://www.gutenberg.org/ebooks/41214,3,queued
-Magic and Religion,Andrew Lang,1901,anthropology,comparative_religion,"historical_anthropological,religious_spiritual,symbolic_occult",https://www.gutenberg.org/ebooks/37811,3,queued
-The Egyptian Book of the Dead,E.A. Wallis Budge,1895,book_spiritual,egyptian_religion,"religious_spiritual,symbolic_occult,historical_anthropological",https://www.sacred-texts.com/egy/ebod/index.htm,3,queued
-The Mystics of Islam,Reynold Nicholson,1914,book_spiritual,sufism,"religious_spiritual,historical_anthropological,philosophical",https://www.gutenberg.org/ebooks/45166,3,queued
-Jewish Magic and Superstition,Joshua Trachtenberg,1939,anthropology,judaism,"historical_anthropological,symbolic_occult,religious_spiritual",https://www.sacred-texts.com/jud/jms/index.htm,3,queued
-Harmonices Mundi Book V,Johannes Kepler,1619,book_science,astronomy,"mathematical,scientific,philosophical,symbolic_occult",https://archive.org/details/ioanniskeplerisah00kepl,3,queued
-The Divine Proportion,Luca Pacioli,1509,reference_table,sacred_geometry,"mathematical,philosophical,symbolic_occult",https://archive.org/details/divinaproportion00paci,3,queued
-A Treatise on the Circle and the Sphere,Julian Coolidge,1916,reference_table,geometry,"mathematical,philosophical",https://archive.org/details/treatiseoncircle00cooluoft,3,queued
-The Theory of Numbers,Thomas Heath,1910,reference_table,number_theory,"mathematical,philosophical",https://archive.org/details/diophantusalex00heatiala,3,queued
-Prolegomena to Any Future Metaphysics,Immanuel Kant,1783,book_philosophical,epistemology,"philosophical,scientific",https://www.gutenberg.org/ebooks/52821,4,queued
-The Natural History of Religion,David Hume,1757,book_philosophical,philosophy_of_religion,"philosophical,historical_anthropological,religious_spiritual",https://www.gutenberg.org/ebooks/4583,4,queued
-An Enquiry Concerning Human Understanding,David Hume,1748,book_philosophical,epistemology,"philosophical,psychological",https://www.gutenberg.org/ebooks/9662,4,queued
-The Apology,Plato,399BCE,book_philosophical,ethics,"philosophical,historical_anthropological",https://www.gutenberg.org/ebooks/1656,4,queued
-Phaedo,Plato,380BCE,book_philosophical,metaphysics,"philosophical,religious_spiritual",https://www.gutenberg.org/ebooks/1658,4,queued
-The Nichomachean Ethics,Aristotle,350BCE,book_philosophical,ethics,"philosophical,psychological",https://www.gutenberg.org/ebooks/8438,4,queued
-The Alchemists,Morley,1854,historical,alchemy,"historical_anthropological,symbolic_occult,philosophical",https://archive.org/details/livesalchemistic00morl,4,queued
-The Book of Black Magic,Arthur Edward Waite,1898,book_esoteric,grimoires,"symbolic_occult,historical_anthropological",https://www.sacred-texts.com/grim/bcm/index.htm,4,queued
-The Rosicrucians,Hargrave Jennings,1870,historical,rosicrucianism,"historical_anthropological,symbolic_occult,philosophical",https://www.sacred-texts.com/sro/rhr/index.htm,4,queued
-The Comte de Gabalis,Montfaucon de Villars,1670,book_esoteric,elemental_beings,"symbolic_occult,philosophical",https://www.sacred-texts.com/eso/cdg/index.htm,4,queued
-The Practice of Magical Evocation,Franz Bardon,1956,ritual_guide,ceremonial_magic,"symbolic_occult,religious_spiritual",https://archive.org/details/practiceofmagica00bard,4,queued
-The Science of Breath,Yogi Ramacharaka,1904,book_spiritual,yoga,"religious_spiritual,scientific,psychological",https://www.sacred-texts.com/hin/sob/index.htm,4,queued
-Light on the Path,Mabel Collins,1885,book_spiritual,theosophy,"religious_spiritual,philosophical,symbolic_occult",https://www.sacred-texts.com/the/lop/index.htm,4,queued
-The Voice of the Silence,Helena Blavatsky,1889,book_spiritual,theosophy,"religious_spiritual,philosophical,psychological",https://www.sacred-texts.com/the/vos/index.htm,4,queued
-The Gateless Gate,Ekai Mumon,1228,book_spiritual,zen_buddhism,"religious_spiritual,philosophical,psychological",https://www.sacred-texts.com/bud/zen/mumonkan.htm,4,queued
-
+﻿Title|Author|Year|Type|Domain|Lenses|Source_URL|Priority|Status
+The Kybalion|Three Initiates|1908|book_esoteric|hermeticism|symbolic_occult,philosophical,historical_anthropological|https://www.sacred-texts.com/eso/kyb/index.htm|1|queued
+Meditations|Marcus Aurelius|180|book_philosophical|stoicism|philosophical,psychological|https://www.gutenberg.org/ebooks/2680|1|queued
+The Bhagavad Gita|Vyasa|500BCE|book_spiritual|hinduism|religious_spiritual,philosophical,historical_anthropological|https://www.gutenberg.org/ebooks/2388|1|queued
+The Tao Te Ching|Lao Tzu|600BCE|book_spiritual|taoism|religious_spiritual,philosophical,symbolic_occult|https://www.gutenberg.org/ebooks/216|1|queued
+On the Origin of Species|Charles Darwin|1859|book_science|evolution|scientific,historical_anthropological|https://www.gutenberg.org/ebooks/1228|1|queued
+The Interpretation of Dreams|Sigmund Freud|1900|book_psychology|psychoanalysis|psychological,scientific|https://www.gutenberg.org/ebooks/56657|1|queued
+The Republic|Plato|380BCE|book_philosophical|political_philosophy|philosophical,historical_anthropological|https://www.gutenberg.org/ebooks/1497|1|queued
+Thus Spoke Zarathustra|Friedrich Nietzsche|1883|book_philosophical|existentialism|philosophical,psychological,religious_spiritual|https://www.gutenberg.org/ebooks/1998|1|queued
+The Secret Doctrine Volume 1|Helena Blavatsky|1888|book_esoteric|theosophy|symbolic_occult,philosophical,religious_spiritual|https://www.sacred-texts.com/the/sd/index.htm|1|queued
+The Varieties of Religious Experience|William James|1902|book_psychology|religious_psychology|psychological,religious_spiritual,philosophical|https://www.gutenberg.org/ebooks/621|1|queued
+The Golden Bough|James George Frazer|1890|anthropology|comparative_religion|historical_anthropological,religious_spiritual|https://www.gutenberg.org/ebooks/3623|1|queued
+The Principles of Psychology Vol 1|William James|1890|book_psychology|psychology|psychological,scientific,philosophical|https://www.gutenberg.org/ebooks/57628|1|queued
+The Confessions|St. Augustine|397|book_spiritual|christianity|religious_spiritual,philosophical,psychological|https://www.gutenberg.org/ebooks/3296|1|queued
+Cosmic Consciousness|Richard Maurice Bucke|1901|book_psychology|consciousness|psychological,religious_spiritual,philosophical|https://www.gutenberg.org/ebooks/8819|1|queued
+The Elements Book I|Euclid|300BCE|reference_table|geometry|mathematical,philosophical|https://www.gutenberg.org/ebooks/21076|1|queued
+The Emerald Tablet|Hermes Trismegistus|150CE|book_esoteric|hermeticism|symbolic_occult,philosophical,historical_anthropological|https://www.sacred-texts.com/alc/emerald.htm|1|queued
+The Book of the Sacred Magic of Abramelin|Abraham of Worms|1458|ritual_guide|ceremonial_magic|symbolic_occult,religious_spiritual|https://www.sacred-texts.com/grim/abr/index.htm|1|queued
+The Secret Teachings of All Ages|Manly P. Hall|1928|book_esoteric|mystery_traditions|symbolic_occult,philosophical,historical_anthropological|https://www.sacred-texts.com/eso/sta/index.htm|1|queued
+Isis Unveiled Volume 1|Helena Blavatsky|1877|book_esoteric|theosophy|symbolic_occult,philosophical,religious_spiritual,historical_anthropological|https://www.sacred-texts.com/the/iu/index.htm|1|queued
+The Upanishads|Various Sages|800BCE|book_spiritual|hinduism|religious_spiritual,philosophical,psychological|https://www.gutenberg.org/ebooks/3283|1|queued
+Transcendental Magic|Ã‰liphas LÃ©vi|1856|book_esoteric|ceremonial_magic|symbolic_occult,philosophical|https://www.sacred-texts.com/eso/tm/index.htm|2|queued
+The Chemical Wedding of Christian Rosenkreutz|Johann Valentin Andreae|1616|book_esoteric|rosicrucianism|symbolic_occult,philosophical,religious_spiritual|https://www.sacred-texts.com/sro/rhr/index.htm|2|queued
+Sepher Yetzirah|Rabbi Akiba ben Joseph|200CE|book_esoteric|qabalah|symbolic_occult,philosophical,mathematical|https://www.sacred-texts.com/jud/yetzirah.htm|2|queued
+The Kabbalah Unveiled|S.L. MacGregor Mathers|1887|book_esoteric|qabalah|symbolic_occult,philosophical,religious_spiritual|https://www.sacred-texts.com/jud/tku/index.htm|2|queued
+The Zohar Volume 1|Moses de Leon|1290|book_esoteric|qabalah|religious_spiritual,symbolic_occult,philosophical|https://www.sacred-texts.com/jud/zdm/index.htm|2|queued
+Christian Astrology|William Lilly|1647|book_esoteric|astrology|symbolic_occult,historical_anthropological|https://www.sacred-texts.com/astro/ca/index.htm|2|queued
+Tetrabiblos|Claudius Ptolemy|150|reference_table|astrology|symbolic_occult,mathematical,scientific|https://www.sacred-texts.com/astro/ptb/index.htm|2|queued
+The Pictorial Key to the Tarot|Arthur Edward Waite|1910|book_esoteric|tarot|symbolic_occult,psychological|https://www.sacred-texts.com/tarot/pkt/index.htm|2|queued
+The Tarot of the Bohemians|Papus|1889|book_esoteric|tarot|symbolic_occult,philosophical|https://www.sacred-texts.com/tarot/tob/index.htm|2|queued
+I Ching|Anonymous|1000BCE|book_esoteric|divination|symbolic_occult,philosophical,religious_spiritual|https://www.sacred-texts.com/ich/index.htm|2|queued
+Magic White and Black|Franz Hartmann|1888|book_esoteric|occultism|symbolic_occult,philosophical,religious_spiritual|https://www.sacred-texts.com/eso/mwb/index.htm|2|queued
+The Hermetic Museum Volume 1|Arthur Edward Waite|1893|book_esoteric|alchemy|symbolic_occult,philosophical,historical_anthropological|https://www.sacred-texts.com/alc/hm1/index.htm|2|queued
+The Dhammapada|Buddha|500BCE|book_spiritual|buddhism|religious_spiritual,philosophical,psychological|https://www.gutenberg.org/ebooks/2017|2|queued
+The Analects|Confucius|500BCE|book_philosophical|confucianism|philosophical,historical_anthropological,religious_spiritual|https://www.gutenberg.org/ebooks/3330|2|queued
+The Art of War|Sun Tzu|500BCE|book_philosophical|strategy|philosophical,historical_anthropological|https://www.gutenberg.org/ebooks/132|2|queued
+The Enneads|Plotinus|270|book_philosophical|neoplatonism|philosophical,religious_spiritual|https://www.gutenberg.org/ebooks/55317|2|queued
+Beyond Good and Evil|Friedrich Nietzsche|1886|book_philosophical|existentialism|philosophical,psychological|https://www.gutenberg.org/ebooks/4363|2|queued
+The World as Will and Representation|Arthur Schopenhauer|1818|book_philosophical|idealism|philosophical,psychological|https://www.gutenberg.org/ebooks/40097|2|queued
+The Gay Science|Friedrich Nietzsche|1882|book_philosophical|existentialism|philosophical,psychological|https://www.gutenberg.org/ebooks/52914|2|queued
+Self-Reliance and Other Essays|Ralph Waldo Emerson|1844|book_philosophical|transcendentalism|philosophical,religious_spiritual|https://www.gutenberg.org/ebooks/16643|2|queued
+The Metaphysics|Aristotle|350BCE|book_philosophical|metaphysics|philosophical,scientific|https://www.gutenberg.org/ebooks/54448|2|queued
+The Discourses|Epictetus|108|book_philosophical|stoicism|philosophical,psychological|https://www.gutenberg.org/ebooks/871|2|queued
+The Symposium|Plato|385BCE|book_philosophical|ethics|philosophical,psychological|https://www.gutenberg.org/ebooks/1600|2|queued
+Ethics|Baruch Spinoza|1677|book_philosophical|rationalism|philosophical,religious_spiritual|https://www.gutenberg.org/ebooks/3800|2|queued
+The Problems of Philosophy|Bertrand Russell|1912|book_philosophical|epistemology|philosophical,scientific|https://www.gutenberg.org/ebooks/5827|2|queued
+The Interior Castle|Teresa of Ãvila|1577|book_spiritual|mysticism|religious_spiritual,psychological|https://www.gutenberg.org/ebooks/8120|2|queued
+The Cloud of Unknowing|Anonymous|1370|book_spiritual|mysticism|religious_spiritual,philosophical|https://www.gutenberg.org/ebooks/9347|2|queued
+The Imitation of Christ|Thomas Ã  Kempis|1418|book_spiritual|christianity|religious_spiritual,philosophical,psychological|https://www.gutenberg.org/ebooks/1653|2|queued
+The Way of a Pilgrim|Anonymous|1884|book_spiritual|eastern_christianity|religious_spiritual,psychological|https://www.gutenberg.org/ebooks/53425|2|queued
+The Yoga Sutras of Patanjali|Patanjali|400BCE|book_spiritual|yoga|religious_spiritual,philosophical,psychological|https://www.sacred-texts.com/hin/yogasutr.htm|2|queued
+The Tibetan Book of the Dead|Padmasambhava|800|book_spiritual|tibetan_buddhism|religious_spiritual,philosophical,symbolic_occult|https://www.sacred-texts.com/bud/tib/index.htm|2|queued
+The Conference of the Birds|Farid ud-Din Attar|1177|book_spiritual|sufism|religious_spiritual,philosophical,symbolic_occult|https://www.gutenberg.org/ebooks/28688|2|queued
+The Masnavi Book 1|Jalal ad-Din Rumi|1258|book_spiritual|sufism|religious_spiritual,philosophical,psychological|https://www.sacred-texts.com/isl/masnavi/index.htm|3|queued
+The Alchemy of Happiness|Al-Ghazali|1105|book_spiritual|sufism|religious_spiritual,philosophical,psychological|https://www.gutenberg.org/ebooks/48206|3|queued
+The Divine Pymander|Hermes Trismegistus|300CE|book_esoteric|hermeticism|symbolic_occult,religious_spiritual,philosophical|https://www.sacred-texts.com/eso/pym/index.htm|3|queued
+Mysticism|Evelyn Underhill|1911|book_spiritual|mysticism|religious_spiritual,psychological,philosophical|https://www.gutenberg.org/ebooks/18428|3|queued
+The Gospel of Buddha|Paul Carus|1894|book_spiritual|buddhism|religious_spiritual,philosophical,historical_anthropological|https://www.gutenberg.org/ebooks/48361|3|queued
+Psychology of the Unconscious|Carl Jung|1912|book_psychology|depth_psychology|psychological,philosophical,symbolic_occult|https://www.gutenberg.org/ebooks/47942|3|queued
+The Ego and the Id|Sigmund Freud|1923|book_psychology|psychoanalysis|psychological,philosophical|https://www.gutenberg.org/ebooks/52694|3|queued
+Beyond the Pleasure Principle|Sigmund Freud|1920|book_psychology|psychoanalysis|psychological,philosophical|https://www.gutenberg.org/ebooks/44565|3|queued
+The Art of Worldly Wisdom|Baltasar GraciÃ¡n|1647|book_philosophical|practical_philosophy|philosophical,psychological|https://www.gutenberg.org/ebooks/5690|3|queued
+Human Nature and Conduct|John Dewey|1922|book_psychology|pragmatism|psychological,philosophical,scientific|https://www.gutenberg.org/ebooks/41386|3|queued
+The Descent of Man|Charles Darwin|1871|book_science|evolution|scientific,historical_anthropological,philosophical|https://www.gutenberg.org/ebooks/2300|3|queued
+The Voyage of the Beagle|Charles Darwin|1839|book_science|natural_history|scientific,historical_anthropological|https://www.gutenberg.org/ebooks/944|3|queued
+Relativity: The Special and General Theory|Albert Einstein|1920|book_science|physics|scientific,philosophical,mathematical|https://www.gutenberg.org/ebooks/5001|3|queued
+The Nature of the Physical World|Arthur Eddington|1928|book_science|physics|scientific,philosophical|https://www.gutenberg.org/ebooks/48934|3|queued
+Man's Place in Nature|Thomas Huxley|1863|book_science|evolution|scientific,philosophical,historical_anthropological|https://www.gutenberg.org/ebooks/2931|3|queued
+The Principles of Light and Color|Edwin Babbitt|1878|book_science|optics|scientific,symbolic_occult,philosophical|https://www.sacred-texts.com/eso/ihas/index.htm|3|queued
+The Mechanism of the Heavens|Mary Somerville|1831|book_science|astronomy|scientific,mathematical,philosophical|https://archive.org/details/mechanismofheave00some|3|queued
+Science and the Modern World|Alfred North Whitehead|1925|book_science|philosophy_of_science|scientific,philosophical|https://archive.org/details/sciencemodernwor00whit|3|queued
+Myths and Legends of Ancient Greece and Rome|E.M. Berens|1880|mythology|greco_roman|historical_anthropological,symbolic_occult,religious_spiritual|https://www.gutenberg.org/ebooks/22381|3|queued
+Bulfinch's Mythology|Thomas Bulfinch|1855|mythology|comparative_mythology|historical_anthropological,symbolic_occult,philosophical|https://www.gutenberg.org/ebooks/4928|3|queued
+The Age of Fable|Thomas Bulfinch|1855|mythology|greco_roman|historical_anthropological,symbolic_occult|https://www.gutenberg.org/ebooks/3327|3|queued
+Primitive Culture Volume 1|Edward Burnett Tylor|1871|anthropology|cultural_anthropology|historical_anthropological,philosophical,religious_spiritual|https://archive.org/details/primitiveculture01tylouoft|3|queued
+The Elementary Forms of Religious Life|Ã‰mile Durkheim|1912|anthropology|sociology_of_religion|historical_anthropological,religious_spiritual,philosophical|https://archive.org/details/elementaryformso00durk|3|queued
+Totem and Taboo|Sigmund Freud|1913|book_psychology|psychoanalysis|psychological,historical_anthropological,symbolic_occult|https://www.gutenberg.org/ebooks/41214|3|queued
+Magic and Religion|Andrew Lang|1901|anthropology|comparative_religion|historical_anthropological,religious_spiritual,symbolic_occult|https://www.gutenberg.org/ebooks/37811|3|queued
+The Egyptian Book of the Dead|E.A. Wallis Budge|1895|book_spiritual|egyptian_religion|religious_spiritual,symbolic_occult,historical_anthropological|https://www.sacred-texts.com/egy/ebod/index.htm|3|queued
+The Mystics of Islam|Reynold Nicholson|1914|book_spiritual|sufism|religious_spiritual,historical_anthropological,philosophical|https://www.gutenberg.org/ebooks/45166|3|queued
+Jewish Magic and Superstition|Joshua Trachtenberg|1939|anthropology|judaism|historical_anthropological,symbolic_occult,religious_spiritual|https://www.sacred-texts.com/jud/jms/index.htm|3|queued
+Harmonices Mundi Book V|Johannes Kepler|1619|book_science|astronomy|mathematical,scientific,philosophical,symbolic_occult|https://archive.org/details/ioanniskeplerisah00kepl|3|queued
+The Divine Proportion|Luca Pacioli|1509|reference_table|sacred_geometry|mathematical,philosophical,symbolic_occult|https://archive.org/details/divinaproportion00paci|3|queued
+A Treatise on the Circle and the Sphere|Julian Coolidge|1916|reference_table|geometry|mathematical,philosophical|https://archive.org/details/treatiseoncircle00cooluoft|3|queued
+The Theory of Numbers|Thomas Heath|1910|reference_table|number_theory|mathematical,philosophical|https://archive.org/details/diophantusalex00heatiala|3|queued
+Prolegomena to Any Future Metaphysics|Immanuel Kant|1783|book_philosophical|epistemology|philosophical,scientific|https://www.gutenberg.org/ebooks/52821|4|queued
+The Natural History of Religion|David Hume|1757|book_philosophical|philosophy_of_religion|philosophical,historical_anthropological,religious_spiritual|https://www.gutenberg.org/ebooks/4583|4|queued
+An Enquiry Concerning Human Understanding|David Hume|1748|book_philosophical|epistemology|philosophical,psychological|https://www.gutenberg.org/ebooks/9662|4|queued
+The Apology|Plato|399BCE|book_philosophical|ethics|philosophical,historical_anthropological|https://www.gutenberg.org/ebooks/1656|4|queued
+Phaedo|Plato|380BCE|book_philosophical|metaphysics|philosophical,religious_spiritual|https://www.gutenberg.org/ebooks/1658|4|queued
+The Nichomachean Ethics|Aristotle|350BCE|book_philosophical|ethics|philosophical,psychological|https://www.gutenberg.org/ebooks/8438|4|queued
+The Alchemists|Morley|1854|historical|alchemy|historical_anthropological,symbolic_occult,philosophical|https://archive.org/details/livesalchemistic00morl|4|queued
+The Book of Black Magic|Arthur Edward Waite|1898|book_esoteric|grimoires|symbolic_occult,historical_anthropological|https://www.sacred-texts.com/grim/bcm/index.htm|4|queued
+The Rosicrucians|Hargrave Jennings|1870|historical|rosicrucianism|historical_anthropological,symbolic_occult,philosophical|https://www.sacred-texts.com/sro/rhr/index.htm|4|queued
+The Comte de Gabalis|Montfaucon de Villars|1670|book_esoteric|elemental_beings|symbolic_occult,philosophical|https://www.sacred-texts.com/eso/cdg/index.htm|4|queued
+The Practice of Magical Evocation|Franz Bardon|1956|ritual_guide|ceremonial_magic|symbolic_occult,religious_spiritual|https://archive.org/details/practiceofmagica00bard|4|queued
+The Science of Breath|Yogi Ramacharaka|1904|book_spiritual|yoga|religious_spiritual,scientific,psychological|https://www.sacred-texts.com/hin/sob/index.htm|4|queued
+Light on the Path|Mabel Collins|1885|book_spiritual|theosophy|religious_spiritual,philosophical,symbolic_occult|https://www.sacred-texts.com/the/lop/index.htm|4|queued
+The Voice of the Silence|Helena Blavatsky|1889|book_spiritual|theosophy|religious_spiritual,philosophical,psychological|https://www.sacred-texts.com/the/vos/index.htm|4|queued
+The Gateless Gate|Ekai Mumon|1228|book_spiritual|zen_buddhism|religious_spiritual,philosophical,psychological|https://www.sacred-texts.com/bud/zen/mumonkan.htm|4|queued

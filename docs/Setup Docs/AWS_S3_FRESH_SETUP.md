@@ -45,8 +45,7 @@ Your current bucket is returning 500 Internal Server Error on OPTIONS requests, 
             "HEAD"
         ],
         "AllowedOrigins": [
-            "http://localhost:3000",
-            "http://localhost:3001"
+            "http://localhost:3000"
         ],
         "ExposeHeaders": [
             "ETag",

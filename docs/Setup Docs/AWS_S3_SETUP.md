@@ -28,7 +28,6 @@ The most common upload issue is missing CORS configuration. Follow these steps:
     ],
     "AllowedOrigins": [
       "http://localhost:3000",
-      "http://localhost:3001",
       "https://yourdomain.com"
     ],
     "ExposeHeaders": [
@@ -55,7 +54,6 @@ Create a file named `cors-config.json`:
       "AllowedMethods": ["GET", "PUT", "POST", "DELETE"],
       "AllowedOrigins": [
         "http://localhost:3000",
-        "http://localhost:3001",
         "https://yourdomain.com"
       ],
       "ExposeHeaders": ["ETag"],
