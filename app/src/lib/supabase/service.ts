@@ -20,6 +20,29 @@ export function createServiceClient() {
     throw new Error('Supabase URL or Service Role Key not configured');
   }
 
+  // Extract project refs from URL and key to detect mismatches
+  const urlRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  
+  // Try to decode JWT to get project ref (basic check)
+  try {
+    const keyParts = supabaseServiceKey.split('.');
+    if (keyParts.length === 3) {
+      const payload = JSON.parse(Buffer.from(keyParts[1], 'base64').toString());
+      const keyRef = payload.ref;
+      
+      if (urlRef && keyRef && urlRef !== keyRef) {
+        console.error('⚠️ SUPABASE PROJECT MISMATCH DETECTED:', {
+          urlProjectRef: urlRef,
+          keyProjectRef: keyRef,
+          message: 'The service role key is from a different Supabase project than the URL. This will cause "Invalid API key" errors.',
+          fix: 'Get the service_role key from the Supabase project matching your URL: ' + supabaseUrl
+        });
+      }
+    }
+  } catch (e) {
+    // If we can't decode, that's okay - just continue
+  }
+
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
