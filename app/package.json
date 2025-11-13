@@ -90,6 +90,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/turndown": "^5.0.6",
     "@unlighthouse/cli": "^0.17.4",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",

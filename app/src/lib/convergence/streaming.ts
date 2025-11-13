@@ -30,7 +30,7 @@ export async function streamConvergenceResponse(
   // Step 1: Hybrid retrieval to get context
   const context = await hybridSearch(query, {
     lenses: Object.entries(lensWeights)
-      .filter(([_, weight]) => weight > 0)
+      .filter(([_, weight]) => (weight as number) > 0)
       .map(([lens, _]) => lens),
     limit: 10,
   });
@@ -65,7 +65,7 @@ export async function* createSSEStream(
     // Hybrid retrieval
     const context = await hybridSearch(query, {
       lenses: Object.entries(lensWeights)
-        .filter(([_, weight]) => weight > 0)
+        .filter(([_, weight]) => (weight as number) > 0)
         .map(([lens, _]) => lens),
       limit: 10,
     });
@@ -116,7 +116,7 @@ export async function* createSSEStream(
 
     // Create response object with empty lens responses (will be loaded on demand)
     const activeLenses = Object.entries(lensWeights)
-      .filter(([_, weight]) => weight > 0)
+      .filter(([_, weight]) => (weight as number) > 0)
       .map(([lens, _]) => lens);
 
     // Send lens placeholders (not full responses yet - saves tokens)
@@ -175,7 +175,7 @@ async function saveConversationHistory(
 
   // Get active lenses
   const lensesUsed = Object.entries(lensWeights)
-    .filter(([_, weight]) => weight > 0)
+    .filter(([_, weight]) => (weight as number) > 0)
     .map(([lens, _]) => lens);
 
   // Combine all lens responses into full text

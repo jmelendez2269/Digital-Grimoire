@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Copy, Check, Link2, ChevronDown, ChevronUp, BookOpen, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { getAllLenses } from '@/lib/convergence/lenses';
+import { LensWeights } from '@/lib/convergence/lens-orchestrator';
 
 interface Source {
   text_id: string;
@@ -31,7 +32,7 @@ interface ResponseStreamProps {
   } | null;
   isStreaming: boolean;
   query?: string;
-  lensWeights?: any;
+  lensWeights?: LensWeights;
   responseLength?: 'short' | 'medium' | 'long';
   onLensExpand?: (lensId: string) => void;
 }
@@ -144,7 +145,7 @@ function ExpandableLensCard({
   lensId: string; 
   lensName: string;
   query: string;
-  lensWeights: any;
+  lensWeights?: LensWeights;
   responseLength?: 'short' | 'medium' | 'long';
   onExpand?: (lensId: string) => void;
 }) {
@@ -313,7 +314,7 @@ export default function ResponseStream({
   const activeLensIds = new Set(
     lensWeights && Object.keys(lensWeights).length > 0
       ? Object.entries(lensWeights)
-          .filter(([_, weight]) => weight > 0)
+          .filter(([_, weight]) => (weight as number) > 0)
           .map(([lens]) => lens)
       : response?.responses?.map(r => r.lens) || []
   );

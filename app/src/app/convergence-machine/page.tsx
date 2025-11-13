@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Sparkles, Send, Loader2 } from 'lucide-react';
@@ -35,7 +35,7 @@ const DEFAULT_WEIGHTS: LensWeights = {
   mathematical: 16,
 };
 
-export default function ConvergenceMachinePage() {
+function ConvergenceMachineContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
@@ -348,6 +348,18 @@ export default function ConvergenceMachinePage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ConvergenceMachinePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+      </div>
+    }>
+      <ConvergenceMachineContent />
+    </Suspense>
   );
 }
 

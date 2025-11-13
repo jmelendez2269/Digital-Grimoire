@@ -5,6 +5,7 @@ import { ChevronDown, BookOpen, ZoomIn, ZoomOut, RotateCw, Maximize, Minimize } 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import DOMPurify from 'dompurify';
+import { TextPosition } from '@/lib/types';
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2.0;
@@ -38,7 +39,7 @@ interface ChapterViewerProps {
   chapters: Chapter[];
   documentTitle?: string;
   format?: 'html' | 'markdown' | 'plaintext';
-  onTextSelected?: (selection: { text: string; position: any }) => void;
+  onTextSelected?: (selection: { text: string; position: TextPosition }) => void;
   annotations?: Annotation[];
   onAnnotationClick?: (annotation: Annotation) => void;
   externalChapterId?: string | null;

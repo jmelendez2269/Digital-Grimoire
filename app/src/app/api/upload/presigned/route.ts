@@ -41,18 +41,40 @@ export async function POST(request: NextRequest) {
 
     // Validate file type
     const allowedTypes = [
+      // Documents
       'application/pdf',
-      'image/png',
-      'image/jpeg',
-      'image/jpg',
       'text/html',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/msword',
+      // Images
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/gif',
+      'image/webp',
+      // Audio
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/ogg',
+      'audio/flac',
+      'audio/x-m4a',
+      // Video
+      'video/mp4',
+      'video/webm',
+      'video/quicktime',
+      'video/x-msvideo',
     ];
 
-    if (!allowedTypes.includes(fileType)) {
+    // Also allow generic audio/*, video/*, image/* MIME types
+    const isAllowedGenericType = 
+      fileType.startsWith('audio/') ||
+      fileType.startsWith('video/') ||
+      fileType.startsWith('image/');
+
+    if (!allowedTypes.includes(fileType) && !isAllowedGenericType) {
       return NextResponse.json(
-        { error: 'Invalid file type. Allowed: PDF, images (PNG, JPG), HTML, DOCX' },
+        { error: 'Invalid file type. Allowed: PDF, HTML, DOCX, images, audio, and video files' },
         { status: 400 }
       );
     }

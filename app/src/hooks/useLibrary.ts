@@ -16,7 +16,7 @@ export interface Text {
   cover_image_url: string | null;
   short_summary: string | null;
   curator_note: string | null;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface FilterValues {
@@ -141,7 +141,9 @@ export function useLibraryTexts({
       };
     },
     enabled: enabled && !!user,
-    staleTime: 2 * 60 * 1000, // 2 minutes for library data
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep cached data longer for instant navigation
+    placeholderData: (previousData) => previousData, // Show cached data immediately while refetching
   });
 }
 

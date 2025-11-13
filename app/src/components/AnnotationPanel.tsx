@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Highlighter, MessageSquare, Trash2, Edit3, Save, X, Sparkles } from 'lucide-react';
 import { formatDate } from '@/lib/utils/formatting';
+import { TextPosition } from '@/lib/types';
 
 interface Annotation {
   id: string;
   quote: string;
   note: string | null;
-  position: any;
+  position: TextPosition;
   category: 'general' | 'important' | 'question' | 'insight' | 'to-research' | 'quote' | 'critique';
   highlight_color: 'yellow' | 'green' | 'blue' | 'pink' | 'red' | 'purple' | 'orange';
   created_at: string;

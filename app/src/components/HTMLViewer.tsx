@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Maximize, Minimize, ZoomIn, ZoomOut, RotateCw, Loader2, AlertCircle } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { TextPosition } from '@/lib/types';
 
 interface HTMLViewerProps {
   fileUrl: string;
   fileName?: string;
   onDocumentLoad?: () => void;
-  onTextSelected?: (selection: { text: string; position: any }) => void;
+  onTextSelected?: (selection: { text: string; position: TextPosition }) => void;
 }
 
 const MIN_ZOOM = 0.25;

@@ -45,21 +45,47 @@ export default function AdminUploadPage() {
 
   // File validation
   const validateFile = (file: File): string | null => {
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    // Different max sizes for different file types
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 200 * 1024 * 1024 : 50 * 1024 * 1024; // 200MB for video, 50MB for others
+    
     const allowedTypes = [
+      // Documents
       'application/pdf',
+      'text/html',
+      // Images (existing)
       'image/png',
       'image/jpeg',
       'image/jpg',
-      'text/html',
+      // Media (new)
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/ogg',
+      'audio/flac',
+      'audio/x-m4a',
+      'video/mp4',
+      'video/webm',
+      'video/quicktime',
+      'video/x-msvideo',
+      'image/gif',
+      'image/webp',
     ];
 
-    if (!allowedTypes.includes(file.type)) {
-      return 'Only PDF, image files (PNG, JPG), and HTML files are allowed';
+    // Also allow any audio/*, video/*, or image/* MIME types
+    const isAllowedGenericType = 
+      file.type.startsWith('audio/') ||
+      file.type.startsWith('video/') ||
+      file.type.startsWith('image/');
+
+    if (!allowedTypes.includes(file.type) && !isAllowedGenericType) {
+      return 'Only PDF, HTML, image, audio, and video files are allowed';
     }
 
     if (file.size > maxSize) {
-      return 'File size must be less than 50MB';
+      return isVideo 
+        ? 'Video file size must be less than 200MB'
+        : 'File size must be less than 50MB';
     }
 
     return null;
@@ -69,8 +95,13 @@ export default function AdminUploadPage() {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadFile[] = acceptedFiles.map((file) => {
       const error = validateFile(file);
-      // Create preview URL for PDFs
-      const previewUrl = file.type === 'application/pdf' ? URL.createObjectURL(file) : undefined;
+      // Create preview URL for PDFs and images
+      const previewUrl = 
+        file.type === 'application/pdf' || 
+        file.type.startsWith('image/') ||
+        file.type.startsWith('video/')
+          ? URL.createObjectURL(file) 
+          : undefined;
       return {
         id: Math.random().toString(36).substring(7),
         file,
@@ -86,13 +117,28 @@ export default function AdminUploadPage() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
+      // Documents
       'application/pdf': ['.pdf'],
+      'text/html': ['.html', '.htm'],
+      // Images
       'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg'],
-      'text/html': ['.html', '.htm'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp'],
+      // Audio
+      'audio/mpeg': ['.mp3'],
+      'audio/wav': ['.wav'],
+      'audio/ogg': ['.ogg'],
+      'audio/flac': ['.flac'],
+      'audio/x-m4a': ['.m4a'],
+      // Video
+      'video/mp4': ['.mp4'],
+      'video/webm': ['.webm'],
+      'video/quicktime': ['.mov'],
+      'video/x-msvideo': ['.avi'],
     },
     multiple: true,
-    maxSize: 52428800, // 50MB
+    maxSize: 209715200, // 200MB (for video files)
   });
 
   // Remove file from queue
@@ -214,8 +260,17 @@ export default function AdminUploadPage() {
       // Get current user to pass to processing
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-      // Trigger document processing (OCR + metadata extraction)
-      const processResponse = await fetch('/api/process-document', {
+      // Determine if this is a media file
+      const isMediaFile = 
+        file.type.startsWith('audio/') ||
+        file.type.startsWith('video/') ||
+        (file.type.startsWith('image/') && file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/jpg');
+
+      // Route to appropriate processing endpoint
+      const processEndpoint = isMediaFile ? '/api/process-media' : '/api/process-document';
+      
+      // Trigger processing (OCR/metadata extraction for documents, media processing for media)
+      const processResponse = await fetch(processEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

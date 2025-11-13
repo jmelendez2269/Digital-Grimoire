@@ -21,7 +21,7 @@ interface DocumentData {
   cover_image_url: string | null;
   short_summary: string | null;
   curator_note: string | null;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export default function EditDocumentPage() {

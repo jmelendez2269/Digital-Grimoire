@@ -88,7 +88,7 @@ This checklist ensures all critical infrastructure and configurations are in pla
 - [ ] **Secrets Security Verified**
   - [ ] No secrets committed to git
   - [ ] `.env.local` in `.gitignore`
-  - [ ] Production secrets stored in Hostinger hPanel (`.env.production` file with 600 permissions) or Hostinger environment variable management
+  - [ ] Production secrets stored in Vercel Environment Variables (encrypted)
   - [ ] Personal password vault set up for backup (optional but recommended)
   - [ ] Emergency access procedures documented
   - [ ] See `docs/SECURITY_VERIFICATION_REPORT.md` for detailed verification
@@ -103,14 +103,14 @@ This checklist ensures all critical infrastructure and configurations are in pla
 - [ ] **Domain Setup**
   - [x] Domain registered (convergencelibrary.com)
   - [ ] DNS records configured
-  - [ ] A/AAAA records pointing to Hostinger
+  - [ ] A/AAAA records pointing to Vercel (or CNAME to Vercel)
   - [ ] CNAME records set up correctly
-  - [ ] Domain verified in Hostinger hPanel
+  - [ ] Domain added and verified in Vercel project
 
 - [ ] **SSL/TLS Certificate**
-  - [ ] SSL certificate provisioned (Hostinger Lifetime SSL - automatic)
-  - [ ] HTTPS redirect enabled
-  - [ ] Certificate auto-renewal confirmed
+  - [ ] SSL certificate automatically provisioned by Vercel (Let's Encrypt)
+  - [ ] HTTPS redirect enabled (automatic with Vercel)
+  - [ ] Certificate auto-renewal confirmed (automatic with Vercel)
   - [ ] SSL Labs test passed (A+ rating)
 
 - [ ] **Subdomain Configuration**
@@ -154,7 +154,7 @@ This checklist ensures all critical infrastructure and configurations are in pla
   - [ ] Team notification channels set up
 
 - [ ] **Application Monitoring**
-  - [ ] Application analytics enabled (Hostinger or third-party)
+  - [ ] Application analytics enabled (Vercel Analytics or third-party)
   - [ ] Performance metrics tracked
   - [ ] Core Web Vitals monitored
   - [ ] Uptime monitoring configured (Pingdom/UptimeRobot)
@@ -285,11 +285,11 @@ This checklist ensures all critical infrastructure and configurations are in pla
 - **DevOps Lead:** [Name] - [Phone] - [Email]
 - **SendGrid Support:** support@sendgrid.com
 - **Supabase Support:** support@supabase.io
+- **Vercel Support:** support@vercel.com
 - **AWS Support:** [Support Plan Link]
-- **Hostinger Support:** [Support contact from hPanel]
 
 **Escalation Path:**
-1. Check status pages (Supabase, Hostinger, AWS, SendGrid)
+1. Check status pages (Supabase, Vercel, AWS, SendGrid)
 2. Review recent deployments
 3. Check monitoring dashboards
 4. Contact relevant support if needed

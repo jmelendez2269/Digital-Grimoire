@@ -171,12 +171,12 @@ function deduplicateResults(
  * Alternative: Keep all chunks but prioritize higher scores
  * Useful when you want multiple chunks from the same text
  */
-export function hybridSearchWithChunks(
+export async function hybridSearchWithChunks(
   query: string,
   options: RetrievalOptions = {}
-): HybridSearchResult[] {
+): Promise<HybridSearchResult[]> {
   // This would keep all chunks, not deduplicate by text_id
   // Implementation similar to hybridSearch but without deduplication
-  return hybridSearch(query, options);
+  return await hybridSearch(query, options);
 }
 

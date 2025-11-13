@@ -73,7 +73,7 @@ export const WikiLink = Mark.create<WikiLinkOptions>({
     return [
       {
         find: wikiRegex,
-        handler: ({ range, match, chain }) => {
+        handler: ({ range, match, chain }: { range: any; match: RegExpMatchArray; chain: any }) => {
           const title = match[1].trim();
           const slug = title
             .toLowerCase()

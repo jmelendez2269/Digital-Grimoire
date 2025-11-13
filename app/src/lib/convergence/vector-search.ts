@@ -118,7 +118,7 @@ async function vectorSearchManual(
         text_title: textMeta?.title,
         text_author: textMeta?.author,
         text_type: textMeta?.type,
-      };
+      } as VectorSearchResult;
     })
     .filter((r): r is VectorSearchResult => r !== null)
     .sort((a, b) => b.similarity - a.similarity)

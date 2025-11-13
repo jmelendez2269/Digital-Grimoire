@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { LensWeights } from './lens-orchestrator';
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -75,7 +76,7 @@ export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
 export async function recordQuery(
   userId: string,
   queryText: string,
-  lensWeights: Record<string, number>
+  lensWeights: LensWeights | Record<string, number>
 ): Promise<void> {
   const supabase = await createClient();
 
@@ -146,7 +147,7 @@ export async function getQueryCount(userId: string): Promise<number> {
   const supabase = await createClient();
   const monthStart = getMonthStart();
 
-  const { data, error } = await supabase
+  const { count, error } = await supabase
     .from('convergence_queries')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
@@ -157,6 +158,6 @@ export async function getQueryCount(userId: string): Promise<number> {
     return 0;
   }
 
-  return data || 0;
+  return count || 0;
 }
 

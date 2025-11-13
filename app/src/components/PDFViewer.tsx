@@ -5,6 +5,7 @@ import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { highlightPlugin, RenderHighlightContentProps, RenderHighlightTargetProps, RenderHighlightsProps } from '@react-pdf-viewer/highlight';
 import type { HighlightArea } from '@react-pdf-viewer/highlight';
+import { TextPosition } from '@/lib/types';
 
 // Import styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -49,7 +50,7 @@ interface PDFViewerProps {
   fileName?: string;
   onDocumentLoad?: (numPages: number) => void;
   onPageChange?: (currentPage: number) => void;
-  onTextSelected?: (selection: { text: string; position: any }) => void;
+  onTextSelected?: (selection: { text: string; position: TextPosition }) => void;
   annotations?: Annotation[];
   onAnnotationClick?: (annotation: Annotation) => void;
 }
