@@ -6,18 +6,18 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-zinc-800 bg-zinc-900/95 backdrop-blur">
-      <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+      <div className="mx-auto max-w-7xl px-4 py-1.5 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
           {/* About */}
           <div className="flex flex-col">
-            <h3 className="mb-0.5 text-xs font-semibold uppercase tracking-wider text-amber-100">
+            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100">
               About
             </h3>
             <ul className="space-y-0.5">
               <li>
                 <Link
                   href="/about"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   About Us
                 </Link>
@@ -25,7 +25,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/mission"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   Our Mission
                 </Link>
@@ -33,7 +33,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/team"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   Team
                 </Link>
@@ -43,14 +43,14 @@ export default function Footer() {
 
           {/* Resources */}
           <div className="flex flex-col">
-            <h3 className="mb-0.5 text-xs font-semibold uppercase tracking-wider text-amber-100">
+            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100">
               Resources
             </h3>
             <ul className="space-y-0.5">
               <li>
                 <Link
                   href="/docs"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   Documentation
                 </Link>
@@ -58,7 +58,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/guides"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   Guides
                 </Link>
@@ -66,16 +66,16 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Legal - Column 1 */}
           <div className="flex flex-col">
-            <h3 className="mb-0.5 text-xs font-semibold uppercase tracking-wider text-amber-100">
+            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100">
               Legal
             </h3>
             <ul className="space-y-0.5">
               <li>
                 <Link
                   href="/privacy"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   Privacy Policy
                 </Link>
@@ -83,7 +83,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   Terms of Service
                 </Link>
@@ -91,15 +91,24 @@ export default function Footer() {
               <li>
                 <Link
                   href="/cookies"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   Cookie Policy
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          {/* Legal - Column 2 */}
+          <div className="flex flex-col">
+            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100 opacity-0">
+              Legal
+            </h3>
+            <ul className="space-y-0.5">
               <li>
                 <Link
                   href="/license"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   License
                 </Link>
@@ -107,7 +116,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/ai-disclaimer"
-                  className="text-xs text-zinc-400 transition-colors hover:text-amber-300"
+                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
                 >
                   AI Disclaimer
                 </Link>
@@ -117,9 +126,9 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-2 border-t border-zinc-800 pt-2">
+        <div className="mt-1.5 border-t border-zinc-800 pt-1.5">
           <div className="flex items-center justify-center">
-            <p className="text-xs text-zinc-500">
+            <p className="text-sm text-zinc-500">
               © {currentYear} Convergence. All rights reserved.
             </p>
           </div>

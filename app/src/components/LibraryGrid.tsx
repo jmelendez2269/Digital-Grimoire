@@ -59,7 +59,7 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
     <div
       ref={parentRef}
       className="h-full overflow-auto"
-      style={{ height: 'calc(100vh - 400px)', minHeight: '600px' }}
+      style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}
     >
       <div
         style={{

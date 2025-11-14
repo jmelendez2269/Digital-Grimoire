@@ -5,9 +5,28 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedbackModal from "./FeedbackModal";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search, ArrowUpDown } from "lucide-react";
+import AdvancedFilters from "@/components/AdvancedFilters";
 
-function Header() {
+interface LibrarySearchProps {
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  filterOptions: any;
+  filterValues: any;
+  onFilterChange: (values: any) => void;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  onSortChange: (field: string, order: 'asc' | 'desc') => void;
+  getSortLabel: () => string;
+  showSortDropdown: boolean;
+  setShowSortDropdown: (show: boolean) => void;
+}
+
+interface HeaderProps {
+  librarySearch?: LibrarySearchProps;
+}
+
+function Header({ librarySearch }: HeaderProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, signOut, isAdmin } = useAuth(); // Single source of truth
@@ -72,7 +91,7 @@ function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-8 md:flex flex-1">
           <Link
             href="/library"
             className={`text-sm font-medium transition-colors ${
@@ -412,6 +431,7 @@ function Header() {
           )}
         </div>
       </nav>
+
 
       {/* Feedback Modal */}
       <FeedbackModal

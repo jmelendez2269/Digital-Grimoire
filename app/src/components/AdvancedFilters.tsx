@@ -91,11 +91,11 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-2 hover:bg-zinc-900/70 transition-colors whitespace-nowrap"
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-zinc-900/70 transition-colors whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-amber-600" />
-          <span className="font-medium text-amber-100">Advanced Filters</span>
+          <Filter className="w-4 h-4 text-amber-600" />
+          <span className="font-medium text-amber-100 text-sm">Filters</span>
           {activeFilterCount > 0 && (
             <span className="px-2 py-0.5 bg-amber-600 text-white text-xs rounded-full">
               {activeFilterCount}
@@ -120,13 +120,13 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
                 }
               }}
             >
-              Clear all
+              Clear
             </div>
           )}
           {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-amber-100/60" />
+            <ChevronUp className="w-4 h-4 text-amber-100/60" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-amber-100/60" />
+            <ChevronDown className="w-4 h-4 text-amber-100/60" />
           )}
         </div>
       </button>

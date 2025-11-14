@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useQueryClient } from '@tanstack/react-query';
-import { FileText, Search, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { FileText, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2, ArrowUpDown, ChevronDown, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
@@ -156,20 +156,113 @@ function LibraryPageContent() {
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
       <Header />
       <main className="flex-1">
-        {/* Page Header */}
+        {/* Page Header - Compact with Search, Filters, and Sort */}
         <div className="border-b border-amber-900/20 bg-zinc-900/50">
-          <div className="max-w-screen-2xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold text-amber-100 mb-2">
-              The Convergence Library
-            </h1>
-            <p className="text-amber-100/60">
-              Explore esoteric texts, religious scriptures, philosophical works, and wisdom traditions
-            </p>
+          <div className="max-w-screen-2xl mx-auto px-4 py-2">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h1 className="text-lg font-semibold text-amber-100">
+                The Convergence Library
+              </h1>
+              
+              <div className="flex items-center gap-2 flex-1 justify-end">
+                {/* Compact Search Bar - Longer */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-100/60 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="w-40 pl-9 pr-3 py-1.5 text-sm bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 focus:w-56 transition-all duration-200"
+                  />
+                </div>
+
+                {/* Compact Advanced Filters - Match Sort Button Size */}
+                <div className="flex-shrink-0">
+                  <AdvancedFilters
+                    options={filterOptions}
+                    values={filterValues}
+                    onChange={handleFilterChange}
+                  />
+                </div>
+              
+                {/* Sort Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowSortDropdown(!showSortDropdown)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 text-sm hover:bg-zinc-800/50 hover:border-amber-600/50 transition-colors"
+                  >
+                    <ArrowUpDown className="w-4 h-4" />
+                    <span>Sort: {getSortLabel()}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showSortDropdown && (
+                    <>
+                      {/* Backdrop */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowSortDropdown(false)}
+                      />
+                      
+                      {/* Dropdown Menu */}
+                      <div className="absolute right-0 z-20 mt-2 w-64 bg-zinc-900 border border-amber-900/20 rounded-lg shadow-xl shadow-black/50 overflow-hidden">
+                        <div className="p-2">
+                          <div className="px-3 py-2 text-xs font-medium text-amber-100/60 uppercase tracking-wide">
+                            Sort By
+                          </div>
+                          
+                          {/* Sort Options */}
+                          {(['title', 'author', 'year', 'created_at', 'domain', 'type'] as const).map((field) => {
+                            const labels: Record<typeof field, string> = {
+                              title: 'Title',
+                              author: 'Author',
+                              year: 'Year',
+                              created_at: 'Date Added',
+                              domain: 'Domain',
+                              type: 'Type',
+                            };
+                            
+                            return (
+                              <div key={field} className="py-1">
+                                <button
+                                  onClick={() => {
+                                    // If clicking the same field, toggle order; otherwise set to desc
+                                    if (sortBy === field) {
+                                      handleSortChange(field, sortOrder === 'asc' ? 'desc' : 'asc');
+                                    } else {
+                                      handleSortChange(field, 'desc');
+                                    }
+                                    setShowSortDropdown(false);
+                                  }}
+                                  className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${
+                                    sortBy === field
+                                      ? 'bg-amber-600/20 text-amber-400'
+                                      : 'text-amber-100/80 hover:bg-zinc-800/50'
+                                  }`}
+                                >
+                                  <span>{labels[field]}</span>
+                                  {sortBy === field && (
+                                    <span className="text-xs text-amber-400/60">
+                                      {sortOrder === 'asc' ? '↑' : '↓'}
+                                    </span>
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="max-w-screen-2xl mx-auto px-4 py-8">
+        <div className="max-w-screen-2xl mx-auto px-4 py-2 flex flex-col flex-1 min-h-0">
         {/* Error Alert */}
         {error && !authLoading && (
           <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
@@ -193,106 +286,6 @@ function LibraryPageContent() {
           </div>
         )}
 
-        {/* Search Bar and Filters - Inline Layout */}
-        <div className="mb-4 flex flex-col sm:flex-row gap-3">
-          {/* Search Bar */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-100/40" />
-            <input
-              type="text"
-              placeholder="Search by title or author..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 transition-colors"
-            />
-          </div>
-
-          {/* Advanced Filters - Inline Button */}
-          <div className="sm:w-auto w-full">
-            <AdvancedFilters
-              options={filterOptions}
-              values={filterValues}
-              onChange={handleFilterChange}
-            />
-          </div>
-        </div>
-
-        {/* Results Count and Sort */}
-        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
-          <div className="text-sm text-amber-100/60">
-            Showing {texts.length} of {totalCount} texts
-          </div>
-          
-          {/* Sort Button */}
-          <div className="relative">
-            <button
-              onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-2 px-4 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 text-sm hover:bg-zinc-800/50 hover:border-amber-600/50 transition-colors"
-            >
-              <ArrowUpDown className="w-4 h-4" />
-              <span>Sort: {getSortLabel()}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showSortDropdown && (
-              <>
-                {/* Backdrop */}
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowSortDropdown(false)}
-                />
-                
-                {/* Dropdown Menu */}
-                <div className="absolute right-0 z-20 mt-2 w-64 bg-zinc-900 border border-amber-900/20 rounded-lg shadow-xl shadow-black/50 overflow-hidden">
-                  <div className="p-2">
-                    <div className="px-3 py-2 text-xs font-medium text-amber-100/60 uppercase tracking-wide">
-                      Sort By
-                    </div>
-                    
-                    {/* Sort Options */}
-                    {(['title', 'author', 'year', 'created_at', 'domain', 'type'] as const).map((field) => {
-                      const labels: Record<typeof field, string> = {
-                        title: 'Title',
-                        author: 'Author',
-                        year: 'Year',
-                        created_at: 'Date Added',
-                        domain: 'Domain',
-                        type: 'Type',
-                      };
-                      
-                      return (
-                        <div key={field} className="py-1">
-                          <button
-                            onClick={() => {
-                              // If clicking the same field, toggle order; otherwise set to desc
-                              if (sortBy === field) {
-                                handleSortChange(field, sortOrder === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                handleSortChange(field, 'desc');
-                              }
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${
-                              sortBy === field
-                                ? 'bg-amber-600/20 text-amber-400'
-                                : 'text-amber-100/80 hover:bg-zinc-800/50'
-                            }`}
-                          >
-                            <span>{labels[field]}</span>
-                            {sortBy === field && (
-                              <span className="text-xs text-amber-400/60">
-                                {sortOrder === 'asc' ? '↑' : '↓'}
-                              </span>
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
 
         {/* Loading State */}
         {!user ? null : loading ? (
@@ -337,25 +330,29 @@ function LibraryPageContent() {
             )}
           </div>
         ) : (
-          <>
+          <div className="flex flex-col flex-1 min-h-0">
             {/* Document Grid - Virtualized */}
-            <LibraryGrid
-              texts={texts}
-              isAdmin={isAdmin}
-              onDelete={deleteText}
-            />
+            <div className="flex-1 min-h-0">
+              <LibraryGrid
+                texts={texts}
+                isAdmin={isAdmin}
+                onDelete={deleteText}
+              />
+            </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={totalCount}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-              />
+              <div className="mt-4 flex-shrink-0">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalCount}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             )}
-          </>
+          </div>
         )}
         </div>
       </main>
