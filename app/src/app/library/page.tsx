@@ -193,27 +193,28 @@ function LibraryPageContent() {
           </div>
         )}
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-2xl">
+        {/* Search Bar and Filters - Inline Layout */}
+        <div className="mb-4 flex flex-col sm:flex-row gap-3">
+          {/* Search Bar */}
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-100/40" />
             <input
               type="text"
               placeholder="Search by title or author..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 transition-colors"
+              className="w-full pl-10 pr-4 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 transition-colors"
             />
           </div>
-        </div>
 
-        {/* Advanced Filters */}
-        <div className="mb-6">
-          <AdvancedFilters
-            options={filterOptions}
-            values={filterValues}
-            onChange={handleFilterChange}
-          />
+          {/* Advanced Filters - Inline Button */}
+          <div className="sm:w-auto w-full">
+            <AdvancedFilters
+              options={filterOptions}
+              values={filterValues}
+              onChange={handleFilterChange}
+            />
+          </div>
         </div>
 
         {/* Results Count and Sort */}

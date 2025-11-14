@@ -83,16 +83,19 @@ function Header() {
           >
             📚 Library
           </Link>
-          <Link
-            href="/library/media"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/library/media") || pathname?.startsWith("/library/media/")
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
-          >
-            🎵 Media
-          </Link>
+          {/* Media - Only show in main nav for admins */}
+          {isAdmin && (
+            <Link
+              href="/library/media"
+              className={`text-sm font-medium transition-colors ${
+                isActive("/library/media") || pathname?.startsWith("/library/media/")
+                  ? "text-amber-400"
+                  : "text-zinc-400 hover:text-amber-300"
+              }`}
+            >
+              🎵 Media
+            </Link>
+          )}
           <Link
             href="/journal"
             className={`text-sm font-medium transition-colors ${
@@ -130,6 +133,10 @@ function Header() {
                   Coming Soon
                 </div>
                 <div className="px-3 py-1.5 text-sm text-zinc-500">
+                  <div className="flex items-center gap-2 py-1">
+                    <span>🎵</span>
+                    <span>Media</span>
+                  </div>
                   <div className="flex items-center gap-2 py-1">
                     <span>🔮</span>
                     <span>Correspondences</span>
@@ -279,14 +286,17 @@ function Header() {
                         <span className="text-base">📖</span>
                         <span>My Library</span>
                       </Link>
-                      <Link
-                        href="/library/media"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <span className="text-base">🎵</span>
-                        <span>Media</span>
-                      </Link>
+                      {/* Media - Only show as active link for admins */}
+                      {isAdmin ? (
+                        <Link
+                          href="/library/media"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          <span className="text-base">🎵</span>
+                          <span>Media</span>
+                        </Link>
+                      ) : null}
                       <Link
                         href="/journal"
                         className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
@@ -320,6 +330,12 @@ function Header() {
                         Coming Soon
                       </div>
                       <div className="px-4 py-2 text-sm text-zinc-500">
+                        {!isAdmin && (
+                          <div className="flex items-center gap-3 py-1">
+                            <span className="text-base">🎵</span>
+                            <span>Media</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-3 py-1">
                           <span className="text-base">🔮</span>
                           <span>Correspondences</span>

@@ -24,6 +24,7 @@ interface UploadFile {
   progress: number;
   status: 'pending' | 'uploading' | 'processing' | 'success' | 'error';
   error?: string;
+  warning?: string;
   metadata?: DocumentMetadata;
   shortSummary?: string;
   longSummary?: string;
@@ -48,6 +49,7 @@ export default function AdminUploadPage() {
     // Different max sizes for different file types
     const isVideo = file.type.startsWith('video/');
     const maxSize = isVideo ? 200 * 1024 * 1024 : 50 * 1024 * 1024; // 200MB for video, 50MB for others
+    const ocrRecommendedSize = 8 * 1024 * 1024; // 8MB recommended for OCR processing
     
     const allowedTypes = [
       // Documents
@@ -88,13 +90,25 @@ export default function AdminUploadPage() {
         : 'File size must be less than 50MB';
     }
 
+    // Warn about image files over 8MB (may fail OCR due to Azure's 4MB limit)
+    const isImage = file.type.startsWith('image/');
+    if (isImage && file.size > ocrRecommendedSize) {
+      // Return a warning (non-blocking) - we'll handle this in the UI
+      // For now, just allow it but we'll show a warning in the file list
+    }
+
     return null;
   };
 
   // Drag-and-drop handler
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    const ocrRecommendedSize = 8 * 1024 * 1024; // 8MB recommended for OCR processing
     const newFiles: UploadFile[] = acceptedFiles.map((file) => {
       const error = validateFile(file);
+      const isImage = file.type.startsWith('image/');
+      const warning = isImage && file.size > ocrRecommendedSize
+        ? 'Image file exceeds 8MB. OCR processing may fail due to Azure\'s 4MB limit for images. Consider compressing the image before uploading.'
+        : undefined;
       // Create preview URL for PDFs and images
       const previewUrl = 
         file.type === 'application/pdf' || 
@@ -108,6 +122,7 @@ export default function AdminUploadPage() {
         progress: 0,
         status: error ? 'error' : 'pending',
         error: error || undefined,
+        warning,
         previewUrl,
       };
     });
@@ -441,7 +456,7 @@ export default function AdminUploadPage() {
             or click to browse your computer
           </p>
           <p className="text-xs text-amber-100/40">
-            Supported formats: PDF, PNG, JPG, HTML • Max size: 50MB per file
+            Supported formats: PDF, PNG, JPG, HTML • Max size: 50MB per file (8MB recommended for OCR processing)
           </p>
         </div>
 
@@ -536,6 +551,12 @@ export default function AdminUploadPage() {
                         {uploadFile.error && (
                           <p className="text-xs text-red-400 mt-1">
                             {uploadFile.error}
+                          </p>
+                        )}
+                        {uploadFile.warning && (
+                          <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {uploadFile.warning}
                           </p>
                         )}
                         {uploadFile.status === 'success' && uploadFile.hasDuplicates && (

@@ -97,11 +97,22 @@ export async function performOCR(
           let errorMessage = `Azure OCR API failed: ${cvResponse.status} - ${cvResponse.statusText}`;
           if (cvResponse.status === 400) {
             const errorDetails = cvErrorData.error?.message || JSON.stringify(cvErrorData);
-            errorMessage = `Azure OCR bad request (400). ` +
-              `This usually means the file URL is not accessible or the file format/size is not supported. ` +
-              `File URL: ${fileUrl.substring(0, 80)}... ` +
-              `Ensure the file is publicly accessible and not behind authentication. ` +
-              `Error details: ${errorDetails.substring(0, 200)}`;
+            const isSizeError = errorDetails.includes('too large') || errorDetails.includes('larger than');
+            if (isSizeError) {
+              errorMessage = `Azure OCR bad request (400). ` +
+                `The file exceeds Azure's size limit for image processing. ` +
+                `Azure Computer Vision API has a 4MB limit for images. ` +
+                `For PDFs, we use Document Intelligence which supports up to 50MB, but if it falls back to Computer Vision, individual pages converted to images must be under 4MB. ` +
+                `File URL: ${fileUrl.substring(0, 80)}... ` +
+                `Try compressing the file or splitting it into smaller parts. ` +
+                `Error details: ${errorDetails.substring(0, 200)}`;
+            } else {
+              errorMessage = `Azure OCR bad request (400). ` +
+                `This usually means the file URL is not accessible or the file format/size is not supported. ` +
+                `File URL: ${fileUrl.substring(0, 80)}... ` +
+                `Ensure the file is publicly accessible and not behind authentication. ` +
+                `Error details: ${errorDetails.substring(0, 200)}`;
+            }
           } else if (cvResponse.status === 401) {
             errorMessage = `Azure OCR authentication failed (401 PermissionDenied). ` +
               `Please verify your AZURE_VISION_KEY in app/.env.local is correct. ` +
@@ -146,11 +157,21 @@ export async function performOCR(
         let errorMessage = `Azure OCR API failed: ${response.status} - ${response.statusText}`;
         if (response.status === 400) {
           const errorDetails = errorData.error?.message || JSON.stringify(errorData);
-          errorMessage = `Azure OCR bad request (400). ` +
-            `Document Intelligence API may not support this file format, size, or URL. ` +
-            `File URL: ${fileUrl.substring(0, 80)}... ` +
-            `The system will try Computer Vision API as fallback. ` +
-            `Error details: ${errorDetails.substring(0, 200)}`;
+          const isSizeError = errorDetails.includes('too large') || errorDetails.includes('larger than');
+          if (isSizeError) {
+            errorMessage = `Azure OCR bad request (400). ` +
+              `The file exceeds Azure's size limit. ` +
+              `Document Intelligence API supports PDFs up to 50MB, but if processing fails and falls back to Computer Vision, images must be under 4MB. ` +
+              `File URL: ${fileUrl.substring(0, 80)}... ` +
+              `The system will try Computer Vision API as fallback, but it may also fail if the file is too large. ` +
+              `Error details: ${errorDetails.substring(0, 200)}`;
+          } else {
+            errorMessage = `Azure OCR bad request (400). ` +
+              `Document Intelligence API may not support this file format, size, or URL. ` +
+              `File URL: ${fileUrl.substring(0, 80)}... ` +
+              `The system will try Computer Vision API as fallback. ` +
+              `Error details: ${errorDetails.substring(0, 200)}`;
+          }
           // Don't throw here - let it fall through to try Computer Vision
         } else if (response.status === 401) {
           errorMessage = `Azure OCR authentication failed (401 PermissionDenied). ` +

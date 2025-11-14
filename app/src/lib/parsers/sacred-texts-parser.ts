@@ -32,6 +32,45 @@ interface ChapterLink {
 }
 
 /**
+ * Retry a function with exponential backoff
+ * Useful for handling rate limiting
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error');
+      
+      // If it's a rate limit error and we have retries left, wait and retry
+      if (lastError.message.includes('Rate limited') || 
+          lastError.message.includes('HTTP 429')) {
+        if (attempt < maxRetries - 1) {
+          const delay = initialDelay * Math.pow(2, attempt); // Exponential backoff
+          console.log(`[retryWithBackoff] Rate limited, waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        } else {
+          // All retries exhausted - update error message
+          throw new Error(`${lastError.message} (Automatic retries exhausted. Please wait 5-10 minutes before trying again.)`);
+        }
+      }
+      
+      // For other errors or if we're out of retries, throw immediately
+      throw lastError;
+    }
+  }
+  
+  throw lastError || new Error('Max retries exceeded');
+}
+
+/**
  * Main function to parse web texts from supported sources
  * Supports sacred-texts.com and generic websites
  */
@@ -50,7 +89,18 @@ export async function parseWebText(
     }
   } catch (error) {
     console.error('Error parsing web text:', error);
-    throw new Error(`Failed to parse web text: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Don't wrap errors that already have descriptive messages
+    if (error instanceof Error) {
+      // If error already contains descriptive prefixes or rate limiting, just re-throw it
+      if (error.message.includes('Failed to parse') || 
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('Rate limited') ||
+          error.message.includes('HTTP 429')) {
+        throw error;
+      }
+      throw new Error(`Failed to parse web text: ${error.message}`);
+    }
+    throw new Error(`Failed to parse web text: Unknown error`);
   }
 }
 
@@ -77,20 +127,45 @@ export async function parseSacredText(
     if (isIndexPage) {
       // Multi-chapter book
       const chapterLinks = await fetchChapterList(url);
+      
+      // Add delay before fetching metadata to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+      
       metadata = await extractMetadata(url);
       
-      chapters = await Promise.all(
-        chapterLinks.map(async (link, index) => {
-          const absoluteUrl = resolveUrl(url, link.href);
+      // Fetch chapters sequentially with delays to avoid rate limiting
+      chapters = [];
+      for (let index = 0; index < chapterLinks.length; index++) {
+        const link = chapterLinks[index];
+        const absoluteUrl = resolveUrl(url, link.href);
+        
+        // Add delay between requests (2-3 seconds to be respectful)
+        if (index > 0) {
+          const delay = 2000 + Math.random() * 1000; // 2-3 seconds with some randomization
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        
+        try {
           const content = await fetchChapterContent(absoluteUrl, format);
-          
-          return {
+          chapters.push({
             id: `chapter-${index + 1}`,
             title: link.title || `Chapter ${index + 1}`,
             content: content,
-          };
-        })
-      );
+          });
+        } catch (error) {
+          console.error(`[parseSacredText] Failed to fetch chapter ${index + 1} (${link.title}):`, error);
+          // If rate limited, throw immediately
+          if (error instanceof Error && error.message.includes('Rate limited')) {
+            throw error;
+          }
+          // For other errors, continue but log
+          chapters.push({
+            id: `chapter-${index + 1}`,
+            title: link.title || `Chapter ${index + 1}`,
+            content: `[Error: Failed to fetch this chapter]`,
+          });
+        }
+      }
     } else {
       // Single page text
       metadata = await extractMetadata(url);
@@ -134,7 +209,18 @@ export async function parseSacredText(
     };
   } catch (error) {
     console.error('Error parsing sacred text:', error);
-    throw new Error(`Failed to parse sacred text: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Don't wrap errors that already have descriptive messages
+    if (error instanceof Error) {
+      // If error already contains descriptive prefixes or rate limiting, just re-throw it
+      if (error.message.includes('Failed to parse') || 
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('Rate limited') ||
+          error.message.includes('HTTP 429')) {
+        throw error;
+      }
+      throw new Error(`Failed to parse sacred text: ${error.message}`);
+    }
+    throw new Error(`Failed to parse sacred text: Unknown error`);
   }
 }
 
@@ -142,10 +228,18 @@ export async function parseSacredText(
  * Fetch and parse the chapter list from an index page
  */
 export async function fetchChapterList(indexUrl: string): Promise<ChapterLink[]> {
-  try {
-    const response = await fetch(indexUrl);
+  return retryWithBackoff(async () => {
+    const response = await fetch(indexUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
     if (!response.ok) {
-      throw new Error(`Failed to fetch index page: ${response.statusText}`);
+      if (response.status === 429) {
+        throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
+      }
+      throw new Error(`Failed to fetch index page (HTTP ${response.status}): ${response.statusText}`);
     }
 
     const html = await response.text();
@@ -192,10 +286,7 @@ export async function fetchChapterList(indexUrl: string): Promise<ChapterLink[]>
     }
 
     return chapters;
-  } catch (error) {
-    console.error('Error fetching chapter list:', error);
-    throw error;
-  }
+  }, 3, 2000); // 3 retries with 2 second initial delay
 }
 
 /**
@@ -206,9 +297,17 @@ export async function fetchChapterContent(
   format: 'html' | 'markdown' | 'plaintext'
 ): Promise<string> {
   try {
-    const response = await fetch(chapterUrl);
+    const response = await fetch(chapterUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
     if (!response.ok) {
-      throw new Error(`Failed to fetch chapter: ${response.statusText}`);
+      if (response.status === 429) {
+        throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
+      }
+      throw new Error(`Failed to fetch chapter (HTTP ${response.status}): ${response.statusText}`);
     }
 
     const html = await response.text();
@@ -364,9 +463,17 @@ export async function fetchChapterContent(
  */
 export async function extractMetadata(url: string): Promise<ParsedTextMetadata> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
     if (!response.ok) {
-      throw new Error(`Failed to fetch page: ${response.statusText}`);
+      if (response.status === 429) {
+        throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
+      }
+      throw new Error(`Failed to fetch page (HTTP ${response.status}): ${response.statusText}`);
     }
 
     const html = await response.text();
@@ -560,9 +667,17 @@ async function extractSectionsFromPage(
   format: 'html' | 'markdown' | 'plaintext'
 ): Promise<Chapter[]> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
     if (!response.ok) {
-      throw new Error(`Failed to fetch page: ${response.statusText}`);
+      if (response.status === 429) {
+        throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
+      }
+      throw new Error(`Failed to fetch page (HTTP ${response.status}): ${response.statusText}`);
     }
 
     const html = await response.text();
@@ -700,17 +815,33 @@ export async function parseGenericWebPage(
     console.log('[parseGenericWebPage] Parsing:', url);
     
     // Fetch the page
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+    } catch (fetchError) {
+      console.error('[parseGenericWebPage] Fetch error:', fetchError);
+      throw new Error(`Failed to fetch page from ${url}: ${fetchError instanceof Error ? fetchError.message : 'Network error'}`);
+    }
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch page: ${response.statusText}`);
+      throw new Error(`Failed to fetch page (HTTP ${response.status}): ${response.statusText}`);
     }
 
-    const html = await response.text();
+    let html: string;
+    try {
+      html = await response.text();
+    } catch (textError) {
+      throw new Error(`Failed to read page content: ${textError instanceof Error ? textError.message : 'Unknown error'}`);
+    }
+    
+    if (!html || html.trim().length === 0) {
+      throw new Error('Page returned empty content');
+    }
+    
     const $ = cheerio.load(html);
 
     // Remove unwanted elements
@@ -810,7 +941,8 @@ export async function parseGenericWebPage(
     }
 
     if (!contentHtml || contentHtml.trim().length < 50) {
-      throw new Error('Could not extract meaningful content from the page');
+      const pageTitle = $('title').text() || 'Unknown';
+      throw new Error(`Could not extract meaningful content from the page. Page title: "${pageTitle}". The page may require JavaScript to load content or may have an unusual structure.`);
     }
 
     // Try to split content into sections/chapters

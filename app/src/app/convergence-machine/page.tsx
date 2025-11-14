@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Sparkles, Send, Loader2 } from 'lucide-react';
+import { Sparkles, Send, Loader2, Info } from 'lucide-react';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LensSlider from '@/components/convergence/LensSlider';
@@ -213,10 +214,27 @@ function ConvergenceMachineContent() {
             <h1 className="text-4xl font-bold text-amber-100">
               Convergence Machine
             </h1>
+            <Link
+              href="/ai-disclaimer"
+              className="ml-auto flex items-center gap-1 text-sm text-amber-400/70 hover:text-amber-400 transition-colors"
+              title="Learn about AI and discernment"
+            >
+              <Info className="w-4 h-4" />
+              <span className="hidden sm:inline">About AI & Discernment</span>
+            </Link>
           </div>
           <p className="text-amber-100/70 text-lg">
             Explore questions through seven unique analytical lenses, synthesizing insights from multiple perspectives.
           </p>
+          <div className="mt-4 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg">
+            <p className="text-sm text-amber-200/80">
+              <strong className="text-amber-200">Important:</strong> AI is a tool, not a source of absolute truth. 
+              Please use discernment and verify important information.{' '}
+              <Link href="/ai-disclaimer" className="text-amber-400 hover:text-amber-300 underline">
+                Learn more about AI safety and discernment
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Rate Limit Display */}

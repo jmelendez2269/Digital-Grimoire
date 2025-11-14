@@ -185,6 +185,13 @@ export default function AnnotationPanel({
     }
   };
 
+  // Filter annotations based on category
+  // NOTE: This hook must be called before any early returns to follow Rules of Hooks
+  const filteredAnnotations = useMemo(
+    () => annotations.filter((a) => filterCategory === 'all' || a.category === filterCategory),
+    [annotations, filterCategory]
+  );
+
   if (loading) {
     return (
       <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 animate-pulse">
@@ -192,12 +199,6 @@ export default function AnnotationPanel({
       </div>
     );
   }
-
-  // Filter annotations based on category
-  const filteredAnnotations = useMemo(
-    () => annotations.filter((a) => filterCategory === 'all' || a.category === filterCategory),
-    [annotations, filterCategory]
-  );
 
   return (
     <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">

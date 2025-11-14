@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Search, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import dynamic from 'next/dynamic';
@@ -217,6 +218,14 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
           {usageStats && ` (${usageStats[autoSelectedModel]} calls this month)`}
         </p>
       )}
+
+      {/* AI Disclaimer Notice */}
+      <p className="text-xs text-amber-100/60 mt-2 text-center">
+        <span className="text-amber-200/80">AI is a tool, not a source of absolute truth.</span>{' '}
+        <Link href="/ai-disclaimer" className="text-amber-400 hover:text-amber-300 underline">
+          Learn more
+        </Link>
+      </p>
 
       {/* Chat Modal */}
       {showChatModal && (

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Calendar, User, Tag, Clock, Download, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Tag, Clock, Download, Loader2, AlertCircle, Music } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
@@ -74,13 +74,49 @@ interface MediaDocument {
 export default function MediaDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const mediaId = params.id as string;
 
   const [media, setMedia] = useState<MediaDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+
+  // Show "Coming Soon" message for non-admin users
+  if (!authLoading && user && !isAdmin) {
+    return (
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+        <Header />
+        <main className="flex-1">
+          <div className="max-w-screen-2xl mx-auto px-4 py-8">
+            <Link
+              href="/library"
+              className="inline-flex items-center gap-2 text-amber-100/60 hover:text-amber-400 transition-colors mb-6"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Library
+            </Link>
+            <div className="text-center py-16">
+              <Music className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
+              <h2 className="text-2xl font-medium text-amber-100 mb-4">
+                Coming Soon
+              </h2>
+              <p className="text-lg text-amber-100/60 mb-6 max-w-2xl mx-auto">
+                The Media Library is currently being prepared for launch. You'll soon be able to browse and explore our collection of audio, video, and photo content.
+              </p>
+              <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-6 max-w-2xl mx-auto">
+                <p className="text-sm text-amber-300/80">
+                  <strong className="block mb-2 text-amber-400">What to Expect:</strong>
+                  Access to curated audio recordings, video content, and photo collections from our library. All media will be searchable and organized by domain, tags, and more.
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!user || !mediaId) return;

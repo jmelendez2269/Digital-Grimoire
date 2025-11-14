@@ -87,11 +87,11 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
   );
 
   return (
-    <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg overflow-hidden">
+    <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg overflow-hidden w-full sm:w-auto">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-900/70 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2 hover:bg-zinc-900/70 transition-colors whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-amber-600" />

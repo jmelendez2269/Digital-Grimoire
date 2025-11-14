@@ -188,7 +188,13 @@ export default function ImportSacredTextPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to import text');
+        // If details exist and error is generic, combine them
+        // Otherwise, use error message directly (it's already descriptive)
+        let errorMessage = data.error || 'Failed to import text';
+        if (data.details && !errorMessage.includes(data.details)) {
+          errorMessage = `${errorMessage}: ${data.details}`;
+        }
+        throw new Error(errorMessage);
       }
 
       // Success!
@@ -314,7 +320,22 @@ export default function ImportSacredTextPage() {
                       Import Failed
                     </h3>
                     <p className="text-sm text-amber-100/80 mb-2">{error}</p>
-                    {(error.includes('Gutenberg') || error.includes('Archive') || error.includes('not supported') || error.includes('Upload')) ? (
+                    {error.includes('Rate limited') || error.includes('HTTP 429') ? (
+                      <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-200/90">
+                        <strong>💡 Tips to avoid rate limiting:</strong>
+                        <ul className="mt-2 ml-4 list-disc space-y-1">
+                          <li>Wait 5-10 minutes before trying again</li>
+                          <li>Try importing a single-page text instead of an index page (fewer requests)</li>
+                          <li>For multi-chapter books, the import will take longer (2-3 seconds between chapters)</li>
+                          <li>Alternatively, use{' '}
+                            <Link href="/admin/upload" className="text-amber-400 hover:text-amber-300 underline">
+                              Admin → Upload
+                            </Link>
+                            {' '}to upload files directly
+                          </li>
+                        </ul>
+                      </div>
+                    ) : (error.includes('Gutenberg') || error.includes('Archive') || error.includes('not supported') || error.includes('Upload')) ? (
                       <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-200/90">
                         <strong>Tip:</strong> To import texts from other sources, go to{' '}
                         <Link href="/admin/upload" className="text-amber-400 hover:text-amber-300 underline">

@@ -64,8 +64,36 @@ export async function POST(request: Request) {
 
     // Parse the web text
     console.log('[Import API] Parsing web text from:', url);
-    const parsedText = await parseWebText(url, format);
-    console.log(`[Import API] Parsed ${parsedText.chapterCount} chapters`);
+    let parsedText;
+    try {
+      parsedText = await parseWebText(url, format);
+      console.log(`[Import API] Parsed ${parsedText.chapterCount} chapters`);
+    } catch (parseError) {
+      console.error('[Import API] Parse error details:', parseError);
+      const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown parsing error';
+      
+      // If error message already contains descriptive information (rate limiting, etc.), use it directly
+      if (errorMessage.includes('Rate limited') || 
+          errorMessage.includes('HTTP 429') ||
+          errorMessage.includes('Failed to fetch') ||
+          errorMessage.includes('Failed to parse')) {
+        return NextResponse.json(
+          { 
+            error: errorMessage
+          },
+          { status: 400 }
+        );
+      }
+      
+      // Otherwise, wrap it with a generic message
+      return NextResponse.json(
+        { 
+          error: 'Failed to parse sacred text', 
+          details: errorMessage 
+        },
+        { status: 400 }
+      );
+    }
 
     // AI-enhanced metadata extraction (if enabled)
     let aiMetadata = null;

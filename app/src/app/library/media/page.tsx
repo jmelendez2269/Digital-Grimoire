@@ -166,6 +166,46 @@ function MediaLibraryPageContent() {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
+  // Show "Coming Soon" message for non-admin users
+  if (!authLoading && user && !isAdmin) {
+    return (
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+        <Header />
+        <main className="flex-1">
+          <div className="border-b border-amber-900/20 bg-zinc-900/50">
+            <div className="max-w-screen-2xl mx-auto px-4 py-8">
+              <h1 className="text-3xl font-bold text-amber-100 mb-2">
+                Media Library
+              </h1>
+              <p className="text-amber-100/60">
+                Browse audio, video, and photo collections
+              </p>
+            </div>
+          </div>
+
+          <div className="max-w-screen-2xl mx-auto px-4 py-8">
+            <div className="text-center py-16">
+              <Music className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
+              <h3 className="text-2xl font-medium text-amber-100 mb-4">
+                Coming Soon
+              </h3>
+              <p className="text-lg text-amber-100/60 mb-6 max-w-2xl mx-auto">
+                The Media Library is currently being prepared for launch. You'll soon be able to browse and explore our collection of audio, video, and photo content.
+              </p>
+              <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-6 max-w-2xl mx-auto">
+                <p className="text-sm text-amber-300/80">
+                  <strong className="block mb-2 text-amber-400">What to Expect:</strong>
+                  Access to curated audio recordings, video content, and photo collections from our library. All media will be searchable and organized by domain, tags, and more.
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
       <Header />
