@@ -91,7 +91,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center gap-8 md:flex flex-1">
+        <div className="hidden items-center gap-8 md:flex flex-1 ml-8">
           <Link
             href="/library"
             className={`text-sm font-medium transition-colors ${

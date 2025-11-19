@@ -250,7 +250,7 @@ export default function ImportSacredTextPage() {
       
       <main className="flex-1">
         <div className="min-h-screen bg-zinc-950 text-amber-50 py-12">
-          <div className="max-w-4xl mx-auto px-6">
+          <div className="max-w-4xl mx-auto pl-8 pr-6">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
