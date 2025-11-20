@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Upload, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -129,7 +130,8 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
   if (!isOpen) return null;
 
-  return (
+  // Use portal to render modal at document body level to ensure it's always on top
+  const modalContent = (
     <div 
       className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm overflow-y-auto"
       onClick={handleClose}
@@ -337,5 +339,12 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
       </div>
     </div>
   );
+
+  // Render modal in portal at document body level
+  if (typeof window !== "undefined") {
+    return createPortal(modalContent, document.body);
+  }
+  
+  return null;
 }
 
