@@ -16,13 +16,13 @@ const presets: Preset[] = [
     icon: <Sparkles className="w-4 h-4" />,
     description: 'All perspectives balanced',
     weights: {
-      scientific: 14,
-      psychological: 14,
-      philosophical: 14,
-      religious_spiritual: 14,
-      historical_anthropological: 14,
-      symbolic_occult: 14,
-      mathematical: 16, // Slightly more to round to 100
+      scientific: 30, // Standard
+      psychological: 30, // Standard
+      philosophical: 30, // Standard
+      religious_spiritual: 30, // Standard
+      historical_anthropological: 30, // Standard
+      symbolic_occult: 30, // Standard
+      mathematical: 30, // Standard
     },
   },
   {
@@ -30,13 +30,13 @@ const presets: Preset[] = [
     icon: <GraduationCap className="w-4 h-4" />,
     description: 'Academic rigor',
     weights: {
-      scientific: 25,
-      psychological: 20,
-      philosophical: 25,
-      religious_spiritual: 10,
-      historical_anthropological: 15,
-      symbolic_occult: 3,
-      mathematical: 2,
+      scientific: 60, // Boosted
+      psychological: 30, // Standard
+      philosophical: 60, // Boosted
+      religious_spiritual: 15, // Minimal
+      historical_anthropological: 30, // Standard
+      symbolic_occult: 0, // Off
+      mathematical: 15, // Minimal
     },
   },
   {
@@ -44,13 +44,13 @@ const presets: Preset[] = [
     icon: <Wand2 className="w-4 h-4" />,
     description: 'Esoteric focus',
     weights: {
-      scientific: 5,
-      psychological: 20,
-      philosophical: 15,
-      religious_spiritual: 25,
-      historical_anthropological: 10,
-      symbolic_occult: 20,
-      mathematical: 5,
+      scientific: 0, // Off
+      psychological: 30, // Standard
+      philosophical: 30, // Standard
+      religious_spiritual: 60, // Boosted
+      historical_anthropological: 15, // Minimal
+      symbolic_occult: 100, // Dominant
+      mathematical: 0, // Off
     },
   },
   {
@@ -58,13 +58,13 @@ const presets: Preset[] = [
     icon: <Search className="w-4 h-4" />,
     description: 'Holistic exploration',
     weights: {
-      scientific: 10,
-      psychological: 20,
-      philosophical: 20,
-      religious_spiritual: 20,
-      historical_anthropological: 15,
-      symbolic_occult: 10,
-      mathematical: 5,
+      scientific: 15, // Minimal
+      psychological: 30, // Standard
+      philosophical: 30, // Standard
+      religious_spiritual: 30, // Standard
+      historical_anthropological: 30, // Standard
+      symbolic_occult: 15, // Minimal
+      mathematical: 15, // Minimal
     },
   },
 ];

@@ -7,14 +7,15 @@ import { Sparkles, Send, Loader2, Info } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import LensSlider from '@/components/convergence/LensSlider';
+import LensIntensitySelector from '@/components/convergence/LensIntensitySelector';
 import LensPresets from '@/components/convergence/LensPresets';
 import ResponseLengthSlider from '@/components/convergence/ResponseLengthSlider';
 import RateLimitDisplay from '@/components/convergence/RateLimitDisplay';
 import PremiumGate from '@/components/convergence/PremiumGate';
 import { getAllLenses } from '@/lib/convergence/lenses';
-import { LensWeights } from '@/lib/convergence/lens-orchestrator';
+import { LensWeights, ResponseLength } from '@/lib/convergence/lens-orchestrator';
 import { useAuth } from '@/contexts/AuthContext';
+import { Save, Check } from 'lucide-react';
 
 // Dynamically import ResponseStream to reduce initial bundle size
 const ResponseStream = dynamic(() => import('@/components/convergence/ResponseStream'), {
@@ -27,13 +28,13 @@ const ResponseStream = dynamic(() => import('@/components/convergence/ResponseSt
 });
 
 const DEFAULT_WEIGHTS: LensWeights = {
-  scientific: 14,
-  psychological: 14,
-  philosophical: 14,
-  religious_spiritual: 14,
-  historical_anthropological: 14,
-  symbolic_occult: 14,
-  mathematical: 16,
+  scientific: 30, // Standard
+  psychological: 30, // Standard
+  philosophical: 30, // Standard
+  religious_spiritual: 30, // Standard
+  historical_anthropological: 30, // Standard
+  symbolic_occult: 30, // Standard
+  mathematical: 30, // Standard
 };
 
 function ConvergenceMachineContent() {
@@ -46,6 +47,8 @@ function ConvergenceMachineContent() {
   const [response, setResponse] = useState<any>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savingDefault, setSavingDefault] = useState(false);
+  const [defaultSaved, setDefaultSaved] = useState(false);
   const [rateLimit, setRateLimit] = useState<{
     remaining: number;
     limit: number;
@@ -55,7 +58,64 @@ function ConvergenceMachineContent() {
 
   useEffect(() => {
     fetchRateLimit();
+    loadUserDefaults();
   }, []);
+
+  // Load user's saved defaults
+  async function loadUserDefaults() {
+    if (!user) return;
+    
+    try {
+      const res = await fetch('/api/user/convergence-preferences');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.preferences?.lensWeights) {
+          setLensWeights(data.preferences.lensWeights);
+        }
+        if (data.preferences?.responseLength) {
+          setResponseLength(data.preferences.responseLength);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading user defaults:', err);
+      // Silently fail - use system defaults
+    }
+  }
+
+  // Save current configuration as default
+  async function saveAsDefault() {
+    if (!user) {
+      setError('Please sign in to save defaults');
+      return;
+    }
+
+    setSavingDefault(true);
+    setDefaultSaved(false);
+
+    try {
+      const res = await fetch('/api/user/convergence-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lensWeights,
+          responseLength,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to save defaults');
+      }
+
+      setDefaultSaved(true);
+      setTimeout(() => setDefaultSaved(false), 3000);
+    } catch (err) {
+      console.error('Error saving defaults:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save defaults');
+    } finally {
+      setSavingDefault(false);
+    }
+  }
 
   // Read query from URL params on mount
   useEffect(() => {
@@ -265,19 +325,35 @@ function ConvergenceMachineContent() {
                 />
               </div>
 
-              {/* Lens Sliders */}
+              {/* Lens Intensity Selectors */}
               <div>
-                <h2 className="text-sm font-semibold text-amber-100/80 mb-3">
-                  Lens Weights
-                  {totalWeight !== 100 && (
-                    <span className="ml-2 text-xs text-amber-400">
-                      ({totalWeight}%)
-                    </span>
-                  )}
-                </h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-amber-100/80">
+                    Lens Intensity
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={saveAsDefault}
+                    disabled={savingDefault || isStreaming || !user}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-zinc-800/50 hover:bg-zinc-800 text-amber-100/70 hover:text-amber-100 border border-zinc-700 hover:border-purple-600/50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={user ? 'Save current settings as default' : 'Sign in to save defaults'}
+                  >
+                    {defaultSaved ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-green-400">Saved!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Set as Default</span>
+                      </>
+                    )}
+                  </button>
+                </div>
                 <div className="space-y-4">
                   {lenses.map(lens => (
-                    <LensSlider
+                    <LensIntensitySelector
                       key={lens.id}
                       lensId={lens.id}
                       lensName={lens.name}

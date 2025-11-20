@@ -8,9 +8,9 @@ interface ResponseLengthSliderProps {
 
 export default function ResponseLengthSlider({ value, onChange, disabled }: ResponseLengthSliderProps) {
   const options = [
-    { value: 'short', label: 'Short', desc: 'Concise answers (~500 tokens)' },
-    { value: 'medium', label: 'Medium', desc: 'Balanced (~1000 tokens)' },
-    { value: 'long', label: 'Long', desc: 'Comprehensive (~2000 tokens)' },
+    { value: 'short', label: 'Short', desc: 'Concise answers (~200 tokens)' },
+    { value: 'medium', label: 'Medium', desc: 'Balanced (~400 tokens)' },
+    { value: 'long', label: 'Long', desc: 'Comprehensive (~1000 tokens)' },
   ];
 
   return (
