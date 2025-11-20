@@ -309,6 +309,13 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Export conversation | P1 | S | Post | ⬜ Planned | Markdown export |
 | Lens comparison view | P1 | M | Post | ⬜ Planned | Side-by-side answers |
 | Continue conversation | P1 | M | Post | ⬜ Planned | Context-aware follow-ups |
+| **Epistemic inline labeling** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Established/Contested/Speculative/Metaphor/Devotional tags in responses** |
+| **Structured answer framing** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **"What we know / What's debated / Where analogies are speculative" structure** |
+| **Discovery ethos system preface** | **P1** | **S** | **Post-MVP** | **⬜ Planned** | **Curiosity, humility, pluralism, rigor principles in all queries** |
+| **Enhanced UI controls** | **P1** | **L** | **Post-MVP** | **⬜ Planned** | **Comparative toggle, Breadth/Depth slider, Include physics/psychology, Speculative analogies switch, Scholars disagree button** |
+| **Physics metadata schema** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **discipline, subfield, evidence_type, math_level fields** |
+| **Physics metadata extraction** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **AI extraction of new physics metadata fields** |
+| **Physics metadata filtering** | **P1** | **S** | **Post-MVP** | **⬜ Planned** | **Library filters for discipline, evidence_type, math_level** |
 | Token-level streaming | P2 | L | Post | ⬜ Planned | Real-time token display |
 | Image generation | P2 | L | Post | ⬜ Planned | DALL-E/Midjourney |
 | Voice input | P2 | M | Post | ⬜ Planned | Whisper API |
@@ -331,6 +338,30 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - Example: Practitioner planning ritual → boost Symbolic/Occult to 50%, Religious/Spiritual to 30%
 - Weights determine: retrieval strategy emphasis, token allocation in prompt, answer section prominence
 - Saved presets available for common research patterns
+
+### 5C. DISCOVERY ENGINE (Phase 6 - Post-MVP)
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| **Cross-domain concept alignment** | **P1** | **L** | **Post-MVP** | **⬜ Planned** | **Embedding-based clustering with human-in-the-loop approval** |
+| **Natural Language Inference filtering** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Filter spurious cross-domain links using NLI** |
+| **Cross-domain concept UI** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **"Related across traditions/sciences" display** |
+| **Unsupervised topic discovery** | **P1** | **L** | **Post-MVP** | **⬜ Planned** | **BERTopic-style pipeline for emerging themes** |
+| **Topic editorial review workflow** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Admin interface for topic approval** |
+| **Topic filtering in library** | **P1** | **S** | **Post-MVP** | **⬜ Planned** | **Add discovered topics as filter options** |
+| **User question logging** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Track questions + best sources + groundedness scores** |
+| **Learning suggestions batch job** | **P1** | **L** | **Post-MVP** | **⬜ Planned** | **Suggest new edges, missing books, prompt tweaks** |
+| **Learning review panel** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Admin interface for reviewing learning suggestions** |
+| **Evaluation system** | **P1** | **L** | **Post-MVP** | **⬜ Planned** | **Gold tests + groundedness/faithfulness metrics** |
+| **Structured corpus layers** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Foundational physics, science-of-science, history/context, popularizations** |
+| **Corpus layer retrieval rules** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Transparent labeling when mixing religion + physics** |
+| **Corpus layer UI** | **P1** | **S** | **Post-MVP** | **⬜ Planned** | **Display and filter by corpus layer in library** |
+
+**Discovery Engine Goals:**
+- Automated discovery of conceptual parallels across traditions
+- Pattern mining to surface emerging themes
+- Self-learning loop that improves from user interactions
+- Structured corpus organization for rigorous physics-spirituality integration
 
 ### 5B. UNIVERSAL AI SEARCH & CHAT SYSTEM - ✅ COMPLETE (November 3, 2025)
 

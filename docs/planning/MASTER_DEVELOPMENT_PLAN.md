@@ -823,6 +823,69 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 
 ---
 
+### Phase 4B: Convergence Machine Post-MVP Enhancements (Weeks 29-32) - ⏳ POST-MVP
+
+**Goal:** Enhance answer quality, transparency, and rigor for physics-spirituality boundary questions
+
+**Status:** Post-MVP - Planned for after launch
+
+#### Week 29-30: Enhanced Answer Quality & Epistemic Labeling
+
+**Epistemic Inline Labeling System:**
+- [ ] Add inline tags to Convergence Machine responses: `*(Established physics)*`, `*(Contested interpretation)*`, `*(Speculative analogy)*`, `*(Metaphor)*`, `*(Devotional view)*`
+- [ ] Modify `lens-orchestrator.ts` to include labeling logic in response generation
+- [ ] Update system prompts to instruct AI to tag claims appropriately
+- [ ] Add styling for epistemic labels in `ResponseStream.tsx`
+
+**Structured Answer Framing:**
+- [ ] Implement answer structure: "What we know (established) / What's debated / Where analogies are tempting but speculative"
+- [ ] Update synthesis prompt in `mergeLensResponses()` to use structured framing
+- [ ] Add UI component to display structured sections in response view
+
+**Discovery Ethos System Preface:**
+- [ ] Add overarching system preface to all Convergence Machine queries
+- [ ] Principles: curiosity, humility, pluralism, rigor
+- [ ] Instructions: cite primary sources, separate established from interpretation, present multiple traditions, avoid medical diagnoses
+- [ ] File: `app/src/lib/convergence/lens-orchestrator.ts` (add to system prompt)
+
+**Enhanced UI Controls:**
+- [ ] Add "Comparative" vs "Single-tradition" toggle
+- [ ] Add "Breadth ↔ Depth" slider (adjusts retrieval k and chunk size)
+- [ ] Add checkboxes: "Include physics", "Include psychology", "Only primary sources"
+- [ ] Add "Show speculative analogies" switch (default off)
+- [ ] Add "Where do scholars disagree?" button (triggers disagreement-focused query)
+- [ ] Files: `app/src/app/convergence-machine/page.tsx`, new component `DiscoveryControls.tsx`
+
+#### Week 31-32: Enhanced Metadata Schema for Physics
+
+**Database Schema Expansion:**
+- [ ] Migration: Add columns to `texts` table:
+  - `discipline` TEXT (physics, philosophy, psychology, religion)
+  - `subfield` TEXT (QM, QFT, cosmology, clinical psych, depth psych, theology)
+  - `evidence_type` TEXT (theory, experiment, commentary, popular)
+  - `math_level` TEXT (none, light, rigorous)
+- [ ] Update `confidence` field to match original spec (already exists but verify values)
+- [ ] File: `migrations/XXX_add_physics_metadata.sql`
+
+**Metadata Extraction Updates:**
+- [ ] Update `claude-metadata.ts` to extract new fields
+- [ ] Update `DocumentMetadata` interface
+- [ ] Update AI prompt to classify physics documents with new fields
+- [ ] File: `app/src/lib/claude-metadata.ts`
+
+**Library Filtering:**
+- [ ] Add filters for new metadata fields in library page
+- [ ] Update `AdvancedFilters.tsx` component
+- [ ] Add facet filters for `discipline`, `evidence_type`, `math_level`
+
+**Deliverables:**
+- Epistemic labeling system reduces confusion at physics-spirituality boundary
+- Structured answer framing improves user satisfaction
+- Enhanced UI controls provide better query customization
+- Physics metadata schema supports structured corpus organization
+
+---
+
 ### Phase 5: Community & Tokenomics (Weeks 29-36)
 
 **Goal:** Launch contribution reward system
@@ -875,6 +938,120 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 ---
 
 ### Phase 6: Advanced Features (Weeks 37-48)
+
+#### Week 37-38: Cross-Domain Concept Alignment (Discovery Engine)
+
+**Goal:** Automated discovery of conceptual parallels across traditions
+
+**Embedding-Based Clustering:**
+- [ ] Use existing embeddings to cluster passages from different domains
+- [ ] Flag cross-cluster neighbors as candidate analogies
+- [ ] File: `app/src/lib/convergence/concept-alignment.ts` (new)
+
+**Natural Language Inference Filtering:**
+- [ ] Lightweight NLI pass (entailment/contradiction) to filter spurious links
+- [ ] Use OpenAI API for NLI classification
+- [ ] File: `app/src/lib/convergence/nli-filter.ts` (new)
+
+**Human-in-the-Loop Approval:**
+- [ ] Admin review interface for cross-domain edges
+- [ ] Store pending edges in `convergence_relationships` with `status = 'pending'`
+- [ ] Approval workflow before edges become public
+- [ ] Files: Admin UI component, API route for approval
+
+**UI: "Related across traditions/sciences":**
+- [ ] Display cross-domain concept map
+- [ ] Show related concepts from different domains
+- [ ] File: New component `CrossDomainConcepts.tsx`
+
+**Deliverables:**
+- Automated concept alignment system with human curation
+- 20+ validated cross-domain connections in first month
+- UI for exploring related concepts across traditions
+
+#### Week 39-40: Pattern Mining & Topic Surfacing
+
+**Goal:** Discover emerging themes across corpus automatically
+
+**Unsupervised Topic Discovery:**
+- [ ] BERTopic-style pipeline using embeddings
+- [ ] Periodic batch job to find emerging themes (e.g., "nothingness," "observer," "causality")
+- [ ] File: `app/src/lib/convergence/topic-discovery.ts` (new)
+
+**Editorial Review Workflow:**
+- [ ] Present new topics to editorial reviewers
+- [ ] Accepted topics become filterable facets
+- [ ] Admin interface for topic approval
+- [ ] Files: Admin UI, topic management API
+
+**Topic Filtering in Library:**
+- [ ] Add discovered topics as filter options
+- [ ] Update library search interface
+
+**Deliverables:**
+- Topic discovery surfaces 10+ new filterable themes
+- Editorial workflow ensures quality control
+- Enhanced library filtering with discovered topics
+
+#### Week 41-42: Self-Learning Loop
+
+**Goal:** System improves by learning from user interactions
+
+**User Question Logging:**
+- [ ] Log user questions + which sources produced best answers
+- [ ] Track groundedness scores and user ratings
+- [ ] Database table: `convergence_learning_logs`
+- [ ] File: `migrations/XXX_add_learning_logs.sql`
+
+**Batch Job for Suggestions:**
+- [ ] Periodic job suggests:
+  - New cross-domain edges
+  - Missing books/editions
+  - Prompt tweaks
+- [ ] File: `app/src/lib/convergence/learning-suggestions.ts` (new)
+
+**Human Review Panel:**
+- [ ] Admin interface for reviewing suggestions
+- [ ] Approval workflow before changes go live
+- [ ] Files: Admin UI for learning suggestions
+
+**Evaluation System:**
+- [ ] Re-run gold tests after changes
+- [ ] Only keep changes that improve groundedness/faithfulness
+- [ ] File: `app/src/lib/convergence/evaluation.ts` (new)
+
+**Deliverables:**
+- Self-learning loop improves answer quality scores by 15%+ over 3 months
+- Automated suggestion system with human curation
+- Evaluation framework ensures continuous improvement
+
+#### Week 43-44: Structured Corpus Layers
+
+**Goal:** Organize physics corpus by progression and evidence type
+
+**Corpus Layer Classification:**
+- [ ] Add `corpus_layer` field to texts table:
+  - Foundational physics (classical → relativity → QM → QFT → quantum information)
+  - Science-of-science (philosophy of science, epistemology, Kuhn, demarcation)
+  - History/context (biographies, lab notes, letters, secondary histories)
+  - Popularizations (clearly labeled, separate from primary)
+- [ ] Migration: `migrations/XXX_add_corpus_layers.sql`
+
+**Retrieval Rules:**
+- [ ] When mixing religion + physics, retrieve from both corpora
+- [ ] Label sources transparently
+- [ ] Avoid causal claims unless in cited physics literature
+- [ ] Update `hybrid-retrieval.ts` with corpus layer awareness
+
+**UI: Corpus Layer Display:**
+- [ ] Show corpus layer in document metadata
+- [ ] Filter by corpus layer in library
+- [ ] Visual indicator for popularizations vs primary sources
+
+**Deliverables:**
+- Structured corpus organization supports rigorous physics-spirituality integration
+- Clear separation between primary sources and popularizations
+- Enhanced retrieval with corpus layer awareness
 
 #### Ritual Inventory System (NEW)
 - [ ] Inventory database schema
