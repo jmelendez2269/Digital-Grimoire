@@ -230,6 +230,23 @@ Digital-Grimoire/
 - Full-text search indexes
 - JSONB for flexible schemas
 
+### Convergence Machine Technical Details
+
+**AI Model:**
+- **GPT-4o (GPT-4 Omni)** - OpenAI's multimodal model used for all lens analysis and synthesis
+
+**Instruction Files:**
+- **`app/src/lib/convergence/lenses.ts`** - Contains all 7 lens definitions with their system prompts:
+  - Scientific, Psychological, Philosophical, Religious/Spiritual
+  - Historical/Anthropological, Symbolic/Occult, Mathematical
+  - Each lens includes: `systemPrompt`, `keywords`, `retrievalStrategy`, and metadata
+  
+- **`app/src/lib/convergence/lens-orchestrator.ts`** - Contains orchestration logic:
+  - Multi-lens response generation
+  - Synthesis instructions for merging perspectives
+  - Length-specific instructions (short/medium/long)
+  - Dominance pattern detection and weighting logic
+
 ---
 
 ## 🎨 Design Philosophy

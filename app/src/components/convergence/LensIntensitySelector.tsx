@@ -13,10 +13,10 @@ interface IntensityConfig {
 
 const INTENSITY_LEVELS: IntensityConfig[] = [
   { level: 'off', value: 0, label: 'Off', description: 'Disabled' },
-  { level: 'minimal', value: 15, label: 'Minimal', description: 'Light emphasis' },
-  { level: 'standard', value: 30, label: 'Standard', description: 'Balanced' },
-  { level: 'boosted', value: 60, label: 'Boosted', description: 'Strong emphasis' },
-  { level: 'dominant', value: 100, label: 'Dominant', description: 'Primary focus' },
+  { level: 'minimal', value: 15, label: 'Low', description: 'Light emphasis' },
+  { level: 'standard', value: 30, label: 'Mid', description: 'Balanced' },
+  { level: 'boosted', value: 60, label: 'High', description: 'Strong emphasis' },
+  { level: 'dominant', value: 100, label: 'Max', description: 'Primary focus' },
 ];
 
 interface LensIntensitySelectorProps {
@@ -60,9 +60,6 @@ export default function LensIntensitySelector({
         <label htmlFor={lensId} className="text-sm font-medium text-amber-100/80">
           {lensName}
         </label>
-        <span className="text-sm font-bold text-purple-400 tabular-nums">
-          {Math.round(value)}%
-        </span>
       </div>
       
       <div className="flex items-center gap-2">

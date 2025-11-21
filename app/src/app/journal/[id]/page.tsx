@@ -301,7 +301,14 @@ export default function JournalPageEditor() {
 
       const data = await response.json();
       setPage(data.page);
-      setDraftContent(serializeContent(data.page.content));
+      const serialized = serializeContent(data.page.content);
+      console.log('Loaded journal content:', {
+        raw: data.page.content,
+        serialized: serialized.substring(0, 200),
+        isString: typeof data.page.content === 'string',
+        isObject: typeof data.page.content === 'object'
+      });
+      setDraftContent(serialized);
       setIsDirty(false);
       setSaveStatus('idle');
     } catch (err) {

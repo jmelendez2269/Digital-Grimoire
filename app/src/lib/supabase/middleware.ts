@@ -110,9 +110,19 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
   );
 
+  // Check if this is an API route
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+
   // Protect routes that require authentication
   if (!user && !isPublicRoute) {
-    // No user, redirect to login
+    // For API routes, return JSON error instead of redirecting
+    if (isApiRoute) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    // For non-API routes, redirect to login
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

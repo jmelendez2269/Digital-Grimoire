@@ -47,14 +47,15 @@ The Convergence Machine MVP is fully implemented and ready for testing. This pre
 4. **`GET /api/convergence/rate-limit`** - Get rate limit status
 5. **`POST /api/convergence/generate-embeddings`** - Generate embeddings for texts (admin)
 
-### UI Components (6 Files)
+### UI Components (7 Files)
 
 1. **`app/convergence-machine/page.tsx`** - Main page with query input, sliders, streaming display
 2. **`components/convergence/LensSlider.tsx`** - Individual lens slider (0-100%)
 3. **`components/convergence/LensPresets.tsx`** - 4 preset buttons (Equal, Scholar, Practitioner, Seeker)
-4. **`components/convergence/ResponseStream.tsx`** - Streaming response display with citations
-5. **`components/convergence/RateLimitDisplay.tsx`** - Rate limit status and upgrade prompts
-6. **`components/convergence/PremiumGate.tsx`** - Premium access control component
+4. **`components/convergence/ResponseStream.tsx`** - Streaming response display with citations and "Save to Journal" functionality
+5. **`components/convergence/ResponseLengthSlider.tsx`** - Response length selector (Short/Medium/Long)
+6. **`components/convergence/RateLimitDisplay.tsx`** - Rate limit status and upgrade prompts
+7. **`components/convergence/PremiumGate.tsx`** - Premium access control component
 
 ---
 
@@ -213,34 +214,7 @@ Digital-Grimoire/
 │       ├── LensSlider.tsx
 │       ├── LensPresets.tsx
 │       ├── ResponseStream.tsx
+│       ├── ResponseLengthSlider.tsx
 │       ├── RateLimitDisplay.tsx
 │       └── PremiumGate.tsx
 ```
-
----
-
-## Next Steps
-
-1. **Run Migrations** - Apply 021 and 022 in Supabase
-2. **Generate Embeddings** - Run embedding generation for existing texts
-3. **Test End-to-End** - Submit queries and verify responses
-4. **Add Navigation** - Add link to Header navigation
-5. **Optional:** Implement response caching for optimization
-
----
-
-## Success Metrics
-
-- ✅ Hybrid retrieval returns relevant results
-- ✅ 7-lens system generates distinct perspectives
-- ✅ Streaming responses work correctly
-- ✅ Rate limiting prevents abuse
-- ✅ Premium gate functions properly
-- ✅ Conversation history persists
-- ✅ UI is responsive and intuitive
-
----
-
-**MVP Status:** Ready for Testing  
-**Documentation Updated:** ✅ Master Plan & Feature Backlog
-
