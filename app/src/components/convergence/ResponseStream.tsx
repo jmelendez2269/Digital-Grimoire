@@ -68,6 +68,7 @@ export default function ResponseStream({
   const [showNavigateModal, setShowNavigateModal] = useState(false);
   const [savedPageId, setSavedPageId] = useState<string | null>(null);
   const [dontAskAgain, setDontAskAgain] = useState(false);
+  const [showLensWeights, setShowLensWeights] = useState(false);
 
   // localStorage functions
   const getNavigatePreference = (): boolean => {
@@ -96,6 +97,38 @@ export default function ResponseStream({
     setDontAskAgain(preference);
   }, []);
 
+  // Helper function to calculate lens weight bars
+  const getLensWeightBars = (lensWeights: LensWeights) => {
+    const activeLenses = getActiveLenses(lensWeights);
+    if (activeLenses.length === 0) return [];
+
+    // Create short abbreviations for each lens
+    const lensAbbrev: Record<string, string> = {
+      'Scientific': 'Sci',
+      'Psychological': 'Psy',
+      'Philosophical': 'Phi',
+      'Religious/Spiritual': 'Rel',
+      'Historical/Anthropological': 'Hist',
+      'Symbolic/Occult': 'Sym',
+      'Mathematical': 'Math'
+    };
+
+    const maxWeight = Math.max(...activeLenses.map(l => lensWeights[l.id as keyof LensWeights] || 0), 1);
+    const maxBarLength = 20;
+
+    return activeLenses
+      .map(lens => {
+        const weight = lensWeights[lens.id as keyof LensWeights] || 0;
+        const barSize = Math.max(1, Math.round((weight / maxWeight) * maxBarLength));
+        return {
+          abbrev: lensAbbrev[lens.name] || lens.name.substring(0, 4),
+          weight,
+          barSize
+        };
+      })
+      .sort((a, b) => b.weight - a.weight);
+  };
+
   if (!response && !isStreaming) {
     return null;
   }
@@ -108,7 +141,7 @@ export default function ResponseStream({
       '',
       `## Synthesis\n\n${response.synthesis}`,
       '',
-      ...response.responses.map(r => `## ${r.lensName}\n\n${r.content}`),
+        ...(response.responses || []).map(r => `## ${r.lensName}\n\n${r.content}`),
       '',
       '## Sources',
       ...response.sources.map((s, idx) => `${idx + 1}. ${s.text_title || 'Unknown'}${s.text_author ? ` by ${s.text_author}` : ''}`),
@@ -229,48 +262,25 @@ export default function ResponseStream({
     setSaved(false);
 
     try {
-      // Format active lenses with weights in condensed format
-      let lensesText = '';
+      // Add lens weights data if available
+      let lensWeightsSection = '';
       if (lensWeights) {
         const activeLenses = getActiveLenses(lensWeights);
         if (activeLenses.length > 0) {
-          // Create short abbreviations for each lens
-          const lensAbbrev: Record<string, string> = {
-            'Scientific': 'Sci',
-            'Psychological': 'Psy',
-            'Philosophical': 'Phi',
-            'Religious/Spiritual': 'Rel',
-            'Historical/Anthropological': 'Hist',
-            'Symbolic/Occult': 'Sym',
-            'Mathematical': 'Math'
-          };
-          
-          // Sort by weight (descending) and format as compact "[60Psy 30Sci 10Phi]"
-          const lensesWithWeights = activeLenses
-            .map(lens => ({
-              abbrev: lensAbbrev[lens.name] || lens.name.substring(0, 4),
-              weight: lensWeights[lens.id as keyof LensWeights] || 0
-            }))
-            .sort((a, b) => b.weight - a.weight)
-            .map(l => `${l.weight}${l.abbrev}`)
-            .join(' ');
-          lensesText = ` [${lensesWithWeights}]`;
+          // Save lens weights as JSON data that can be parsed later
+          lensWeightsSection = `\n\n<!-- LENS_WEIGHTS_DATA:${JSON.stringify(lensWeights)} -->\n`;
         }
-      } else if (response.responses.length > 0) {
-        // Fallback: just show lens names if weights not available
-        const lensNames = response.responses.map(r => r.lensName).join(', ');
-        lensesText = ` [${lensNames}]`;
       }
 
       // Format the response content
       const fullText = [
-        `Query: ${response.query}${lensesText}`,
+        `Query: ${response.query}${lensWeightsSection}`,
         '',
         `## Synthesis`,
         '',
         response.synthesis,
         '',
-        ...response.responses.flatMap(r => [
+        ...(response.responses || []).flatMap(r => [
           `## ${r.lensName}`,
           '',
           r.content,
@@ -744,6 +754,40 @@ export default function ResponseStream({
         </div>
       )}
 
+      {/* Lens Weights Dropdown */}
+      {response && lensWeights && (
+        <div className="bg-zinc-900/30 border border-purple-600/20 rounded-xl overflow-hidden">
+          <button
+            onClick={() => setShowLensWeights(!showLensWeights)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-900/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span className="font-medium text-amber-100">Lens Weights</span>
+            </div>
+            {showLensWeights ? (
+              <ChevronUp className="w-4 h-4 text-amber-100/60" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-amber-100/60" />
+            )}
+          </button>
+          {showLensWeights && (
+            <div className="px-4 py-4 border-t border-purple-600/20 space-y-2.5">
+              {getLensWeightBars(lensWeights).map((lens, idx) => (
+                <div key={idx} className="flex items-center gap-3 text-sm">
+                  <span className="text-amber-100/90 w-12 text-left font-medium">{lens.abbrev}</span>
+                  <div className="flex-1 flex items-center min-w-0">
+                    <span className="text-purple-400 font-mono">{'█'.repeat(lens.barSize)}</span>
+                    <span className="text-amber-100/30 font-mono">{'░'.repeat(20 - lens.barSize)}</span>
+                  </div>
+                  <span className="text-amber-100/80 w-10 text-right font-medium">{lens.weight}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Synthesis FIRST - Main Answer */}
       {response?.synthesis && (
         <div className="bg-gradient-to-br from-purple-900/20 to-amber-900/10 border-2 border-purple-600/30 rounded-xl p-6">
@@ -785,7 +829,7 @@ export default function ResponseStream({
           <h3 className="text-lg font-semibold text-amber-100/80">
             Individual Perspectives ({activeLensIds.size})
           </h3>
-          {response.responses.length > 0 ? (
+          {response.responses && response.responses.length > 0 ? (
             // Show full responses if already loaded
             response.responses.map((lensResponse, idx) => (
         <div
