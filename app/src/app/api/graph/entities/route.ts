@@ -33,7 +33,16 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ items: data || [] });
+    
+    const response = NextResponse.json({ items: data || [] });
+    
+    // Add cache headers for public, read-only data (15 minutes)
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=900, stale-while-revalidate=1800'
+    );
+    
+    return response;
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message || "Failed to fetch entities" },

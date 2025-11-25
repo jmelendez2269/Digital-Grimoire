@@ -210,48 +210,70 @@ export async function GET(request: NextRequest) {
 
 ## 4. Incremental Static Regeneration (ISR)
 
-### When to Use ISR
+### Current Status: Not Applicable
 
-ISR is ideal for pages that:
-- Change infrequently
-- Are expensive to generate
-- Benefit from static performance
+**ISR is not implemented** in this application because the architecture uses client components with heavy interactivity and user authentication.
 
-### Implementation
+#### Why ISR Doesn't Fit This Architecture
 
-#### Example: Library Page with ISR
+1. **Client Component Architecture**
+   - Pages are built as client components (`'use client'`) for interactivity
+   - ISR requires server components that fetch data at build/render time
+   - Refactoring would require significant architectural changes
 
-```typescript
-// app/src/app/library/page.tsx
-export const revalidate = 3600; // Revalidate every hour
+2. **User Authentication Required**
+   - Most pages require user authentication
+   - ISR works best for public, static content
+   - User-specific content can't be pre-rendered effectively
 
-export default async function LibraryPage() {
-  // ... page content ...
-}
-```
+3. **Heavy Client-Side Interactivity**
+   - Pages have dynamic features: search, filters, sorting, pagination
+   - Content changes based on user actions and URL parameters
+   - ISR can't pre-render all possible combinations of user interactions
 
-#### Example: Dynamic Route with ISR
+4. **Dynamic Content**
+   - Library listings change based on filters, search queries, and sorting
+   - Text detail pages load user-specific annotations and bookmarks
+   - Graph pages display interactive, user-driven visualizations
 
-```typescript
-// app/src/app/texts/[id]/page.tsx
-export const revalidate = 1800; // Revalidate every 30 minutes
+#### Alternative Caching Strategy (Implemented)
 
-export async function generateStaticParams() {
-  // Pre-generate popular texts at build time
-  const popularTexts = await getPopularTexts();
-  return popularTexts.map((text) => ({ id: text.id }));
-}
+Instead of ISR, we use a **multi-layer caching approach** that provides similar performance benefits:
 
-export default async function TextPage({ params }: { params: { id: string } }) {
-  // ... page content ...
-}
-```
+1. **API Response Caching** ✅
+   - CDN cache headers on API routes (5-15 minutes)
+   - Reduces server load and improves response times
+   - See Section 3 for implementation details
 
-### Revalidation Times
+2. **React Query Client Caching** ✅
+   - 10-minute stale time for library data
+   - 30-minute garbage collection time
+   - Provides instant navigation between pages
+   - Shows cached data immediately while refetching in background
 
-- **Frequently Updated**: 5-15 minutes (`revalidate: 300` or `900`)
-- **Moderately Updated**: 30-60 minutes (`revalidate: 1800` or `3600`)
-- **Rarely Updated**: 1-24 hours (`revalidate: 3600` or `86400`)
+3. **Static Asset Caching** ✅
+   - 1-year cache for hashed assets (`/_next/static/*`)
+   - 1-day cache for public assets with stale-while-revalidate
+   - See Section 2 for implementation details
+
+#### Performance Benefits
+
+This combination provides:
+- ✅ **Fast API responses** - CDN cached at edge locations
+- ✅ **Instant navigation** - React Query serves cached data immediately
+- ✅ **Reduced server load** - API caching reduces database queries
+- ✅ **Better UX** - Stale-while-revalidate pattern shows data instantly
+- ✅ **Lower complexity** - Easier to maintain than ISR + client components
+
+#### When ISR Might Be Considered
+
+ISR could be beneficial if:
+- Pages become truly public (no authentication required)
+- Content is mostly static with minimal interactivity
+- You want to pre-render popular pages at build time
+- SEO becomes a priority for public-facing pages
+
+**Current Recommendation:** Keep the existing multi-layer caching strategy. It's well-suited for authenticated, interactive applications and provides excellent performance without the architectural complexity of ISR.
 
 ---
 
@@ -259,20 +281,32 @@ export default async function TextPage({ params }: { params: { id: string } }) {
 
 ### Current State
 
-- ✅ React Query configured with 5-minute stale time
+- ✅ React Query configured with optimized stale times
 - ✅ 30-minute garbage collection time
+- ✅ Library-specific caching (10 minutes stale time)
 - ⚠️ No database-level query result caching
 
 ### React Query Configuration
 
-Current configuration in `app/src/lib/react-query.tsx`:
-
+**Global Configuration** (`app/src/lib/react-query.tsx`):
 ```typescript
-staleTime: 5 * 60 * 1000, // 5 minutes
+staleTime: 5 * 60 * 1000, // 5 minutes (default)
 gcTime: 30 * 60 * 1000, // 30 minutes
 ```
 
-**This is appropriate for most use cases.** Consider adjusting for:
+**Library-Specific Configuration** (`app/src/hooks/useLibrary.ts`):
+```typescript
+staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
+gcTime: 30 * 60 * 1000, // 30 minutes - keep cached data longer
+placeholderData: (previousData) => previousData, // Show cached data immediately
+```
+
+**This configuration is optimized for the application's needs:**
+- **Library data** (10 min stale time) - Changes infrequently, benefits from longer cache
+- **Default queries** (5 min stale time) - Balanced for most use cases
+- **Instant navigation** - Cached data shown immediately while refetching in background
+
+**Consider adjusting for:**
 - **Frequently changing data**: Reduce stale time to 1-2 minutes
 - **Rarely changing data**: Increase stale time to 15-30 minutes
 
