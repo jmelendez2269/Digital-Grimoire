@@ -583,7 +583,7 @@ function ConvergenceMachineContent() {
               <ConversationHistory
                 onSelectConversation={handleSelectConversation}
                 currentQuery={query}
-                currentResponseId={currentResponseId}
+                currentResponseId={currentResponseId ?? undefined}
                 refreshTrigger={historyRefreshTrigger}
               />
             </div>

@@ -10,6 +10,7 @@ import {
 import { hybridSearch } from './hybrid-retrieval';
 import { createClient } from '@/lib/supabase/server';
 import { recordQuery } from './rate-limit';
+import { logConvergenceQueryUsage } from '@/lib/usage-tracker';
 
 /**
  * Stream Convergence Machine response using Server-Sent Events (SSE)
@@ -139,6 +140,36 @@ export async function* createSSEStream(
     // Save to history
     await saveConversationHistory(userId, query, lensWeights, response);
 
+    // Track token usage and costs
+    // Note: Token usage is tracked in lens-orchestrator via global variable
+    // This is a temporary solution - in production, functions should return usage
+    const tokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
+    
+    // Get query ID from the most recent query
+    const supabase = await createClient();
+    const { data: recentQuery } = await supabase
+      .from('convergence_queries')
+      .select('id')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Log usage and costs
+    await logConvergenceQueryUsage({
+      inputTokens: tokenUsage.input,
+      outputTokens: tokenUsage.output,
+      userId,
+      queryId: recentQuery?.id,
+      queryText: query,
+      lensWeights: lensWeights as unknown as Record<string, number>,
+      responseLength,
+      success: true,
+    });
+
+    // Reset token usage tracker
+    (globalThis as any).__convergenceTokenUsage = { input: 0, output: 0 };
+
     // Final message
     yield `data: ${JSON.stringify({ 
       type: 'done', 
@@ -148,6 +179,23 @@ export async function* createSSEStream(
 
   } catch (error) {
     console.error('Error in SSE stream:', error);
+    
+    // Log failed query usage if we have any token data
+    const tokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
+    if (tokenUsage.input > 0 || tokenUsage.output > 0) {
+      await logConvergenceQueryUsage({
+        inputTokens: tokenUsage.input,
+        outputTokens: tokenUsage.output,
+        userId,
+        queryText: query,
+        lensWeights: lensWeights as unknown as Record<string, number>,
+        responseLength,
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      (globalThis as any).__convergenceTokenUsage = { input: 0, output: 0 };
+    }
+    
     yield `data: ${JSON.stringify({ 
       type: 'error', 
       message: error instanceof Error ? error.message : 'Unknown error' 

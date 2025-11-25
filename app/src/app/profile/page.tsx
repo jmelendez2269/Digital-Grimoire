@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +13,7 @@ import SubscriptionTab from "@/components/SubscriptionTab";
 
 type TabType = "profile" | "subscription";
 
-export default function ProfilePage() {
+function ProfileContent() {
   const searchParams = useSearchParams();
   const activeTab = (searchParams.get("tab") || "profile") as TabType;
   const { user, loading: authLoading, supabase } = useAuth();
@@ -266,19 +266,16 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
-        <Header />
-        <div className="flex flex-1 items-center justify-center">
+      <main className="flex-1">
+        <div className="flex items-center justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
         </div>
-        <Footer />
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
-      <Header />
+    <>
       <main className="flex-1">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
           {/* Page Title */}
@@ -523,7 +520,6 @@ export default function ProfilePage() {
           )}
         </div>
       </main>
-      <Footer />
 
       {/* Crop Modal */}
       {cropModalOpen && imageToCrop && (
@@ -536,6 +532,24 @@ export default function ProfilePage() {
           }}
         />
       )}
+    </>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <Suspense fallback={
+        <main className="flex-1">
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
+          </div>
+        </main>
+      }>
+        <ProfileContent />
+      </Suspense>
+      <Footer />
     </div>
   );
 }

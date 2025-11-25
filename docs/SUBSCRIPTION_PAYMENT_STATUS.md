@@ -1,6 +1,6 @@
 # Subscription & Payment Setup Status
 
-**Last Updated:** $(date)
+**Last Updated:** December 2024
 
 ## Current Status Overview
 
@@ -8,39 +8,56 @@
 
 1. **Database Schema**
    - `subscription_status` column in `users` table
-   - Migration: `migrations/022_add_subscription_status.sql`
-   - Values: `'free'`, `'premium'`, `'active'`, or `NULL`
+   - Migrations: 
+     - `migrations/022_add_subscription_status.sql` - Initial subscription status
+     - `migrations/023_add_stripe_fields.sql` - Stripe customer/subscription IDs
+     - `migrations/025_add_subscription_tiers.sql` - Multi-tier support
+   - Values: `'free'`, `'student'`, `'scholar'`, `'adept'`, `'premium'`, `'active'`, or `NULL`
    - Default: `'free'`
+   - Legacy values `'premium'` and `'active'` are treated as `'scholar'` for backwards compatibility
 
-2. **Subscription Checking Logic**
-   - Rate limiting system checks subscription status
+2. **Subscription Tier System**
+   - Three-tier structure: Free, Student ($5), Scholar ($9.99), Adept ($15)
+   - Rate limiting system supports all tiers
    - Location: `app/src/lib/convergence/rate-limit.ts`
-   - Function: `checkPremiumStatus(userId)`
+   - Functions: `getSubscriptionTier()`, `getTierLimit()`, `checkRateLimit()`
    - API route: `app/src/app/api/convergence/rate-limit/route.ts`
 
 3. **UI Components**
+   - ✅ Subscription tab on profile page (`app/src/app/profile/page.tsx`)
+   - ✅ `SubscriptionTab` component with full tier display
+   - ✅ Shows current tier, usage, and upgrade options
+   - ✅ Beta messaging for Scholar/Adept tiers
    - `PremiumGate` component shows upgrade prompts
    - `RateLimitDisplay` component shows remaining queries
-   - Both link to `/profile?tab=subscription` (but tab doesn't exist yet)
 
-### ❌ What's Missing
+### ✅ Fully Implemented
 
 1. **Subscription Management Page**
-   - Profile page exists at `app/src/app/profile/page.tsx`
-   - **No subscription tab implemented**
-   - Components reference `/profile?tab=subscription` but it doesn't exist
-   - Need to add tabbed interface to profile page
+   - ✅ Tabbed interface on profile page
+   - ✅ Subscription tab displays all tiers
+   - ✅ Shows current subscription status and usage
+   - ✅ Upgrade buttons for each tier
+   - ✅ Subscription management link (Stripe Customer Portal)
 
 2. **Payment Processing (Stripe)**
-   - **No Stripe integration**
-   - No Stripe API routes
-   - No Stripe environment variables
-   - No checkout flow
-   - No webhook handlers for subscription events
+   - ✅ Stripe packages installed
+   - ✅ Stripe API routes created:
+     - `app/src/app/api/stripe/create-checkout-session/route.ts`
+     - `app/src/app/api/stripe/create-portal-session/route.ts`
+     - `app/src/app/api/stripe/webhook/route.ts`
+   - ✅ Webhook handlers for all subscription events
+   - ✅ Tier mapping from Stripe price IDs
 
 3. **Environment Variables**
-   - Stripe keys not documented in `ENVIRONMENT_VARIABLES.md`
-   - No Stripe configuration in `.env.local` template
+   - ✅ Documented in `ENVIRONMENT_VARIABLES.md`
+   - ✅ Required variables:
+     - `STRIPE_SECRET_KEY`
+     - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+     - `STRIPE_WEBHOOK_SECRET`
+     - `NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT`
+     - `NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR`
+     - `NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT`
 
 ## Implementation Requirements
 
@@ -65,7 +82,7 @@
 
 **Priority:** High  
 **Effort:** Large  
-**Status:** Planned (Sprint 14 per backlog)
+**Status:** ✅ Complete
 
 **Tasks:**
 1. Install Stripe packages
@@ -104,16 +121,19 @@
 
 ### Phase 3: Database Integration
 
-**Tasks:**
-1. Add Stripe customer ID to users table
-   - Migration: Add `stripe_customer_id` column
-   - Migration: Add `stripe_subscription_id` column
-   - Migration: Add `subscription_start_date` column
-   - Migration: Add `subscription_end_date` column
+**Status:** ✅ Complete
 
-2. Update subscription status logic
-   - Sync with Stripe subscription status
-   - Handle webhook events to update database
+**Completed Tasks:**
+1. ✅ Added Stripe customer ID to users table
+   - Migration: `migrations/023_add_stripe_fields.sql`
+   - Added `stripe_customer_id` column
+   - Added `stripe_subscription_id` column
+   - Added `subscription_start_date` column
+   - Added `subscription_end_date` column
+
+2. ✅ Updated subscription status logic
+   - Webhook handlers sync with Stripe subscription status
+   - Handles all subscription events (created, updated, deleted, payment succeeded/failed)
 
 ## Current Code References
 
@@ -157,24 +177,57 @@ From `docs/planning/FEATURE_BACKLOG.md`:
 
 ## Pricing Model
 
-From `docs/planning/MASTER_DEVELOPMENT_PLAN.md`:
+**Current Three-Tier Structure:**
 
-**Premium Tier (The Scholar) - $15/month or $150/year:**
-- Unlimited grimoire pages
-- Unlimited AI queries (Multi-Lens System)
-- Advanced semantic search
-- Interactive correspondence graph
-- Ritual inventory system
-- Export to PDF + Notion
+### Free Tier - "The Reader" ($0/month)
+- 5 AI queries per month
+- 25 journal pages
+- Full library and graph access
+- Unlimited annotations and collections
+
+### Student Tier - "The Student" ($5/month)
+- 5 AI queries per month (unlimited journals is the value)
+- Unlimited journal pages
+- Full library and graph access
+- Unlimited annotations and collections
+
+### Scholar Tier - "The Scholar" ($9.99/month)
+- 25-50 AI queries per month (beta - limits may adjust)
+- Unlimited journal pages
+- Advanced annotation search
 - Priority support
+- All Student features
+
+### Adept Tier - "The Adept" ($15/month)
+- 50-100 AI queries per month (beta - limits may adjust)
 - Early access to new features
+- All Scholar features
+
+**Note:** Query limits for Scholar and Adept tiers are in beta and may be adjusted based on actual usage data. See `docs/SUBSCRIPTION_TIER_STRUCTURE.md` for full details.
 
 ## Next Steps
 
-1. **Immediate:** Add subscription tab to profile page (UI only, no payment yet)
-2. **Short-term:** Set up Stripe account and get API keys
-3. **Medium-term:** Implement Stripe checkout flow
-4. **Long-term:** Add webhook handlers and subscription management
+1. **Stripe Setup Required:**
+   - Create products in Stripe Dashboard:
+     - "The Student" - $5/month recurring
+     - "The Scholar" - $9.99/month recurring
+     - "The Adept" - $15/month recurring
+   - Get price IDs and add to `.env.local`
+   - Configure webhook endpoint
+   - Test with Stripe test mode
+   - **Stripe Support:** (919) 322-9418 (for setup assistance)
+
+2. **Monitoring:**
+   - Track query costs per tier
+   - Monitor usage patterns
+   - Adjust query limits if profitable
+   - Notify users of any changes (30 days notice)
+
+3. **Future Enhancements:**
+   - Annual plans (save 10-15%)
+   - Student discounts
+   - PDF/Notion export (when implemented)
+   - API access for Adept tier
 
 ## Testing Subscription Status (Current)
 
@@ -192,10 +245,16 @@ Or use the test migration:
 
 ## Related Files
 
-- `migrations/022_add_subscription_status.sql` - Database schema
-- `app/src/lib/convergence/rate-limit.ts` - Subscription checking
-- `app/src/components/convergence/PremiumGate.tsx` - Upgrade prompts
-- `app/src/components/convergence/RateLimitDisplay.tsx` - Query limits display
-- `app/src/app/profile/page.tsx` - Profile page (needs subscription tab)
-- `docs/Setup Docs/ENVIRONMENT_VARIABLES.md` - Environment variables (needs Stripe section)
+- `migrations/022_add_subscription_status.sql` - Initial subscription status
+- `migrations/023_add_stripe_fields.sql` - Stripe customer/subscription IDs
+- `migrations/025_add_subscription_tiers.sql` - Multi-tier support
+- `app/src/lib/convergence/rate-limit.ts` - Tier checking and rate limiting
+- `app/src/components/SubscriptionTab.tsx` - Subscription management UI
+- `app/src/app/profile/page.tsx` - Profile page with subscription tab
+- `app/src/app/api/stripe/create-checkout-session/route.ts` - Stripe checkout
+- `app/src/app/api/stripe/create-portal-session/route.ts` - Customer portal
+- `app/src/app/api/stripe/webhook/route.ts` - Webhook handlers
+- `app/src/app/api/convergence/rate-limit/route.ts` - Rate limit API
+- `docs/SUBSCRIPTION_TIER_STRUCTURE.md` - Comprehensive tier documentation
+- `docs/Setup Docs/ENVIRONMENT_VARIABLES.md` - Environment variables
 

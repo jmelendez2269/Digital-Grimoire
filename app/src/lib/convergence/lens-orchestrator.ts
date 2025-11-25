@@ -365,6 +365,14 @@ Provide a brief summary from the ${lens.name} perspective.`;
       max_tokens: maxTokens,
     });
 
+    // Track token usage (will be logged by caller)
+    const usage = completion.usage;
+    if (usage) {
+      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
+      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
+      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
+    }
+
     return completion.choices[0]?.message?.content || '';
   } catch (error) {
     console.error(`Error generating ${lens.name} summary:`, error);
@@ -412,6 +420,14 @@ Please answer the question from the ${lens.name} perspective.`;
       temperature: 0.7,
       max_tokens: maxTokens,
     });
+
+    // Track token usage (will be logged by caller)
+    const usage = completion.usage;
+    if (usage) {
+      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
+      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
+      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
+    }
 
     const content = completion.choices[0]?.message?.content || 'No response generated.';
 
@@ -547,6 +563,14 @@ IMPORTANT: Your response must not exceed ${lengthConfig.synthesisMaxTokens} toke
       max_tokens: lengthConfig.synthesisMaxTokens,
     });
 
+    // Track token usage (will be logged by caller)
+    const usage = completion.usage;
+    if (usage) {
+      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
+      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
+      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
+    }
+
     return completion.choices[0]?.message?.content || 'Synthesis generation failed.';
   } catch (error) {
     console.error('Error generating synthesis:', error);
@@ -663,6 +687,11 @@ export async function mergeLensResponses(
     dominance
   );
 
+  // Check if one lens has 100% raw weight (exclusive focus)
+  const rawWeights = Object.entries(weights);
+  const dominantLensRaw = rawWeights.find(([_, weight]) => weight === 100);
+  const hasExclusiveDominant = dominantLensRaw && rawWeights.filter(([_, weight]) => weight > 0).length === 1;
+
   // Vary prompt structure based on dominance pattern
   let promptStructure = '';
   if (hasExclusiveDominant) {
@@ -716,6 +745,14 @@ IMPORTANT: Your response must not exceed ${maxTokens} tokens. Stay strictly with
       temperature: 0.7,
       max_tokens: maxTokens,
     });
+
+    // Track token usage (will be logged by caller)
+    const usage = completion.usage;
+    if (usage) {
+      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
+      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
+      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
+    }
 
     return completion.choices[0]?.message?.content || 'Synthesis generation failed.';
   } catch (error) {

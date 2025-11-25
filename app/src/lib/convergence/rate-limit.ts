@@ -9,12 +9,71 @@ export interface RateLimitResult {
 }
 
 const FREE_TIER_LIMIT = 5;
-const PREMIUM_TIER_LIMIT = Infinity; // Unlimited
+const STUDENT_TIER_LIMIT = 5; // Same as free for now (unlimited journals is the value)
+const SCHOLAR_TIER_LIMIT = 25; // Start conservative, may increase to 50
+const ADEPT_TIER_LIMIT = 50; // Start conservative, may increase to 100
+
+export type SubscriptionTier = 'free' | 'student' | 'scholar' | 'adept';
+
+/**
+ * Get subscription tier for user
+ */
+export async function getSubscriptionTier(userId: string): Promise<SubscriptionTier> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('subscription_status, role')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    return 'free';
+  }
+
+  // Admins get adept tier for testing
+  if (data.role === 'admin') {
+    return 'adept';
+  }
+
+  // Map subscription_status to tier
+  const status = data.subscription_status;
+  if (status === 'student') return 'student';
+  if (status === 'scholar') return 'scholar';
+  if (status === 'adept') return 'adept';
+  if (status === 'premium' || status === 'active') {
+    // Legacy: treat 'premium'/'active' as 'scholar' for now
+    // Can be migrated later
+    return 'scholar';
+  }
+
+  return 'free';
+}
+
+/**
+ * Get query limit for a subscription tier
+ */
+export function getTierLimit(tier: SubscriptionTier): number {
+  switch (tier) {
+    case 'free':
+      return FREE_TIER_LIMIT;
+    case 'student':
+      return STUDENT_TIER_LIMIT;
+    case 'scholar':
+      return SCHOLAR_TIER_LIMIT;
+    case 'adept':
+      return ADEPT_TIER_LIMIT;
+    default:
+      return FREE_TIER_LIMIT;
+  }
+}
 
 /**
  * Check if user has exceeded rate limit for Convergence Machine queries
- * Free tier: 5 queries per month
- * Premium tier: Unlimited
+ * Free tier: 5 queries per month (calendar month)
+ * Student tier: 5 queries per billing period (unlimited journals is the value)
+ * Scholar tier: 25-50 queries per billing period (beta - may adjust)
+ * Adept tier: 50-100 queries per billing period (beta - may adjust)
  * 
  * @param userId - User ID to check
  * @returns Rate limit status
@@ -22,27 +81,22 @@ const PREMIUM_TIER_LIMIT = Infinity; // Unlimited
 export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
   const supabase = await createClient();
 
-  // Check if user is premium (for now, we'll assume all users are free tier)
-  // TODO: Implement actual subscription check when premium system is ready
-  const isPremium = await checkPremiumStatus(userId);
-  const limit = isPremium ? PREMIUM_TIER_LIMIT : FREE_TIER_LIMIT;
+  // Get user's subscription tier
+  const tier = await getSubscriptionTier(userId);
+  const limit = getTierLimit(tier);
+  const isPaid = tier !== 'free';
 
-  if (isPremium) {
-    return {
-      allowed: true,
-      remaining: Infinity,
-      limit: PREMIUM_TIER_LIMIT,
-      resetDate: getNextMonthStart(),
-    };
-  }
+  // Get period start date (subscription period for paid tiers, calendar month for free)
+  const periodStart = await getPeriodStart(userId, isPaid);
+  const periodEnd = await getPeriodEnd(userId, isPaid);
 
-  // Get current month's query count
-  const monthStart = getMonthStart();
+  // Get queries in current period
   const { data: queries, error } = await supabase
     .from('convergence_queries')
     .select('id')
     .eq('user_id', userId)
-    .gte('created_at', monthStart.toISOString());
+    .gte('created_at', periodStart.toISOString())
+    .lt('created_at', periodEnd.toISOString());
 
   if (error) {
     console.error('Error checking rate limit:', error);
@@ -51,7 +105,7 @@ export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
       allowed: true,
       remaining: limit,
       limit,
-      resetDate: getNextMonthStart(),
+      resetDate: periodEnd,
     };
   }
 
@@ -63,7 +117,7 @@ export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
     allowed,
     remaining,
     limit,
-    resetDate: getNextMonthStart(),
+    resetDate: periodEnd,
   };
 }
 
@@ -95,37 +149,95 @@ export async function recordQuery(
 }
 
 /**
- * Check if user has premium subscription
- * - Admins automatically get premium access (for testing)
- * - Checks subscription_status column in users table
- * - Future: Will integrate with Stripe or payment provider
+ * Check if user has any paid subscription (legacy function for compatibility)
+ * @deprecated Use getSubscriptionTier instead
  */
-async function checkPremiumStatus(userId: string): Promise<boolean> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('users')
-    .select('subscription_status, role')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    console.error('Error checking premium status:', error);
-    // Fail closed: assume free tier on error
-    return false;
-  }
-
-  // Admins automatically get premium access (useful for testing)
-  if (data?.role === 'admin') {
-    return true;
-  }
-
-  // Check subscription status
-  return data?.subscription_status === 'premium' || data?.subscription_status === 'active';
+export async function checkPremiumStatus(userId: string): Promise<boolean> {
+  const tier = await getSubscriptionTier(userId);
+  return tier !== 'free';
 }
 
 /**
- * Get the start of the current month (UTC)
+ * Get the start of the current billing period
+ * For premium users: subscription_start_date (billing period)
+ * For free users: start of current calendar month
+ */
+async function getPeriodStart(userId: string, isPremium: boolean): Promise<Date> {
+  if (!isPremium) {
+    // Free tier: use calendar month
+    return getMonthStart();
+  }
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase
+    .from('users')
+    .select('subscription_start_date, subscription_end_date')
+    .eq('id', userId)
+    .single();
+
+  if (userData?.subscription_start_date) {
+    const startDate = new Date(userData.subscription_start_date);
+    const endDate = userData.subscription_end_date 
+      ? new Date(userData.subscription_end_date)
+      : null;
+    const now = new Date();
+
+    // If we have both dates, calculate current period
+    if (endDate && now >= startDate && now < endDate) {
+      return startDate;
+    }
+
+    // If subscription has renewed, calculate new period
+    // For monthly subscriptions, find the most recent period start
+    if (endDate && now >= endDate) {
+      // Subscription has renewed - use the end date as new start
+      // This will be updated by webhook, but handle edge case
+      return endDate;
+    }
+
+    return startDate;
+  }
+
+  // Fallback to calendar month if no subscription date
+  return getMonthStart();
+}
+
+/**
+ * Get the end of the current billing period
+ * For premium users: subscription_end_date (billing period end)
+ * For free users: start of next calendar month
+ */
+async function getPeriodEnd(userId: string, isPremium: boolean): Promise<Date> {
+  if (!isPremium) {
+    // Free tier: use next calendar month
+    return getNextMonthStart();
+  }
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase
+    .from('users')
+    .select('subscription_end_date, subscription_start_date')
+    .eq('id', userId)
+    .single();
+
+  if (userData?.subscription_end_date) {
+    return new Date(userData.subscription_end_date);
+  }
+
+  // Fallback: if we have start date but no end date, assume 1 month from start
+  if (userData?.subscription_start_date) {
+    const startDate = new Date(userData.subscription_start_date);
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+    return endDate;
+  }
+
+  // Fallback to next calendar month
+  return getNextMonthStart();
+}
+
+/**
+ * Get the start of the current month (UTC) - for free tier
  */
 function getMonthStart(): Date {
   const now = new Date();
@@ -133,7 +245,7 @@ function getMonthStart(): Date {
 }
 
 /**
- * Get the start of next month (UTC)
+ * Get the start of next month (UTC) - for free tier
  */
 function getNextMonthStart(): Date {
   const now = new Date();
@@ -141,17 +253,21 @@ function getNextMonthStart(): Date {
 }
 
 /**
- * Get user's query count for current month
+ * Get user's query count for current period
  */
 export async function getQueryCount(userId: string): Promise<number> {
   const supabase = await createClient();
-  const monthStart = getMonthStart();
+  const tier = await getSubscriptionTier(userId);
+  const isPaid = tier !== 'free';
+  const periodStart = await getPeriodStart(userId, isPaid);
+  const periodEnd = await getPeriodEnd(userId, isPaid);
 
   const { count, error } = await supabase
     .from('convergence_queries')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .gte('created_at', monthStart.toISOString());
+    .gte('created_at', periodStart.toISOString())
+    .lt('created_at', periodEnd.toISOString());
 
   if (error) {
     console.error('Error getting query count:', error);

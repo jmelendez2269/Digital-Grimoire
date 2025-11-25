@@ -23,7 +23,7 @@ export const PRICING = {
 };
 
 export interface UsageLogParams {
-  service: 'azure_ocr' | 'openai_metadata' | 'r2_storage' | 'r2_bandwidth' | 'notion' | 'other';
+  service: 'azure_ocr' | 'openai_metadata' | 'r2_storage' | 'r2_bandwidth' | 'notion' | 'convergence_query' | 'other';
   endpoint?: string;
   operation: string;
   unitsUsed: number;
@@ -241,6 +241,49 @@ export async function logNotionUsage(params: {
     success: params.success,
     errorMessage: params.errorMessage,
     requestMetadata: params.metadata,
+  });
+}
+
+/**
+ * Log Convergence Machine query usage and costs
+ */
+export async function logConvergenceQueryUsage(params: {
+  inputTokens: number;
+  outputTokens: number;
+  userId: string;
+  queryId?: string;
+  queryText?: string;
+  lensWeights?: Record<string, number>;
+  responseLength?: string;
+  success?: boolean;
+  errorMessage?: string;
+}) {
+  const totalTokens = params.inputTokens + params.outputTokens;
+  
+  // Calculate cost based on GPT-4o pricing
+  const inputCost = (params.inputTokens / 1000) * PRICING.OPENAI_INPUT_PER_1K;
+  const outputCost = (params.outputTokens / 1000) * PRICING.OPENAI_OUTPUT_PER_1K;
+  const totalCost = inputCost + outputCost;
+  
+  await logApiUsage({
+    service: 'convergence_query',
+    operation: 'convergence_machine_query',
+    endpoint: '/api/convergence/query',
+    unitsUsed: totalTokens,
+    unitType: 'tokens',
+    estimatedCost: totalCost,
+    userId: params.userId,
+    success: params.success,
+    errorMessage: params.errorMessage,
+    requestMetadata: {
+      inputTokens: params.inputTokens,
+      outputTokens: params.outputTokens,
+      queryId: params.queryId,
+      queryText: params.queryText?.substring(0, 200), // First 200 chars for reference
+      lensWeights: params.lensWeights,
+      responseLength: params.responseLength,
+      model: 'gpt-4o',
+    },
   });
 }
 

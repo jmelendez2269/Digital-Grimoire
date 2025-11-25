@@ -125,6 +125,58 @@ https://abc123def456@o1234567.ingest.sentry.io/1234567
 
 ---
 
+### Stripe (Payment Processing) - OPTIONAL
+
+```env
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY=price_your_monthly_price_id
+NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY=price_your_yearly_price_id
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+**What it does:**
+- Payment processing for premium subscriptions
+- Stripe Checkout for secure payment collection
+- Customer portal for subscription management
+- Webhook handlers for subscription events
+
+**Where to find:**
+1. Create a Stripe account at [stripe.com](https://stripe.com)
+2. Go to **Developers** → **API keys**
+3. Copy your **Secret key** (starts with `sk_test_` or `sk_live_`)
+4. Copy your **Publishable key** (starts with `pk_test_` or `pk_live_`)
+5. Create a product and price in **Products** → **Add product**
+   - Product name: "Premium Subscription"
+   - Price: $15/month (or $150/year)
+   - Copy the **Price ID** (starts with `price_`)
+6. Set up webhooks:
+   - Go to **Developers** → **Webhooks**
+   - Click **Add endpoint**
+   - Endpoint URL: `https://your-domain.com/api/stripe/webhook`
+   - Select events:
+     - `checkout.session.completed`
+     - `customer.subscription.updated`
+     - `customer.subscription.deleted`
+     - `invoice.payment_succeeded`
+     - `invoice.payment_failed`
+   - Copy the **Signing secret** (starts with `whsec_`)
+
+**Pricing:**
+- **Free tier**: No monthly fee
+- **Transaction fees**: 2.9% + $0.30 per successful payment
+- **No setup fees** or monthly minimums
+
+**Support:**
+- **Stripe Support Phone**: (919) 322-9418
+- **Stripe Dashboard**: [dashboard.stripe.com](https://dashboard.stripe.com)
+- **Stripe Documentation**: [stripe.com/docs](https://stripe.com/docs)
+
+**Note:** This is optional. If not configured, subscription features will show "coming soon" messages. Use test mode keys for development.
+
+---
+
 ## Complete .env.local Template
 
 Copy this entire template to `Digital-Grimoire/app/.env.local` and fill in your values:
@@ -168,6 +220,17 @@ REPLICATE_API_TOKEN=your_replicate_api_token_here
 # Format: https://your-key@your-org.ingest.sentry.io/your-project-id
 # Get from: Sentry Dashboard → Settings → Projects → Client Keys (DSN)
 NEXT_PUBLIC_SENTRY_DSN=https://your-key@your-org.ingest.sentry.io/your-project-id
+
+# ============================================
+# Stripe (Payment Processing) - OPTIONAL
+# ============================================
+# Get from: Stripe Dashboard → Developers → API keys
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY=price_your_monthly_price_id
+NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY=price_your_yearly_price_id
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ---
