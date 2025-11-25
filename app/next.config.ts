@@ -9,8 +9,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   // Set workspace root to prevent multiple lockfile warnings
   outputFileTracingRoot: require('path').join(__dirname),
-  // Enable Sentry instrumentation
-  instrumentationHook: true,
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
   },
@@ -88,6 +86,36 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+        ],
+      },
+      // Static assets with content hash - long-term caching
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Images from Next.js Image Optimization
+      {
+        source: '/_next/image',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Public static files - match common file extensions
+      {
+        source: '/:path*.:ext(ico|png|jpg|jpeg|svg|webp|avif|woff|woff2|ttf|eot)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
           },
         ],
       },
