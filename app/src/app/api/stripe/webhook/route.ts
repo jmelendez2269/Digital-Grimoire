@@ -3,11 +3,15 @@ import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-11-17.clover',
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+function getStripeClient(): Stripe {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+  }
+  return new Stripe(secretKey, {
+    apiVersion: '2025-11-17.clover',
+  });
+}
 
 /**
  * Map Stripe price ID to subscription tier
@@ -31,6 +35,19 @@ function getTierFromPriceId(priceId: string): 'student' | 'scholar' | 'adept' | 
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+      return NextResponse.json(
+        { 
+          error: 'Stripe is not configured',
+          message: 'STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET environment variables are missing.'
+        },
+        { status: 503 }
+      );
+    }
+
+    const stripe = getStripeClient();
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     const body = await request.text();
     const signature = (await headers()).get('stripe-signature');
 
