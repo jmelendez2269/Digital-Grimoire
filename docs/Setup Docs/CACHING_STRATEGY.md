@@ -24,12 +24,37 @@ Vercel automatically provides Edge CDN for all deployments. No manual configurat
 - ✅ Automatic geographic distribution
 
 **Verification Steps:**
-1. Navigate to Vercel Dashboard → Your Project → Settings → Edge Network
-2. Verify Edge Network is enabled (should be automatic)
-3. Check Analytics → Edge Network to see hit rates
-4. Monitor performance metrics in Vercel Analytics
 
-**No Action Required** - Vercel handles this automatically.
+⚠️ **Important:** There is **NO "Edge Network" setting** in Project Settings. Edge Network is automatically enabled for all Vercel deployments - it's built into the platform and cannot be disabled.
+
+To verify Edge Network is working:
+
+1. **Via Analytics (Recommended):**
+   - Navigate to Vercel Dashboard → Your Project → **Analytics** tab (NOT Settings)
+   - Look for Edge Network metrics showing:
+     - CDN hit rates
+     - Cache hit rates  
+     - Geographic distribution of requests
+   - Note: These metrics may only appear after you have traffic/deployments
+
+2. **Via Browser DevTools:**
+   - Open your deployed site in a browser
+   - Open DevTools → Network tab
+   - Check response headers for:
+     - `X-Cache` header (shows cache status: HIT, MISS, etc.)
+     - `X-Vercel-Cache` header
+     - `Cache-Control` header
+
+3. **Via Response Headers (Programmatic):**
+   - Make a request to your deployed site
+   - Check for Vercel-specific cache headers in the response
+
+**Note:** Edge Network is **always enabled** - there's no toggle or setting to configure. If you don't see Edge Network metrics in Analytics, it may be because:
+- The project is new and hasn't received traffic yet
+- You're looking in Settings instead of Analytics
+- Your plan doesn't include detailed Analytics (check your Vercel plan)
+
+**No Action Required** - Vercel handles Edge Network automatically for all deployments.
 
 ---
 
@@ -331,11 +356,12 @@ export async function updateText(id: string, data: TextUpdate) {
 
 ### Vercel Analytics
 
-1. Navigate to Vercel Dashboard → Analytics
-2. Check **Edge Network** metrics:
+1. Navigate to Vercel Dashboard → Your Project → **Analytics** tab (NOT Settings)
+2. Look for **Edge Network** or **CDN** metrics (may be under different sections depending on your plan):
    - CDN hit rate (should be >80% for static assets)
    - Cache hit rate
    - Geographic distribution
+   - Note: If you don't see these metrics, check your Vercel plan - some metrics require Pro/Enterprise plans
 
 ### Browser DevTools
 
