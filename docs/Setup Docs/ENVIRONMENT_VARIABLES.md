@@ -86,6 +86,45 @@ REPLICATE_API_TOKEN=your_replicate_api_token_here
 
 ---
 
+### Sentry (Error Tracking) - OPTIONAL
+
+```env
+NEXT_PUBLIC_SENTRY_DSN=https://your-key@your-org.ingest.sentry.io/your-project-id
+```
+
+**Sentry DSN Format:**
+The DSN is a URL that Sentry provides when you create a project. It looks like:
+```
+https://abc123def456@o1234567.ingest.sentry.io/1234567
+```
+
+**How to get your DSN:**
+1. Create a Sentry account at [sentry.io](https://sentry.io/)
+2. Create a new project (select "Next.js" as platform)
+3. Go to **Settings** → **Projects** → Your project → **Client Keys (DSN)**
+4. Copy the DSN URL and paste it here
+
+**What it does:**
+- Error tracking and monitoring for production
+- Automatic error reporting with stack traces
+- Performance monitoring and session replay
+- Real-time alerts for critical errors
+
+**Where to find:**
+- Go to [Sentry](https://sentry.io/) and sign up (free tier available)
+- Create a new project (select Next.js)
+- Copy the DSN from project settings
+- Add it to your `.env.local` file
+
+**Pricing:**
+- **Free tier**: 5,000 events/month, 1 project
+- Perfect for getting started and small applications
+- Upgrade as needed for more events/projects
+
+**Note:** This is optional. If not configured, Sentry will be disabled and errors won't be tracked.
+
+---
+
 ## Complete .env.local Template
 
 Copy this entire template to `Digital-Grimoire/app/.env.local` and fill in your values:
@@ -122,6 +161,13 @@ ANTHROPIC_API_KEY=sk-ant-your_key_here
 # Replicate (Book Cover Generation) - OPTIONAL
 # ============================================
 REPLICATE_API_TOKEN=your_replicate_api_token_here
+
+# ============================================
+# Sentry (Error Tracking) - OPTIONAL
+# ============================================
+# Format: https://your-key@your-org.ingest.sentry.io/your-project-id
+# Get from: Sentry Dashboard → Settings → Projects → Client Keys (DSN)
+NEXT_PUBLIC_SENTRY_DSN=https://your-key@your-org.ingest.sentry.io/your-project-id
 ```
 
 ---

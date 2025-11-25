@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   // Set workspace root to prevent multiple lockfile warnings
   outputFileTracingRoot: require('path').join(__dirname),
+  // Enable Sentry instrumentation
+  instrumentationHook: true,
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
   },
@@ -20,12 +22,77 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.cloudflare.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'covers.openlibrary.org',
+      },
     ],
   },
   // Compress output
   compress: true,
   // Production source maps disabled for smaller bundle
   productionBrowserSourceMaps: false,
+  // Security headers
+  async headers() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Content Security Policy
+    // Allow necessary services: Supabase, Cloudflare R2, Azure, OpenAI, Vercel Analytics, Sentry
+    const cspDirectives = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "upgrade-insecure-requests",
+    ].join('; ');
+
+    return [
+      {
+        // Apply security headers to all routes
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives,
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          // Strict-Transport-Security (HSTS) - only in production
+          ...(isProduction
+            ? [
+                {
+                  key: 'Strict-Transport-Security',
+                  value: 'max-age=31536000; includeSubDomains; preload',
+                },
+              ]
+            : []),
+          // Referrer Policy
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          // Permissions Policy (formerly Feature Policy)
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+        ],
+      },
+    ];
+  },
   webpack: (config, { isServer, webpack }) => {
     // Completely ignore canvas module
     config.plugins.push(

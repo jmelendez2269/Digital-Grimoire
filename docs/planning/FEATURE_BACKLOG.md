@@ -493,9 +493,9 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Vercel deployment | P0 | S | 1 | 🟡 Partial | Ready to deploy |
 | Environment variables | P0 | XS | 1 | ✅ Complete | .env management |
 | Quick start guide (QUICK_START.md) | P0 | XS | 6 | ✅ Complete | Server commands quick reference |
-| Error tracking (Sentry) | P1 | S | Post | ⬜ Planned | Production errors |
+| Error tracking (Sentry) | P1 | S | Latest | ✅ Complete | @sentry/nextjs installed, configured, ready for DSN |
 | CloudWatch alarms | P1 | M | Post | ⬜ Planned | AWS monitoring |
-| Uptime monitoring | P1 | S | Post | ⬜ Planned | Pingdom |
+| Uptime monitoring | P1 | S | Latest | ✅ Complete | Health endpoint created, ready for external service |
 | Database backups | P1 | M | Post | ⬜ Planned | Automated |
 | Terraform IaC | P2 | L | Post | ⬜ Planned | Reproducible infra |
 
