@@ -312,20 +312,33 @@ placeholderData: (previousData) => previousData, // Show cached data immediately
 
 ### Database Indexes
 
-Ensure indexes exist for frequently queried columns:
+**Status:** ✅ Indexes created via migration `026_add_performance_indexes.sql`
+
+Indexes exist for frequently queried columns:
 
 ```sql
--- Example indexes (verify these exist in Supabase)
+-- Performance indexes (created in migration 026)
 CREATE INDEX IF NOT EXISTS idx_texts_status ON texts(status);
 CREATE INDEX IF NOT EXISTS idx_texts_type ON texts(type);
-CREATE INDEX IF NOT EXISTS idx_user_inventory_user_id ON user_inventory(user_id);
-CREATE INDEX IF NOT EXISTS idx_concepts_name ON concepts(name);
+CREATE INDEX IF NOT EXISTS idx_convergence_concepts_name ON convergence_concepts(name);
 ```
+
+**Existing Indexes (from schema):**
+- `idx_texts_domain` - For filtering by domain
+- `idx_texts_author` - For author searches
+- `idx_texts_year` - For year-based filtering
+- `idx_texts_tags` - GIN index for tag array searches
+- `idx_texts_embedding` - Vector similarity search
+- `idx_concepts_tradition` - For filtering convergence concepts by tradition
+- `idx_concepts_tags` - GIN index for concept tag searches
+
+**Note:** `user_inventory` table does not exist in current schema. If added in future, create index on `user_id`.
 
 **Verification:**
 1. Check Supabase Dashboard → Database → Indexes
 2. Review query performance in Supabase Analytics
-3. Add indexes for slow queries
+3. Monitor slow query logs and add indexes as needed
+4. Run `EXPLAIN ANALYZE` on slow queries to identify missing indexes
 
 ### Query Result Caching (Optional)
 
@@ -360,29 +373,109 @@ export async function getCachedConcepts() {
 
 ## 6. Cache Invalidation Strategy
 
+### Current Status: ✅ Implemented
+
+**React Query Cache Invalidation** is implemented via utility functions in `app/src/lib/cache-invalidation.ts`.
+
 ### When to Invalidate
 
-- **User Actions**: Invalidate user-specific caches when data changes
-- **Admin Updates**: Invalidate public caches when content is updated
-- **Scheduled**: Use ISR revalidation for time-based invalidation
+- **User Actions**: Invalidate user-specific caches when data changes (annotations, journal, collections)
+- **Admin Updates**: Invalidate public caches when content is updated (texts, concepts, graph data)
+- **CDN Cache**: Expires naturally based on cache headers (5-15 minutes) - no manual purge needed
 
-### Implementation Pattern
+### Implementation
+
+#### Utility Functions
+
+Use the centralized cache invalidation utilities for consistent cache management:
 
 ```typescript
-// Example: Invalidate cache after update
-export async function updateText(id: string, data: TextUpdate) {
-  // Update database
-  await supabase.from('texts').update(data).eq('id', id);
-  
-  // Invalidate React Query cache
-  queryClient.invalidateQueries({ queryKey: ['texts', id] });
-  queryClient.invalidateQueries({ queryKey: ['texts'] });
-  
-  // Revalidate ISR page
-  await revalidatePath(`/texts/${id}`);
-  await revalidatePath('/library');
-}
+import { useQueryClient } from '@tanstack/react-query';
+import { invalidateTextCaches, invalidateConceptCaches, invalidateGraphCaches } from '@/lib/cache-invalidation';
+
+// In a component
+const queryClient = useQueryClient();
+
+// After deleting a text
+await deleteText(textId);
+invalidateTextCaches(queryClient, textId);
+
+// After updating concepts
+await updateConcept(conceptId, data);
+invalidateConceptCaches(queryClient);
+
+// After updating graph data
+await updateCorrespondence(id, data);
+invalidateGraphCaches(queryClient);
 ```
+
+#### Available Functions
+
+- `invalidateTextCaches(queryClient, textId?)` - Library texts and filter options
+- `invalidateConceptCaches(queryClient)` - Convergence concepts
+- `invalidateGraphCaches(queryClient)` - Knowledge graph entities and edges
+- `invalidateAnnotationCaches(queryClient, textId?)` - User annotations
+- `invalidateJournalCaches(queryClient, pageId?)` - Journal pages
+- `invalidateCollectionCaches(queryClient, collectionId?)` - Collections
+- `invalidatePublicCaches(queryClient)` - All public data (texts, concepts, graph)
+
+#### Current Implementation Status
+
+**✅ Implemented:**
+- Delete operations invalidate React Query cache (see `library/page.tsx`)
+- Utility functions created for consistent invalidation
+
+**⚠️ To Be Implemented:**
+- Update operations should call invalidation functions (when PUT/PATCH endpoints are added)
+- Create/update operations for concepts, graph data should invalidate caches
+
+#### Example: Delete Operation (Current Implementation)
+
+```typescript
+// app/src/app/library/page.tsx
+const deleteText = async (textId: string, title: string) => {
+  // ... confirmation and API call ...
+  
+  if (response.ok) {
+    // Invalidate and refetch library queries
+    queryClient.invalidateQueries({ queryKey: ['library', 'texts'] });
+    queryClient.invalidateQueries({ queryKey: ['library', 'filterOptions'] });
+    alert('Document deleted successfully');
+  }
+};
+```
+
+#### Example: Update Operation (Future Implementation)
+
+```typescript
+// When adding PUT/PATCH endpoints for texts
+import { invalidateTextCaches } from '@/lib/cache-invalidation';
+
+const updateText = async (textId: string, data: TextUpdate) => {
+  const response = await fetch(`/api/texts/${textId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+  
+  if (response.ok) {
+    // Invalidate caches to show updated data
+    invalidateTextCaches(queryClient, textId);
+  }
+};
+```
+
+### CDN Cache Invalidation
+
+**Note:** Vercel does not provide a cache purge API. CDN cache invalidation is handled automatically:
+
+- **Short Cache Times**: API routes use 5-15 minute cache times, so stale data expires quickly
+- **Stale-While-Revalidate**: Serves stale content while fetching fresh data in background
+- **Natural Expiration**: Cache expires based on `s-maxage` headers
+
+This approach is acceptable because:
+- Cache times are short (5-15 minutes)
+- Most updates are infrequent
+- Stale-while-revalidate provides good UX during cache expiration
 
 ---
 
