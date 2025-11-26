@@ -950,7 +950,13 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
   - [ ] Footer social links implementation
   - [ ] GitHub repository integration
   - [ ] Twitter/X account setup and feed
-  - [ ] Discord server integration
+  - [ ] **Discord server setup** (see `docs/Setup Docs/DISCORD_SERVER_SETUP.md`)
+    - [ ] Create Discord server with channel structure
+    - [ ] Set up Sentry → Discord webhook integration
+    - [ ] Configure roles and permissions
+    - [ ] Create permanent invite link
+    - [ ] Add "Join Discord" button to application
+    - [ ] (Optional) Set up Discord bot for automation
   - [ ] Social sharing buttons for library texts
 
 #### Week 33-34: Smart Contract Development
@@ -1511,6 +1517,31 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 - Error rate alarms
 - Uptime monitoring service (external setup required)
 ```
+
+### Discord Server Setup (Planned for Phase 5)
+
+**Status:** 📋 Documented, ready for implementation
+
+A comprehensive Discord server setup guide has been created to support:
+- **Sentry Alerts** - Real-time error notifications from production
+- **Feature Updates** - Announcements and communication with end users  
+- **Community Engagement** - Feature requests, book requests, and user support
+
+**Documentation:** `docs/Setup Docs/DISCORD_SERVER_SETUP.md`
+
+**Key Components:**
+- Channel structure (admin/technical, community, optional channels)
+- Sentry → Discord webhook integration
+- Discord bot setup (optional, for automation)
+- Roles and permissions configuration
+- Application integration ("Join Discord" button)
+
+**Priority:** P1 (Should Have)  
+**Effort:** M (16-40 hours)  
+**Sprint:** Phase 5, Weeks 31-32  
+**Dependencies:** None
+
+---
 
 ### Email Infrastructure (Required for Production)
 

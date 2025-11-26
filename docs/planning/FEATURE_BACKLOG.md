@@ -494,6 +494,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Environment variables | P0 | XS | 1 | ✅ Complete | .env management |
 | Quick start guide (QUICK_START.md) | P0 | XS | 6 | ✅ Complete | Server commands quick reference |
 | Error tracking (Sentry) | P1 | S | Latest | ✅ Complete | @sentry/nextjs installed, configured, ready for DSN |
+| **Discord Sentry alerts** | **P1** | **S** | **31-32** | **⬜ Planned** | **Webhook integration for error notifications** |
 | CloudWatch alarms | P1 | M | Post | ⬜ Planned | AWS monitoring |
 | Uptime monitoring | P1 | S | Latest | ✅ Complete | Health endpoint created, ready for external service |
 | Database backups | P1 | M | Post | ⬜ Planned | Automated |
@@ -619,7 +620,10 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Obsidian export | P2 | M | Post | ⬜ Planned | Markdown vault |
 | Roam Research export | P2 | M | Post | ⬜ Planned | JSON format |
 | Zapier integration | P2 | L | Post | ⬜ Planned | Automation |
-| Discord bot | P2 | L | Post | ⬜ Planned | Community |
+| **Discord server setup** | **P1** | **M** | **31-32** | **⬜ Planned** | **Server creation, channels, Sentry integration** |
+| **Discord Sentry webhook** | **P1** | **S** | **31-32** | **⬜ Planned** | **Real-time error alerts to Discord** |
+| **Discord "Join" button** | **P1** | **XS** | **31-32** | **⬜ Planned** | **Add invite link to app footer/header** |
+| Discord bot | P2 | L | Post | ⬜ Planned | Automation, moderation, request tracking |
 | Twitter/X integration | P3 | M | Year 2 | ⬜ Planned | Share quotes |
 
 ### API & Developer Tools
