@@ -155,8 +155,8 @@ export default function TermsOfServicePage() {
             </ul>
             <p className="text-zinc-300 mt-4">
               If you believe content on our Service infringes your intellectual property rights, please contact us at{" "}
-              <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                privacy@convergencelibrary.com
+              <a href="mailto:legal@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
+                legal@convergencelibrary.com
               </a>{" "}
               with specific information about the allegedly infringing content.
             </p>
@@ -405,8 +405,8 @@ export default function TermsOfServicePage() {
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">12.2 Informal Resolution</h3>
             <p className="text-zinc-300">
               Before filing a claim, you agree to try to resolve the dispute informally by contacting us at{" "}
-              <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                privacy@convergencelibrary.com
+              <a href="mailto:legal@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
+                legal@convergencelibrary.com
               </a>. We will try to resolve the dispute within 60 days.
             </p>
 
@@ -462,8 +462,8 @@ export default function TermsOfServicePage() {
               <p className="text-zinc-300">
                 <strong>Service:</strong> Convergence<br />
                 <strong>Contact:</strong>{" "}
-                <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                  privacy@convergencelibrary.com
+                <a href="mailto:legal@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
+                  legal@convergencelibrary.com
                 </a>
                 <br />
                 <strong>Operated by:</strong> Jeanine Melendez

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Music, Video, Image, Clock, User, Calendar } from 'lucide-react';
+import Image from 'next/image';
+import { Music, Video, Image as ImageIcon, Clock, User, Calendar } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
 
 export interface MediaItem {
@@ -39,7 +40,7 @@ export default function MediaCard({ media, onDelete, isAdmin }: MediaCardProps) 
       case 'video':
         return <Video className="w-8 h-8 text-amber-400" />;
       case 'photo':
-        return <Image className="w-8 h-8 text-amber-400" />;
+        return <ImageIcon className="w-8 h-8 text-amber-400" />;
     }
   };
 
@@ -50,10 +51,13 @@ export default function MediaCard({ media, onDelete, isAdmin }: MediaCardProps) 
       {/* Thumbnail */}
       <Link href={`/library/media/${media.id}`} className="relative w-full h-48 bg-zinc-800/50 overflow-hidden flex-shrink-0">
         {thumbnailUrl ? (
-          <img
+          <Image
             src={thumbnailUrl}
             alt={media.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 768px) 100vw, 192px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-900/20 to-zinc-900/50">

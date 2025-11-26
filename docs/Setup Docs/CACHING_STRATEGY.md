@@ -1,0 +1,555 @@
+# Caching Strategy Implementation Guide
+
+**Last Updated:** November 10, 2025  
+**Status:** Implementation Guide  
+**Reference:** `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md` (Section 7: Performance Optimization)
+
+---
+
+## Overview
+
+This guide provides step-by-step instructions for implementing a comprehensive caching strategy for the Convergence Library application deployed on Vercel. Proper caching improves performance, reduces server load, and enhances user experience.
+
+---
+
+## 1. CDN Configuration (Vercel Edge)
+
+### ✅ Automatic Configuration
+
+Vercel automatically provides Edge CDN for all deployments. No manual configuration is required.
+
+**What's Already Configured:**
+- ✅ Global Edge Network automatically enabled
+- ✅ Static assets served from Edge locations
+- ✅ Automatic geographic distribution
+
+**Verification Steps:**
+
+⚠️ **Important:** There is **NO "Edge Network" setting** in Project Settings. Edge Network is automatically enabled for all Vercel deployments - it's built into the platform and cannot be disabled.
+
+To verify Edge Network is working:
+
+1. **Via Analytics (Recommended):**
+   - Navigate to Vercel Dashboard → Your Project → **Analytics** tab (NOT Settings)
+   - Look for Edge Network metrics showing:
+     - CDN hit rates
+     - Cache hit rates  
+     - Geographic distribution of requests
+   - Note: These metrics may only appear after you have traffic/deployments
+
+2. **Via Browser DevTools:**
+   - Open your deployed site in a browser
+   - Open DevTools → Network tab
+   - Check response headers for:
+     - `X-Cache` header (shows cache status: HIT, MISS, etc.)
+     - `X-Vercel-Cache` header
+     - `Cache-Control` header
+
+3. **Via Response Headers (Programmatic):**
+   - Make a request to your deployed site
+   - Check for Vercel-specific cache headers in the response
+
+**Note:** Edge Network is **always enabled** - there's no toggle or setting to configure. If you don't see Edge Network metrics in Analytics, it may be because:
+- The project is new and hasn't received traffic yet
+- You're looking in Settings instead of Analytics
+- Your plan doesn't include detailed Analytics (check your Vercel plan)
+
+**No Action Required** - Vercel handles Edge Network automatically for all deployments.
+
+---
+
+## 2. Static Assets Caching
+
+### Current State
+
+Next.js automatically handles static asset caching, but we can optimize with explicit cache headers.
+
+### Implementation
+
+Add cache headers to `next.config.ts` for optimal static asset caching:
+
+```typescript
+// In next.config.ts headers() function, add:
+
+async headers() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  return [
+    // ... existing security headers ...
+    
+    // Static assets with content hash - long-term caching
+    {
+      source: '/_next/static/:path*',
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=31536000, immutable',
+        },
+      ],
+    },
+    // Images from Next.js Image Optimization
+    {
+      source: '/_next/image',
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=31536000, immutable',
+        },
+      ],
+    },
+    // Public static files (robots.txt, sitemap.xml, etc.)
+    {
+      source: '/:path*\\.(?:ico|png|jpg|jpeg|svg|webp|avif|woff|woff2|ttf|eot)',
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=86400, stale-while-revalidate=604800',
+        },
+      ],
+    },
+  ];
+}
+```
+
+### What This Does
+
+- **Hashed Assets** (`/_next/static/*`): 1 year cache (immutable) - safe because filenames include content hash
+- **Image Optimization** (`/_next/image`): 1 year cache - Next.js handles versioning
+- **Public Assets**: 1 day cache with 1 week stale-while-revalidate
+
+### Verification
+
+After deployment:
+1. Check browser DevTools → Network tab
+2. Verify static assets have `Cache-Control` headers
+3. Confirm cache times match configuration
+
+---
+
+## 3. API Response Caching
+
+### Strategy
+
+Different API routes require different caching strategies:
+
+#### Cacheable Routes (Read-Only, Public Data)
+- `/api/texts` - Library texts (cache for 5-15 minutes)
+- `/api/concepts` - Concept definitions (cache for 1 hour)
+- `/api/graph/entities` - Knowledge graph entities (cache for 15 minutes)
+- `/api/graph/edges` - Knowledge graph relationships (cache for 15 minutes)
+
+#### Non-Cacheable Routes
+- `/api/convergence/query` - SSE streams (already has `no-cache`)
+- `/api/auth/*` - Authentication endpoints
+- `/api/user/*` - User-specific data
+- `/api/journal/*` - User journal entries
+- `/api/annotations/*` - User annotations
+
+### Implementation
+
+#### Example: Cacheable API Route
+
+```typescript
+// app/src/app/api/texts/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  // ... existing code ...
+  
+  const response = NextResponse.json(data);
+  
+  // Add cache headers for public, read-only data
+  response.headers.set(
+    'Cache-Control',
+    'public, s-maxage=300, stale-while-revalidate=600'
+  );
+  
+  return response;
+}
+```
+
+#### Cache Header Values
+
+- `public` - Can be cached by CDN and browsers
+- `s-maxage=300` - CDN cache for 5 minutes
+- `stale-while-revalidate=600` - Serve stale content for up to 10 minutes while revalidating
+
+#### Example: User-Specific Route (No Cache)
+
+```typescript
+// app/src/app/api/journal/[id]/route.ts
+export async function GET(request: NextRequest) {
+  // ... existing code ...
+  
+  const response = NextResponse.json(data);
+  
+  // No caching for user-specific data
+  response.headers.set(
+    'Cache-Control',
+    'private, no-cache, no-store, must-revalidate'
+  );
+  
+  return response;
+}
+```
+
+### Priority Implementation Order
+
+1. **High Priority** (Most traffic, read-only):
+   - `/api/texts` - Library listing
+   - `/api/concepts` - Concept definitions
+
+2. **Medium Priority**:
+   - `/api/graph/*` - Knowledge graph data
+   - `/api/collections` - Public collections
+
+3. **Low Priority**:
+   - Other read-only endpoints
+
+---
+
+## 4. Incremental Static Regeneration (ISR)
+
+### Current Status: Not Applicable
+
+**ISR is not implemented** in this application because the architecture uses client components with heavy interactivity and user authentication.
+
+#### Why ISR Doesn't Fit This Architecture
+
+1. **Client Component Architecture**
+   - Pages are built as client components (`'use client'`) for interactivity
+   - ISR requires server components that fetch data at build/render time
+   - Refactoring would require significant architectural changes
+
+2. **User Authentication Required**
+   - Most pages require user authentication
+   - ISR works best for public, static content
+   - User-specific content can't be pre-rendered effectively
+
+3. **Heavy Client-Side Interactivity**
+   - Pages have dynamic features: search, filters, sorting, pagination
+   - Content changes based on user actions and URL parameters
+   - ISR can't pre-render all possible combinations of user interactions
+
+4. **Dynamic Content**
+   - Library listings change based on filters, search queries, and sorting
+   - Text detail pages load user-specific annotations and bookmarks
+   - Graph pages display interactive, user-driven visualizations
+
+#### Alternative Caching Strategy (Implemented)
+
+Instead of ISR, we use a **multi-layer caching approach** that provides similar performance benefits:
+
+1. **API Response Caching** ✅
+   - CDN cache headers on API routes (5-15 minutes)
+   - Reduces server load and improves response times
+   - See Section 3 for implementation details
+
+2. **React Query Client Caching** ✅
+   - 10-minute stale time for library data
+   - 30-minute garbage collection time
+   - Provides instant navigation between pages
+   - Shows cached data immediately while refetching in background
+
+3. **Static Asset Caching** ✅
+   - 1-year cache for hashed assets (`/_next/static/*`)
+   - 1-day cache for public assets with stale-while-revalidate
+   - See Section 2 for implementation details
+
+#### Performance Benefits
+
+This combination provides:
+- ✅ **Fast API responses** - CDN cached at edge locations
+- ✅ **Instant navigation** - React Query serves cached data immediately
+- ✅ **Reduced server load** - API caching reduces database queries
+- ✅ **Better UX** - Stale-while-revalidate pattern shows data instantly
+- ✅ **Lower complexity** - Easier to maintain than ISR + client components
+
+#### When ISR Might Be Considered
+
+ISR could be beneficial if:
+- Pages become truly public (no authentication required)
+- Content is mostly static with minimal interactivity
+- You want to pre-render popular pages at build time
+- SEO becomes a priority for public-facing pages
+
+**Current Recommendation:** Keep the existing multi-layer caching strategy. It's well-suited for authenticated, interactive applications and provides excellent performance without the architectural complexity of ISR.
+
+---
+
+## 5. Database Query Optimization
+
+### Current State
+
+- ✅ React Query configured with optimized stale times
+- ✅ 30-minute garbage collection time
+- ✅ Library-specific caching (10 minutes stale time)
+- ⚠️ No database-level query result caching
+
+### React Query Configuration
+
+**Global Configuration** (`app/src/lib/react-query.tsx`):
+```typescript
+staleTime: 5 * 60 * 1000, // 5 minutes (default)
+gcTime: 30 * 60 * 1000, // 30 minutes
+```
+
+**Library-Specific Configuration** (`app/src/hooks/useLibrary.ts`):
+```typescript
+staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
+gcTime: 30 * 60 * 1000, // 30 minutes - keep cached data longer
+placeholderData: (previousData) => previousData, // Show cached data immediately
+```
+
+**This configuration is optimized for the application's needs:**
+- **Library data** (10 min stale time) - Changes infrequently, benefits from longer cache
+- **Default queries** (5 min stale time) - Balanced for most use cases
+- **Instant navigation** - Cached data shown immediately while refetching in background
+
+**Consider adjusting for:**
+- **Frequently changing data**: Reduce stale time to 1-2 minutes
+- **Rarely changing data**: Increase stale time to 15-30 minutes
+
+### Database Indexes
+
+**Status:** ✅ Indexes created via migration `026_add_performance_indexes.sql`
+
+Indexes exist for frequently queried columns:
+
+```sql
+-- Performance indexes (created in migration 026)
+CREATE INDEX IF NOT EXISTS idx_texts_status ON texts(status);
+CREATE INDEX IF NOT EXISTS idx_texts_type ON texts(type);
+CREATE INDEX IF NOT EXISTS idx_convergence_concepts_name ON convergence_concepts(name);
+```
+
+**Existing Indexes (from schema):**
+- `idx_texts_domain` - For filtering by domain
+- `idx_texts_author` - For author searches
+- `idx_texts_year` - For year-based filtering
+- `idx_texts_tags` - GIN index for tag array searches
+- `idx_texts_embedding` - Vector similarity search
+- `idx_concepts_tradition` - For filtering convergence concepts by tradition
+- `idx_concepts_tags` - GIN index for concept tag searches
+
+**Note:** `user_inventory` table does not exist in current schema. If added in future, create index on `user_id`.
+
+**Verification:**
+1. Check Supabase Dashboard → Database → Indexes
+2. Review query performance in Supabase Analytics
+3. Monitor slow query logs and add indexes as needed
+4. Run `EXPLAIN ANALYZE` on slow queries to identify missing indexes
+
+### Query Result Caching (Optional)
+
+For expensive queries, consider implementing application-level caching:
+
+```typescript
+// Example: Cache expensive concept queries
+const CACHE_TTL = 3600; // 1 hour
+const queryCache = new Map<string, { data: any; expires: number }>();
+
+export async function getCachedConcepts() {
+  const cacheKey = 'concepts:all';
+  const cached = queryCache.get(cacheKey);
+  
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
+  }
+  
+  const data = await fetchConcepts();
+  queryCache.set(cacheKey, {
+    data,
+    expires: Date.now() + CACHE_TTL * 1000,
+  });
+  
+  return data;
+}
+```
+
+**Note:** For production, consider using Redis or Supabase's built-in caching if available.
+
+---
+
+## 6. Cache Invalidation Strategy
+
+### Current Status: ✅ Implemented
+
+**React Query Cache Invalidation** is implemented via utility functions in `app/src/lib/cache-invalidation.ts`.
+
+### When to Invalidate
+
+- **User Actions**: Invalidate user-specific caches when data changes (annotations, journal, collections)
+- **Admin Updates**: Invalidate public caches when content is updated (texts, concepts, graph data)
+- **CDN Cache**: Expires naturally based on cache headers (5-15 minutes) - no manual purge needed
+
+### Implementation
+
+#### Utility Functions
+
+Use the centralized cache invalidation utilities for consistent cache management:
+
+```typescript
+import { useQueryClient } from '@tanstack/react-query';
+import { invalidateTextCaches, invalidateConceptCaches, invalidateGraphCaches } from '@/lib/cache-invalidation';
+
+// In a component
+const queryClient = useQueryClient();
+
+// After deleting a text
+await deleteText(textId);
+invalidateTextCaches(queryClient, textId);
+
+// After updating concepts
+await updateConcept(conceptId, data);
+invalidateConceptCaches(queryClient);
+
+// After updating graph data
+await updateCorrespondence(id, data);
+invalidateGraphCaches(queryClient);
+```
+
+#### Available Functions
+
+- `invalidateTextCaches(queryClient, textId?)` - Library texts and filter options
+- `invalidateConceptCaches(queryClient)` - Convergence concepts
+- `invalidateGraphCaches(queryClient)` - Knowledge graph entities and edges
+- `invalidateAnnotationCaches(queryClient, textId?)` - User annotations
+- `invalidateJournalCaches(queryClient, pageId?)` - Journal pages
+- `invalidateCollectionCaches(queryClient, collectionId?)` - Collections
+- `invalidatePublicCaches(queryClient)` - All public data (texts, concepts, graph)
+
+#### Current Implementation Status
+
+**✅ Implemented:**
+- Delete operations invalidate React Query cache (see `library/page.tsx`)
+- Utility functions created for consistent invalidation
+
+**⚠️ To Be Implemented:**
+- Update operations should call invalidation functions (when PUT/PATCH endpoints are added)
+- Create/update operations for concepts, graph data should invalidate caches
+
+#### Example: Delete Operation (Current Implementation)
+
+```typescript
+// app/src/app/library/page.tsx
+const deleteText = async (textId: string, title: string) => {
+  // ... confirmation and API call ...
+  
+  if (response.ok) {
+    // Invalidate and refetch library queries
+    queryClient.invalidateQueries({ queryKey: ['library', 'texts'] });
+    queryClient.invalidateQueries({ queryKey: ['library', 'filterOptions'] });
+    alert('Document deleted successfully');
+  }
+};
+```
+
+#### Example: Update Operation (Future Implementation)
+
+```typescript
+// When adding PUT/PATCH endpoints for texts
+import { invalidateTextCaches } from '@/lib/cache-invalidation';
+
+const updateText = async (textId: string, data: TextUpdate) => {
+  const response = await fetch(`/api/texts/${textId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+  
+  if (response.ok) {
+    // Invalidate caches to show updated data
+    invalidateTextCaches(queryClient, textId);
+  }
+};
+```
+
+### CDN Cache Invalidation
+
+**Note:** Vercel does not provide a cache purge API. CDN cache invalidation is handled automatically:
+
+- **Short Cache Times**: API routes use 5-15 minute cache times, so stale data expires quickly
+- **Stale-While-Revalidate**: Serves stale content while fetching fresh data in background
+- **Natural Expiration**: Cache expires based on `s-maxage` headers
+
+This approach is acceptable because:
+- Cache times are short (5-15 minutes)
+- Most updates are infrequent
+- Stale-while-revalidate provides good UX during cache expiration
+
+---
+
+## 7. Monitoring & Verification
+
+### Vercel Analytics
+
+1. Navigate to Vercel Dashboard → Your Project → **Analytics** tab (NOT Settings)
+2. Look for **Edge Network** or **CDN** metrics (may be under different sections depending on your plan):
+   - CDN hit rate (should be >80% for static assets)
+   - Cache hit rate
+   - Geographic distribution
+   - Note: If you don't see these metrics, check your Vercel plan - some metrics require Pro/Enterprise plans
+
+### Browser DevTools
+
+1. Open DevTools → Network tab
+2. Check response headers:
+   - `Cache-Control` header present
+   - `X-Cache` header (Vercel CDN status)
+   - `X-Vercel-Cache` header
+
+### Performance Testing
+
+1. Run Lighthouse audit
+2. Check **Caching** section in report
+3. Verify cache headers are set correctly
+4. Test cache behavior with different scenarios
+
+---
+
+## 8. Implementation Checklist
+
+- [ ] Add static asset cache headers to `next.config.ts`
+- [ ] Add cache headers to cacheable API routes
+- [ ] Configure ISR for appropriate pages
+- [ ] Verify database indexes exist
+- [ ] Test cache behavior in development
+- [ ] Deploy and verify in production
+- [ ] Monitor cache hit rates in Vercel Analytics
+- [ ] Adjust cache times based on real-world usage
+
+---
+
+## 9. Common Issues & Solutions
+
+### Issue: Stale Data Showing
+
+**Solution:** Reduce cache times or implement proper cache invalidation
+
+### Issue: Cache Not Working
+
+**Solution:** 
+- Verify headers are set correctly
+- Check Vercel deployment logs
+- Ensure route is not using `dynamic = 'force-dynamic'`
+
+### Issue: Too Much Cache
+
+**Solution:** 
+- Reduce cache times for frequently updated data
+- Use `stale-while-revalidate` for better UX
+
+---
+
+## 10. References
+
+- **Next.js Caching:** https://nextjs.org/docs/app/building-your-application/caching
+- **Vercel Edge Network:** https://vercel.com/docs/edge-network
+- **React Query Caching:** https://tanstack.com/query/latest/docs/react/guides/caching
+- **Production Checklist:** `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`
+
+---
+
+**Version:** 1.0  
+**Last Updated:** November 10, 2025
+

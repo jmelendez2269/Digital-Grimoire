@@ -319,3 +319,10 @@ Write-Host "   • Upgrade to Supabase Pro for automated backups when ready" -Fo
 Write-Host ""
 
 
+
+
+
+
+
+
+

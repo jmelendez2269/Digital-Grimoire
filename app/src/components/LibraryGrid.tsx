@@ -3,6 +3,7 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { User, BookOpen, Tag, Eye, Edit, Trash2 } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
@@ -91,13 +92,16 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
                     {/* Book Cover */}
                     <Link href={`/library/${text.id}`} className="relative md:w-40 md:h-56 w-full h-48 bg-zinc-800/50 overflow-hidden flex-shrink-0">
                       {text.cover_image_url ? (
-                        <img
+                        <Image
                           src={text.cover_image_url}
                           alt={text.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 160px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                           style={{
                             objectPosition: (text.metadata as any)?.cover_position || 'center',
                           }}
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-900/20 to-zinc-900/50">

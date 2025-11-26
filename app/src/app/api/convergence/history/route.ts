@@ -67,3 +67,84 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/convergence/history
+ * Save a conversation to history
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { query, lensWeights, response, synthesis, sources } = body;
+
+    // Validate required fields
+    if (!query || !lensWeights || !response) {
+      return NextResponse.json(
+        { error: 'Missing required fields: query, lensWeights, and response are required' },
+        { status: 400 }
+      );
+    }
+
+    // Extract lens IDs that were used (weights > 0)
+    const lensesUsed = Object.entries(lensWeights)
+      .filter(([_, weight]) => (weight as number) > 0)
+      .map(([lensId]) => lensId);
+
+    // Prepare response data
+    const responseData = {
+      user_id: user.id,
+      query_text: query,
+      lens_weights: lensWeights,
+      response_text: typeof response === 'string' ? response : JSON.stringify(response),
+      sources: sources || [],
+      lenses_used: lensesUsed,
+    };
+
+    // Save to database
+    const { data: savedResponse, error } = await supabase
+      .from('convergence_responses')
+      .insert(responseData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving conversation:', error);
+      return NextResponse.json(
+        { error: 'Failed to save conversation' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { 
+        id: savedResponse.id,
+        conversation: savedResponse 
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Error in POST history endpoint:', error);
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+

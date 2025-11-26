@@ -38,7 +38,7 @@ export async function POST(
 
     // Parse request body
     const body = await request.json();
-    const { query, lensWeights, responseLength = 'short' } = body;
+    const { query, lensWeights, responseLength = 'medium' } = body;
 
     // Validate input
     if (!query || typeof query !== 'string' || query.trim().length === 0) {

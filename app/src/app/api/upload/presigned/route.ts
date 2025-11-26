@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getR2Client, PutObjectCommand, getSignedUrl } from '@/lib/storage/r2-client';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimitMiddleware, RateLimitPresets } from '@/lib/rate-limit';
 
 // Initialize R2 client (compatible with S3 API)
 const s3Client = getR2Client();
@@ -27,6 +28,16 @@ export async function POST(request: NextRequest) {
 
     if (profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Apply rate limiting for file uploads (10 uploads per hour)
+    const rateLimitResponse = await rateLimitMiddleware(
+      request,
+      RateLimitPresets.FILE_UPLOAD,
+      user.id
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     // Parse request body

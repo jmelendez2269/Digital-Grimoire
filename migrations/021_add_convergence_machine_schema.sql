@@ -59,8 +59,10 @@ CREATE TABLE IF NOT EXISTS convergence_queries (
 );
 
 -- Index for fast user query lookups (for rate limiting: count queries per user per month)
+-- Note: We index on (user_id, created_at) instead of DATE_TRUNC because DATE_TRUNC
+-- is not immutable with TIMESTAMPTZ. Queries can still use DATE_TRUNC in WHERE clauses.
 CREATE INDEX IF NOT EXISTS idx_convergence_queries_user_month 
-ON convergence_queries(user_id, DATE_TRUNC('month', created_at));
+ON convergence_queries(user_id, created_at);
 
 -- Index for user lookup
 CREATE INDEX IF NOT EXISTS idx_convergence_queries_user_id 

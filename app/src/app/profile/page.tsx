@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import JournalNamePreference from "@/components/JournalNamePreference";
+import SubscriptionTab from "@/components/SubscriptionTab";
 
-export default function ProfilePage() {
+type TabType = "profile" | "subscription";
+
+function ProfileContent() {
+  const searchParams = useSearchParams();
+  const activeTab = (searchParams.get("tab") || "profile") as TabType;
   const { user, loading: authLoading, supabase } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -260,19 +266,16 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
-        <Header />
-        <div className="flex flex-1 items-center justify-center">
+      <main className="flex-1">
+        <div className="flex items-center justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
         </div>
-        <Footer />
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
-      <Header />
+    <>
       <main className="flex-1">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
           {/* Page Title */}
@@ -283,7 +286,37 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Tabs */}
+          <div className="mb-8 border-b border-zinc-800">
+            <nav className="flex gap-1" aria-label="Tabs">
+              <Link
+                href="/profile?tab=profile"
+                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+                  activeTab === "profile"
+                    ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
+                    : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
+                }`}
+              >
+                Profile
+              </Link>
+              <Link
+                href="/profile?tab=subscription"
+                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+                  activeTab === "subscription"
+                    ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
+                    : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
+                }`}
+              >
+                Subscription
+              </Link>
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === "subscription" ? (
+            <SubscriptionTab />
+          ) : (
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Profile Card */}
             <div className="lg:col-span-1">
               <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
@@ -356,11 +389,6 @@ export default function ProfilePage() {
 
                 {/* Stats */}
                 <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-100">Neophyte</div>
-                    <div className="text-sm text-zinc-500">Current Rank</div>
-                  </div>
-
                   <div className="flex justify-around border-t border-zinc-800 pt-4">
                     <div className="text-center">
                       <div className="text-xl font-bold text-amber-100">0</div>
@@ -489,9 +517,9 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+          )}
         </div>
       </main>
-      <Footer />
 
       {/* Crop Modal */}
       {cropModalOpen && imageToCrop && (
@@ -504,6 +532,24 @@ export default function ProfilePage() {
           }}
         />
       )}
+    </>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <Header />
+      <Suspense fallback={
+        <main className="flex-1">
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
+          </div>
+        </main>
+      }>
+        <ProfileContent />
+      </Suspense>
+      <Footer />
     </div>
   );
 }

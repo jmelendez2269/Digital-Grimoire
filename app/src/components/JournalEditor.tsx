@@ -70,7 +70,7 @@ export default function JournalEditor({
       return;
     }
 
-    if (!content) {
+    if (!content || content.trim() === '') {
       editor.commands.setContent('', { emitUpdate: false });
       lastAppliedContentRef.current = '';
       return;
@@ -78,10 +78,27 @@ export default function JournalEditor({
 
     try {
       const parsed = JSON.parse(content);
-      editor.commands.setContent(parsed, { emitUpdate: false });
-      lastAppliedContentRef.current = content;
+      console.log('JournalEditor: Setting content from JSON', {
+        hasType: !!parsed.type,
+        type: parsed.type,
+        hasContent: !!parsed.content,
+        contentLength: parsed.content?.length,
+        firstNode: parsed.content?.[0]
+      });
+      
+      // Validate it's a valid Tiptap doc structure
+      if (parsed.type === 'doc' && Array.isArray(parsed.content)) {
+        editor.commands.setContent(parsed, { emitUpdate: false });
+        lastAppliedContentRef.current = content;
+      } else {
+        console.warn('JournalEditor: Invalid Tiptap structure', parsed);
+        // Try to wrap it in a doc structure
+        editor.commands.setContent({ type: 'doc', content: [parsed] }, { emitUpdate: false });
+        lastAppliedContentRef.current = content;
+      }
       return;
-    } catch {
+    } catch (error) {
+      console.warn('JournalEditor: Failed to parse content as JSON, treating as plain text', error);
       editor.commands.setContent(content, { emitUpdate: false });
       lastAppliedContentRef.current = content;
     }

@@ -13,6 +13,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { formatFileSize, formatDate, getStatusColor } from '@/lib/utils/formatting';
 import { useLibraryTexts, useLibraryFilterOptions, type FilterValues } from '@/hooks/useLibrary';
+import { invalidateTextCaches } from '@/lib/cache-invalidation';
 import LibraryGrid from '@/components/LibraryGrid';
 
 // Lazy load AdvancedFilters - not needed on initial render
@@ -138,9 +139,8 @@ function LibraryPageContent() {
       });
 
       if (response.ok) {
-        // Invalidate and refetch library queries
-        queryClient.invalidateQueries({ queryKey: ['library', 'texts'] });
-        queryClient.invalidateQueries({ queryKey: ['library', 'filterOptions'] });
+        // Invalidate and refetch library queries using utility function
+        invalidateTextCaches(queryClient, textId);
         alert('Document deleted successfully');
       } else {
         const data = await response.json();

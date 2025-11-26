@@ -124,13 +124,21 @@ export async function GET(request: Request) {
       const to = from + limit;
       const paginatedData = sortedData.slice(from, to);
       
-      return NextResponse.json({
+      const response = NextResponse.json({
         texts: paginatedData || [],
         total: count || 0,
         page,
         limit,
         totalPages: Math.ceil((count || 0) / limit),
       });
+      
+      // Add cache headers for public, read-only data (5-15 minutes)
+      response.headers.set(
+        'Cache-Control',
+        'public, s-maxage=300, stale-while-revalidate=600'
+      );
+      
+      return response;
     } else {
       // For non-title sorting, use normal database sorting with pagination
       const from = (page - 1) * limit;
@@ -148,13 +156,21 @@ export async function GET(request: Request) {
         );
       }
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         texts: data || [],
         total: count || 0,
         page,
         limit,
         totalPages: Math.ceil((count || 0) / limit),
       });
+      
+      // Add cache headers for public, read-only data (5-15 minutes)
+      response.headers.set(
+        'Cache-Control',
+        'public, s-maxage=300, stale-while-revalidate=600'
+      );
+      
+      return response;
     }
   } catch (error) {
     console.error('Unexpected error:', error);

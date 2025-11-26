@@ -7,14 +7,16 @@ import { Sparkles, Send, Loader2, Info } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import LensSlider from '@/components/convergence/LensSlider';
+import LensIntensitySelector from '@/components/convergence/LensIntensitySelector';
 import LensPresets from '@/components/convergence/LensPresets';
 import ResponseLengthSlider from '@/components/convergence/ResponseLengthSlider';
 import RateLimitDisplay from '@/components/convergence/RateLimitDisplay';
 import PremiumGate from '@/components/convergence/PremiumGate';
+import ConversationHistory from '@/components/convergence/ConversationHistory';
 import { getAllLenses } from '@/lib/convergence/lenses';
-import { LensWeights } from '@/lib/convergence/lens-orchestrator';
+import { LensWeights, ResponseLength } from '@/lib/convergence/lens-orchestrator';
 import { useAuth } from '@/contexts/AuthContext';
+import { Save, Check } from 'lucide-react';
 
 // Dynamically import ResponseStream to reduce initial bundle size
 const ResponseStream = dynamic(() => import('@/components/convergence/ResponseStream'), {
@@ -27,13 +29,13 @@ const ResponseStream = dynamic(() => import('@/components/convergence/ResponseSt
 });
 
 const DEFAULT_WEIGHTS: LensWeights = {
-  scientific: 14,
-  psychological: 14,
-  philosophical: 14,
-  religious_spiritual: 14,
-  historical_anthropological: 14,
-  symbolic_occult: 14,
-  mathematical: 16,
+  scientific: 30, // Standard
+  psychological: 30, // Standard
+  philosophical: 30, // Standard
+  religious_spiritual: 30, // Standard
+  historical_anthropological: 30, // Standard
+  symbolic_occult: 30, // Standard
+  mathematical: 30, // Standard
 };
 
 function ConvergenceMachineContent() {
@@ -46,16 +48,77 @@ function ConvergenceMachineContent() {
   const [response, setResponse] = useState<any>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savingDefault, setSavingDefault] = useState(false);
+  const [defaultSaved, setDefaultSaved] = useState(false);
   const [rateLimit, setRateLimit] = useState<{
     remaining: number;
     limit: number;
     resetDate: Date | string;
     isPremium: boolean;
   } | null>(null);
+  const [currentResponseId, setCurrentResponseId] = useState<string | null>(null);
+  const [historyRefreshTrigger, setHistoryRefreshTrigger] = useState(0);
 
   useEffect(() => {
     fetchRateLimit();
+    loadUserDefaults();
   }, []);
+
+  // Load user's saved defaults
+  async function loadUserDefaults() {
+    if (!user) return;
+    
+    try {
+      const res = await fetch('/api/user/convergence-preferences');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.preferences?.lensWeights) {
+          setLensWeights(data.preferences.lensWeights);
+        }
+        if (data.preferences?.responseLength) {
+          setResponseLength(data.preferences.responseLength);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading user defaults:', err);
+      // Silently fail - use system defaults
+    }
+  }
+
+  // Save current configuration as default
+  async function saveAsDefault() {
+    if (!user) {
+      setError('Please sign in to save defaults');
+      return;
+    }
+
+    setSavingDefault(true);
+    setDefaultSaved(false);
+
+    try {
+      const res = await fetch('/api/user/convergence-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lensWeights,
+          responseLength,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to save defaults');
+      }
+
+      setDefaultSaved(true);
+      setTimeout(() => setDefaultSaved(false), 3000);
+    } catch (err) {
+      console.error('Error saving defaults:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save defaults');
+    } finally {
+      setSavingDefault(false);
+    }
+  }
 
   // Read query from URL params on mount
   useEffect(() => {
@@ -153,6 +216,9 @@ function ConvergenceMachineContent() {
                 finalResponse = data.response;
                 setResponse(finalResponse);
                 setIsStreaming(false);
+                setCurrentResponseId(null); // Clear history selection for new response
+                // Save conversation to history
+                saveConversationToHistory(query, lensWeights, finalResponse);
               } else if (data.type === 'synthesis') {
                 // Update synthesis immediately
                 setResponse((prev: any) => ({
@@ -194,6 +260,139 @@ function ConvergenceMachineContent() {
     }));
   }
 
+  // Save conversation to history (localStorage and database)
+  async function saveConversationToHistory(
+    query: string,
+    lensWeights: LensWeights,
+    response: any
+  ) {
+    if (!response || !response.synthesis) return;
+
+    const conversationEntry = {
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      query,
+      lensWeights,
+      synthesis: response.synthesis,
+      responsePreview: response.synthesis.substring(0, 150),
+      response: response, // Save full response object
+      timestamp: new Date(),
+      sources: response.sources || [],
+    };
+
+    // Save to localStorage immediately
+    const localKey = user ? `convergence_history_${user.id}` : 'convergence_history_guest';
+    if (typeof window !== 'undefined') {
+      const existing = localStorage.getItem(localKey);
+      const history = existing ? JSON.parse(existing) : [];
+      history.unshift(conversationEntry);
+      // Keep only last 50 entries
+      const limited = history.slice(0, 50);
+      localStorage.setItem(localKey, JSON.stringify(limited));
+    }
+
+    // Save to database if user is authenticated
+    if (user) {
+      try {
+        await fetch('/api/convergence/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query,
+            lensWeights,
+            response: JSON.stringify(response),
+            synthesis: response.synthesis,
+            sources: response.sources || [],
+          }),
+        });
+        
+        // Trigger history refresh
+        setHistoryRefreshTrigger(prev => prev + 1);
+      } catch (error) {
+        console.error('Error saving conversation to database:', error);
+        // Non-blocking - localStorage already saved
+        // Still trigger refresh for localStorage update
+        setHistoryRefreshTrigger(prev => prev + 1);
+      }
+    } else {
+      // Guest user - still trigger refresh for localStorage update
+      setHistoryRefreshTrigger(prev => prev + 1);
+    }
+  }
+
+  // Handle conversation selection from history
+  function handleSelectConversation(conversation: any) {
+    setQuery(conversation.query);
+    setLensWeights(conversation.lensWeights);
+    
+    // Load the full response if available
+    if (conversation.response) {
+      try {
+        // Ensure response has the correct structure
+        let responseData = conversation.response;
+        
+        // Parse if it's a string
+        if (typeof responseData === 'string') {
+          try {
+            responseData = JSON.parse(responseData);
+          } catch (e) {
+            console.error('Error parsing response string:', e);
+            responseData = null;
+          }
+        }
+        
+        if (responseData) {
+          // Ensure it has all required fields matching ResponseStream interface
+          const formattedResponse = {
+            query: conversation.query,
+            synthesis: responseData.synthesis || conversation.synthesis || '',
+            responses: Array.isArray(responseData.responses) ? responseData.responses : [],
+            sources: Array.isArray(responseData.sources) 
+              ? responseData.sources 
+              : (conversation.sources || []),
+          };
+          
+          console.log('Loading conversation from history:', {
+            id: conversation.id,
+            query: conversation.query,
+            hasSynthesis: !!formattedResponse.synthesis,
+            responsesCount: formattedResponse.responses.length,
+            sourcesCount: formattedResponse.sources.length,
+          });
+          
+          setResponse(formattedResponse);
+          setCurrentResponseId(conversation.id);
+        } else {
+          // If parsing failed, try to reconstruct from available data
+          const fallbackResponse = {
+            query: conversation.query,
+            synthesis: conversation.synthesis || '',
+            responses: [],
+            sources: conversation.sources || [],
+          };
+          setResponse(fallbackResponse);
+          setCurrentResponseId(conversation.id);
+        }
+      } catch (error) {
+        console.error('Error loading conversation response:', error);
+        // Fallback: just set query and weights
+        setResponse(null);
+        setCurrentResponseId(null);
+      }
+    } else {
+      // If no response, clear it
+      setResponse(null);
+      setCurrentResponseId(null);
+    }
+    
+    // Scroll to response area after a short delay
+    setTimeout(() => {
+      const responseElement = document.querySelector('[data-response-area]');
+      if (responseElement) {
+        responseElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 200);
+  }
+
   // Memoize lenses array - getAllLenses() returns a new array on every call
   const lenses = useMemo(() => getAllLenses(), []);
   
@@ -214,14 +413,16 @@ function ConvergenceMachineContent() {
             <h1 className="text-4xl font-bold text-amber-100">
               Convergence Machine
             </h1>
-            <Link
-              href="/ai-disclaimer"
-              className="ml-auto flex items-center gap-1 text-sm text-amber-400/70 hover:text-amber-400 transition-colors"
-              title="Learn about AI and discernment"
-            >
-              <Info className="w-4 h-4" />
-              <span className="hidden sm:inline">About AI & Discernment</span>
-            </Link>
+            <div className="ml-auto flex items-center gap-3">
+              <Link
+                href="/ai-disclaimer"
+                className="flex items-center gap-1 text-sm text-amber-400/70 hover:text-amber-400 transition-colors"
+                title="Learn about AI and discernment"
+              >
+                <Info className="w-4 h-4" />
+                <span className="hidden sm:inline">About AI & Discernment</span>
+              </Link>
+            </div>
           </div>
           <p className="text-amber-100/70 text-lg">
             Explore questions through seven unique analytical lenses, synthesizing insights from multiple perspectives.
@@ -265,19 +466,35 @@ function ConvergenceMachineContent() {
                 />
               </div>
 
-              {/* Lens Sliders */}
+              {/* Lens Intensity Selectors */}
               <div>
-                <h2 className="text-sm font-semibold text-amber-100/80 mb-3">
-                  Lens Weights
-                  {totalWeight !== 100 && (
-                    <span className="ml-2 text-xs text-amber-400">
-                      ({totalWeight}%)
-                    </span>
-                  )}
-                </h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-amber-100/80">
+                    Lens Intensity
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={saveAsDefault}
+                    disabled={savingDefault || isStreaming || !user}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-zinc-800/50 hover:bg-zinc-800 text-amber-100/70 hover:text-amber-100 border border-zinc-700 hover:border-purple-600/50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={user ? 'Save current settings as default' : 'Sign in to save defaults'}
+                  >
+                    {defaultSaved ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-green-400">Saved!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Set as Default</span>
+                      </>
+                    )}
+                  </button>
+                </div>
                 <div className="space-y-4">
                   {lenses.map(lens => (
-                    <LensSlider
+                    <LensIntensitySelector
                       key={lens.id}
                       lensId={lens.id}
                       lensName={lens.name}
@@ -352,12 +569,22 @@ function ConvergenceMachineContent() {
               </form>
 
               {/* Response */}
-              <ResponseStream 
-                response={response} 
-                isStreaming={isStreaming}
-                query={query}
-                lensWeights={lensWeights}
-                responseLength={responseLength}
+              <div data-response-area>
+                <ResponseStream 
+                  response={response} 
+                  isStreaming={isStreaming}
+                  query={query}
+                  lensWeights={lensWeights}
+                  responseLength={responseLength}
+                />
+              </div>
+
+              {/* Conversation History - Below Response */}
+              <ConversationHistory
+                onSelectConversation={handleSelectConversation}
+                currentQuery={query}
+                currentResponseId={currentResponseId ?? undefined}
+                refreshTrigger={historyRefreshTrigger}
               />
             </div>
           </div>

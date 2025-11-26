@@ -32,7 +32,16 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ items: data || [] });
+    
+    const response = NextResponse.json({ items: data || [] });
+    
+    // Add cache headers for public, read-only data (1 hour)
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=3600, stale-while-revalidate=7200'
+    );
+    
+    return response;
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message || "Failed to fetch concepts" },

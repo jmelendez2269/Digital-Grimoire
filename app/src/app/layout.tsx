@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactQueryProvider } from "@/lib/react-query";
 import CookieConsent from "@/components/CookieConsent";
+import SentryProvider from "@/components/SentryProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,6 +26,38 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Convergence | Multi-Lens Library & Knowledge Network",
   description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+  keywords: ["esoteric texts", "sacred writings", "wisdom traditions", "knowledge network", "digital library", "hermeticism", "spiritual texts", "AI analysis"],
+  authors: [{ name: "Convergence Library" }],
+  creator: "Convergence Library",
+  publisher: "Convergence Library",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://www.convergencelibrary.com",
+    siteName: "Convergence",
+    title: "Convergence | Multi-Lens Library & Knowledge Network",
+    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Convergence | Multi-Lens Library & Knowledge Network",
+    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    // Add Google Search Console verification when available
+    // google: "your-verification-code",
+  },
 };
 
 export default function RootLayout({
@@ -37,11 +70,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <ReactQueryProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ReactQueryProvider>
+        <SentryProvider>
+          <ReactQueryProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ReactQueryProvider>
+        </SentryProvider>
         <Toaster theme="dark" position="bottom-right" richColors />
         <SpeedInsights />
         <Analytics />

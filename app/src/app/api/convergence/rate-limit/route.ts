@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit } from '@/lib/convergence/rate-limit';
+import { checkRateLimit, getSubscriptionTier } from '@/lib/convergence/rate-limit';
 
 /**
  * GET /api/convergence/rate-limit
@@ -26,21 +26,15 @@ export async function GET() {
     // Check rate limit
     const rateLimit = await checkRateLimit(user.id);
 
-    // Check if user is premium
-    const { data: userData } = await supabase
-      .from('users')
-      .select('subscription_status, role')
-      .eq('id', user.id)
-      .single();
-
-    const isPremium = userData?.role === 'admin' || 
-                      userData?.subscription_status === 'premium' || 
-                      userData?.subscription_status === 'active';
+    // Get subscription tier
+    const tier = await getSubscriptionTier(user.id);
+    const isPaid = tier !== 'free';
 
     return NextResponse.json({
       ...rateLimit,
       resetDate: rateLimit.resetDate.toISOString(), // Convert Date to ISO string for JSON
-      isPremium,
+      isPremium: isPaid, // Legacy support
+      tier, // New: include tier information
     });
   } catch (error) {
     console.error('Error fetching rate limit:', error);

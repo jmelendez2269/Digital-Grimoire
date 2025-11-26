@@ -97,7 +97,46 @@
 **Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)  
 **New Feature:** Universal AI Search & Chat System complete (100% - ready for use!)
 
-### Latest Session Updates (November 10, 2025) - SendGrid Setup & Footer Cleanup! 🎉
+### Latest Session Updates (Current Session) - Monitoring Setup Complete! 🎉
+
+**📊 Error Tracking & Uptime Monitoring:**
+- ✅ **Sentry Error Tracking** - Complete setup with @sentry/nextjs SDK
+  - Client, server, and edge runtime configurations created (`sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`)
+  - Next.js instrumentation hook enabled (`instrumentation.ts`)
+  - SentryProvider component integrated in root layout
+  - Environment variable documentation updated with DSN format
+  - Comprehensive setup guide created (`docs/Setup Docs/MONITORING_SETUP.md`)
+  - **Status:** Code complete, requires Sentry project creation and DSN configuration
+- ✅ **Health Check Endpoint** - Created `/api/health` route for uptime monitoring
+  - Returns JSON status with timestamp: `{"status":"ok","timestamp":"...","service":"convergence-library"}`
+  - Ready for UptimeRobot, Pingdom, or other monitoring services
+  - **Status:** Ready to use, requires external monitoring service setup
+- ✅ **Vercel Analytics** - Already configured and active
+  - Page views and user behavior tracking
+  - Speed Insights for Core Web Vitals monitoring
+
+**Files Created:**
+- `app/sentry.client.config.ts` - Client-side Sentry configuration
+- `app/sentry.server.config.ts` - Server-side Sentry configuration
+- `app/sentry.edge.config.ts` - Edge runtime Sentry configuration
+- `app/instrumentation.ts` - Next.js instrumentation hook
+- `app/src/components/SentryProvider.tsx` - Client-side Sentry initialization
+- `app/src/app/api/health/route.ts` - Health check endpoint
+- `docs/Setup Docs/MONITORING_SETUP.md` - Complete monitoring setup guide
+
+**Files Modified:**
+- `app/package.json` - Added @sentry/nextjs dependency
+- `app/next.config.ts` - Enabled instrumentationHook
+- `app/src/app/layout.tsx` - Added SentryProvider wrapper
+- `docs/Setup Docs/ENVIRONMENT_VARIABLES.md` - Added Sentry DSN configuration
+
+**Next Steps (User Action Required):**
+1. Create Sentry account and project at [sentry.io](https://sentry.io/)
+2. Copy DSN from Sentry project settings
+3. Add `NEXT_PUBLIC_SENTRY_DSN` to `.env.local` and Vercel environment variables
+4. Set up uptime monitoring service (UptimeRobot recommended) pointing to `https://your-domain.com/api/health`
+
+### Previous Session Updates (November 10, 2025) - SendGrid Setup & Footer Cleanup! 🎉
 
 **📧 SendGrid Email Infrastructure Complete:**
 - ✅ SendGrid account created and domain authenticated (convergencelibrary.com)
@@ -911,7 +950,13 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
   - [ ] Footer social links implementation
   - [ ] GitHub repository integration
   - [ ] Twitter/X account setup and feed
-  - [ ] Discord server integration
+  - [ ] **Discord server setup** (see `docs/Setup Docs/DISCORD_SERVER_SETUP.md`)
+    - [ ] Create Discord server with channel structure
+    - [ ] Set up Sentry → Discord webhook integration
+    - [ ] Configure roles and permissions
+    - [ ] Create permanent invite link
+    - [ ] Add "Join Discord" button to application
+    - [ ] (Optional) Set up Discord bot for automation
   - [ ] Social sharing buttons for library texts
 
 #### Week 33-34: Smart Contract Development
@@ -1465,10 +1510,38 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 - CloudWatch alarms (storage, invocations, costs)
 
 # Monitoring
+- ✅ Sentry error tracking (complete setup, requires DSN)
+- ✅ Health check endpoint (`/api/health`)
+- ✅ Vercel Analytics (active)
 - Budget alerts (90% threshold)
 - Error rate alarms
-- Uptime monitors
+- Uptime monitoring service (external setup required)
 ```
+
+### Discord Server Setup (Planned for Phase 5)
+
+**Status:** 📋 Documented, ready for implementation
+
+A comprehensive Discord server setup guide has been created to support:
+- **Sentry Alerts** - Real-time error notifications from production
+- **Feature Updates** - Announcements and communication with end users  
+- **Community Engagement** - Feature requests, book requests, and user support
+
+**Documentation:** `docs/Setup Docs/DISCORD_SERVER_SETUP.md`
+
+**Key Components:**
+- Channel structure (admin/technical, community, optional channels)
+- Sentry → Discord webhook integration
+- Discord bot setup (optional, for automation)
+- Roles and permissions configuration
+- Application integration ("Join Discord" button)
+
+**Priority:** P1 (Should Have)  
+**Effort:** M (16-40 hours)  
+**Sprint:** Phase 5, Weeks 31-32  
+**Dependencies:** None
+
+---
 
 ### Email Infrastructure (Required for Production)
 
@@ -1541,8 +1614,10 @@ Supabase's default email service is limited to 3 emails/hour during development 
 
 4. Monitor
    - Lighthouse CI (performance)
-   - Sentry (error tracking)
-   - CloudWatch (infrastructure)
+   - ✅ Sentry (error tracking) - Complete setup, requires DSN configuration
+   - ✅ Health check endpoint - `/api/health` ready for uptime monitoring
+   - ✅ Vercel Analytics - Active (page views, Core Web Vitals)
+   - CloudWatch (infrastructure) - AWS monitoring (when using AWS services)
 ```
 
 ### Hosting & Scaling

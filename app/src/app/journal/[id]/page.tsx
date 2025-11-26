@@ -9,6 +9,8 @@ import EmojiPicker, { Theme } from 'emoji-picker-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import useWikiLinkActivation from '@/hooks/useWikiLinkActivation';
+import LensWeightsChart from '@/components/convergence/LensWeightsChart';
+import { LensWeights } from '@/lib/convergence/lens-orchestrator';
 import dynamic from 'next/dynamic';
 
 // Dynamically import FloatingAISearch
@@ -301,7 +303,14 @@ export default function JournalPageEditor() {
 
       const data = await response.json();
       setPage(data.page);
-      setDraftContent(serializeContent(data.page.content));
+      const serialized = serializeContent(data.page.content);
+      console.log('Loaded journal content:', {
+        raw: data.page.content,
+        serialized: serialized.substring(0, 200),
+        isString: typeof data.page.content === 'string',
+        isObject: typeof data.page.content === 'object'
+      });
+      setDraftContent(serialized);
       setIsDirty(false);
       setSaveStatus('idle');
     } catch (err) {

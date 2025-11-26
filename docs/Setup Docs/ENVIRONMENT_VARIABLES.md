@@ -86,6 +86,97 @@ REPLICATE_API_TOKEN=your_replicate_api_token_here
 
 ---
 
+### Sentry (Error Tracking) - OPTIONAL
+
+```env
+NEXT_PUBLIC_SENTRY_DSN=https://your-key@your-org.ingest.sentry.io/your-project-id
+```
+
+**Sentry DSN Format:**
+The DSN is a URL that Sentry provides when you create a project. It looks like:
+```
+https://abc123def456@o1234567.ingest.sentry.io/1234567
+```
+
+**How to get your DSN:**
+1. Create a Sentry account at [sentry.io](https://sentry.io/)
+2. Create a new project (select "Next.js" as platform)
+3. Go to **Settings** → **Projects** → Your project → **Client Keys (DSN)**
+4. Copy the DSN URL and paste it here
+
+**What it does:**
+- Error tracking and monitoring for production
+- Automatic error reporting with stack traces
+- Performance monitoring and session replay
+- Real-time alerts for critical errors
+
+**Where to find:**
+- Go to [Sentry](https://sentry.io/) and sign up (free tier available)
+- Create a new project (select Next.js)
+- Copy the DSN from project settings
+- Add it to your `.env.local` file
+
+**Pricing:**
+- **Free tier**: 5,000 events/month, 1 project
+- Perfect for getting started and small applications
+- Upgrade as needed for more events/projects
+
+**Note:** This is optional. If not configured, Sentry will be disabled and errors won't be tracked.
+
+---
+
+### Stripe (Payment Processing) - OPTIONAL
+
+```env
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY=price_your_monthly_price_id
+NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY=price_your_yearly_price_id
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+**What it does:**
+- Payment processing for premium subscriptions
+- Stripe Checkout for secure payment collection
+- Customer portal for subscription management
+- Webhook handlers for subscription events
+
+**Where to find:**
+1. Create a Stripe account at [stripe.com](https://stripe.com)
+2. Go to **Developers** → **API keys**
+3. Copy your **Secret key** (starts with `sk_test_` or `sk_live_`)
+4. Copy your **Publishable key** (starts with `pk_test_` or `pk_live_`)
+5. Create a product and price in **Products** → **Add product**
+   - Product name: "Premium Subscription"
+   - Price: $15/month (or $150/year)
+   - Copy the **Price ID** (starts with `price_`)
+6. Set up webhooks:
+   - Go to **Developers** → **Webhooks**
+   - Click **Add endpoint**
+   - Endpoint URL: `https://your-domain.com/api/stripe/webhook`
+   - Select events:
+     - `checkout.session.completed`
+     - `customer.subscription.updated`
+     - `customer.subscription.deleted`
+     - `invoice.payment_succeeded`
+     - `invoice.payment_failed`
+   - Copy the **Signing secret** (starts with `whsec_`)
+
+**Pricing:**
+- **Free tier**: No monthly fee
+- **Transaction fees**: 2.9% + $0.30 per successful payment
+- **No setup fees** or monthly minimums
+
+**Support:**
+- **Stripe Support Phone**: (919) 322-9418
+- **Stripe Dashboard**: [dashboard.stripe.com](https://dashboard.stripe.com)
+- **Stripe Documentation**: [stripe.com/docs](https://stripe.com/docs)
+
+**Note:** This is optional. If not configured, subscription features will show "coming soon" messages. Use test mode keys for development.
+
+---
+
 ## Complete .env.local Template
 
 Copy this entire template to `Digital-Grimoire/app/.env.local` and fill in your values:
@@ -122,6 +213,24 @@ ANTHROPIC_API_KEY=sk-ant-your_key_here
 # Replicate (Book Cover Generation) - OPTIONAL
 # ============================================
 REPLICATE_API_TOKEN=your_replicate_api_token_here
+
+# ============================================
+# Sentry (Error Tracking) - OPTIONAL
+# ============================================
+# Format: https://your-key@your-org.ingest.sentry.io/your-project-id
+# Get from: Sentry Dashboard → Settings → Projects → Client Keys (DSN)
+NEXT_PUBLIC_SENTRY_DSN=https://your-key@your-org.ingest.sentry.io/your-project-id
+
+# ============================================
+# Stripe (Payment Processing) - OPTIONAL
+# ============================================
+# Get from: Stripe Dashboard → Developers → API keys
+STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY=price_your_monthly_price_id
+NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY=price_your_yearly_price_id
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ---
