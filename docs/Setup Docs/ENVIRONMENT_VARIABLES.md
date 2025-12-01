@@ -150,7 +150,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 5. Create a product and price in **Products** → **Add product**
    - Product name: "Premium Subscription"
    - Price: $15/month (or $150/year)
-   - Copy the **Price ID** (starts with `price_`)
+   - ⚠️ **IMPORTANT**: Copy the **Price ID** (starts with `price_`), NOT the Product ID (starts with `prod_`)
+   - After creating the product, click on it to view details
+   - In the **Pricing** section, copy the **Price ID** (looks like `price_1ABC123...`)
+   - ❌ **DO NOT** use the Product ID from the product overview page
 6. Set up webhooks:
    - Go to **Developers** → **Webhooks**
    - Click **Add endpoint**

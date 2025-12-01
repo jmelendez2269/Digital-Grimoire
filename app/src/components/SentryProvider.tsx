@@ -5,7 +5,7 @@
 
 if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_SENTRY_DSN) {
   // Dynamically import Sentry client config only on client side
-  import("../../sentry.client.config").catch((err) => {
+  import("../instrumentation-client").catch((err) => {
     // Silently fail if Sentry can't be loaded
     console.warn("Failed to load Sentry:", err);
   });

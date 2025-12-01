@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +15,14 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // Check authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
             author
           )
         `, { count: 'exact' })
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       // Apply filters
@@ -107,7 +109,7 @@ export async function GET(request: NextRequest) {
       'search_annotations',
       {
         search_query: searchQuery,
-        user_id_param: session.user.id,
+        user_id_param: user.id,
         category_filter: category,
         color_filter: color,
         text_id_filter: textId,
@@ -131,7 +133,7 @@ export async function GET(request: NextRequest) {
             author
           )
         `, { count: 'exact' })
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .textSearch('search_vector', searchQuery)
         .order('created_at', { ascending: false });
 
@@ -175,7 +177,7 @@ export async function GET(request: NextRequest) {
     const { count: totalCount } = await supabase
       .from('user_annotations')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
       .textSearch('search_vector', searchQuery);
 
     return NextResponse.json({

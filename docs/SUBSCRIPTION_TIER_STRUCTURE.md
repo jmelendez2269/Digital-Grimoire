@@ -145,8 +145,13 @@ NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT=price_...
    - Product: "The Adept" - $15/month recurring
 
 2. **Get Price IDs:**
-   - Copy the price ID for each product
-   - Add to `.env.local` as shown above
+   - ⚠️ **IMPORTANT**: You need the **Price ID** (starts with `price_`), NOT the Product ID (starts with `prod_`)
+   - In Stripe Dashboard, go to **Products** → Click on your product
+   - Scroll to the **Pricing** section
+   - Copy the **Price ID** (it will look like `price_1ABC123...`)
+   - ❌ **DO NOT** use the Product ID (which looks like `prod_ABC123...`)
+   - Add the Price IDs to `.env.local` as shown above
+   - Ensure test price IDs are used with test keys (`sk_test_`), and live price IDs with live keys (`sk_live_`)
 
 3. **Configure Webhook:**
    - Endpoint: `https://yourdomain.com/api/stripe/webhook`
