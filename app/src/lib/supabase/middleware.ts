@@ -10,6 +10,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next();
   }
   
+  // Allow Sentry monitoring tunnel route - return early to prevent authentication
+  // Check both exact match and startsWith to handle query parameters
+  if (request.nextUrl.pathname === '/monitoring' || request.nextUrl.pathname.startsWith('/monitoring')) {
+    return NextResponse.next();
+  }
+  
   // Allow access to maintenance page itself and static assets
   if (maintenanceMode) {
     // Create a minimal Supabase client to check if user is admin

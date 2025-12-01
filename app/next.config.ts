@@ -16,14 +16,24 @@ const nextConfig: NextConfig = {
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],
+    // Explicit domains list for external images used in the app
+    domains: [
+      'covers.openlibrary.org',
+      'th.bing.com',
+    ],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.cloudflare.com',
+        // Allow images from Cloudflare (R2 and related endpoints)
+        hostname: 'cloudflare.com',
       },
       {
         protocol: 'https',
         hostname: 'covers.openlibrary.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'th.bing.com',
       },
     ],
   },
@@ -39,11 +49,12 @@ const nextConfig: NextConfig = {
     // Allow necessary services: Supabase, Cloudflare R2, Azure, OpenAI, Vercel Analytics, Sentry
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org",
+      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com",
+      "worker-src 'self' blob:",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",

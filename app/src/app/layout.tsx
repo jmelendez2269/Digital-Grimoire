@@ -6,7 +6,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactQueryProvider } from "@/lib/react-query";
 import CookieConsent from "@/components/CookieConsent";
-import SentryProvider from "@/components/SentryProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -70,13 +69,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <SentryProvider>
-          <ReactQueryProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </ReactQueryProvider>
-        </SentryProvider>
+        <ReactQueryProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ReactQueryProvider>
         <Toaster theme="dark" position="bottom-right" richColors />
         <SpeedInsights />
         <Analytics />
