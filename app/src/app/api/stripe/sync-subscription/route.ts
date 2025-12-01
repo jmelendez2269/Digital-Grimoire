@@ -190,19 +190,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log subscription details for debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📋 Subscription details:', {
-        id: subscription.id,
-        status: subscription.status,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end,
-        customer: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id,
-        items: subscription.items.data.length,
-        priceId: subscription.items.data[0]?.price?.id,
-      });
-    }
-
     // Determine tier from price ID
     const priceId = subscription.items.data[0]?.price?.id;
     const tier = priceId ? getTierFromPriceId(priceId) : 'scholar';
@@ -220,6 +207,24 @@ export async function POST(request: NextRequest) {
       return date.toISOString();
     };
 
+    // Extract period dates for type safety
+    // Using 'as any' because Stripe types may not expose these properties correctly
+    const currentPeriodStart = (subscription as any).current_period_start as number | undefined;
+    const currentPeriodEnd = (subscription as any).current_period_end as number | undefined;
+
+    // Log subscription details for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📋 Subscription details:', {
+        id: subscription.id,
+        status: subscription.status,
+        current_period_start: currentPeriodStart,
+        current_period_end: currentPeriodEnd,
+        customer: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id,
+        items: subscription.items.data.length,
+        priceId: subscription.items.data[0]?.price?.id,
+      });
+    }
+
     // Update database with subscription status
     const updateData: any = {
       subscription_status: subscription.status === 'active' || subscription.status === 'trialing' ? tier : 'free',
@@ -227,8 +232,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Only add dates if they're valid
-    const startDate = toISOString(subscription.current_period_start);
-    const endDate = toISOString(subscription.current_period_end);
+    const startDate = toISOString(currentPeriodStart);
+    const endDate = toISOString(currentPeriodEnd);
     
     if (startDate) {
       updateData.subscription_start_date = startDate;

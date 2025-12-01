@@ -1,0 +1,35 @@
+# OneDrive Ignore File
+# Prevents OneDrive from syncing build artifacts and dependencies
+
+# Next.js build cache
+app/.next/
+.next/
+
+# Node modules
+app/node_modules/
+node_modules/
+
+# Build outputs
+app/out/
+out/
+app/build/
+build/
+
+# TypeScript build info
+*.tsbuildinfo
+app/tsconfig.tsbuildinfo
+
+# Environment files (keep .env.example but not .env.local)
+.env.local
+.env*.local
+app/.env.local
+app/.env*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
