@@ -36,11 +36,20 @@ export const metadata: Metadata = {
     siteName: "Convergence",
     title: "Convergence | Multi-Lens Library & Knowledge Network",
     description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+    images: [
+      {
+        url: "https://www.convergencelibrary.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Convergence - Multi-Lens Library & Knowledge Network",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Convergence | Multi-Lens Library & Knowledge Network",
     description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity.",
+    images: ["https://www.convergencelibrary.com/og-image.png"],
   },
   robots: {
     index: true,

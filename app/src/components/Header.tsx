@@ -29,7 +29,7 @@ interface HeaderProps {
 function Header({ librarySearch }: HeaderProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, signOut, isAdmin } = useAuth(); // Single source of truth
+  const { user, loading, signOut, isAdmin, refreshAdminStatus } = useAuth(); // Single source of truth
   const [menuOpen, setMenuOpen] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -232,7 +232,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                   />
                   
                   {/* Menu */}
-                  <div className="absolute right-0 z-[9999] mt-2 w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/50 overflow-hidden">
+                  <div className="absolute right-0 z-[9999] mt-2 w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/50 overflow-y-auto max-h-[90vh]">
                     {/* User Info Header */}
                     <div className="border-b border-zinc-800 bg-zinc-800/50 px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -362,12 +362,47 @@ function Header({ librarySearch }: HeaderProps = {}) {
                         </div>
                       </>
                     )}
-                    {/* Debug info - only in development */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <div className="px-4 py-2 text-xs text-zinc-500 border-t border-zinc-800">
-                        Debug: isAdmin={String(isAdmin)}
+                    {/* Debug info - temporarily visible in all environments for troubleshooting */}
+                    <hr className="my-1 border-zinc-800" />
+                    <div className="px-4 py-3 text-xs border-t-2 border-amber-500/30 bg-amber-500/5 space-y-2">
+                      <div className="font-semibold text-amber-400 mb-2">🔧 Debug Tools</div>
+                      <div className="text-zinc-400 space-y-1">
+                        <div>isAdmin: <span className={isAdmin ? "text-green-400" : "text-red-400"}>{String(isAdmin)}</span></div>
+                        <div>User ID: {user?.id?.substring(0, 8)}...</div>
                       </div>
-                    )}
+                      <div className="space-y-1 pt-2">
+                        <button
+                          onClick={async () => {
+                            console.log('🔄 Manually refreshing admin status...');
+                            await refreshAdminStatus();
+                            // Don't close menu so user can see the result
+                          }}
+                          className="w-full rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-300 hover:bg-amber-500/20 font-medium"
+                        >
+                          🔄 Refresh Admin Status
+                        </button>
+                        <button
+                          onClick={async () => {
+                            console.log('🧪 Testing admin status API...');
+                            try {
+                              const response = await fetch('/api/auth/admin-status', {
+                                credentials: 'include',
+                              });
+                              const data = await response.json();
+                              console.log('🧪 API Response:', data);
+                              alert(`Admin Status Test:\n\nisAdmin: ${data.isAdmin}\nrole: ${data.role}\nuserId: ${data.userId}\n\nCheck console for full details.`);
+                              await refreshAdminStatus();
+                            } catch (err) {
+                              console.error('🧪 API Test Error:', err);
+                              alert('Error testing API. Check console.');
+                            }
+                          }}
+                          className="w-full rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-300 hover:bg-amber-500/20 font-medium"
+                        >
+                          🧪 Test Admin API
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Sign Out */}
                     <hr className="my-1 border-zinc-800" />

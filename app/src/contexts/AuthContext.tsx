@@ -10,6 +10,7 @@ interface AuthContextType {
   supabase: SupabaseClient;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  refreshAdminStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,13 +29,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (!response.ok) {
-        console.error('[AuthContext] API admin check failed:', response.status);
+        // 401 means not authenticated - this is expected, not an error
+        if (response.status === 401) {
+          console.log('[AuthContext] User not authenticated (401)');
+        } else {
+          // Other errors (500, etc.) are actual problems
+          console.error('[AuthContext] API admin check failed:', response.status);
+        }
         return false;
       }
       
       const data = await response.json();
       console.log('[AuthContext] API admin check result:', data);
-      return data.isAdmin === true;
+      
+      // Debug: Log the actual values
+      if (data.debug) {
+        console.log('[AuthContext] Debug info:', data.debug);
+      }
+      
+      // Check both isAdmin boolean and role string
+      const isAdminResult = data.isAdmin === true || data.role === 'admin';
+      console.log('[AuthContext] Final admin status:', isAdminResult, '(from isAdmin:', data.isAdmin, ', role:', data.role, ')');
+      
+      return isAdminResult;
     } catch (error) {
       console.error('[AuthContext] API admin check error:', error);
       return false;
@@ -122,8 +139,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAdmin(false);
   };
 
+  const refreshAdminStatus = async () => {
+    if (user) {
+      console.log('[AuthContext] Manually refreshing admin status...');
+      const adminStatus = await checkAdminViaAPI(user.id);
+      setIsAdmin(adminStatus);
+      console.log('[AuthContext] Admin status refreshed:', adminStatus);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, supabase, signOut, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, supabase, signOut, isAdmin, refreshAdminStatus }}>
       {children}
     </AuthContext.Provider>
   );

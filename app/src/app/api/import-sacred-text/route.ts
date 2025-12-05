@@ -20,6 +20,9 @@ interface ImportRequestBody {
   };
 }
 
+// Increase timeout for this route (60 seconds for large imports)
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -149,21 +152,21 @@ export async function POST(request: Request) {
     // Prepare text record for database
     const textRecord = {
       title: finalMetadata.title,
-      author: finalMetadata.author,
-      year: finalMetadata.year,
-      publisher: finalMetadata.publisher,
+      author: finalMetadata.author || null,
+      year: finalMetadata.year || null,
+      publisher: finalMetadata.publisher || null,
       type: finalMetadata.type,
       domain: finalMetadata.domain,
-      tags: finalMetadata.tags,
-      lenses: finalMetadata.lenses,
-      summary: finalMetadata.summary,
+      tags: finalMetadata.tags || [],
+      lenses: finalMetadata.lenses || [],
+      summary: finalMetadata.summary || null,
       short_summary: finalMetadata.shortSummary || null,
       curator_note: finalMetadata.curatorNote || null,
       status: 'ready',
       content: null, // We store content in metadata.chapters
       s3_key: null, // No S3 storage for web-imported texts
       file_size: parsedText.totalLength,
-      source_format: 'html', // We'll add this column in migration
+      source_format: format, // Use the actual format (html, markdown, or plaintext)
       metadata: {
         isStructuredText: true,
         format: format,
@@ -179,19 +182,93 @@ export async function POST(request: Request) {
       uploaded_by: session.user.id,
     };
 
+    // Check metadata size
+    const metadataJson = JSON.stringify(textRecord.metadata);
+    const metadataSize = metadataJson.length;
+    const metadataSizeMB = (metadataSize / 1024 / 1024).toFixed(2);
+    
+    console.log('[Import API] Preparing to insert text record:', {
+      title: textRecord.title,
+      type: textRecord.type,
+      domain: textRecord.domain,
+      chapterCount: parsedText.chapterCount,
+      totalLength: parsedText.totalLength,
+      metadataSize: `${metadataSize} bytes (${metadataSizeMB} MB)`,
+      tagsCount: textRecord.tags?.length || 0,
+      lensesCount: textRecord.lenses?.length || 0,
+    });
+    
+    // Warn if metadata is very large (over 10MB)
+    if (metadataSize > 10 * 1024 * 1024) {
+      console.warn(`[Import API] WARNING: Metadata is very large (${metadataSizeMB} MB). This may cause slow inserts.`);
+    }
+
     // Insert into database
-    const { data: insertedText, error: insertError } = await supabase
-      .from('texts')
-      .insert(textRecord)
-      .select()
-      .single();
+    console.log('[Import API] Starting database insert...');
+    const insertStartTime = Date.now();
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Database insert timed out after 60 seconds'));
+      }, 60000);
+    });
+    
+    // Race between insert and timeout
+    let insertedText: any = null;
+    let insertError: any = null;
+    
+    try {
+      const insertResult = await Promise.race([
+        supabase
+          .from('texts')
+          .insert(textRecord)
+          .select()
+          .single(),
+        timeoutPromise,
+      ]);
+      
+      insertedText = insertResult.data;
+      insertError = insertResult.error;
+    } catch (error) {
+      const insertDuration = Date.now() - insertStartTime;
+      if (error instanceof Error && error.message.includes('timed out')) {
+        console.error(`[Import API] Database insert timed out after ${insertDuration}ms`);
+        return NextResponse.json(
+          { 
+            error: 'Database insert timed out',
+            details: 'The operation took too long. The text may be too large or there may be a connection issue.',
+          },
+          { status: 504 }
+        );
+      }
+      // Re-throw if it's not a timeout
+      throw error;
+    }
+
+    const insertDuration = Date.now() - insertStartTime;
+    console.log(`[Import API] Database insert completed in ${insertDuration}ms`);
 
     if (insertError) {
-      console.error('[Import API] Database error:', insertError);
+      console.error('[Import API] Database error details:', {
+        message: insertError.message,
+        code: insertError.code,
+        details: insertError.details,
+        hint: insertError.hint,
+        textRecord: {
+          title: textRecord.title,
+          type: textRecord.type,
+          domain: textRecord.domain,
+          hasMetadata: !!textRecord.metadata,
+          metadataSize: JSON.stringify(textRecord.metadata).length,
+        },
+      });
       return NextResponse.json(
         { 
           error: 'Failed to save text to database', 
-          details: insertError.message 
+          details: insertError.message,
+          code: insertError.code,
+          hint: insertError.hint,
         },
         { status: 500 }
       );

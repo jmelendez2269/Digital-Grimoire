@@ -126,20 +126,44 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log('[API] GET /api/texts/[id] - Starting request');
+    
+    // Extract params safely
+    let id: string;
+    try {
+      const resolvedParams = await params;
+      id = resolvedParams.id;
+      if (!id) {
+        return NextResponse.json(
+          { error: 'Document ID is required' },
+          { status: 400 }
+        );
+      }
+    } catch (paramsError) {
+      console.error('[API] Error extracting params:', paramsError);
+      return NextResponse.json(
+        { error: 'Invalid request parameters' },
+        { status: 400 }
+      );
+    }
+    console.log('[API] Document ID:', id);
+    
     const supabase = await createClient();
+    console.log('[API] Supabase client created');
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.log('[API] Authentication failed:', authError?.message);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const { id } = await params;
+    console.log('[API] User authenticated:', user.id);
 
     // Fetch document with all fields
+    console.log('[API] Fetching document from database...');
     const { data: document, error: docError } = await supabase
       .from('texts')
       .select('*')
@@ -147,13 +171,13 @@ export async function GET(
       .single();
 
     if (docError) {
+      console.error('[API] Database error:', docError);
       if (docError.code === 'PGRST116') {
         return NextResponse.json(
           { error: 'Document not found' },
           { status: 404 }
         );
       }
-      console.error('[API] Error fetching document:', docError);
       return NextResponse.json(
         { error: 'Failed to fetch document', details: docError.message },
         { status: 500 }
@@ -161,15 +185,46 @@ export async function GET(
     }
 
     if (!document) {
+      console.log('[API] Document not found');
       return NextResponse.json(
         { error: 'Document not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ document });
+    console.log('[API] Document fetched successfully:', document.title);
+    
+    // Check metadata size and log if it's very large
+    if (document.metadata && typeof document.metadata === 'object') {
+      try {
+        const metadataStr = JSON.stringify(document.metadata);
+        const metadataSizeMB = (metadataStr.length / 1024 / 1024).toFixed(2);
+        console.log(`[API] Metadata size: ${metadataSizeMB} MB`);
+        if (parseFloat(metadataSizeMB) > 5) {
+          console.warn(`[API] Large metadata detected: ${metadataSizeMB} MB for document ${id}`);
+        }
+      } catch (metadataError) {
+        console.error('[API] Error checking metadata size:', metadataError);
+      }
+    }
+
+    try {
+      return NextResponse.json({ document });
+    } catch (jsonError) {
+      console.error('[API] Error serializing document to JSON:', jsonError);
+      // If JSON serialization fails, try to return a simplified version
+      const simplifiedDocument = {
+        ...document,
+        metadata: document.metadata ? { 
+          error: 'Metadata too large to serialize',
+          size: document.metadata ? JSON.stringify(document.metadata).length : 0
+        } : null,
+      };
+      return NextResponse.json({ document: simplifiedDocument });
+    }
   } catch (error) {
     console.error('[API] Unexpected error fetching document:', error);
+    console.error('[API] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
       { 
         error: 'Internal server error', 

@@ -4,6 +4,26 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Cookie Policy | Convergence",
   description: "Cookie Policy for Convergence - Learn about how we use cookies",
+  openGraph: {
+    title: "Cookie Policy | Convergence",
+    description: "Cookie Policy for Convergence - Learn about how we use cookies",
+    type: "website",
+    url: "https://www.convergencelibrary.com/cookies",
+    images: [
+      {
+        url: "https://www.convergencelibrary.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Convergence Cookie Policy",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cookie Policy | Convergence",
+    description: "Cookie Policy for Convergence - Learn about how we use cookies",
+    images: ["https://www.convergencelibrary.com/og-image.png"],
+  },
 };
 
 export default function CookiePolicyPage() {

@@ -4,6 +4,26 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "License | Convergence",
   description: "License information for Convergence - Software, documentation, and content licensing",
+  openGraph: {
+    title: "License | Convergence",
+    description: "License information for Convergence - Software, documentation, and content licensing",
+    type: "website",
+    url: "https://www.convergencelibrary.com/license",
+    images: [
+      {
+        url: "https://www.convergencelibrary.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Convergence License",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "License | Convergence",
+    description: "License information for Convergence - Software, documentation, and content licensing",
+    images: ["https://www.convergencelibrary.com/og-image.png"],
+  },
 };
 
 export default function LicensePage() {
