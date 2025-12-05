@@ -172,20 +172,39 @@ export default function ImportSacredTextPage() {
       if (summary.trim()) metadata.summary = summary.trim();
 
       // Call import API
-      const response = await fetch('/api/import-sacred-text', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url,
-          format,
-          useAI,
-          metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
-        }),
-      });
+      let response: Response;
+      try {
+        response = await fetch('/api/import-sacred-text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url,
+            format,
+            useAI,
+            metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+          }),
+        });
+      } catch (fetchError) {
+        // Network error - fetch failed completely
+        console.error('[Import] Network error:', fetchError);
+        throw new Error(
+          'Failed to connect to server. Please check your internet connection and ensure the server is running.'
+        );
+      }
 
-      const data = await response.json();
+      // Check if response is ok before parsing JSON
+      let data: any;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // Response is not valid JSON
+        console.error('[Import] JSON parse error:', jsonError);
+        throw new Error(
+          `Server returned an invalid response (status: ${response.status}). Please try again or contact support.`
+        );
+      }
 
       if (!response.ok) {
         // If details exist and error is generic, combine them
@@ -213,11 +232,28 @@ export default function ImportSacredTextPage() {
       });
 
     } catch (err) {
-      console.error('Import error:', err);
+      console.error('[Import] Error details:', {
+        error: err,
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        url: url,
+      });
       setProgress(0);
       setProgressStage('');
       setStatus('error');
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      
+      // Provide more helpful error messages
+      let errorMessage = 'Unknown error occurred';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        
+        // Enhance generic error messages
+        if (errorMessage === 'Failed to fetch' || errorMessage.includes('Failed to fetch')) {
+          errorMessage = 'Failed to connect to the server. Please ensure the development server is running and try again.';
+        }
+      }
+      
+      setError(errorMessage);
     }
   };
 

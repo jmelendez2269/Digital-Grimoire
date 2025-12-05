@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, X, ChevronUp, ChevronDown } from 'lucide-react';
-import AISearchBar from './AISearchBar';
 
 interface FloatingAISearchProps {
   defaultCollapsed?: boolean;
@@ -10,6 +9,18 @@ interface FloatingAISearchProps {
 
 export default function FloatingAISearch({ defaultCollapsed = true }: FloatingAISearchProps) {
   const [isExpanded, setIsExpanded] = useState(!defaultCollapsed);
+  const [AISearchBarComponent, setAISearchBarComponent] = useState<React.ComponentType<{ className?: string }> | null>(null);
+  
+  // Dynamically load AISearchBar only when expanded to avoid webpack resolution issues
+  useEffect(() => {
+    if (isExpanded && !AISearchBarComponent) {
+      import('@/components/AISearchBar').then((mod) => {
+        setAISearchBarComponent(() => mod.default);
+      }).catch((error) => {
+        console.error('Failed to load AISearchBar:', error);
+      });
+    }
+  }, [isExpanded, AISearchBarComponent]);
 
   // If collapsed, show floating button
   // Position at bottom-6 right-6 (lower position, Read Aloud will be above)
@@ -55,7 +66,13 @@ export default function FloatingAISearch({ defaultCollapsed = true }: FloatingAI
         </div>
         
         {/* AI Search Bar */}
-        <AISearchBar />
+        {AISearchBarComponent ? (
+          <AISearchBarComponent />
+        ) : (
+          <div className="flex items-center justify-center py-4">
+            <div className="text-amber-100/60">Loading search...</div>
+          </div>
+        )}
       </div>
     </div>
   );

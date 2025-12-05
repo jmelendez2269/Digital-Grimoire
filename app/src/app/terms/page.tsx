@@ -4,6 +4,26 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of Service | Convergence",
   description: "Terms of Service for Convergence - Rules and guidelines for using our platform",
+  openGraph: {
+    title: "Terms of Service | Convergence",
+    description: "Terms of Service for Convergence - Rules and guidelines for using our platform",
+    type: "website",
+    url: "https://www.convergencelibrary.com/terms",
+    images: [
+      {
+        url: "https://www.convergencelibrary.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Convergence Terms of Service",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service | Convergence",
+    description: "Terms of Service for Convergence - Rules and guidelines for using our platform",
+    images: ["https://www.convergencelibrary.com/og-image.png"],
+  },
 };
 
 export default function TermsOfServicePage() {

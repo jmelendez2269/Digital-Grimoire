@@ -24,6 +24,23 @@ export default function ResetPasswordPage() {
       // Check if this is a password recovery session
       if (session) {
         setValidToken(true);
+        
+        // Preserve admin status and sync profile picture when user arrives via reset link
+        // This handles the case where user is already logged in from the email link
+        try {
+          const preserveResponse = await fetch('/api/auth/preserve-account-data', {
+            method: 'POST',
+            credentials: 'include',
+          });
+          
+          if (preserveResponse.ok) {
+            const preserveData = await preserveResponse.json();
+            console.log('✅ Account data preserved on page load:', preserveData);
+          }
+        } catch (preserveErr) {
+          console.warn('⚠️ Error preserving account data on page load:', preserveErr);
+          // Don't fail if this fails
+        }
       } else {
         setError("Invalid or expired reset link. Please request a new one.");
       }
@@ -118,6 +135,25 @@ export default function ResetPasswordPage() {
       }
 
       console.log("✅ Password updated successfully");
+      
+      // Preserve admin status and sync profile picture after password reset
+      try {
+        const preserveResponse = await fetch('/api/auth/preserve-account-data', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        
+        if (preserveResponse.ok) {
+          const preserveData = await preserveResponse.json();
+          console.log('✅ Account data preserved:', preserveData);
+        } else {
+          console.warn('⚠️ Account data preservation had issues, but password reset succeeded');
+        }
+      } catch (preserveErr) {
+        console.warn('⚠️ Error preserving account data:', preserveErr);
+        // Don't fail password reset if this fails
+      }
+      
       setSuccess(true);
       setLoading(false);
 

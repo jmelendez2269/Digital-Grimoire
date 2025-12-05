@@ -5,13 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import dynamic from 'next/dynamic';
 
-// Lazy load AIChatModal - only needed when user opens it
-const AIChatModal = dynamic(() => import('./AIChatModal'), {
-  ssr: false,
-  loading: () => null,
-});
+// Lazy load AIChatModal - load it only when needed to avoid webpack resolution issues
+// We'll create it inside the component when showChatModal becomes true
 
 type Model = 'auto' | 'claude' | 'gpt' | 'gemini' | 'convergence';
 
@@ -37,6 +33,20 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
   const [chatModel, setChatModel] = useState<'claude' | 'gpt' | 'gemini'>('claude');
   const [chatQuery, setChatQuery] = useState('');
   const hasFetchedUsage = useRef(false);
+  
+  // Dynamically load AIChatModal only when needed
+  const [AIChatModalComponent, setAIChatModalComponent] = useState<React.ComponentType<{ model: 'claude' | 'gpt' | 'gemini'; initialQuery?: string; onClose: () => void }> | null>(null);
+  
+  useEffect(() => {
+    if (showChatModal && !AIChatModalComponent) {
+      // Load the component only when modal is shown
+      import('@/components/AIChatModal').then((mod) => {
+        setAIChatModalComponent(() => mod.default);
+      }).catch((error) => {
+        console.error('Failed to load AIChatModal:', error);
+      });
+    }
+  }, [showChatModal, AIChatModalComponent]);
 
   // Fetch usage stats when component mounts or when auto is selected
   // Only fetch if auth is ready and user is logged in
@@ -228,8 +238,8 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
       </p>
 
       {/* Chat Modal */}
-      {showChatModal && (
-        <AIChatModal
+      {showChatModal && AIChatModalComponent && (
+        <AIChatModalComponent
           model={chatModel}
           initialQuery={chatQuery}
           onClose={() => {

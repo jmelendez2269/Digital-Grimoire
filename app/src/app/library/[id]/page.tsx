@@ -54,11 +54,7 @@ const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
   loading: () => null,
 });
 
-// Dynamically import FloatingAISearch
-const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
-  ssr: false,
-  loading: () => null,
-});
+// FloatingAISearch will be loaded conditionally in the component
 
 // Dynamically import ChapterViewer for structured text documents
 const ChapterViewer = dynamic(() => import('@/components/ChapterViewer'), {
@@ -156,6 +152,18 @@ export default function DocumentDetailPage() {
   const [reimporting, setReimporting] = useState(false);
   const [reimportError, setReimportError] = useState<string | null>(null);
   const [reimportSuccess, setReimportSuccess] = useState(false);
+  
+  // Dynamically load FloatingAISearch only when needed
+  const [FloatingAISearchComponent, setFloatingAISearchComponent] = useState<React.ComponentType<{ defaultCollapsed?: boolean }> | null>(null);
+  
+  useEffect(() => {
+    // Load FloatingAISearch after component mounts to avoid webpack resolution issues
+    import('@/components/FloatingAISearch').then((mod) => {
+      setFloatingAISearchComponent(() => mod.default);
+    }).catch((error) => {
+      console.error('Failed to load FloatingAISearch:', error);
+    });
+  }, []);
 
   const fetchDocument = useCallback(async () => {
     if (!documentId) return;
@@ -1141,7 +1149,9 @@ export default function DocumentDetailPage() {
       )}
 
       {/* Floating AI Search */}
-      <FloatingAISearch defaultCollapsed={true} />
+      {FloatingAISearchComponent && (
+        <FloatingAISearchComponent defaultCollapsed={true} />
+      )}
         </div>
       </main>
       <Footer />

@@ -5,6 +5,26 @@ import { getAllLenses } from "@/lib/convergence/lenses";
 export const metadata: Metadata = {
   title: "AI Disclaimer & Discernment Guide | Convergence",
   description: "Understanding how AI works, the importance of discernment, and mental health resources when using Convergence's AI features",
+  openGraph: {
+    title: "AI Disclaimer & Discernment Guide | Convergence",
+    description: "Understanding how AI works, the importance of discernment, and mental health resources when using Convergence's AI features",
+    type: "website",
+    url: "https://www.convergencelibrary.com/ai-disclaimer",
+    images: [
+      {
+        url: "https://www.convergencelibrary.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Convergence AI Disclaimer & Discernment Guide",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Disclaimer & Discernment Guide | Convergence",
+    description: "Understanding how AI works, the importance of discernment, and mental health resources when using Convergence's AI features",
+    images: ["https://www.convergencelibrary.com/og-image.png"],
+  },
 };
 
 export default function AIDisclaimerPage() {
