@@ -3,11 +3,18 @@ import { createClient as createSupabaseServerClient } from "@/lib/supabase/serve
 import { createServiceClient } from "@/lib/supabase/service";
 
 export async function GET(request: NextRequest) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:5',message:'API route entry',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   try {
     // First, check if environment variables are set
     const hasUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
     const hasAnonKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:12',message:'Env vars check',data:{hasUrl,hasAnonKey,hasServiceKey,urlPrefix:process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0,30)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     if (!hasUrl || !hasAnonKey || !hasServiceKey) {
       console.error('[API] Missing environment variables:', {
@@ -15,6 +22,9 @@ export async function GET(request: NextRequest) {
         hasAnonKey,
         hasServiceKey
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:18',message:'Missing env vars error',data:{hasUrl,hasAnonKey,hasServiceKey},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return NextResponse.json({ 
         isAdmin: false, 
         error: "Missing Supabase environment variables",
@@ -27,8 +37,14 @@ export async function GET(request: NextRequest) {
     let supabase;
     try {
       console.log('[API] Creating Supabase client...');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:30',message:'Before createSupabaseServerClient',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       supabase = await createSupabaseServerClient();
       console.log('[API] Supabase client created successfully');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:32',message:'After createSupabaseServerClient success',data:{hasClient:!!supabase},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
     } catch (clientError) {
       const errorMsg = clientError instanceof Error ? clientError.message : String(clientError);
       const errorStack = clientError instanceof Error ? clientError.stack : undefined;
@@ -37,6 +53,9 @@ export async function GET(request: NextRequest) {
         message: errorMsg,
         stack: errorStack
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:42',message:'createSupabaseServerClient failed',data:{error:errorMsg,isAuthError:errorMsg.includes('cookie')||errorMsg.includes('Failed to create Supabase client')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       // If it's a cookie/environment issue, return 401 (not authenticated)
       // Otherwise return 500 (server error)
       const isAuthError = errorMsg.includes('cookie') || errorMsg.includes('Failed to create Supabase client');
@@ -76,6 +95,9 @@ export async function GET(request: NextRequest) {
     
     // Get the authenticated user
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:79',message:'Before getUser call',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       const userResult = await supabase.auth.getUser();
       user = userResult.data?.user;
       userError = userResult.error;
@@ -85,8 +107,14 @@ export async function GET(request: NextRequest) {
         userId: user?.id,
         userEmail: user?.email 
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:87',message:'After getUser call',data:{hasUser:!!user,hasError:!!userError,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
     } catch (err) {
       console.error('[API] Error getting user:', err);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:91',message:'getUser exception',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       // If we can't get user, user is not authenticated
       return NextResponse.json({ 
         isAdmin: false, 
@@ -104,6 +132,9 @@ export async function GET(request: NextRequest) {
         status: userError?.status,
         code: userError?.code
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:107',message:'User auth error',data:{hasError:!!userError,errorMessage:userError?.message,errorCode:userError?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       return NextResponse.json({ 
         isAdmin: false, 
         error: "Not authenticated",
@@ -117,12 +148,21 @@ export async function GET(request: NextRequest) {
     // This ensures we can always check the role even if RLS policies are restrictive
     let serviceClient;
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:120',message:'Before createServiceClient',data:{userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       serviceClient = createServiceClient();
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:122',message:'After createServiceClient success',data:{hasClient:!!serviceClient},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
     } catch (serviceClientError) {
       console.error('[API] Failed to create service client:', {
         error: serviceClientError,
         message: serviceClientError instanceof Error ? serviceClientError.message : 'Unknown error'
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:126',message:'createServiceClient failed',data:{error:serviceClientError instanceof Error ? serviceClientError.message : 'Unknown error'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return NextResponse.json({ 
         isAdmin: false, 
         error: "Failed to create service client",
@@ -131,11 +171,18 @@ export async function GET(request: NextRequest) {
     }
     
     // Check admin status - service client bypasses RLS
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:134',message:'Before database query',data:{userId:user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     const { data: profile, error: profileError } = await serviceClient
       .from('users')
       .select('role')
       .eq('id', user.id)
       .maybeSingle();
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:140',message:'After database query',data:{hasProfile:!!profile,hasError:!!profileError,errorCode:profileError?.code,errorMessage:profileError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     if (profileError) {
       console.error('[API] Error fetching profile:', {
@@ -149,6 +196,9 @@ export async function GET(request: NextRequest) {
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
         serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...'
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:152',message:'Database query error',data:{errorCode:profileError.code,errorMessage:profileError.message,details:profileError.details},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       return NextResponse.json({ 
         isAdmin: false, 
         error: profileError.message,
@@ -211,6 +261,9 @@ export async function GET(request: NextRequest) {
         serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20),
       }
     });
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin-status/route.ts:200',message:'Catch-all error handler',data:{errorName,errorMessage,hasUrl:!!process.env.NEXT_PUBLIC_SUPABASE_URL,hasAnonKey:!!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,hasServiceKey:!!process.env.SUPABASE_SERVICE_ROLE_KEY},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     
     // Determine if this is an authentication error or server error
     const isAuthError = errorMessage.toLowerCase().includes('cookie') || 
