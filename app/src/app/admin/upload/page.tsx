@@ -234,7 +234,11 @@ export default function AdminUploadPage() {
         let errorMessage = 'Failed to get upload URL';
         try {
           const error = await presignedResponse.json();
-          errorMessage = error.error || errorMessage;
+          errorMessage = error.error || error.details || errorMessage;
+          // Include additional details if available
+          if (error.details && error.details !== error.error) {
+            errorMessage = `${error.error || errorMessage}: ${error.details}`;
+          }
         } catch (e) {
           // Response wasn't JSON, use status text
           errorMessage = `${errorMessage}: ${presignedResponse.statusText}`;

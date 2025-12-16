@@ -3,12 +3,50 @@ import { getR2Client, PutObjectCommand, getSignedUrl } from '@/lib/storage/r2-cl
 import { createClient } from '@/lib/supabase/server';
 import { rateLimitMiddleware, RateLimitPresets } from '@/lib/rate-limit';
 
-// Initialize R2 client (compatible with S3 API)
-const s3Client = getR2Client();
-
 export async function POST(request: NextRequest) {
+  console.log('[PRESIGNED] POST handler called');
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:POST-entry',message:'POST handler called',data:{hasRequest:!!request},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
   try {
+    console.log('[PRESIGNED] Starting request processing');
+    // Validate R2 configuration
+    console.log('[PRESIGNED] Checking R2 configuration:', {
+      hasEndpoint: !!process.env.R2_ENDPOINT,
+      hasAccessKey: !!process.env.R2_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.R2_SECRET_ACCESS_KEY,
+      hasBucket: !!process.env.R2_BUCKET_NAME,
+    });
+    if (!process.env.R2_ENDPOINT || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+      console.error('[PRESIGNED] Missing R2 configuration');
+      return NextResponse.json(
+        { error: 'R2 storage is not configured. Please check environment variables.' },
+        { status: 500 }
+      );
+    }
+
+    // Initialize R2 client (compatible with S3 API) - after validation
+    console.log('[PRESIGNED] Initializing R2 client');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:before-getR2Client',message:'Before getR2Client call',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    let s3Client;
+    try {
+      s3Client = getR2Client();
+      console.log('[PRESIGNED] R2 client initialized successfully');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:after-getR2Client',message:'getR2Client succeeded',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+    } catch (r2Error) {
+      console.error('[PRESIGNED] Failed to initialize R2 client:', r2Error);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:getR2Client-error',message:'getR2Client failed',data:{error:String(r2Error),stack:r2Error instanceof Error?r2Error.stack:null},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      throw r2Error;
+    }
+
     // Verify user is authenticated and is admin
+    console.log('[PRESIGNED] Checking authentication');
     const supabase = await createClient();
     const {
       data: { user },
@@ -96,24 +134,85 @@ export async function POST(request: NextRequest) {
     const key = `uploads/${timestamp}-${sanitizedFilename}`;
 
     // Create presigned URL for R2
+    const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
+    
+    if (!bucketName) {
+      return NextResponse.json(
+        { error: 'R2 bucket name is not configured' },
+        { status: 500 }
+      );
+    }
+
     const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+      Bucket: bucketName,
       Key: key,
       ContentType: fileType,
     });
 
-    const presignedUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600, // URL expires in 1 hour
-    });
+    try {
+      console.log('[PRESIGNED] Generating presigned URL:', { bucketName, key, fileType });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:before-getSignedUrl',message:'Before getSignedUrl call',data:{bucketName,key,fileType},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      const presignedUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 3600, // URL expires in 1 hour
+      });
+      console.log('[PRESIGNED] Presigned URL generated successfully');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:after-getSignedUrl',message:'getSignedUrl succeeded',data:{hasUrl:!!presignedUrl,urlLength:presignedUrl?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
 
-    return NextResponse.json({
-      presignedUrl,
-      key,
-    });
+      return NextResponse.json({
+        presignedUrl,
+        key,
+      });
+    } catch (urlError) {
+      console.error('[PRESIGNED] Error generating presigned URL:', urlError);
+      console.error('[PRESIGNED] Error details:', {
+        name: urlError instanceof Error ? urlError.name : 'Unknown',
+        message: urlError instanceof Error ? urlError.message : String(urlError),
+        stack: urlError instanceof Error ? urlError.stack : null,
+        code: (urlError as any)?.code,
+      });
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:getSignedUrl-error',message:'getSignedUrl failed',data:{error:String(urlError),errorName:urlError instanceof Error?urlError.name:'unknown',errorMessage:urlError instanceof Error?urlError.message:'unknown',errorStack:urlError instanceof Error?urlError.stack:null,errorCode:(urlError as any)?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      throw new Error(`Failed to generate presigned URL: ${urlError instanceof Error ? urlError.message : 'Unknown error'}`);
+    }
   } catch (error) {
-    console.error('Presigned URL generation error:', error);
+    console.error('[PRESIGNED] Presigned URL generation error:', error);
+    console.error('[PRESIGNED] Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('[PRESIGNED] Error message:', error instanceof Error ? error.message : String(error));
+    console.error('[PRESIGNED] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('[PRESIGNED] Error code:', (error as any)?.code || 'N/A');
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route.ts:catch-block',message:'Error caught in route handler',data:{errorName:error instanceof Error?error.name:'unknown',errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack:null,errorCode:(error as any)?.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    
+    // Provide more detailed error information
+    let errorMessage = 'Failed to generate upload URL';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        code: (error as any)?.code,
+        env: {
+          hasEndpoint: !!process.env.R2_ENDPOINT,
+          hasAccessKey: !!process.env.R2_ACCESS_KEY_ID,
+          hasSecretKey: !!process.env.R2_SECRET_ACCESS_KEY,
+          hasBucket: !!process.env.R2_BUCKET_NAME,
+        }
+      });
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to generate upload URL' },
+      { 
+        error: errorMessage,
+        details: error instanceof Error ? error.message : 'Unknown error',
+        code: (error as any)?.code || 'UNKNOWN'
+      },
       { status: 500 }
     );
   }

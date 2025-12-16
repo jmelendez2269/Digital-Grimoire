@@ -163,6 +163,18 @@ const nextConfig: NextConfig = {
       canvas: false,
     };
     
+    // Fix for OpenTelemetry instrumentation module resolution issues with Sentry
+    // Prevent webpack from creating empty contexts that cause MODULE_NOT_FOUND errors
+    if (isServer) {
+      // Ignore the problematic OpenTelemetry platform node module resolution
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /@opentelemetry\/instrumentation\/build\/esm\/platform\/node/,
+          contextRegExp: /.*/,
+        })
+      );
+    }
+    
     return config;
   },
 };
