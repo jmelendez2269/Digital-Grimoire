@@ -58,7 +58,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://*.googleusercontent.com",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com",
       "worker-src 'self' blob:",
       "frame-src 'none'",
       "object-src 'none'",
@@ -163,17 +163,8 @@ const nextConfig: NextConfig = {
       canvas: false,
     };
     
-    // Fix for OpenTelemetry instrumentation module resolution issues with Sentry
-    // Prevent webpack from creating empty contexts that cause MODULE_NOT_FOUND errors
-    if (isServer) {
-      // Ignore the problematic OpenTelemetry platform node module resolution
-      config.plugins.push(
-        new webpack.IgnorePlugin({
-          resourceRegExp: /@opentelemetry\/instrumentation\/build\/esm\/platform\/node/,
-          contextRegExp: /.*/,
-        })
-      );
-    }
+    // Note: OpenTelemetry instrumentation issues are handled by Sentry's Next.js SDK
+    // If MODULE_NOT_FOUND errors occur, they're typically resolved by Sentry's webpack config
     
     return config;
   },
