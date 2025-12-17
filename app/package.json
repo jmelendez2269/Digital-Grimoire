@@ -109,5 +109,17 @@
     "puppeteer": "^24.26.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {
+      "next": "16.0.10",
+      "@next/bundle-analyzer": "16.0.10",
+      "eslint-config-next": "16.0.10"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "next": "16.0.10"
+      }
+    }
   }
 }
