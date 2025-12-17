@@ -40,6 +40,11 @@ const nextConfig: NextConfig = {
         // Allow Google profile pictures
         hostname: '*.googleusercontent.com',
       },
+      {
+        protocol: 'https',
+        // Allow Amazon book cover images
+        hostname: '*.media-amazon.com',
+      },
     ],
   },
   // Compress output
@@ -56,7 +61,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://*.googleusercontent.com",
+      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://*.googleusercontent.com https://*.media-amazon.com",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com",
       "worker-src 'self' blob:",
