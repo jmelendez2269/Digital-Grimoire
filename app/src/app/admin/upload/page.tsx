@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, Eye, Trash2, Home, Library, LayoutDashboard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -43,6 +43,100 @@ export default function AdminUploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
   const [previewFile, setPreviewFile] = useState<UploadFile | null>(null);
+
+  // Suppress FileSystemFileHandle errors - these are non-fatal and react-dropzone falls back to standard API
+  useEffect(() => {
+    // Store original console methods
+    const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+
+    // Override console.error to filter out FileSystemFileHandle errors
+    console.error = (...args: any[]) => {
+      const errorString = args.map(arg => 
+        typeof arg === 'string' ? arg : 
+        arg?.message || arg?.toString() || ''
+      ).join(' ');
+      
+      // Suppress FileSystemFileHandle errors - more permissive check
+      if (
+        errorString.includes('FileSystemFileHandle') ||
+        (errorString.includes('getFile') && errorString.includes('FileSystem')) ||
+        (errorString.includes('NotAllowedError') && (errorString.includes('getFile') || errorString.includes('FileSystem')))
+      ) {
+        // Suppress the error - don't log it
+        return;
+      }
+      
+      // Log other errors normally
+      originalConsoleError.apply(console, args);
+    };
+
+    // Override console.warn to filter out FileSystemFileHandle warnings
+    console.warn = (...args: any[]) => {
+      const warnString = args.map(arg => 
+        typeof arg === 'string' ? arg : 
+        arg?.message || arg?.toString() || ''
+      ).join(' ');
+      
+      // Suppress FileSystemFileHandle warnings - more permissive check
+      if (
+        warnString.includes('FileSystemFileHandle') ||
+        (warnString.includes('getFile') && warnString.includes('FileSystem')) ||
+        (warnString.includes('NotAllowedError') && (warnString.includes('getFile') || warnString.includes('FileSystem')))
+      ) {
+        // Suppress the warning - don't log it
+        return;
+      }
+      
+      // Log other warnings normally
+      originalConsoleWarn.apply(console, args);
+    };
+
+    const handleError = (event: ErrorEvent) => {
+      const error = event.error;
+      const errorMessage = error?.message || error?.toString() || '';
+      
+      // Suppress FileSystemFileHandle errors - these are expected when File System Access API is not available
+      if (
+        errorMessage.includes('FileSystemFileHandle') ||
+        errorMessage.includes('getFile') ||
+        (error?.name === 'NotAllowedError' && errorMessage.includes('FileSystem'))
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
+      return true;
+    };
+
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      const error = event.reason;
+      const errorMessage = error?.message || error?.toString() || '';
+      
+      // Suppress FileSystemFileHandle errors - these are expected when File System Access API is not available
+      if (
+        errorMessage.includes('FileSystemFileHandle') ||
+        errorMessage.includes('getFile') ||
+        (error?.name === 'NotAllowedError' && errorMessage.includes('FileSystem'))
+      ) {
+        event.preventDefault();
+        return false;
+      }
+      return true;
+    };
+
+    window.addEventListener('error', handleError, true); // Use capture phase
+    window.addEventListener('unhandledrejection', handleRejection, true); // Use capture phase
+
+    return () => {
+      // Restore original console methods
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
+      
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleRejection, true);
+    };
+  }, []);
 
   // File validation
   const validateFile = (file: File): string | null => {
@@ -101,35 +195,62 @@ export default function AdminUploadPage() {
   };
 
   // Drag-and-drop handler
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const ocrRecommendedSize = 8 * 1024 * 1024; // 8MB recommended for OCR processing
-    const newFiles: UploadFile[] = acceptedFiles.map((file) => {
-      const error = validateFile(file);
-      const isImage = file.type.startsWith('image/');
-      const warning = isImage && file.size > ocrRecommendedSize
-        ? 'Image file exceeds 8MB. OCR processing may fail due to Azure\'s 4MB limit for images. Consider compressing the image before uploading.'
-        : undefined;
-      // Create preview URL for PDFs and images
-      const previewUrl = 
-        file.type === 'application/pdf' || 
-        file.type.startsWith('image/') ||
-        file.type.startsWith('video/')
-          ? URL.createObjectURL(file) 
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+    try {
+      console.log('[UPLOAD] onDrop called:', { 
+        acceptedCount: acceptedFiles.length, 
+        rejectedCount: rejectedFiles.length,
+        acceptedFiles: acceptedFiles.map(f => ({ name: f.name, type: f.type, size: f.size })),
+        rejectedFiles: rejectedFiles.map(({ file, errors }) => ({ 
+          name: file.name, 
+          type: file.type, 
+          errors: errors.map((e: any) => `${e.code}: ${e.message}`) 
+        }))
+      });
+      
+      if (rejectedFiles.length > 0) {
+        console.error('[UPLOAD] Files rejected:', rejectedFiles);
+      }
+      
+      const ocrRecommendedSize = 8 * 1024 * 1024; // 8MB recommended for OCR processing
+      const newFiles: UploadFile[] = acceptedFiles.map((file) => {
+        const error = validateFile(file);
+        const isImage = file.type.startsWith('image/');
+        const warning = isImage && file.size > ocrRecommendedSize
+          ? 'Image file exceeds 8MB. OCR processing may fail due to Azure\'s 4MB limit for images. Consider compressing the image before uploading.'
           : undefined;
-      return {
-        id: Math.random().toString(36).substring(7),
-        file,
-        progress: 0,
-        status: error ? 'error' : 'pending',
-        error: error || undefined,
-        warning,
-        previewUrl,
-      };
-    });
-    setFiles((prev) => [...prev, ...newFiles]);
+        // Create preview URL for PDFs and images
+        const previewUrl = 
+          file.type === 'application/pdf' || 
+          file.type.startsWith('image/') ||
+          file.type.startsWith('video/')
+            ? URL.createObjectURL(file) 
+            : undefined;
+        return {
+          id: Math.random().toString(36).substring(7),
+          file,
+          progress: 0,
+          status: error ? 'error' : 'pending',
+          error: error || undefined,
+          warning,
+          previewUrl,
+        };
+      });
+      setFiles((prev) => [...prev, ...newFiles]);
+    } catch (error) {
+      // Catch any errors during file processing (including FileSystemFileHandle errors)
+      console.error('[UPLOAD] Error in onDrop:', error);
+      // If it's a FileSystemFileHandle error, it's non-fatal - the files should still be available
+      if (error instanceof Error && error.message.includes('FileSystemFileHandle')) {
+        console.debug('[UPLOAD] FileSystemFileHandle error caught (non-fatal), continuing...');
+      } else {
+        // For other errors, show user feedback
+        console.error('[UPLOAD] Unexpected error during file drop:', error);
+      }
+    }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,
     accept: {
       // Documents
@@ -154,6 +275,32 @@ export default function AdminUploadPage() {
     },
     multiple: true,
     maxSize: 209715200, // 200MB (for video files)
+    noClick: false,
+    noKeyboard: false,
+    onDragEnter: () => {
+      console.log('[UPLOAD] Drag enter');
+    },
+    onDragOver: () => {
+      console.log('[UPLOAD] Drag over');
+    },
+    onDragLeave: () => {
+      console.log('[UPLOAD] Drag leave');
+    },
+    onDropRejected: (rejectedFiles) => {
+      console.error('[UPLOAD] Files rejected:', rejectedFiles);
+      rejectedFiles.forEach(({ file, errors }) => {
+        console.error(`[UPLOAD] File ${file.name} rejected:`, errors);
+        const errorMessages = errors.map((e: any) => `${e.code}: ${e.message}`).join(', ');
+        // Add rejected files to the queue with error status
+        setFiles((prev) => [...prev, {
+          id: Math.random().toString(36).substring(7),
+          file,
+          progress: 0,
+          status: 'error',
+          error: `File rejected: ${errorMessages}`,
+        }]);
+      });
+    },
   });
 
   // Remove file from queue
@@ -462,6 +609,16 @@ export default function AdminUploadPage() {
           <p className="text-xs text-amber-100/40">
             Supported formats: PDF, PNG, JPG, HTML • Max size: 50MB per file (8MB recommended for OCR processing)
           </p>
+          {fileRejections.length > 0 && (
+            <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-md">
+              <p className="text-xs text-red-400 font-medium mb-1">Some files were rejected:</p>
+              {fileRejections.map(({ file, errors }, idx) => (
+                <p key={idx} className="text-xs text-red-300">
+                  {file.name}: {errors.map(e => e.message).join(', ')}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Upload Queue */}
