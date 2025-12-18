@@ -120,7 +120,7 @@ export async function updateSession(request: NextRequest) {
       if (authError.message?.includes('refresh_token') || authError.message?.includes('Refresh Token')) {
         console.warn('[Middleware] Invalid refresh token detected, clearing session:', authError.message);
         // Clear auth cookies by setting them to empty with past expiration
-        const expiredDate = new Date(0).toUTCString();
+        const expiredDate = new Date(0);
         supabaseResponse.cookies.set('sb-access-token', '', { expires: expiredDate, path: '/' });
         supabaseResponse.cookies.set('sb-refresh-token', '', { expires: expiredDate, path: '/' });
         // Continue without user - will redirect to login if needed
