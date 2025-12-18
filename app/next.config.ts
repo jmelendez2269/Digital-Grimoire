@@ -16,11 +16,7 @@ const nextConfig: NextConfig = {
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],
-    // Explicit domains list for external images used in the app
-    domains: [
-      'covers.openlibrary.org',
-      'th.bing.com',
-    ],
+    // Use remotePatterns instead of deprecated domains
     remotePatterns: [
       {
         protocol: 'https',
@@ -37,6 +33,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        // Allow Internet Archive images
+        hostname: 'archive.org',
+      },
+      {
+        protocol: 'https',
         // Allow Google profile pictures
         hostname: '*.googleusercontent.com',
       },
@@ -44,6 +45,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         // Allow Amazon book cover images
         hostname: '*.media-amazon.com',
+      },
+      {
+        protocol: 'https',
+        // Allow Amazon SSL image domains (Goodreads, etc.)
+        hostname: '*.ssl-images-amazon.com',
       },
     ],
   },
@@ -61,7 +67,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://*.googleusercontent.com https://*.media-amazon.com",
+      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://archive.org https://*.googleusercontent.com https://*.media-amazon.com https://*.ssl-images-amazon.com",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com",
       "worker-src 'self' blob:",

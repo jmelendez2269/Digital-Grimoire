@@ -71,9 +71,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('[AuthContext] Session error:', error);
-          setUser(null);
-          setIsAdmin(false);
+          // Handle refresh token errors gracefully
+          if (error.message?.includes('refresh_token') || error.message?.includes('Refresh Token')) {
+            console.warn('[AuthContext] Invalid refresh token detected, clearing session:', error.message);
+            // Clear the invalid session
+            await supabase.auth.signOut();
+            setUser(null);
+            setIsAdmin(false);
+          } else {
+            console.error('[AuthContext] Session error:', error);
+            setUser(null);
+            setIsAdmin(false);
+          }
           setLoading(false);
           clearTimeout(timeoutId);
           return;
@@ -96,7 +105,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsAdmin(false);
         }
       } catch (err) {
-        console.error('[AuthContext] Error initializing auth:', err);
+        // Handle any unexpected errors, including refresh token errors
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('refresh_token') || errorMessage.includes('Refresh Token')) {
+          console.warn('[AuthContext] Invalid refresh token in catch block, clearing session:', errorMessage);
+          try {
+            await supabase.auth.signOut();
+          } catch (signOutError) {
+            // Ignore sign out errors
+          }
+        } else {
+          console.error('[AuthContext] Error initializing auth:', err);
+        }
         setUser(null);
         setIsAdmin(false);
       } finally {
@@ -111,18 +131,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[AuthContext] Auth state changed:', event, session?.user?.email);
-        
-        if (session?.user) {
-          setUser(session.user);
+        try {
+          console.log('[AuthContext] Auth state changed:', event, session?.user?.email);
           
-          // Check admin via API
-          const adminStatus = await checkAdminViaAPI(session.user.id);
-          setIsAdmin(adminStatus);
-          console.log('[AuthContext] Auth change - Admin status:', adminStatus);
-        } else {
-          setUser(null);
-          setIsAdmin(false);
+          if (session?.user) {
+            setUser(session.user);
+            
+            // Check admin via API
+            const adminStatus = await checkAdminViaAPI(session.user.id);
+            setIsAdmin(adminStatus);
+            console.log('[AuthContext] Auth change - Admin status:', adminStatus);
+          } else {
+            setUser(null);
+            setIsAdmin(false);
+          }
+        } catch (err) {
+          // Handle errors in auth state change, including refresh token errors
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          if (errorMessage.includes('refresh_token') || errorMessage.includes('Refresh Token')) {
+            console.warn('[AuthContext] Invalid refresh token in auth state change, clearing session:', errorMessage);
+            try {
+              await supabase.auth.signOut();
+            } catch (signOutError) {
+              // Ignore sign out errors
+            }
+            setUser(null);
+            setIsAdmin(false);
+          } else {
+            console.error('[AuthContext] Error in auth state change:', err);
+          }
         }
       }
     );

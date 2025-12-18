@@ -5,7 +5,7 @@ import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
 import { scrapeCover } from '@/lib/cover-scraper';
 import { generateBookCover } from '@/lib/getimg-cover';
-import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
+import { logStorageUpload, logUserActivity, logOcrUsage } from '@/lib/usage-tracker';
 import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
 
 // Initialize R2 client for cleanup on error
@@ -69,9 +69,31 @@ export async function POST(request: NextRequest) {
   try {
     const filename = key.split('/').pop() || 'document';
     const fileExtension = filename.split('.').pop()?.toLowerCase() || '';
-    const isHtmlFile = fileExtension === 'html' || fileExtension === 'htm';
     
-    console.log('Starting document processing for:', key, 'Type:', isHtmlFile ? 'HTML' : 'PDF/Image');
+    // Get file from R2 to check actual MIME type (more reliable than extension)
+    const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
+    const getCommand = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    });
+    
+    const fileResponse = await s3Client.send(getCommand);
+    const mimeType = fileResponse.ContentType || 'application/octet-stream';
+    
+    // Determine if it's HTML based on MIME type AND extension (both must match)
+    const isHtmlByExtension = fileExtension === 'html' || fileExtension === 'htm';
+    const isHtmlByMimeType = mimeType === 'text/html' || mimeType === 'application/xhtml+xml';
+    const isHtmlFile = isHtmlByExtension && isHtmlByMimeType;
+    
+    console.log('Starting document processing for:', key);
+    console.log('File extension:', fileExtension);
+    console.log('MIME type:', mimeType);
+    console.log('Detected type:', isHtmlFile ? 'HTML' : 'PDF/Image');
+    
+    // If extension says HTML but MIME type says PDF, it's likely a misnamed file - use OCR
+    if (isHtmlByExtension && !isHtmlByMimeType && mimeType === 'application/pdf') {
+      console.warn('⚠️ File has .html extension but MIME type is PDF. Treating as PDF and using OCR.');
+    }
     
     let ocrResult;
     let extractedText = '';
@@ -552,6 +574,24 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Document processing failed:', error);
+    
+    // Log OCR failures to database even if they happen at the route level
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isOcrError = errorMessage.includes('OCR') || errorMessage.includes('Azure');
+    
+    if (isOcrError && userId) {
+      try {
+        await logOcrUsage({
+          pages: 0,
+          userId,
+          documentId: undefined,
+          success: false,
+          errorMessage: `Route-level OCR error: ${errorMessage}`,
+        });
+      } catch (logError) {
+        console.error('Failed to log OCR error:', logError);
+      }
+    }
 
     // Clean up uploaded files from R2
     try {
