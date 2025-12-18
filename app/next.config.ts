@@ -174,6 +174,14 @@ const nextConfig: NextConfig = {
       canvas: false,
     };
     
+    // Ensure proper module resolution for TypeScript path aliases
+    if (!isServer) {
+      config.resolve.modules = [
+        ...(config.resolve.modules || []),
+        require('path').join(__dirname, 'src'),
+      ];
+    }
+    
     // Note: OpenTelemetry instrumentation issues are handled by Sentry's Next.js SDK
     // If MODULE_NOT_FOUND errors occur, they're typically resolved by Sentry's webpack config
     

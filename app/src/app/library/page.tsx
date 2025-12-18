@@ -15,14 +15,7 @@ import { formatFileSize, formatDate, getStatusColor } from '@/lib/utils/formatti
 import { useLibraryTexts, useLibraryFilterOptions, type FilterValues } from '@/hooks/useLibrary';
 import { invalidateTextCaches } from '@/lib/cache-invalidation';
 import LibraryGrid from '@/components/LibraryGrid';
-
-// Lazy load AdvancedFilters - not needed on initial render
-const AdvancedFilters = dynamic(() => import('@/components/AdvancedFilters'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-20 bg-zinc-900/30 border border-amber-900/20 rounded-lg animate-pulse" />
-  ),
-});
+import AdvancedFilters from '@/components/AdvancedFilters';
 
 // Dynamically import FloatingAISearch
 const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
