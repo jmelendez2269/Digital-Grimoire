@@ -89,6 +89,27 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {/* Privacy Policy Link - Required for Google OAuth verification - Always rendered for SEO */}
+          <div className="mb-8 text-center">
+            <p className="text-sm text-zinc-500">
+              By using this site, you agree to our{" "}
+              <Link
+                href="/privacy"
+                className="text-amber-400 underline transition-colors hover:text-amber-300"
+              >
+                Privacy Policy
+              </Link>
+              {" "}and{" "}
+              <Link
+                href="/terms"
+                className="text-amber-400 underline transition-colors hover:text-amber-300"
+              >
+                Terms of Service
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </main>
       <Footer />
