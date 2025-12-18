@@ -185,6 +185,24 @@ Before starting, ensure you have:
 4. Click **"Save"** after adding each URL
 5. Verify both URLs appear in the list
 
+---
+
+### Step 6: Change Project Name to "Convergence" (Fix Branding)
+
+**If you see "characters.supabase" or another project name during Google sign-in, follow these steps:**
+
+1. Go to your [Supabase Dashboard](https://app.supabase.com)
+2. Select your project
+3. Navigate to **Settings** → **General** (left sidebar)
+4. Scroll down to the **Project Name** section
+5. Click the **"Edit"** button (pencil icon) next to the project name
+6. Change the project name to **"Convergence"**
+7. Click **"Save"** or press Enter
+8. The change should take effect immediately
+
+**Note:** The project reference (the part in the URL like `characters.supabase.co`) cannot be changed, but the display name that appears during OAuth flows will now show "Convergence" instead of the old project name.
+
+**Alternative:** If you want to change the project reference itself, you would need to create a new Supabase project and migrate your data. However, changing just the project name is usually sufficient for branding purposes.
 
 ---
 
