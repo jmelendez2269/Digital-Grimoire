@@ -2,11 +2,19 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, Eye, Trash2, Home, Library, LayoutDashboard } from 'lucide-react';
+import { Upload, FileText, X, Check, AlertCircle, Loader2, ChevronDown, ChevronUp, Eye, Trash2, Home, Library, LayoutDashboard, Shrink, RotateCcw } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { DocumentMetadata } from '@/lib/claude-metadata';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import { compressPDF, shouldCompressPDF, formatFileSize as formatFileSizeUtil } from '@/lib/utils/pdf-compress';
+
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - Header',data:{HeaderType:typeof Header,HeaderValue:Header?.toString?.()?.substring(0,50)||'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - lucide icons',data:{Upload:typeof Upload,FileText:typeof FileText,X:typeof X,Check:typeof Check,AlertCircle:typeof AlertCircle,Loader2:typeof Loader2,ChevronDown:typeof ChevronDown,ChevronUp:typeof ChevronUp,Eye:typeof Eye,Trash2:typeof Trash2,Home:typeof Home,Library:typeof Library,LayoutDashboard:typeof LayoutDashboard,Shrink:typeof Shrink,RotateCcw:typeof RotateCcw},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - pdf-compress',data:{compressPDF:typeof compressPDF,shouldCompressPDF:typeof shouldCompressPDF,formatFileSizeUtil:typeof formatFileSizeUtil},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - Link and useDropzone',data:{Link:typeof Link,useDropzone:typeof useDropzone},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+// #endregion
 
 interface SimilarDocument {
   id: string;
@@ -21,8 +29,9 @@ interface SimilarDocument {
 interface UploadFile {
   id: string;
   file: File;
+  originalFile?: File; // Store original file when compressed
   progress: number;
-  status: 'pending' | 'uploading' | 'processing' | 'success' | 'error';
+  status: 'pending' | 'uploading' | 'processing' | 'success' | 'error' | 'compressing';
   error?: string;
   warning?: string;
   metadata?: DocumentMetadata;
@@ -35,14 +44,46 @@ interface UploadFile {
   previewUrl?: string;
   similarDocuments?: SimilarDocument[];
   hasDuplicates?: boolean;
+  isCompressed?: boolean;
+  originalSize?: number;
+  compressionRatio?: number;
 }
 
 export default function AdminUploadPage() {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:45',message:'Component render start',data:{HeaderDefined:Header!==undefined,HeaderType:typeof Header},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   const supabase = createClient();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
   const [previewFile, setPreviewFile] = useState<UploadFile | null>(null);
+
+  // Prevent browser default drop behavior globally (opening files)
+  useEffect(() => {
+    const handleGlobalDrop = (e: DragEvent) => {
+      // Only prevent default if dropping files (not text/links)
+      if (e.dataTransfer?.types.includes('Files')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    
+    const handleGlobalDragOver = (e: DragEvent) => {
+      // Prevent default to allow drop
+      if (e.dataTransfer?.types.includes('Files')) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('drop', handleGlobalDrop);
+    document.addEventListener('dragover', handleGlobalDragOver);
+    
+    return () => {
+      document.removeEventListener('drop', handleGlobalDrop);
+      document.removeEventListener('dragover', handleGlobalDragOver);
+    };
+  }, []);
 
   // Suppress FileSystemFileHandle errors - these are non-fatal and react-dropzone falls back to standard API
   useEffect(() => {
@@ -216,9 +257,17 @@ export default function AdminUploadPage() {
       const newFiles: UploadFile[] = acceptedFiles.map((file) => {
         const error = validateFile(file);
         const isImage = file.type.startsWith('image/');
-        const warning = isImage && file.size > ocrRecommendedSize
-          ? 'Image file exceeds 8MB. OCR processing may fail due to Azure\'s 4MB limit for images. Consider compressing the image before uploading.'
-          : undefined;
+        const isPDF = file.type === 'application/pdf';
+        
+        // Warning for large images
+        let warning: string | undefined = undefined;
+        if (isImage && file.size > ocrRecommendedSize) {
+          warning = 'Image file exceeds 8MB. OCR processing may fail due to Azure\'s 4MB limit for images. Consider compressing the image before uploading.';
+        } else if (isPDF && shouldCompressPDF(file)) {
+          // Warning for large PDFs
+          warning = 'Large PDF detected. OCR may fail due to Azure\'s 4MB per-page limit. Consider compressing the PDF before uploading.';
+        }
+        
         // Create preview URL for PDFs and images
         const previewUrl = 
           file.type === 'application/pdf' || 
@@ -229,11 +278,14 @@ export default function AdminUploadPage() {
         return {
           id: Math.random().toString(36).substring(7),
           file,
+          originalFile: undefined, // Will be set if compressed
           progress: 0,
           status: error ? 'error' : 'pending',
           error: error || undefined,
           warning,
           previewUrl,
+          isCompressed: false,
+          originalSize: file.size,
         };
       });
       setFiles((prev) => [...prev, ...newFiles]);
@@ -310,6 +362,122 @@ export default function AdminUploadPage() {
       URL.revokeObjectURL(fileToRemove.previewUrl);
     }
     setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  // Compress PDF file
+  const handleCompressPDF = async (uploadFile: UploadFile) => {
+    if (uploadFile.file.type !== 'application/pdf') {
+      return;
+    }
+
+    try {
+      // Update status to compressing
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === uploadFile.id ? { ...f, status: 'compressing' } : f
+        )
+      );
+
+      // Compress the PDF
+      const result = await compressPDF(uploadFile.file);
+
+      if (result.success && result.compressedBlob) {
+        // Create a new File object from the compressed Blob
+        const compressedFile = new File(
+          [result.compressedBlob],
+          uploadFile.file.name,
+          { type: 'application/pdf' }
+        );
+
+        // Revoke old preview URL if exists
+        if (uploadFile.previewUrl) {
+          URL.revokeObjectURL(uploadFile.previewUrl);
+        }
+
+        // Create new preview URL for compressed file
+        const newPreviewUrl = URL.createObjectURL(compressedFile);
+
+        // Update file with compressed version
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === uploadFile.id
+              ? {
+                  ...f,
+                  file: compressedFile,
+                  originalFile: uploadFile.file, // Store original
+                  status: 'pending',
+                  isCompressed: true,
+                  originalSize: result.originalSize,
+                  compressionRatio: result.compressionRatio,
+                  previewUrl: newPreviewUrl,
+                  warning: undefined, // Clear warning after compression
+                }
+              : f
+          )
+        );
+      } else {
+        // Compression failed - show error but keep original
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === uploadFile.id
+              ? {
+                  ...f,
+                  status: 'pending',
+                  error: result.error || 'Compression failed. Using original file.',
+                }
+              : f
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Compression error:', error);
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === uploadFile.id
+            ? {
+                ...f,
+                status: 'pending',
+                error: error instanceof Error ? error.message : 'Compression failed. Using original file.',
+              }
+            : f
+        )
+      );
+    }
+  };
+
+  // Restore original file
+  const handleRestoreOriginal = (uploadFile: UploadFile) => {
+    if (!uploadFile.originalFile) {
+      return;
+    }
+
+    // Revoke compressed preview URL
+    if (uploadFile.previewUrl) {
+      URL.revokeObjectURL(uploadFile.previewUrl);
+    }
+
+    // Create new preview URL for original file
+    const newPreviewUrl = URL.createObjectURL(uploadFile.originalFile);
+
+    // Restore original file
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === uploadFile.id
+          ? {
+              ...f,
+              file: uploadFile.originalFile!,
+              originalFile: undefined,
+              isCompressed: false,
+              originalSize: uploadFile.originalFile.size,
+              compressionRatio: undefined,
+              previewUrl: newPreviewUrl,
+              warning: shouldCompressPDF(uploadFile.originalFile!)
+                ? 'Large PDF detected. OCR may fail due to Azure\'s 4MB per-page limit. Consider compressing the PDF before uploading.'
+                : undefined,
+            }
+          : f
+      )
+    );
   };
 
   // Clear all successful uploads
@@ -447,13 +615,21 @@ export default function AdminUploadPage() {
 
       if (!processResponse.ok) {
         let errorMessage = 'Failed to process document';
+        let errorData: any = {};
         try {
-          const error = await processResponse.json();
-          errorMessage = error.error || errorMessage;
+          errorData = await processResponse.json();
+          errorMessage = errorData.error || errorMessage;
         } catch (e) {
           // Response wasn't JSON, use status text
           errorMessage = `${errorMessage}: ${processResponse.statusText}`;
         }
+        
+        // Check if error is due to file size (Azure OCR size limit)
+        const isSizeError = errorMessage.includes('too large') || 
+                           errorMessage.includes('larger than') || 
+                           errorMessage.includes('4MB limit') ||
+                           errorMessage.includes('size limit');
+        
         throw new Error(errorMessage);
       }
 
@@ -487,17 +663,53 @@ export default function AdminUploadPage() {
       );
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      
+      // Check if error is due to file size (Azure OCR size limit)
+      const isSizeError = errorMessage.includes('too large') || 
+                         errorMessage.includes('larger than') || 
+                         errorMessage.includes('4MB limit') ||
+                         errorMessage.includes('size limit');
+      
       setFiles((prev) =>
         prev.map((f) =>
           f.id === uploadFile.id
             ? {
                 ...f,
                 status: 'error',
-                error: error instanceof Error ? error.message : 'Upload failed',
+                error: errorMessage,
+                // Add flag to show compression retry option for size errors
+                warning: isSizeError && !f.isCompressed 
+                  ? 'File size error detected. Try compressing the PDF and retrying.'
+                  : undefined,
               }
             : f
         )
       );
+    }
+  };
+
+  // Retry upload with compression
+  const handleRetryWithCompression = async (fileItem: UploadFile) => {
+    // First compress the file if not already compressed
+    if (!fileItem.isCompressed && fileItem.file.type === 'application/pdf') {
+      await handleCompressPDF(fileItem);
+      
+      // Wait a moment for state to update, then retry upload
+      setTimeout(() => {
+        setFiles((prev) => {
+          const updatedFile = prev.find(f => f.id === fileItem.id);
+          if (updatedFile && updatedFile.isCompressed) {
+            // Clear error status and retry upload
+            uploadFile(updatedFile);
+            return prev;
+          }
+          return prev;
+        });
+      }, 500);
+    } else {
+      // Already compressed or not a PDF, just retry
+      uploadFile(fileItem);
     }
   };
 
@@ -525,10 +737,16 @@ export default function AdminUploadPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:730',message:'Before render - checking Header',data:{Header:Header,HeaderType:typeof Header,isFunction:typeof Header==='function',isUndefined:Header===undefined,hasType:!!Header?.type,hasRender:!!Header?.render,isMemo:!!Header?.compare},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   return (
-    <div className="min-h-screen bg-zinc-950 text-amber-50">
-      {/* Main Header */}
-      <Header />
+      <div className="min-h-screen bg-zinc-950 text-amber-50">
+        {/* Main Header */}
+        {/* #region agent log */}
+        {(()=>{fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:733',message:'Rendering Header component',data:{HeaderDefined:Header!==undefined,HeaderType:typeof Header,canCall:typeof Header==='function'||(Header&&typeof Header.type==='function')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});return null;})()}
+        {/* #endregion */}
+        <Header />
       
       {/* Admin Navigation Bar */}
       <div className="border-b border-amber-900/20 bg-zinc-900/50">
@@ -694,7 +912,11 @@ export default function AdminUploadPage() {
             </div>
 
             <div className="space-y-2">
-              {files.map((uploadFile) => (
+              {files.map((uploadFile) => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:915',message:'Rendering file item - checking components',data:{FileText:typeof FileText,Shrink:typeof Shrink,RotateCcw:typeof RotateCcw,Eye:typeof Eye,X:typeof X,Check:typeof Check,AlertCircle:typeof AlertCircle,Loader2:typeof Loader2,ChevronDown:typeof ChevronDown,ChevronUp:typeof ChevronUp,formatFileSize:typeof formatFileSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                // #endregion
+                return (
                 <div
                   key={uploadFile.id}
                   className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4"
@@ -707,8 +929,16 @@ export default function AdminUploadPage() {
                           {uploadFile.file.name}
                         </p>
                         <p className="text-xs text-amber-100/60 mt-0.5">
-                          {formatFileSize(uploadFile.file.size)}
+                          {uploadFile.isCompressed && uploadFile.originalSize
+                            ? `${formatFileSize(uploadFile.originalSize)} → ${formatFileSize(uploadFile.file.size)} (${uploadFile.compressionRatio}% smaller)`
+                            : formatFileSize(uploadFile.file.size)}
                         </p>
+                        {uploadFile.isCompressed && (
+                          <p className="text-xs text-emerald-400 mt-0.5 flex items-center gap-1">
+                            <Shrink className="w-3 h-3" />
+                            Compressed
+                          </p>
+                        )}
                         {uploadFile.error && (
                           <p className="text-xs text-red-400 mt-1">
                             {uploadFile.error}
@@ -730,6 +960,31 @@ export default function AdminUploadPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Compress PDF button for large PDFs */}
+                      {uploadFile.status === 'pending' && 
+                       uploadFile.file.type === 'application/pdf' && 
+                       shouldCompressPDF(uploadFile.file) && 
+                       !uploadFile.isCompressed && (
+                        <button
+                          onClick={() => handleCompressPDF(uploadFile)}
+                          className="text-amber-100/60 hover:text-amber-100 transition-colors"
+                          title="Compress PDF to reduce file size"
+                        >
+                          <Shrink className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {/* Restore Original button for compressed files */}
+                      {uploadFile.status === 'pending' && uploadFile.isCompressed && uploadFile.originalFile && (
+                        <button
+                          onClick={() => handleRestoreOriginal(uploadFile)}
+                          className="text-amber-100/60 hover:text-amber-100 transition-colors"
+                          title="Restore original file"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                      )}
+                      
                       {/* Preview button for PDFs */}
                       {uploadFile.previewUrl && uploadFile.status === 'pending' && (
                         <button
@@ -750,6 +1005,9 @@ export default function AdminUploadPage() {
                         >
                           <X className="w-4 h-4" />
                         </button>
+                      )}
+                      {uploadFile.status === 'compressing' && (
+                        <Loader2 className="w-4 h-4 text-amber-600 animate-spin" title="Compressing PDF..." />
                       )}
                       {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
                         <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
@@ -775,6 +1033,19 @@ export default function AdminUploadPage() {
                       {uploadFile.status === 'error' && (
                         <>
                           <AlertCircle className="w-4 h-4 text-red-400" />
+                          {/* Retry with compression button for size errors */}
+                          {uploadFile.warning && 
+                           uploadFile.file.type === 'application/pdf' && 
+                           !uploadFile.isCompressed && (
+                            <button
+                              onClick={() => handleRetryWithCompression(uploadFile)}
+                              className="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-medium transition-colors flex items-center gap-1"
+                              title="Compress PDF and retry upload"
+                            >
+                              <Shrink className="w-3 h-3" />
+                              Compress & Retry
+                            </button>
+                          )}
                           <button
                             onClick={() => removeFile(uploadFile.id)}
                             className="text-amber-100/40 hover:text-amber-100 transition-colors"
@@ -786,6 +1057,18 @@ export default function AdminUploadPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Compression Status */}
+                  {uploadFile.status === 'compressing' && (
+                    <div className="mt-3">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+                        <p className="text-xs text-amber-100/60">
+                          Compressing PDF... (this may take a moment)
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Progress Bar */}
                   {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
@@ -1000,7 +1283,8 @@ export default function AdminUploadPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

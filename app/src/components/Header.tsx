@@ -27,6 +27,9 @@ interface HeaderProps {
 }
 
 function Header({ librarySearch }: HeaderProps = {}) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:29',message:'Header render start - checking imports',data:{FeedbackModal:typeof FeedbackModal,AdvancedFilters:typeof AdvancedFilters,Link:typeof Link,useAuth:typeof useAuth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, signOut, isAdmin, refreshAdminStatus } = useAuth(); // Single source of truth
@@ -68,6 +71,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
     { label: "Admin Panel", icon: "🔐", href: "/admin" },
     { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
     { label: "Import Sacred Text", icon: "🌐", href: "/admin/import-sacred-text" },
+    { label: "Courses", icon: "📚", href: "/admin/courses" },
     { label: "Feedback", icon: "💬", href: "/admin/feedback" },
     // To add new admin pages, add entries here!
   ];
@@ -101,6 +105,16 @@ function Header({ librarySearch }: HeaderProps = {}) {
             }`}
           >
             📚 Library
+          </Link>
+          <Link
+            href="/courses"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/courses") || pathname?.startsWith("/courses/")
+                ? "text-amber-400"
+                : "text-zinc-400 hover:text-amber-300"
+            }`}
+          >
+            🎓 Courses
           </Link>
           <Link
             href="/journal"
@@ -443,6 +457,9 @@ function Header({ librarySearch }: HeaderProps = {}) {
 
 
       {/* Feedback Modal */}
+      {/* #region agent log */}
+      {(()=>{fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:457',message:'Before rendering FeedbackModal',data:{FeedbackModal:FeedbackModal,FeedbackModalType:typeof FeedbackModal,isUndefined:FeedbackModal===undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});return null;})()}
+      {/* #endregion */}
       <FeedbackModal
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
@@ -451,5 +468,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
   );
 }
 
-export default memo(Header);
+// Temporarily removing memo to test if it's causing the issue
+// export default memo(Header);
+export default Header;
 
