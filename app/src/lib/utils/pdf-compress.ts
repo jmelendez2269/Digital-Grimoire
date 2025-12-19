@@ -159,7 +159,9 @@ export async function compressPDF(file: File): Promise<CompressionResult> {
     }
     
     // Create a Blob from the compressed bytes
-    const compressedBlob = new Blob([result.bytes], { type: 'application/pdf' });
+    // Type assertion needed: pdf-lib returns Uint8Array<ArrayBufferLike> but Blob expects BlobPart
+    // In practice, Uint8Array works fine with Blob, but TypeScript needs the cast
+    const compressedBlob = new Blob([result.bytes as BlobPart], { type: 'application/pdf' });
     const compressedSize = result.size;
     const compressionRatio = ((originalSize - compressedSize) / originalSize) * 100;
     
