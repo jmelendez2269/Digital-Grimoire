@@ -33,7 +33,22 @@ function Header({ librarySearch }: HeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // #region agent log
+  if (typeof window !== 'undefined') {
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:31',message:'pathname value on client',data:{pathname,isNull:pathname===null,isUndefined:pathname===undefined,type:typeof pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  }
+  // #endregion
+
+  // Ensure client-only rendering to prevent hydration mismatches
+  useEffect(() => {
+    setMounted(true);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:42',message:'mounted state set to true',data:{pathname,isNull:pathname===null,isUndefined:pathname===undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -41,7 +56,15 @@ function Header({ librarySearch }: HeaderProps = {}) {
     router.refresh();
   };
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => {
+    const result = pathname === path;
+    // #region agent log
+    if (typeof window !== 'undefined') {
+      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:50',message:'isActive check',data:{path,pathname,result,pathnameType:typeof pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    }
+    // #endregion
+    return result;
+  };
 
   // Close more menu when clicking outside
   useEffect(() => {
@@ -110,6 +133,10 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 ? "text-amber-400"
                 : "text-zinc-400 hover:text-amber-300"
             }`}
+            // #region agent log
+            data-debug-href="/courses"
+            data-debug-text="🎓 Courses"
+            // #endregion
           >
             🎓 Courses
           </Link>
@@ -120,8 +147,12 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 ? "text-amber-400"
                 : "text-zinc-400 hover:text-amber-300"
             }`}
+            // #region agent log
+            data-debug-href="/journal"
+            data-debug-text="📝 Journal"
+            // #endregion
           >
-            📝 {user?.user_metadata?.journal_name || "Journal"}
+            📝 Journal
           </Link>
           <Link
             href="/convergence-machine"
@@ -181,13 +212,18 @@ function Header({ librarySearch }: HeaderProps = {}) {
           </button>
 
           {/* Debug info - remove after testing */}
-          {process.env.NODE_ENV === 'development' && (
+          {process.env.NODE_ENV === 'development' && mounted && (
             <div className="text-xs text-zinc-500">
               {loading ? '⏳' : user ? '👤' : '🚫'}
             </div>
           )}
           
-          {loading ? (
+          {/* Only render auth-dependent UI after mount to prevent hydration mismatch */}
+          {!mounted ? (
+            <div className="h-9 w-20 animate-pulse rounded-md bg-zinc-800">
+              <span className="sr-only">Loading user menu...</span>
+            </div>
+          ) : loading ? (
             <div className="h-9 w-20 animate-pulse rounded-md bg-zinc-800">
               <span className="sr-only">Loading user menu...</span>
             </div>
