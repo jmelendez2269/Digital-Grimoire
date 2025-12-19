@@ -5,7 +5,7 @@ import { performOCR } from '@/lib/azure-ocr';
 import { extractMetadata } from '@/lib/claude-metadata';
 import { scrapeCover } from '@/lib/cover-scraper';
 import { generateBookCover } from '@/lib/getimg-cover';
-import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
+import { logStorageUpload, logUserActivity, logOcrUsage } from '@/lib/usage-tracker';
 import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
 
 // Initialize R2 client for cleanup on error
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { key, userId } = body;
+  const { key, userId, skipOCR } = body;
   
   if (!key) {
     return NextResponse.json(
@@ -69,9 +69,31 @@ export async function POST(request: NextRequest) {
   try {
     const filename = key.split('/').pop() || 'document';
     const fileExtension = filename.split('.').pop()?.toLowerCase() || '';
-    const isHtmlFile = fileExtension === 'html' || fileExtension === 'htm';
     
-    console.log('Starting document processing for:', key, 'Type:', isHtmlFile ? 'HTML' : 'PDF/Image');
+    // Get file from R2 to check actual MIME type (more reliable than extension)
+    const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
+    const getCommand = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    });
+    
+    const fileResponse = await s3Client.send(getCommand);
+    const mimeType = fileResponse.ContentType || 'application/octet-stream';
+    
+    // Determine if it's HTML based on MIME type AND extension (both must match)
+    const isHtmlByExtension = fileExtension === 'html' || fileExtension === 'htm';
+    const isHtmlByMimeType = mimeType === 'text/html' || mimeType === 'application/xhtml+xml';
+    const isHtmlFile = isHtmlByExtension && isHtmlByMimeType;
+    
+    console.log('Starting document processing for:', key);
+    console.log('File extension:', fileExtension);
+    console.log('MIME type:', mimeType);
+    console.log('Detected type:', isHtmlFile ? 'HTML' : 'PDF/Image');
+    
+    // If extension says HTML but MIME type says PDF, it's likely a misnamed file - use OCR
+    if (isHtmlByExtension && !isHtmlByMimeType && mimeType === 'application/pdf') {
+      console.warn('⚠️ File has .html extension but MIME type is PDF. Treating as PDF and using OCR.');
+    }
     
     let ocrResult;
     let extractedText = '';
@@ -126,30 +148,90 @@ export async function POST(request: NextRequest) {
         throw new Error(`HTML processing failed: ${htmlError instanceof Error ? htmlError.message : 'Unknown error'}`);
       }
     } else {
-      // For PDF/Images: Perform OCR
-      console.log('Step 1: Running Azure OCR...');
-      const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
-      
-      try {
-        ocrResult = await performOCR(fileUrl, userId);
-        console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
-      } catch (ocrError) {
-        console.error('OCR failed:', ocrError);
-        throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+      // For PDF/Images: Perform OCR (unless skipped)
+      if (skipOCR) {
+        console.log('Step 1: Skipping OCR as requested by user');
+        // Create minimal OCR result for documents without OCR
+        ocrResult = {
+          text: '', // No text extracted
+          lineCount: 0,
+          pageCount: 0,
+        };
+        console.log('OCR skipped - document will be uploaded without text extraction');
+      } else {
+        console.log('Step 1: Running Azure OCR...');
+        const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+        
+        // Check file size - Document Intelligence supports up to 50MB for PDFs
+        const fileSize = fileResponse.ContentLength || 0;
+        const fileSizeMB = fileSize / (1024 * 1024);
+        const isPDF = mimeType === 'application/pdf';
+        
+        if (isPDF && fileSizeMB > 50) {
+          throw new Error(
+            `File size (${fileSizeMB.toFixed(2)}MB) exceeds Azure Document Intelligence limit of 50MB for PDFs. ` +
+            `Please compress the file or split it into smaller parts, or use "Skip OCR" option.`
+          );
+        }
+        
+        console.log(`File size: ${fileSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`);
+        
+        try {
+          ocrResult = await performOCR(fileUrl, userId);
+          console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
+        } catch (ocrError) {
+          console.error('OCR failed:', ocrError);
+          throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+        }
       }
     }
 
-    // Step 2: Extract metadata with OpenAI
+    // Step 2: Extract metadata with OpenAI (or create minimal metadata if OCR was skipped)
     console.log('Step 2: Extracting metadata...');
     let metadata;
     try {
-      const result = await extractMetadata(ocrResult.text, filename || 'document', userId);
-      metadata = result.metadata;
-      rawAiOutput = result.rawOutput; // Store for response
-      console.log('Metadata extracted:', metadata.title);
+      if (skipOCR && !ocrResult.text) {
+        // If OCR was skipped, create minimal metadata from filename
+        console.log('Creating minimal metadata from filename (OCR was skipped)');
+        metadata = {
+          title: filename.replace(/\.[^/.]+$/, '') || 'Untitled Document',
+          author: undefined,
+          year: undefined,
+          publisher: undefined,
+          type: 'document_other',
+          domain: 'general',
+          standardizedId: `doc_${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+          tags: [],
+          confidence: 'low',
+        };
+        rawAiOutput = 'Metadata created from filename (OCR skipped)';
+        console.log('Minimal metadata created:', metadata.title);
+      } else {
+        const result = await extractMetadata(ocrResult.text, filename || 'document', userId);
+        metadata = result.metadata;
+        rawAiOutput = result.rawOutput; // Store for response
+        console.log('Metadata extracted:', metadata.title);
+      }
     } catch (metadataError) {
       console.error('Metadata extraction failed:', metadataError);
-      throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
+      // If metadata extraction fails but OCR was skipped, create minimal metadata
+      if (skipOCR) {
+        console.log('Metadata extraction failed, creating minimal metadata from filename');
+        metadata = {
+          title: filename.replace(/\.[^/.]+$/, '') || 'Untitled Document',
+          author: undefined,
+          year: undefined,
+          publisher: undefined,
+          type: 'document_other',
+          domain: 'general',
+          standardizedId: `doc_${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+          tags: [],
+          confidence: 'low',
+        };
+        rawAiOutput = 'Metadata created from filename (extraction failed)';
+      } else {
+        throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
+      }
     }
 
     // Step 2.25: Check for similar/duplicate documents
@@ -552,6 +634,24 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Document processing failed:', error);
+    
+    // Log OCR failures to database even if they happen at the route level
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isOcrError = errorMessage.includes('OCR') || errorMessage.includes('Azure');
+    
+    if (isOcrError && userId) {
+      try {
+        await logOcrUsage({
+          pages: 0,
+          userId,
+          documentId: undefined,
+          success: false,
+          errorMessage: `Route-level OCR error: ${errorMessage}`,
+        });
+      } catch (logError) {
+        console.error('Failed to log OCR error:', logError);
+      }
+    }
 
     // Clean up uploaded files from R2
     try {

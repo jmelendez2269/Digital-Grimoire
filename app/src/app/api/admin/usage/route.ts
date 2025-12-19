@@ -50,8 +50,10 @@ export async function GET(request: NextRequest) {
 
     if (usageError) throw usageError;
 
+    console.log(`[ADMIN USAGE] Found ${usageByService?.length || 0} usage records for the last ${daysAgo} days`);
+
     // Aggregate by service
-    const serviceStats = usageByService?.reduce((acc: any, curr: any) => {
+    const serviceStats = (usageByService || []).reduce((acc: any, curr: any) => {
       const service = curr.service;
       if (!acc[service]) {
         acc[service] = {
@@ -116,10 +118,20 @@ export async function GET(request: NextRequest) {
       .gte('created_at', monthStartDate.toISOString());
 
     const currentCosts = {
-      daily: dailyCostData?.reduce((sum, row) => sum + parseFloat(row.estimated_cost || '0'), 0) || 0,
-      weekly: weeklyCostData?.reduce((sum, row) => sum + parseFloat(row.estimated_cost || '0'), 0) || 0,
-      monthly: monthlyCostData?.reduce((sum, row) => sum + parseFloat(row.estimated_cost || '0'), 0) || 0,
+      daily: (dailyCostData || []).reduce((sum, row) => sum + parseFloat(row.estimated_cost || '0'), 0),
+      weekly: (weeklyCostData || []).reduce((sum, row) => sum + parseFloat(row.estimated_cost || '0'), 0),
+      monthly: (monthlyCostData || []).reduce((sum, row) => sum + parseFloat(row.estimated_cost || '0'), 0),
     };
+
+    console.log('[ADMIN USAGE] Calculated costs:', {
+      daily: currentCosts.daily,
+      weekly: currentCosts.weekly,
+      monthly: currentCosts.monthly,
+      dailyRecords: dailyCostData?.length || 0,
+      weeklyRecords: weeklyCostData?.length || 0,
+      monthlyRecords: monthlyCostData?.length || 0,
+    });
+    console.log('[ADMIN USAGE] Service stats:', Object.values(serviceStats));
 
     // Get total users count
     const { count: totalUsers } = await supabase
@@ -158,7 +170,7 @@ export async function GET(request: NextRequest) {
         currentCosts,
       },
       dailySummary: dailySummary || [],
-      serviceStats: Object.values(serviceStats || {}),
+      serviceStats: Object.values(serviceStats),
       userActivity: userActivity || [],
       topUsers: topUsers || [],
       storageUsage: storageUsage || null,

@@ -8,16 +8,38 @@ interface FloatingAISearchProps {
 }
 
 export default function FloatingAISearch({ defaultCollapsed = true }: FloatingAISearchProps) {
+  console.log('[DEBUG] FloatingAISearch component rendered', { defaultCollapsed });
+  
   const [isExpanded, setIsExpanded] = useState(!defaultCollapsed);
   const [AISearchBarComponent, setAISearchBarComponent] = useState<React.ComponentType<{ className?: string }> | null>(null);
   
   // Dynamically load AISearchBar only when expanded to avoid webpack resolution issues
   useEffect(() => {
+    console.log('[DEBUG] FloatingAISearch useEffect triggered', { isExpanded, hasAISearchBarComponent: !!AISearchBarComponent });
+    
     if (isExpanded && !AISearchBarComponent) {
+      console.log('[DEBUG] Starting AISearchBar import');
+      
       import('@/components/AISearchBar').then((mod) => {
+        console.log('[DEBUG] AISearchBar import resolved', {
+          hasDefault: !!mod.default,
+          exportKeys: Object.keys(mod),
+          defaultType: typeof mod.default
+        });
+        
+        if (!mod.default) {
+          console.error('[FloatingAISearch] AISearchBar has no default export:', mod);
+          return;
+        }
+        
         setAISearchBarComponent(() => mod.default);
       }).catch((error) => {
-        console.error('Failed to load AISearchBar:', error);
+        console.error('[FloatingAISearch] Failed to load AISearchBar:', error);
+        console.error('[FloatingAISearch] Error details:', {
+          message: error?.message,
+          stack: error?.stack,
+          name: error?.name
+        });
       });
     }
   }, [isExpanded, AISearchBarComponent]);

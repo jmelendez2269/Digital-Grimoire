@@ -68,6 +68,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
     { label: "Admin Panel", icon: "🔐", href: "/admin" },
     { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
     { label: "Import Sacred Text", icon: "🌐", href: "/admin/import-sacred-text" },
+    { label: "Courses", icon: "📚", href: "/admin/courses" },
     { label: "Feedback", icon: "💬", href: "/admin/feedback" },
     // To add new admin pages, add entries here!
   ];
@@ -101,6 +102,16 @@ function Header({ librarySearch }: HeaderProps = {}) {
             }`}
           >
             📚 Library
+          </Link>
+          <Link
+            href="/courses"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/courses") || pathname?.startsWith("/courses/")
+                ? "text-amber-400"
+                : "text-zinc-400 hover:text-amber-300"
+            }`}
+          >
+            🎓 Courses
           </Link>
           <Link
             href="/journal"

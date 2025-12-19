@@ -134,18 +134,31 @@ export default function AdminDashboard() {
       
       // Fetch usage metrics
       const metricsResponse = await fetch(`/api/admin/usage?range=${timeRange}`);
+      
+      if (!metricsResponse.ok) {
+        console.error('Failed to fetch metrics:', metricsResponse.status, metricsResponse.statusText);
+        const errorData = await metricsResponse.json().catch(() => ({}));
+        console.error('Error details:', errorData);
+        return;
+      }
+      
       const metricsData = await metricsResponse.json();
+      console.log('Metrics data received:', metricsData);
 
       if (metricsData.success) {
         setMetrics(metricsData);
+      } else {
+        console.error('Metrics API returned success: false', metricsData);
       }
 
       // Fetch cover system status
       const coverResponse = await fetch('/api/admin/covers/status');
-      const coverData = await coverResponse.json();
-
-      if (coverData.success) {
-        setCoverStatus(coverData);
+      
+      if (coverResponse.ok) {
+        const coverData = await coverResponse.json();
+        if (coverData.success) {
+          setCoverStatus(coverData);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch metrics:', error);
@@ -337,6 +350,11 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-bold text-amber-100 mb-4">
                 📊 API Usage by Service
               </h2>
+              {metrics.serviceStats.length === 0 ? (
+                <div className="text-center py-8 text-amber-100/40">
+                  No API usage data found for the selected time range
+                </div>
+              ) : (
               <div className="space-y-4">
                 {metrics.serviceStats.map((stat) => (
                   <div key={stat.service} className="border border-amber-900/20 rounded-lg p-4">
@@ -372,6 +390,7 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             {/* Storage Usage */}
@@ -650,7 +669,9 @@ export default function AdminDashboard() {
                     {metrics.overview.currentCosts.monthly >= 500 && (
                       <li>High usage detected - implement usage-based pricing or higher tiers</li>
                     )}
-                    <li>Azure OCR is {((metrics.serviceStats.find(s => s.service === 'azure_ocr')?.totalCost || 0) / metrics.overview.currentCosts.monthly * 100).toFixed(1)}% of total cost</li>
+                    <li>Azure OCR is {metrics.overview.currentCosts.monthly > 0 
+                      ? ((metrics.serviceStats.find(s => s.service === 'azure_ocr')?.totalCost || 0) / metrics.overview.currentCosts.monthly * 100).toFixed(1)
+                      : '0'}% of total cost</li>
                     <li>Consider bulk upload discounts if average documents/user is high</li>
                   </ul>
                 </div>

@@ -106,9 +106,35 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Get user with error handling for invalid refresh tokens
+  let user = null;
+  try {
+    const {
+      data: { user: fetchedUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+    
+    // If there's an auth error (like invalid refresh token), clear the session
+    if (authError) {
+      // Check if it's a refresh token error
+      if (authError.message?.includes('refresh_token') || authError.message?.includes('Refresh Token')) {
+        console.warn('[Middleware] Invalid refresh token detected, clearing session:', authError.message);
+        // Clear auth cookies by setting them to empty with past expiration
+        const expiredDate = new Date(0);
+        supabaseResponse.cookies.set('sb-access-token', '', { expires: expiredDate, path: '/' });
+        supabaseResponse.cookies.set('sb-refresh-token', '', { expires: expiredDate, path: '/' });
+        // Continue without user - will redirect to login if needed
+      } else {
+        console.warn('[Middleware] Auth error (non-refresh-token):', authError.message);
+      }
+    } else {
+      user = fetchedUser;
+    }
+  } catch (error) {
+    // Catch any unexpected errors during auth check
+    console.warn('[Middleware] Error during auth check:', error instanceof Error ? error.message : String(error));
+    // Continue without user - will redirect to login if needed
+  }
 
   // Define public routes that don't require authentication
   const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance"];
