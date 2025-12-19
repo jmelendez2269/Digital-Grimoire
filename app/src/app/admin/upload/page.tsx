@@ -459,7 +459,7 @@ export default function AdminUploadPage() {
               file: uploadFile.originalFile!,
               originalFile: undefined,
               isCompressed: false,
-              originalSize: uploadFile.originalFile.size,
+              originalSize: uploadFile.originalFile!.size,
               compressionRatio: undefined,
               previewUrl: newPreviewUrl,
               warning: shouldCompressPDF(uploadFile.originalFile!)
@@ -915,6 +915,9 @@ export default function AdminUploadPage() {
                           {uploadFile.isCompressed && uploadFile.originalSize
                             ? `${formatFileSize(uploadFile.originalSize)} → ${formatFileSize(uploadFile.file.size)} (${uploadFile.compressionRatio}% smaller)`
                             : formatFileSize(uploadFile.file.size)}
+                          {uploadFile.status === 'pending' && (
+                            <span className="ml-2 text-amber-500/60">• Pending</span>
+                          )}
                         </p>
                         {uploadFile.isCompressed && (
                           <p className="text-xs text-emerald-400 mt-0.5 flex items-center gap-1">
@@ -939,29 +942,52 @@ export default function AdminUploadPage() {
                             Possible duplicate detected - expand for details
                           </p>
                         )}
-                        {/* Skip OCR option for PDFs */}
-                        {uploadFile.status === 'pending' && 
-                         (uploadFile.file.type === 'application/pdf' || uploadFile.file.type.startsWith('image/')) && (
-                          <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={uploadFile.skipOCR || false}
-                              onChange={(e) => {
-                                setFiles((prev) =>
-                                  prev.map((f) =>
-                                    f.id === uploadFile.id
-                                      ? { ...f, skipOCR: e.target.checked }
-                                      : f
-                                  )
-                                );
-                              }}
-                              className="w-4 h-4 text-amber-600 bg-zinc-800 border-amber-700 rounded focus:ring-amber-500 focus:ring-2"
-                            />
-                            <span className="text-xs text-amber-100/70">
-                              Skip OCR (upload without text extraction)
-                            </span>
-                          </label>
-                        )}
+                        {/* Skip OCR option for PDFs and Images */}
+                        {(() => {
+                          const isPending = uploadFile.status === 'pending';
+                          const isPDFOrImage = uploadFile.file.type === 'application/pdf' || uploadFile.file.type.startsWith('image/');
+                          const shouldShow = isPending && isPDFOrImage;
+                          
+                          // Debug logging (remove in production)
+                          if (isPDFOrImage && !shouldShow) {
+                            console.log('Skip OCR checkbox conditions:', {
+                              status: uploadFile.status,
+                              fileType: uploadFile.file.type,
+                              isPending,
+                              isPDFOrImage,
+                              shouldShow
+                            });
+                          }
+                          
+                          return shouldShow ? (
+                          <div className="mt-3 p-2.5 bg-amber-950/30 border border-amber-800/50 rounded-md">
+                            <label className="flex items-center gap-2.5 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                checked={uploadFile.skipOCR || false}
+                                onChange={(e) => {
+                                  setFiles((prev) =>
+                                    prev.map((f) =>
+                                      f.id === uploadFile.id
+                                        ? { ...f, skipOCR: e.target.checked }
+                                        : f
+                                    )
+                                  );
+                                }}
+                                className="w-4 h-4 text-amber-600 bg-zinc-800 border-amber-600 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
+                              />
+                              <span className="text-xs text-amber-100 font-medium group-hover:text-amber-50 transition-colors">
+                                ⚡ Skip OCR (upload without text extraction)
+                              </span>
+                            </label>
+                            {uploadFile.skipOCR && (
+                              <p className="text-xs text-amber-200/70 mt-2 ml-6 italic">
+                                File will be uploaded but text won't be extracted. You can add metadata manually later.
+                              </p>
+                            )}
+                          </div>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
 
@@ -1013,7 +1039,7 @@ export default function AdminUploadPage() {
                         </button>
                       )}
                       {uploadFile.status === 'compressing' && (
-                        <Loader2 className="w-4 h-4 text-amber-600 animate-spin" title="Compressing PDF..." />
+                        <Loader2 className="w-4 h-4 text-amber-600 animate-spin" aria-label="Compressing PDF..." />
                       )}
                       {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
                         <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />

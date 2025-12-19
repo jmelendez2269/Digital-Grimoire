@@ -444,8 +444,8 @@ export const DragHandle = Extension.create({
                 } catch (err) {
                   console.error('[DragHandle] Error moving block:', err);
                   console.error('[DragHandle] Error details:', {
-                    message: err?.message,
-                    stack: err?.stack
+                    message: err instanceof Error ? err.message : String(err),
+                    stack: err instanceof Error ? err.stack : undefined
                   });
                 }
               } else {

@@ -83,16 +83,22 @@ export async function compressPDF(file: File): Promise<CompressionResult> {
     // Try multiple compression strategies and use the best result
     let bestResult: { bytes: Uint8Array; size: number } | null = null;
     
+    // Helper to update best result
+    const updateBestResult = (bytes: Uint8Array, size: number) => {
+      if (bestResult === null) {
+        bestResult = { bytes, size };
+      } else if (size < bestResult.size) {
+        bestResult = { bytes, size };
+      }
+    };
+    
     // Strategy 1: Standard save with object streams disabled (often smaller)
     try {
       const bytes1 = await pdfDoc.save({
         useObjectStreams: false,
         addDefaultPage: false,
       });
-      const size1 = bytes1.length;
-      if (!bestResult || size1 < bestResult.size) {
-        bestResult = { bytes: bytes1, size: size1 };
-      }
+      updateBestResult(bytes1, bytes1.length);
     } catch (e) {
       console.warn('Compression strategy 1 failed:', e);
     }
@@ -103,10 +109,7 @@ export async function compressPDF(file: File): Promise<CompressionResult> {
         useObjectStreams: true,
         addDefaultPage: false,
       });
-      const size2 = bytes2.length;
-      if (!bestResult || size2 < bestResult.size) {
-        bestResult = { bytes: bytes2, size: size2 };
-      }
+      updateBestResult(bytes2, bytes2.length);
     } catch (e) {
       console.warn('Compression strategy 2 failed:', e);
     }
@@ -117,8 +120,8 @@ export async function compressPDF(file: File): Promise<CompressionResult> {
       const pages = pdfDoc.getPages();
       
       for (const page of pages) {
-        const [width, height] = page.getSize();
-        const newPage = newPdfDoc.addPage([width, height]);
+        const size = page.getSize();
+        const newPage = newPdfDoc.addPage([size.width, size.height]);
         
         // Copy page content (this may lose some formatting but reduces size)
         const content = page.node;
@@ -136,9 +139,12 @@ export async function compressPDF(file: File): Promise<CompressionResult> {
       throw new Error('All compression strategies failed');
     }
     
+    // TypeScript guard: bestResult is guaranteed to be non-null here
+    const result: { bytes: Uint8Array; size: number } = bestResult;
+    
     // Validate: Try to load the compressed PDF to ensure it's still valid
     try {
-      await PDFDocument.load(bestResult.bytes);
+      await PDFDocument.load(result.bytes);
     } catch (validationError) {
       console.error('Compressed PDF validation failed:', validationError);
       // If validation fails, return original file
@@ -153,8 +159,8 @@ export async function compressPDF(file: File): Promise<CompressionResult> {
     }
     
     // Create a Blob from the compressed bytes
-    const compressedBlob = new Blob([bestResult.bytes], { type: 'application/pdf' });
-    const compressedSize = bestResult.size;
+    const compressedBlob = new Blob([result.bytes], { type: 'application/pdf' });
+    const compressedSize = result.size;
     const compressionRatio = ((originalSize - compressedSize) / originalSize) * 100;
     
     // If compression didn't actually reduce size (or increased it), try server-side compression

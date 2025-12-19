@@ -30,16 +30,22 @@ export async function POST(request: NextRequest) {
     // Try multiple compression strategies
     let bestResult: { bytes: Uint8Array; size: number } | null = null;
 
+    // Helper to update best result
+    const updateBestResult = (bytes: Uint8Array, size: number) => {
+      if (bestResult === null) {
+        bestResult = { bytes, size };
+      } else if (size < bestResult.size) {
+        bestResult = { bytes, size };
+      }
+    };
+
     // Strategy 1: Standard save with object streams disabled
     try {
       const bytes1 = await pdfDoc.save({
         useObjectStreams: false,
         addDefaultPage: false,
       });
-      const size1 = bytes1.length;
-      if (!bestResult || size1 < bestResult.size) {
-        bestResult = { bytes: bytes1, size: size1 };
-      }
+      updateBestResult(bytes1, bytes1.length);
     } catch (e) {
       console.warn('Compression strategy 1 failed:', e);
     }
@@ -50,10 +56,7 @@ export async function POST(request: NextRequest) {
         useObjectStreams: true,
         addDefaultPage: false,
       });
-      const size2 = bytes2.length;
-      if (!bestResult || size2 < bestResult.size) {
-        bestResult = { bytes: bytes2, size: size2 };
-      }
+      updateBestResult(bytes2, bytes2.length);
     } catch (e) {
       console.warn('Compression strategy 2 failed:', e);
     }
@@ -65,9 +68,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // TypeScript guard: bestResult is guaranteed to be non-null here
+    const result: { bytes: Uint8Array; size: number } = bestResult;
+
     // Validate the compressed PDF
     try {
-      await PDFDocument.load(bestResult.bytes);
+      await PDFDocument.load(result.bytes);
     } catch (validationError) {
       return NextResponse.json(
         { error: 'Compressed PDF validation failed' },
@@ -75,7 +81,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const compressedSize = bestResult.size;
+    const compressedSize = result.size;
     const compressionRatio = ((originalSize - compressedSize) / originalSize) * 100;
 
     // If compression didn't help, return original
@@ -91,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert to base64 for transmission
-    const base64 = Buffer.from(bestResult.bytes).toString('base64');
+    const base64 = Buffer.from(result.bytes).toString('base64');
 
     return NextResponse.json({
       success: true,
