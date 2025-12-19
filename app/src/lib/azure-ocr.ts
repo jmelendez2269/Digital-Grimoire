@@ -40,6 +40,11 @@ export async function performOCR(
   console.log(`Starting OCR for URL: ${fileUrl}`);
   console.log(`Azure endpoint: ${endpoint.substring(0, 50)}...`); // Only log first 50 chars for security
 
+  // Detect if file is likely a PDF based on URL
+  const isLikelyPDF = fileUrl.toLowerCase().includes('.pdf') || 
+                      fileUrl.toLowerCase().endsWith('/pdf') ||
+                      fileUrl.toLowerCase().includes('application/pdf');
+
   // Try Document Intelligence API first (better for large documents)
   // If that fails with 401/404, fall back to Computer Vision API
   const baseEndpoint = endpoint.replace(/\/$/, '');
@@ -63,15 +68,76 @@ export async function performOCR(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      const errorText = JSON.stringify(errorData);
+      const errorMessage = errorData.error?.message || errorText;
+      
       console.error('Document Intelligence API error:', {
         status: response.status,
         statusText: response.statusText,
-        errorData: JSON.stringify(errorData).substring(0, 200)
+        errorData: errorText.substring(0, 200)
       });
       
-      // If 400, 401, or 404, try falling back to Computer Vision API
+      // Check if this is a size-related error from Document Intelligence
+      const isSizeError = errorMessage.includes('too large') || 
+                         errorMessage.includes('larger than') || 
+                         errorMessage.includes('exceeds') ||
+                         errorMessage.includes('size limit') ||
+                         errorMessage.includes('4MB') ||
+                         errorMessage.includes('50MB');
+      
+      // If Document Intelligence fails with a size error, don't fall back to Computer Vision
+      // Computer Vision has a 4MB limit and will definitely fail for large files
+      if (response.status === 400 && isSizeError) {
+        const errorDetails = errorMessage.substring(0, 200);
+        const finalError = `Azure Document Intelligence failed: The file exceeds the size limit. ` +
+          `Document Intelligence supports PDFs up to 50MB, but this file appears to be too large. ` +
+          `File URL: ${fileUrl.substring(0, 80)}... ` +
+          `Please compress the file or split it into smaller parts. ` +
+          `Error details: ${errorDetails}`;
+        
+        await logOcrUsage({
+          pages: 0,
+          userId,
+          documentId,
+          success: false,
+          errorMessage: finalError,
+        });
+        
+        throw new Error(finalError);
+      }
+      
+      // If 400 (non-size), 401, or 404, try falling back to Computer Vision API
       // 400 can happen if Document Intelligence API doesn't support the file or URL format
+      // For PDFs, only fall back if it's not a size error (Computer Vision has 4MB limit)
       if ((response.status === 400 || response.status === 401 || response.status === 404) && useDocumentIntelligence) {
+        // For PDFs, be cautious about falling back to Computer Vision due to 4MB limit
+        if (isLikelyPDF && response.status === 400) {
+          console.warn('Document Intelligence failed for PDF with 400 error. This may indicate a size or format issue.');
+          console.warn('Computer Vision fallback may fail for large PDFs due to 4MB image limit.');
+          
+          // If Document Intelligence fails with 400 for a PDF, it might be a page-level size issue
+          // Don't fall back to Computer Vision as it will likely fail with the same issue
+          const errorDetails = errorMessage.substring(0, 500);
+          const finalError = `Azure Document Intelligence failed to process your PDF. ` +
+            `Even though your file is under 8MB total, individual pages may exceed Azure's 4MB limit when converted to images. ` +
+            `This often happens with PDFs that have high-resolution images or scanned pages. ` +
+            `\n\nSolutions:\n` +
+            `1. Further compress the PDF using a tool that compresses embedded images\n` +
+            `2. Reduce the resolution of images within the PDF\n` +
+            `3. Split the PDF into smaller sections\n` +
+            `4. Use a PDF with lower image quality/resolution\n\n` +
+            `Error details: ${errorDetails}`;
+          
+          await logOcrUsage({
+            pages: 0,
+            userId,
+            documentId,
+            success: false,
+            errorMessage: finalError,
+          });
+          
+          throw new Error(finalError);
+        }
         console.log('Document Intelligence API not available, trying Computer Vision API...');
         useDocumentIntelligence = false;
         
@@ -97,14 +163,16 @@ export async function performOCR(
           let errorMessage = `Azure OCR API failed: ${cvResponse.status} - ${cvResponse.statusText}`;
           if (cvResponse.status === 400) {
             const errorDetails = cvErrorData.error?.message || JSON.stringify(cvErrorData);
-            const isSizeError = errorDetails.includes('too large') || errorDetails.includes('larger than');
-            if (isSizeError) {
-              errorMessage = `Azure OCR bad request (400). ` +
-                `The file exceeds Azure's size limit for image processing. ` +
-                `Azure Computer Vision API has a 4MB limit for images. ` +
-                `For PDFs, we use Document Intelligence which supports up to 50MB, but if it falls back to Computer Vision, individual pages converted to images must be under 4MB. ` +
-                `File URL: ${fileUrl.substring(0, 80)}... ` +
-                `Try compressing the file or splitting it into smaller parts. ` +
+            const isCvSizeError = errorDetails.includes('too large') || errorDetails.includes('larger than') || errorDetails.includes('4MB');
+            if (isCvSizeError) {
+              errorMessage = `Azure OCR failed: Individual PDF pages exceed the 4MB image limit. ` +
+                `Even though your total file is under 8MB, when Azure converts PDF pages to images for processing, ` +
+                `each page image must be under 4MB. High-resolution or scanned pages often exceed this limit. ` +
+                `\n\nSolutions:\n` +
+                `1. Compress the PDF using a tool that reduces image resolution (not just file structure)\n` +
+                `2. Reduce image quality/resolution within the PDF\n` +
+                `3. Split the PDF into smaller sections with fewer pages\n` +
+                `4. Use a lower-resolution version of the PDF\n\n` +
                 `Error details: ${errorDetails.substring(0, 200)}`;
             } else {
               errorMessage = `Azure OCR bad request (400). ` +

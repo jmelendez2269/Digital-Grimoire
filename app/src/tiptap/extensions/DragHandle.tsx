@@ -15,12 +15,11 @@ export const DragHandle = Extension.create({
       new Plugin({
         key,
         view(view) {
-          // Create handle and append to body (like SlashMenu does)
+          // Create handle and append to body
           const handle = document.createElement('div');
           handle.setAttribute('data-drag-handle', 'true');
           handle.innerText = '⋮⋮';
           
-          // Use fixed positioning like SlashMenu - append to body
           handle.style.cssText = `
             position: fixed !important;
             z-index: 100 !important;
@@ -55,27 +54,149 @@ export const DragHandle = Extension.create({
           let currentBlock: HTMLElement | null = null;
           let isDragging = false;
           let draggedBlock: HTMLElement | null = null;
-          let dragStartY = 0;
-          let lastDropTarget: HTMLElement | null = null;
+          let draggedBlockNodePos: number | null = null;
+
+          const BLOCK_SELECTOR = 'p, h1, h2, h3, h4, h5, h6, li, pre, blockquote';
+
+          // Find ProseMirror position for a DOM block element by matching DOM nodes
+          const findBlockPosition = (blockElement: HTMLElement): number | null => {
+            try {
+              const { state } = editor;
+              
+              console.log('[DragHandle] Finding position for block:', blockElement.tagName, blockElement.textContent?.substring(0, 50));
+              
+              // Walk through ProseMirror document and match DOM nodes
+              let foundPos: number | null = null;
+              
+              state.doc.descendants((node, pos) => {
+                if (foundPos !== null) return false; // Stop if found
+                
+                // Only check block nodes (paragraphs, headings, etc.)
+                if (node.isBlock && node.type.name !== 'doc') {
+                  try {
+                    // Get the DOM node for this ProseMirror position
+                    const domAtPos = view.domAtPos(pos);
+                    let domNode: Node | null = domAtPos.node;
+                    
+                    // If it's a text node, get parent
+                    if (domNode.nodeType === Node.TEXT_NODE) {
+                      domNode = domNode.parentElement;
+                    }
+                    
+                    // Check if this DOM node matches our block element
+                    if (domNode === blockElement) {
+                      foundPos = pos;
+                      console.log('[DragHandle] Found exact match at position:', pos);
+                      return false; // Stop searching
+                    }
+                    
+                    // Also check if the block element contains this node or vice versa
+                    if (domNode instanceof Element && blockElement instanceof Element) {
+                      if (blockElement.contains(domNode) || domNode.contains(blockElement)) {
+                        // Walk up from domNode to find the block
+                        let walkNode: Element | null = domNode as Element;
+                        while (walkNode && walkNode !== view.dom) {
+                          if (walkNode === blockElement) {
+                            foundPos = pos;
+                            console.log('[DragHandle] Found via containment at position:', pos);
+                            return false;
+                          }
+                          walkNode = walkNode.parentElement;
+                        }
+                      }
+                    }
+                  } catch (err) {
+                    // Ignore errors for this node
+                  }
+                }
+                return true; // Continue searching
+              });
+              
+              if (foundPos === null) {
+                console.warn('[DragHandle] Could not find position for block:', blockElement.tagName);
+              }
+              
+              return foundPos;
+            } catch (err) {
+              console.error('[DragHandle] Error finding block position:', err);
+              return null;
+            }
+          };
+
+          // Find the block node at a given position
+          const getBlockNodeAtPos = (pos: number): { nodePos: number; node: any } | null => {
+            try {
+              const { state } = editor;
+              const $pos = state.doc.resolve(pos);
+              
+              // Walk up to find the block node (usually at depth 1)
+              for (let depth = $pos.depth; depth >= 1; depth--) {
+                const nodePos = $pos.before(depth);
+                const node = state.doc.nodeAt(nodePos);
+                
+                if (node && node.isBlock) {
+                  return { nodePos, node };
+                }
+              }
+              
+              return null;
+            } catch (err) {
+              console.error('[DragHandle] Error getting block node:', err);
+              return null;
+            }
+          };
 
           const updatePosition = (block: HTMLElement) => {
+            if (!block || isDragging) return;
             const rect = block.getBoundingClientRect();
             handle.style.left = `${rect.left - 32}px`;
             handle.style.top = `${rect.top}px`;
             handle.style.display = 'flex';
+          };
+          
+          // Update position on scroll
+          let scrollRafId: number | null = null;
+          const handleScroll = () => {
+            if (currentBlock && !isDragging) {
+              if (scrollRafId !== null) {
+                cancelAnimationFrame(scrollRafId);
+              }
+              scrollRafId = requestAnimationFrame(() => {
+                updatePosition(currentBlock!);
+                scrollRafId = null;
+              });
+            }
+          };
+          
+          // Update position on resize
+          let resizeTimeout: NodeJS.Timeout | null = null;
+          const handleResize = () => {
+            if (currentBlock && !isDragging) {
+              if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+              }
+              resizeTimeout = setTimeout(() => {
+                updatePosition(currentBlock!);
+                resizeTimeout = null;
+              }, 16);
+            }
           };
 
           const handleMouseOver = (e: MouseEvent) => {
             if (isDragging) return;
             
             const target = e.target as HTMLElement;
-            if (!target || target === handle || handle.contains(target)) return;
+            if (!target || target === handle || handle.contains(target)) {
+              if (currentBlock && (target === handle || handle.contains(target))) {
+                updatePosition(currentBlock);
+              }
+              return;
+            }
 
             const editorDom = view.dom as HTMLElement;
             if (!editorDom.contains(target) && target !== editorDom) return;
 
-            // Find block element
-            const block = target.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote') as HTMLElement;
+            const block = target.closest(BLOCK_SELECTOR) as HTMLElement;
             
             if (block && editorDom.contains(block)) {
               currentBlock = block;
@@ -87,12 +208,14 @@ export const DragHandle = Extension.create({
             if (isDragging) return;
             
             const relatedTarget = e.relatedTarget as HTMLElement;
-            if (relatedTarget !== handle && !handle.contains(relatedTarget)) {
-              const editorDom = view.dom as HTMLElement;
-              if (!editorDom.contains(relatedTarget)) {
-                handle.style.display = 'none';
-                currentBlock = null;
-              }
+            if (relatedTarget === handle || handle.contains(relatedTarget)) {
+              return;
+            }
+            
+            const editorDom = view.dom as HTMLElement;
+            if (relatedTarget && !editorDom.contains(relatedTarget) && relatedTarget !== editorDom) {
+              handle.style.display = 'none';
+              currentBlock = null;
             }
           };
 
@@ -101,7 +224,7 @@ export const DragHandle = Extension.create({
             e.preventDefault();
             e.stopPropagation();
             
-            console.log('[DragHandle] mousedown, currentBlock:', currentBlock);
+            console.log('[DragHandle] mousedown', { hasCurrentBlock: !!currentBlock });
             
             if (!currentBlock) {
               console.log('[DragHandle] No currentBlock, aborting');
@@ -110,9 +233,20 @@ export const DragHandle = Extension.create({
             
             isDragging = true;
             draggedBlock = currentBlock;
-            dragStartY = e.clientY;
             
-            console.log('[DragHandle] Starting drag, block:', draggedBlock.tagName);
+            console.log('[DragHandle] Starting drag for block:', draggedBlock.tagName);
+            
+            // Find the ProseMirror position for this block
+            draggedBlockNodePos = findBlockPosition(draggedBlock);
+            
+            if (draggedBlockNodePos === null) {
+              console.warn('[DragHandle] Could not find position for dragged block');
+              isDragging = false;
+              draggedBlock = null;
+              return;
+            }
+            
+            console.log('[DragHandle] Dragged block position:', draggedBlockNodePos);
             
             draggedBlock.style.opacity = '0.5';
             draggedBlock.style.transition = 'opacity 0.2s';
@@ -123,66 +257,24 @@ export const DragHandle = Extension.create({
               
               // Move handle with mouse for visual feedback
               handle.style.top = `${e.clientY - 12}px`;
-              
-              // Find potential drop target and remember it
-              const editorDom = view.dom as HTMLElement;
-              let potentialTarget: HTMLElement | null = null;
-              
-              // Try elementFromPoint first, but offset slightly to avoid the handle
-              const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
-              if (elementAtPoint && elementAtPoint !== handle && !handle.contains(elementAtPoint)) {
-                potentialTarget = elementAtPoint.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote') as HTMLElement;
-              }
-              
-              // Fallback: use ProseMirror coordinates
-              if (!potentialTarget) {
-                const coords = view.posAtCoords({ left: e.clientX, top: e.clientY });
-                if (coords && coords.pos !== null && coords.pos !== undefined) {
-                  try {
-                    const domAtPos = view.domAtPos(coords.pos);
-                    let domNode: Node | null = domAtPos.node;
-                    if (domNode.nodeType === Node.TEXT_NODE) {
-                      domNode = domNode.parentElement;
-                    }
-                    if (domNode instanceof HTMLElement) {
-                      potentialTarget = domNode.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote') as HTMLElement;
-                      if (!potentialTarget) {
-                        const tagName = domNode.tagName.toLowerCase();
-                        if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'pre', 'blockquote'].includes(tagName)) {
-                          potentialTarget = domNode;
-                        }
-                      }
-                    }
-                  } catch (err) {
-                    // Ignore errors
-                  }
-                }
-              }
-              
-              if (potentialTarget && editorDom.contains(potentialTarget) && potentialTarget !== draggedBlock) {
-                lastDropTarget = potentialTarget; // Remember the last valid target
-                potentialTarget.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
-                setTimeout(() => {
-                  if (potentialTarget && potentialTarget !== draggedBlock) {
-                    potentialTarget.style.backgroundColor = '';
-                  }
-                }, 100);
-              }
             };
 
             const handleMouseUp = (e: MouseEvent) => {
-              console.log('[DragHandle] mouseup, finding drop target at:', e.clientX, e.clientY);
+              console.log('[DragHandle] mouseup event', { 
+                hasDraggedBlock: !!draggedBlock, 
+                draggedBlockNodePos,
+                clientY: e.clientY 
+              });
               
               isDragging = false;
               handle.style.cursor = 'grab';
               
-              // Reset handle position
               if (currentBlock) {
                 updatePosition(currentBlock);
               }
 
-              if (!draggedBlock) {
-                console.log('[DragHandle] No draggedBlock on mouseup');
+              if (!draggedBlock || draggedBlockNodePos === null) {
+                console.log('[DragHandle] No dragged block or position, aborting');
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
                 return;
@@ -191,275 +283,177 @@ export const DragHandle = Extension.create({
               // Restore opacity
               draggedBlock.style.opacity = '1';
               
-              // Find drop target - prioritize lastDropTarget (most reliable during drag)
+              // Find drop target - only if mouse is over the editor
               const editorDom = view.dom as HTMLElement;
+              const editorRect = editorDom.getBoundingClientRect();
+              const isOverEditor = e.clientX >= editorRect.left && 
+                                  e.clientX <= editorRect.right &&
+                                  e.clientY >= editorRect.top && 
+                                  e.clientY <= editorRect.bottom;
+              
+              console.log('[DragHandle] Mouse position check:', {
+                clientX: e.clientX,
+                clientY: e.clientY,
+                editorRect: { left: editorRect.left, right: editorRect.right, top: editorRect.top, bottom: editorRect.bottom },
+                isOverEditor
+              });
+              
+              // If not over editor, don't drop
+              if (!isOverEditor) {
+                console.log('[DragHandle] Mouse outside editor, canceling drop');
+                draggedBlock = null;
+                draggedBlockNodePos = null;
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+                return;
+              }
+              
+              const allBlocks = Array.from(editorDom.querySelectorAll(BLOCK_SELECTOR)) as HTMLElement[];
+              
+              console.log('[DragHandle] Found blocks:', allBlocks.length, 'dragged block:', draggedBlock.tagName);
+              
+              // Find the nearest block by Y position
               let targetBlock: HTMLElement | null = null;
-              let targetCoords: { pos: number; inside: number } | null = null;
+              let nearestDistance = Infinity;
               
-              // Method 1: Use the last remembered drop target (set during drag)
-              if (lastDropTarget && editorDom.contains(lastDropTarget) && lastDropTarget !== draggedBlock) {
-                console.log('[DragHandle] Using last remembered drop target:', lastDropTarget.tagName);
-                targetBlock = lastDropTarget;
+              for (const block of allBlocks) {
+                if (block === draggedBlock) continue;
                 
-                // Get coordinates for this target block
-                const targetRect = lastDropTarget.getBoundingClientRect();
-                targetCoords = view.posAtCoords({
-                  left: targetRect.left + targetRect.width / 2,
-                  top: targetRect.top + targetRect.height / 2
-                });
-              }
-              
-              // Method 2: Try ProseMirror coordinates if no lastDropTarget
-              if (!targetBlock) {
-                const coords = view.posAtCoords({
-                  left: e.clientX,
-                  top: e.clientY
-                });
+                const rect = block.getBoundingClientRect();
+                const blockCenterY = rect.top + rect.height / 2;
+                const distance = Math.abs(e.clientY - blockCenterY);
                 
-                console.log('[DragHandle] Target coords from ProseMirror:', coords);
-                targetCoords = coords;
-                
-                if (coords && coords.pos !== null && coords.pos !== undefined) {
-                  try {
-                    const domAtPos = view.domAtPos(coords.pos);
-                    let domNode: Node | null = domAtPos.node;
-                    
-                    console.log('[DragHandle] DOM at pos:', {
-                      nodeType: domNode.nodeType,
-                      nodeName: domNode.nodeName,
-                      offset: domAtPos.offset
-                    });
-                    
-                    // If it's a text node, get parent
-                    if (domNode.nodeType === Node.TEXT_NODE) {
-                      domNode = domNode.parentElement;
-                    }
-                    
-                    if (domNode instanceof HTMLElement) {
-                      console.log('[DragHandle] DOM node element:', domNode.tagName, domNode.className);
-                      
-                      // Try closest first
-                      targetBlock = domNode.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote') as HTMLElement;
-                      
-                      // If closest didn't work, check if the node itself is a block
-                      if (!targetBlock) {
-                        const tagName = domNode.tagName.toLowerCase();
-                        if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'pre', 'blockquote'].includes(tagName)) {
-                          targetBlock = domNode;
-                          console.log('[DragHandle] Node itself is a block:', tagName);
-                        } else {
-                          // Walk up the tree to find a block
-                          let parent = domNode.parentElement;
-                          while (parent && parent !== editorDom) {
-                            const parentTag = parent.tagName.toLowerCase();
-                            if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'pre', 'blockquote'].includes(parentTag)) {
-                              targetBlock = parent;
-                              console.log('[DragHandle] Found block by walking up tree:', parentTag);
-                              break;
-                            }
-                            parent = parent.parentElement;
-                          }
-                        }
-                      } else {
-                        console.log('[DragHandle] Found block via closest:', targetBlock.tagName);
-                      }
-                    }
-                  } catch (err) {
-                    console.error('[DragHandle] Error finding block via ProseMirror:', err);
-                  }
+                if (distance < nearestDistance) {
+                  nearestDistance = distance;
+                  targetBlock = block;
                 }
               }
               
-              // Method 3: Fallback to elementFromPoint if still no target
-              if (!targetBlock) {
-                const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
-                console.log('[DragHandle] Element at point (fallback):', elementAtPoint?.tagName, elementAtPoint?.className);
-                
-                if (elementAtPoint && elementAtPoint !== handle && !handle.contains(elementAtPoint)) {
-                  // Only look within editor
-                  if (editorDom.contains(elementAtPoint)) {
-                    targetBlock = elementAtPoint.closest('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote') as HTMLElement;
-                    
-                    // If found, get coordinates
-                    if (targetBlock) {
-                      const targetRect = targetBlock.getBoundingClientRect();
-                      targetCoords = view.posAtCoords({
-                        left: targetRect.left + targetRect.width / 2,
-                        top: targetRect.top + targetRect.height / 2
-                      });
-                    }
-                  }
-                }
+              console.log('[DragHandle] Target block found:', {
+                hasTarget: !!targetBlock,
+                targetTag: targetBlock?.tagName,
+                distance: nearestDistance,
+                isSame: targetBlock === draggedBlock
+              });
+              
+              if (!targetBlock || targetBlock === draggedBlock) {
+                console.log('[DragHandle] No valid target block, aborting');
+                draggedBlock = null;
+                draggedBlockNodePos = null;
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+                return;
               }
               
-              console.log('[DragHandle] Drop target:', targetBlock?.tagName, 'dragged:', draggedBlock.tagName);
+              // Find ProseMirror positions for both blocks
+              console.log('[DragHandle] Finding positions for dragged and target blocks');
+              const targetBlockNodePos = findBlockPosition(targetBlock);
               
-              if (targetBlock && editorDom.contains(targetBlock) && targetBlock !== draggedBlock) {
-                console.log('[DragHandle] Valid drop target, calculating positions');
-                
-                // Get positions using ProseMirror
-                // Use targetCoords we already calculated (or recalculate if needed)
-                let finalTargetCoords = targetCoords;
-                if (!finalTargetCoords || finalTargetCoords.pos === null || finalTargetCoords.pos === undefined) {
-                  // Try to get coordinates from the target block itself
-                  if (targetBlock) {
-                    const targetRect = targetBlock.getBoundingClientRect();
-                    finalTargetCoords = view.posAtCoords({
-                      left: targetRect.left + targetRect.width / 2,
-                      top: targetRect.top + targetRect.height / 2
-                    });
-                  }
+              console.log('[DragHandle] Positions found:', {
+                draggedPos: draggedBlockNodePos,
+                targetPos: targetBlockNodePos
+              });
+              
+              if (targetBlockNodePos === null) {
+                console.warn('[DragHandle] Could not find position for target block');
+                draggedBlock = null;
+                draggedBlockNodePos = null;
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+                return;
+              }
+              
+              // Get the actual block nodes
+              const draggedNodeInfo = getBlockNodeAtPos(draggedBlockNodePos);
+              const targetNodeInfo = getBlockNodeAtPos(targetBlockNodePos);
+              
+              console.log('[DragHandle] Node info:', {
+                dragged: draggedNodeInfo ? { nodePos: draggedNodeInfo.nodePos, nodeType: draggedNodeInfo.node.type.name } : null,
+                target: targetNodeInfo ? { nodePos: targetNodeInfo.nodePos, nodeType: targetNodeInfo.node.type.name } : null
+              });
+              
+              if (!draggedNodeInfo || !targetNodeInfo) {
+                console.warn('[DragHandle] Could not get block nodes', {
+                  hasDragged: !!draggedNodeInfo,
+                  hasTarget: !!targetNodeInfo
+                });
+                draggedBlock = null;
+                draggedBlockNodePos = null;
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+                return;
+              }
+              
+              const { nodePos: draggedNodePos, node: draggedNode } = draggedNodeInfo;
+              const { nodePos: targetNodePos, node: targetNode } = targetNodeInfo;
+              
+              // Determine if we should insert before or after the target
+              const targetRect = targetBlock.getBoundingClientRect();
+              const shouldInsertAfter = e.clientY > targetRect.top + targetRect.height / 2;
+              
+              // Calculate insert position
+              const insertPos = shouldInsertAfter 
+                ? targetNodePos + targetNode.nodeSize
+                : targetNodePos;
+              
+              console.log('[DragHandle] Move calculation:', {
+                draggedNodePos,
+                targetNodePos,
+                insertPos,
+                shouldInsertAfter,
+                draggedNodeSize: draggedNode.nodeSize,
+                targetNodeSize: targetNode.nodeSize
+              });
+              
+              // Only move if positions are different
+              if (draggedNodePos !== insertPos && draggedNodePos !== insertPos - 1) {
+                try {
+                  const { state } = editor;
+                  const tr = state.tr;
+                  const nodeCopy = draggedNode.copy(draggedNode.content);
                   
-                  // Last resort: use mouse position
-                  if (!finalTargetCoords || finalTargetCoords.pos === null || finalTargetCoords.pos === undefined) {
-                    finalTargetCoords = view.posAtCoords({
-                      left: e.clientX,
-                      top: e.clientY
+                  console.log('[DragHandle] Creating transaction', {
+                    deleteFrom: draggedNodePos,
+                    deleteTo: draggedNodePos + draggedNode.nodeSize,
+                    insertAt: insertPos
+                  });
+                  
+                  // Delete from original position
+                  tr.delete(draggedNodePos, draggedNodePos + draggedNode.nodeSize);
+                  
+                  // Adjust insert position if we deleted before the target
+                  const adjustedPos = draggedNodePos < insertPos 
+                    ? insertPos - draggedNode.nodeSize 
+                    : insertPos;
+                  
+                  console.log('[DragHandle] Adjusted position:', adjustedPos, 'doc size:', tr.doc.content.size);
+                  
+                  // Ensure position is valid
+                  if (adjustedPos >= 1 && adjustedPos <= tr.doc.content.size) {
+                    tr.insert(adjustedPos, nodeCopy);
+                    view.dispatch(tr);
+                    console.log('[DragHandle] ✓ Block moved successfully');
+                  } else {
+                    console.error('[DragHandle] Invalid insert position:', {
+                      adjustedPos,
+                      docSize: tr.doc.content.size,
+                      min: 1,
+                      max: tr.doc.content.size
                     });
                   }
-                }
-                
-                const draggedRect = draggedBlock.getBoundingClientRect();
-                const draggedCoords = view.posAtCoords({
-                  left: draggedRect.left + draggedRect.width / 2,
-                  top: draggedRect.top + draggedRect.height / 2
-                });
-
-                console.log('[DragHandle] Positions:', {
-                  dragged: draggedCoords?.pos,
-                  target: finalTargetCoords?.pos
-                });
-
-                if (draggedCoords && draggedCoords.pos !== null && draggedCoords.pos !== undefined &&
-                    finalTargetCoords && finalTargetCoords.pos !== null && finalTargetCoords.pos !== undefined) {
-                    try {
-                      const { state } = editor;
-                      
-                      // Use the dragged and target positions directly
-                      const $dragged = state.doc.resolve(draggedCoords.pos);
-                      const $target = state.doc.resolve(finalTargetCoords.pos);
-                      
-                      // Get the depth - we want the paragraph/heading level (usually depth 1)
-                      const draggedDepth = $dragged.depth;
-                      const targetDepth = $target.depth;
-                      
-                      // Find the actual block node position
-                      // For paragraphs/headings, they're typically direct children of doc (depth 1)
-                      let draggedNodePos: number;
-                      let draggedNode;
-                      
-                      // Try to find the block at the appropriate depth
-                      if (draggedDepth >= 1) {
-                        // Get the node at depth 1 (the block level)
-                        const blockDepth = draggedDepth >= 1 ? 1 : draggedDepth;
-                        draggedNodePos = $dragged.before(blockDepth);
-                        draggedNode = state.doc.nodeAt(draggedNodePos);
-                        
-                        // If not found, try the parent
-                        if (!draggedNode && draggedDepth > 1) {
-                          draggedNodePos = $dragged.before(draggedDepth);
-                          draggedNode = state.doc.nodeAt(draggedNodePos);
-                        }
-                      } else {
-                        // At document level, find the first child
-                        draggedNodePos = 1;
-                        draggedNode = state.doc.child(0);
-                      }
-                      
-                      console.log('[DragHandle] Node info:', {
-                        draggedDepth,
-                        draggedNodePos,
-                        draggedNodeType: draggedNode?.type.name,
-                        draggedNodeSize: draggedNode?.nodeSize,
-                        targetDepth
-                      });
-                      
-                      if (draggedNode && draggedNodePos >= 0) {
-                        // Find target position
-                        let targetNodePos: number;
-                        let targetNode;
-                        
-                        if (targetDepth >= 1) {
-                          const blockDepth = targetDepth >= 1 ? 1 : targetDepth;
-                          targetNodePos = $target.before(blockDepth);
-                          targetNode = state.doc.nodeAt(targetNodePos);
-                          
-                          if (!targetNode && targetDepth > 1) {
-                            targetNodePos = $target.before(targetDepth);
-                            targetNode = state.doc.nodeAt(targetNodePos);
-                          }
-                        } else {
-                          targetNodePos = 1;
-                          targetNode = state.doc.child(0);
-                        }
-                        
-                        const targetRect = targetBlock.getBoundingClientRect();
-                        const shouldInsertAfter = e.clientY > targetRect.top + targetRect.height / 2;
-                        
-                        // Calculate insert position based on target
-                        const insertPos = shouldInsertAfter && targetNode
-                          ? targetNodePos + targetNode.nodeSize
-                          : (targetNodePos || 1);
-                        
-                        console.log('[DragHandle] Insert position:', {
-                          draggedNodePos,
-                          insertPos,
-                          shouldInsertAfter,
-                          targetNodePos,
-                          willMove: draggedNodePos !== insertPos && draggedNodePos !== insertPos - 1
-                        });
-                        
-                        // Only move if it's actually different
-                        if (draggedNodePos !== insertPos && draggedNodePos !== insertPos - 1 && Math.abs(draggedNodePos - insertPos) > 1) {
-                          const tr = state.tr;
-                          const nodeCopy = draggedNode.copy(draggedNode.content);
-                          
-                          // Delete from original position first
-                          tr.delete(draggedNodePos, draggedNodePos + draggedNode.nodeSize);
-                          
-                          // Adjust insert position if we deleted before the target
-                          const adjustedPos = draggedNodePos < insertPos 
-                            ? insertPos - draggedNode.nodeSize 
-                            : insertPos;
-                          
-                          console.log('[DragHandle] Adjusted position:', adjustedPos, 'doc size:', tr.doc.content.size);
-                          
-                          // Ensure position is valid (ProseMirror positions start at 1)
-                          if (adjustedPos >= 1 && adjustedPos <= tr.doc.content.size) {
-                            try {
-                              tr.insert(adjustedPos, nodeCopy);
-                              view.dispatch(tr);
-                              console.log('[DragHandle] ✓ Block moved successfully');
-                            } catch (insertErr) {
-                              console.error('[DragHandle] Insert failed:', insertErr);
-                              console.error('[DragHandle] Details:', {
-                                adjustedPos,
-                                docSize: tr.doc.content.size,
-                                nodeSize: draggedNode.nodeSize,
-                                nodeType: draggedNode.type.name
-                              });
-                            }
-                          } else {
-                            console.error('[DragHandle] Invalid adjusted position:', adjustedPos, 'doc size:', tr.doc.content.size);
-                          }
-                        } else {
-                          console.log('[DragHandle] Same position, no move needed');
-                        }
-                      } else {
-                        console.error('[DragHandle] Could not find dragged node. draggedNodePos:', draggedNodePos, 'draggedNode:', draggedNode);
-                      }
-                    } catch (err) {
-                      console.error('[DragHandle] Move failed with error:', err);
-                    }
-                } else {
-                  console.error('[DragHandle] Invalid coordinates:', { draggedCoords, finalTargetCoords });
+                } catch (err) {
+                  console.error('[DragHandle] Error moving block:', err);
+                  console.error('[DragHandle] Error details:', {
+                    message: err?.message,
+                    stack: err?.stack
+                  });
                 }
               } else {
-                console.log('[DragHandle] Invalid drop target or same block');
+                console.log('[DragHandle] Same position, no move needed');
               }
               
               draggedBlock = null;
-              lastDropTarget = null; // Reset for next drag
+              draggedBlockNodePos = null;
               document.removeEventListener('mousemove', handleMouseMove);
               document.removeEventListener('mouseup', handleMouseUp);
             };
@@ -471,6 +465,25 @@ export const DragHandle = Extension.create({
           const editorDom = view.dom as HTMLElement;
           editorDom.addEventListener('mouseover', handleMouseOver);
           editorDom.addEventListener('mouseout', handleMouseOut);
+          
+          // Add scroll and resize listeners
+          const scrollHandler = () => handleScroll();
+          window.addEventListener('scroll', scrollHandler, { passive: true, capture: true });
+          document.addEventListener('scroll', scrollHandler, { passive: true, capture: true });
+          editorDom.addEventListener('scroll', scrollHandler, { passive: true });
+          window.addEventListener('resize', handleResize, { passive: true });
+          
+          // Listen to scroll on scrollable parents
+          let scrollableParent: HTMLElement | null = editorDom.parentElement;
+          const scrollableParents: HTMLElement[] = [];
+          while (scrollableParent && scrollableParent !== document.body) {
+            const overflow = window.getComputedStyle(scrollableParent).overflowY;
+            if (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') {
+              scrollableParent.addEventListener('scroll', scrollHandler, { passive: true });
+              scrollableParents.push(scrollableParent);
+            }
+            scrollableParent = scrollableParent.parentElement;
+          }
 
           // Keep handle visible when hovering over it
           handle.addEventListener('mouseenter', () => {
@@ -494,6 +507,24 @@ export const DragHandle = Extension.create({
             destroy() {
               editorDom.removeEventListener('mouseover', handleMouseOver);
               editorDom.removeEventListener('mouseout', handleMouseOut);
+              window.removeEventListener('scroll', scrollHandler, { capture: true });
+              document.removeEventListener('scroll', scrollHandler, { capture: true });
+              editorDom.removeEventListener('scroll', scrollHandler);
+              window.removeEventListener('resize', handleResize);
+              
+              // Cancel pending animations
+              if (scrollRafId !== null) {
+                cancelAnimationFrame(scrollRafId);
+              }
+              if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+              }
+              
+              // Remove scroll listeners from scrollable parents
+              scrollableParents.forEach(parent => {
+                parent.removeEventListener('scroll', scrollHandler);
+              });
+              
               if (handle.parentElement) {
                 handle.remove();
               }
@@ -506,5 +537,3 @@ export const DragHandle = Extension.create({
 });
 
 export default DragHandle;
-
-

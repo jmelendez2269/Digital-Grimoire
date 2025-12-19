@@ -27,9 +27,6 @@ interface HeaderProps {
 }
 
 function Header({ librarySearch }: HeaderProps = {}) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:29',message:'Header render start - checking imports',data:{FeedbackModal:typeof FeedbackModal,AdvancedFilters:typeof AdvancedFilters,Link:typeof Link,useAuth:typeof useAuth},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, signOut, isAdmin, refreshAdminStatus } = useAuth(); // Single source of truth
@@ -457,9 +454,6 @@ function Header({ librarySearch }: HeaderProps = {}) {
 
 
       {/* Feedback Modal */}
-      {/* #region agent log */}
-      {(()=>{fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:457',message:'Before rendering FeedbackModal',data:{FeedbackModal:FeedbackModal,FeedbackModalType:typeof FeedbackModal,isUndefined:FeedbackModal===undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});return null;})()}
-      {/* #endregion */}
       <FeedbackModal
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
@@ -468,7 +462,5 @@ function Header({ librarySearch }: HeaderProps = {}) {
   );
 }
 
-// Temporarily removing memo to test if it's causing the issue
-// export default memo(Header);
-export default Header;
+export default memo(Header);
 

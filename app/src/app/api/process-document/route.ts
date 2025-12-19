@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { key, userId } = body;
+  const { key, userId, skipOCR } = body;
   
   if (!key) {
     return NextResponse.json(
@@ -148,30 +148,90 @@ export async function POST(request: NextRequest) {
         throw new Error(`HTML processing failed: ${htmlError instanceof Error ? htmlError.message : 'Unknown error'}`);
       }
     } else {
-      // For PDF/Images: Perform OCR
-      console.log('Step 1: Running Azure OCR...');
-      const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
-      
-      try {
-        ocrResult = await performOCR(fileUrl, userId);
-        console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
-      } catch (ocrError) {
-        console.error('OCR failed:', ocrError);
-        throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+      // For PDF/Images: Perform OCR (unless skipped)
+      if (skipOCR) {
+        console.log('Step 1: Skipping OCR as requested by user');
+        // Create minimal OCR result for documents without OCR
+        ocrResult = {
+          text: '', // No text extracted
+          lineCount: 0,
+          pageCount: 0,
+        };
+        console.log('OCR skipped - document will be uploaded without text extraction');
+      } else {
+        console.log('Step 1: Running Azure OCR...');
+        const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+        
+        // Check file size - Document Intelligence supports up to 50MB for PDFs
+        const fileSize = fileResponse.ContentLength || 0;
+        const fileSizeMB = fileSize / (1024 * 1024);
+        const isPDF = mimeType === 'application/pdf';
+        
+        if (isPDF && fileSizeMB > 50) {
+          throw new Error(
+            `File size (${fileSizeMB.toFixed(2)}MB) exceeds Azure Document Intelligence limit of 50MB for PDFs. ` +
+            `Please compress the file or split it into smaller parts, or use "Skip OCR" option.`
+          );
+        }
+        
+        console.log(`File size: ${fileSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`);
+        
+        try {
+          ocrResult = await performOCR(fileUrl, userId);
+          console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
+        } catch (ocrError) {
+          console.error('OCR failed:', ocrError);
+          throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+        }
       }
     }
 
-    // Step 2: Extract metadata with OpenAI
+    // Step 2: Extract metadata with OpenAI (or create minimal metadata if OCR was skipped)
     console.log('Step 2: Extracting metadata...');
     let metadata;
     try {
-      const result = await extractMetadata(ocrResult.text, filename || 'document', userId);
-      metadata = result.metadata;
-      rawAiOutput = result.rawOutput; // Store for response
-      console.log('Metadata extracted:', metadata.title);
+      if (skipOCR && !ocrResult.text) {
+        // If OCR was skipped, create minimal metadata from filename
+        console.log('Creating minimal metadata from filename (OCR was skipped)');
+        metadata = {
+          title: filename.replace(/\.[^/.]+$/, '') || 'Untitled Document',
+          author: undefined,
+          year: undefined,
+          publisher: undefined,
+          type: 'document_other',
+          domain: 'general',
+          standardizedId: `doc_${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+          tags: [],
+          confidence: 'low',
+        };
+        rawAiOutput = 'Metadata created from filename (OCR skipped)';
+        console.log('Minimal metadata created:', metadata.title);
+      } else {
+        const result = await extractMetadata(ocrResult.text, filename || 'document', userId);
+        metadata = result.metadata;
+        rawAiOutput = result.rawOutput; // Store for response
+        console.log('Metadata extracted:', metadata.title);
+      }
     } catch (metadataError) {
       console.error('Metadata extraction failed:', metadataError);
-      throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
+      // If metadata extraction fails but OCR was skipped, create minimal metadata
+      if (skipOCR) {
+        console.log('Metadata extraction failed, creating minimal metadata from filename');
+        metadata = {
+          title: filename.replace(/\.[^/.]+$/, '') || 'Untitled Document',
+          author: undefined,
+          year: undefined,
+          publisher: undefined,
+          type: 'document_other',
+          domain: 'general',
+          standardizedId: `doc_${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
+          tags: [],
+          confidence: 'low',
+        };
+        rawAiOutput = 'Metadata created from filename (extraction failed)';
+      } else {
+        throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
+      }
     }
 
     // Step 2.25: Check for similar/duplicate documents

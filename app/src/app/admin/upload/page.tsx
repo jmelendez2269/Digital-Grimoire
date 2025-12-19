@@ -9,13 +9,6 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import { compressPDF, shouldCompressPDF, formatFileSize as formatFileSizeUtil } from '@/lib/utils/pdf-compress';
 
-// #region agent log
-fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - Header',data:{HeaderType:typeof Header,HeaderValue:Header?.toString?.()?.substring(0,50)||'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - lucide icons',data:{Upload:typeof Upload,FileText:typeof FileText,X:typeof X,Check:typeof Check,AlertCircle:typeof AlertCircle,Loader2:typeof Loader2,ChevronDown:typeof ChevronDown,ChevronUp:typeof ChevronUp,Eye:typeof Eye,Trash2:typeof Trash2,Home:typeof Home,Library:typeof Library,LayoutDashboard:typeof LayoutDashboard,Shrink:typeof Shrink,RotateCcw:typeof RotateCcw},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - pdf-compress',data:{compressPDF:typeof compressPDF,shouldCompressPDF:typeof shouldCompressPDF,formatFileSizeUtil:typeof formatFileSizeUtil},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:11',message:'Import check - Link and useDropzone',data:{Link:typeof Link,useDropzone:typeof useDropzone},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-// #endregion
-
 interface SimilarDocument {
   id: string;
   title: string;
@@ -47,12 +40,10 @@ interface UploadFile {
   isCompressed?: boolean;
   originalSize?: number;
   compressionRatio?: number;
+  skipOCR?: boolean; // Option to skip OCR processing
 }
 
 export default function AdminUploadPage() {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:45',message:'Component render start',data:{HeaderDefined:Header!==undefined,HeaderType:typeof Header},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   const supabase = createClient();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -609,7 +600,8 @@ export default function AdminUploadPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           key,
-          userId: currentUser?.id 
+          userId: currentUser?.id,
+          skipOCR: uploadFile.skipOCR || false
         }),
       });
 
@@ -737,15 +729,9 @@ export default function AdminUploadPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:730',message:'Before render - checking Header',data:{Header:Header,HeaderType:typeof Header,isFunction:typeof Header==='function',isUndefined:Header===undefined,hasType:!!Header?.type,hasRender:!!Header?.render,isMemo:!!Header?.compare},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   return (
       <div className="min-h-screen bg-zinc-950 text-amber-50">
         {/* Main Header */}
-        {/* #region agent log */}
-        {(()=>{fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:733',message:'Rendering Header component',data:{HeaderDefined:Header!==undefined,HeaderType:typeof Header,canCall:typeof Header==='function'||(Header&&typeof Header.type==='function')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});return null;})()}
-        {/* #endregion */}
         <Header />
       
       {/* Admin Navigation Bar */}
@@ -913,9 +899,6 @@ export default function AdminUploadPage() {
 
             <div className="space-y-2">
               {files.map((uploadFile) => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:915',message:'Rendering file item - checking components',data:{FileText:typeof FileText,Shrink:typeof Shrink,RotateCcw:typeof RotateCcw,Eye:typeof Eye,X:typeof X,Check:typeof Check,AlertCircle:typeof AlertCircle,Loader2:typeof Loader2,ChevronDown:typeof ChevronDown,ChevronUp:typeof ChevronUp,formatFileSize:typeof formatFileSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                // #endregion
                 return (
                 <div
                   key={uploadFile.id}
@@ -955,6 +938,29 @@ export default function AdminUploadPage() {
                             <AlertCircle className="w-3 h-3" />
                             Possible duplicate detected - expand for details
                           </p>
+                        )}
+                        {/* Skip OCR option for PDFs */}
+                        {uploadFile.status === 'pending' && 
+                         (uploadFile.file.type === 'application/pdf' || uploadFile.file.type.startsWith('image/')) && (
+                          <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={uploadFile.skipOCR || false}
+                              onChange={(e) => {
+                                setFiles((prev) =>
+                                  prev.map((f) =>
+                                    f.id === uploadFile.id
+                                      ? { ...f, skipOCR: e.target.checked }
+                                      : f
+                                  )
+                                );
+                              }}
+                              className="w-4 h-4 text-amber-600 bg-zinc-800 border-amber-700 rounded focus:ring-amber-500 focus:ring-2"
+                            />
+                            <span className="text-xs text-amber-100/70">
+                              Skip OCR (upload without text extraction)
+                            </span>
+                          </label>
                         )}
                       </div>
                     </div>

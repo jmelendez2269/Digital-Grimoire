@@ -6,8 +6,10 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import { WikiLink } from '../tiptap/extensions/WikiLinkExtension';
-import { DragHandle } from '../tiptap/extensions/DragHandle';
 import { SlashMenu } from '../tiptap/extensions/SlashMenu';
+import { DragHandle as DragHandleExtension } from '@tiptap/extension-drag-handle';
+import { NodeRange } from '@tiptap/extension-node-range';
+import { DragHandle } from '@tiptap/extension-drag-handle-react';
 import {
   Bold,
   Italic,
@@ -47,7 +49,8 @@ export default function JournalEditor({
         placeholder,
       }),
       Typography,
-      DragHandle,
+      NodeRange,
+      DragHandleExtension,
       SlashMenu,
       WikiLink,
     ],
@@ -212,7 +215,14 @@ export default function JournalEditor({
         </ToolbarButton>
       </div>
 
-      <EditorContent editor={editor} />
+      <div className="relative">
+        <EditorContent editor={editor} />
+        <DragHandle editor={editor}>
+          <div className="flex items-center justify-center w-6 h-6 text-zinc-400 hover:text-amber-400 cursor-grab active:cursor-grabbing text-lg leading-none">
+            ⋮⋮
+          </div>
+        </DragHandle>
+      </div>
     </div>
   );
 }

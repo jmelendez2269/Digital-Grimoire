@@ -14,9 +14,33 @@ import { LensWeights } from '@/lib/convergence/lens-orchestrator';
 import dynamic from 'next/dynamic';
 
 // Dynamically import FloatingAISearch
-const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
+const FloatingAISearch = dynamic(() => {
+  console.log('[DEBUG] Dynamic import started for FloatingAISearch');
+  return import('@/components/FloatingAISearch').then((mod) => {
+    console.log('[DEBUG] Dynamic import resolved:', {
+      hasDefault: !!mod.default,
+      exportKeys: Object.keys(mod),
+      defaultType: typeof mod.default
+    });
+    if (!mod.default) {
+      console.error('[FloatingAISearch] Module has no default export:', mod);
+    }
+    return mod;
+  }).catch((err) => {
+    console.error('[FloatingAISearch] Import error:', err);
+    console.error('[FloatingAISearch] Error details:', {
+      message: err?.message,
+      stack: err?.stack,
+      name: err?.name
+    });
+    throw err;
+  });
+}, {
   ssr: false,
-  loading: () => null,
+  loading: () => {
+    console.log('[DEBUG] Dynamic import loading...');
+    return null;
+  },
 });
 
 interface JournalPage {
