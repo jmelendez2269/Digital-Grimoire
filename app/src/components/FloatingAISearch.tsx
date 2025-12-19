@@ -1,48 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Sparkles, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { useState, lazy, Suspense } from 'react';
+import { Sparkles, X, ChevronDown } from 'lucide-react';
+
+// Lazy load AISearchBar to preserve code splitting without webpack issues
+const AISearchBar = lazy(() => 
+  import('@/components/AISearchBar').catch((err) => {
+    console.error('Failed to load AISearchBar:', err);
+    // Return a fallback component
+    return { default: () => <div className="text-amber-100/60">Failed to load search</div> };
+  })
+);
 
 interface FloatingAISearchProps {
   defaultCollapsed?: boolean;
 }
 
 export default function FloatingAISearch({ defaultCollapsed = true }: FloatingAISearchProps) {
-  console.log('[DEBUG] FloatingAISearch component rendered', { defaultCollapsed });
-  
   const [isExpanded, setIsExpanded] = useState(!defaultCollapsed);
-  const [AISearchBarComponent, setAISearchBarComponent] = useState<React.ComponentType<{ className?: string }> | null>(null);
-  
-  // Dynamically load AISearchBar only when expanded to avoid webpack resolution issues
-  useEffect(() => {
-    console.log('[DEBUG] FloatingAISearch useEffect triggered', { isExpanded, hasAISearchBarComponent: !!AISearchBarComponent });
-    
-    if (isExpanded && !AISearchBarComponent) {
-      console.log('[DEBUG] Starting AISearchBar import');
-      
-      import('@/components/AISearchBar').then((mod) => {
-        console.log('[DEBUG] AISearchBar import resolved', {
-          hasDefault: !!mod.default,
-          exportKeys: Object.keys(mod),
-          defaultType: typeof mod.default
-        });
-        
-        if (!mod.default) {
-          console.error('[FloatingAISearch] AISearchBar has no default export:', mod);
-          return;
-        }
-        
-        setAISearchBarComponent(() => mod.default);
-      }).catch((error) => {
-        console.error('[FloatingAISearch] Failed to load AISearchBar:', error);
-        console.error('[FloatingAISearch] Error details:', {
-          message: error?.message,
-          stack: error?.stack,
-          name: error?.name
-        });
-      });
-    }
-  }, [isExpanded, AISearchBarComponent]);
 
   // If collapsed, show floating button
   // Position at bottom-6 right-6 (lower position, Read Aloud will be above)
@@ -87,14 +62,14 @@ export default function FloatingAISearch({ defaultCollapsed = true }: FloatingAI
           </button>
         </div>
         
-        {/* AI Search Bar */}
-        {AISearchBarComponent ? (
-          <AISearchBarComponent />
-        ) : (
+        {/* AI Search Bar with Suspense for lazy loading */}
+        <Suspense fallback={
           <div className="flex items-center justify-center py-4">
             <div className="text-amber-100/60">Loading search...</div>
           </div>
-        )}
+        }>
+          <AISearchBar />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Loader2, AlertCircle } from 'lucide-react';
 
-export default function NewJournalPage() {
+function NewJournalPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -263,4 +263,25 @@ export default function NewJournalPage() {
   }
 
   return null;
+}
+
+export default function NewJournalPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Header />
+          <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto mb-4" />
+              <p className="text-amber-100">Loading...</p>
+            </div>
+          </div>
+          <Footer />
+        </>
+      }
+    >
+      <NewJournalPageContent />
+    </Suspense>
+  );
 }

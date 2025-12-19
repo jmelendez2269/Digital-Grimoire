@@ -17,11 +17,18 @@ import { invalidateTextCaches } from '@/lib/cache-invalidation';
 import LibraryGrid from '@/components/LibraryGrid';
 import AdvancedFilters from '@/components/AdvancedFilters';
 
-// Dynamically import FloatingAISearch
-const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), {
-  ssr: false,
-  loading: () => null,
-});
+// Dynamically import FloatingAISearch with explicit error handling
+const FloatingAISearch = dynamic(
+  () => import('@/components/FloatingAISearch').catch((err) => {
+    console.error('Failed to load FloatingAISearch:', err);
+    // Return a no-op component if import fails
+    return { default: () => null };
+  }),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 // Types are now imported from useLibrary hook
 
