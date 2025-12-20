@@ -5,11 +5,16 @@ import { Sparkles, X, ChevronDown } from 'lucide-react';
 
 // Lazy load AISearchBar to preserve code splitting without webpack issues
 const AISearchBar = lazy(() => 
-  import('@/components/AISearchBar').catch((err) => {
-    console.error('Failed to load AISearchBar:', err);
-    // Return a fallback component
-    return { default: () => <div className="text-amber-100/60">Failed to load search</div> };
-  })
+  import('@/components/AISearchBar').then(
+    (module) => ({ default: module.default }),
+    (err) => {
+      console.error('Failed to load AISearchBar:', err);
+      // Return a fallback component that matches the expected interface
+      return {
+        default: () => <div className="text-amber-100/60 p-4">Failed to load search. Please refresh the page.</div>
+      };
+    }
+  )
 );
 
 interface FloatingAISearchProps {

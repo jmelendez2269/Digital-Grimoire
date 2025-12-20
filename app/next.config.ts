@@ -63,13 +63,18 @@ const nextConfig: NextConfig = {
     
     // Content Security Policy
     // Allow necessary services: Supabase, Cloudflare R2, Azure, OpenAI, Vercel Analytics, Sentry
+    // In development, allow localhost connections for Sentry tunnel
+    const connectSrc = isProduction
+      ? "'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com"
+      : "'self' http://localhost:* http://127.0.0.1:* https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com";
+    
     const cspDirectives = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://archive.org https://*.googleusercontent.com https://*.media-amazon.com https://*.ssl-images-amazon.com",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com",
+      `connect-src ${connectSrc}`,
       "worker-src 'self' blob:",
       "frame-src 'none'",
       "object-src 'none'",

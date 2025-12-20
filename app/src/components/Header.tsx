@@ -36,18 +36,9 @@ function Header({ librarySearch }: HeaderProps = {}) {
   const [mounted, setMounted] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  // #region agent log
-  if (typeof window !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:31',message:'pathname value on client',data:{pathname,isNull:pathname===null,isUndefined:pathname===undefined,type:typeof pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  }
-  // #endregion
-
   // Ensure client-only rendering to prevent hydration mismatches
   useEffect(() => {
     setMounted(true);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:42',message:'mounted state set to true',data:{pathname,isNull:pathname===null,isUndefined:pathname===undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
   }, []);
 
   const handleSignOut = async () => {
@@ -57,13 +48,9 @@ function Header({ librarySearch }: HeaderProps = {}) {
   };
 
   const isActive = (path: string) => {
-    const result = pathname === path;
-    // #region agent log
-    if (typeof window !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/3b2f6436-4ebc-4289-b024-a34094c46a49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:50',message:'isActive check',data:{path,pathname,result,pathnameType:typeof pathname},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    }
-    // #endregion
-    return result;
+    // Only check pathname after mount to prevent hydration mismatch
+    if (!mounted) return false;
+    return pathname === path;
   };
 
   // Close more menu when clicking outside
@@ -119,7 +106,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
           <Link
             href="/library"
             className={`text-sm font-medium transition-colors ${
-              isActive("/library")
+              mounted && isActive("/library")
                 ? "text-amber-400"
                 : "text-zinc-400 hover:text-amber-300"
             }`}
@@ -129,35 +116,27 @@ function Header({ librarySearch }: HeaderProps = {}) {
           <Link
             href="/courses"
             className={`text-sm font-medium transition-colors ${
-              isActive("/courses") || pathname?.startsWith("/courses/")
+              isActive("/courses") || (mounted && pathname?.startsWith("/courses/"))
                 ? "text-amber-400"
                 : "text-zinc-400 hover:text-amber-300"
             }`}
-            // #region agent log
-            data-debug-href="/courses"
-            data-debug-text="🎓 Courses"
-            // #endregion
           >
             🎓 Courses
           </Link>
           <Link
             href="/journal"
             className={`text-sm font-medium transition-colors ${
-              isActive("/journal") || pathname?.startsWith("/journal/")
+              isActive("/journal") || (mounted && pathname?.startsWith("/journal/"))
                 ? "text-amber-400"
                 : "text-zinc-400 hover:text-amber-300"
             }`}
-            // #region agent log
-            data-debug-href="/journal"
-            data-debug-text="📝 Journal"
-            // #endregion
           >
             📝 Journal
           </Link>
           <Link
             href="/convergence-machine"
             className={`text-sm font-medium transition-colors ${
-              isActive("/convergence-machine")
+              mounted && isActive("/convergence-machine")
                 ? "text-amber-400"
                 : "text-zinc-400 hover:text-amber-300"
             }`}
