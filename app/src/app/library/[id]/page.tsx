@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -17,7 +17,8 @@ import {
   Sparkles,
   RefreshCw,
   Edit,
-  Trash2
+  Trash2,
+  Dice6
 } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
@@ -27,9 +28,11 @@ import TableOfContents, { TOCItem } from '@/components/TableOfContents';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
 import { useAuth } from '@/contexts/AuthContext';
 import * as pdfjsLib from 'pdfjs-dist';
+import type { PDFViewerRef } from '@/components/PDFViewer';
 
 // Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
-const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
+// Use a wrapper to ensure refs and callbacks work properly
+const PDFViewerDynamic = dynamic(() => import('@/components/PDFViewer'), {
   ssr: false,
   loading: () => (
     <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
@@ -37,6 +40,31 @@ const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
     </div>
   ),
 });
+
+// Store jumpToPage function globally to avoid ref issues with dynamic imports
+let globalJumpToPageFn: ((pageNumber: number) => void) | null = null;
+
+// Wrapper component to capture the jumpToPage function
+// Use React.memo and useCallback to prevent infinite loops
+const PDFViewer = React.memo((props: React.ComponentProps<typeof PDFViewerDynamic> & { onJumpToPageReady?: (fn: (pageNumber: number) => void) => void }) => {
+  const handleJumpToPageReadyRef = React.useRef<(fn: (pageNumber: number) => void) => void | null>(null);
+  
+  // Store the callback in a ref to avoid recreating it
+  if (!handleJumpToPageReadyRef.current) {
+    handleJumpToPageReadyRef.current = (fn: (pageNumber: number) => void) => {
+      // Only log once to avoid spam
+      if (!globalJumpToPageFn) {
+        console.log('[PDFViewer Wrapper] ✅ onJumpToPageReady callback received in wrapper!');
+      }
+      globalJumpToPageFn = fn;
+      // Don't call props.onJumpToPageReady here - it causes infinite loops
+      // The global function is enough, and the parent can access it via polling
+    };
+  }
+  
+  return <PDFViewerDynamic {...props} onJumpToPageReady={handleJumpToPageReadyRef.current} />;
+});
+PDFViewer.displayName = 'PDFViewer';
 
 // Lazy load AnnotationPanel - only needed when user switches to notes tab
 const AnnotationPanelLazy = dynamic(() => import('@/components/AnnotationPanel'), {
@@ -152,6 +180,13 @@ export default function DocumentDetailPage() {
   const [reimporting, setReimporting] = useState(false);
   const [reimportError, setReimportError] = useState<string | null>(null);
   const [reimportSuccess, setReimportSuccess] = useState(false);
+  
+  // Ref for PDFViewer to enable programmatic navigation
+  const pdfViewerRef = useRef<PDFViewerRef>(null);
+  // Alternative: callback function for jumpToPage (works better with dynamic imports)
+  const [jumpToPageFn, setJumpToPageFn] = useState<((pageNumber: number) => void) | null>(null);
+  // Track when ref is available
+  const [refReady, setRefReady] = useState(false);
   
   // Dynamically load FloatingAISearch only when needed
   const [FloatingAISearchComponent, setFloatingAISearchComponent] = useState<React.ComponentType<{ defaultCollapsed?: boolean }> | null>(null);
@@ -431,7 +466,22 @@ export default function DocumentDetailPage() {
   const handleDocumentLoad = useCallback((totalPages: number) => {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
-  }, []);
+    // Ensure jumpToPageFn is set up after document loads
+    setTimeout(() => {
+      console.log('[DocumentDetailPage] PDF Viewer Ref after load:', pdfViewerRef.current);
+      if (pdfViewerRef.current && !jumpToPageFn) {
+        console.log('[DocumentDetailPage] Setting up jumpToPageFn after document load');
+        setJumpToPageFn((pageNumber: number) => {
+          console.log('[DocumentDetailPage] jumpToPageFn called with page:', pageNumber);
+          if (pdfViewerRef.current) {
+            pdfViewerRef.current.jumpToPage(pageNumber);
+          } else {
+            console.error('[DocumentDetailPage] pdfViewerRef.current is null in jumpToPageFn');
+          }
+        });
+      }
+    }, 500);
+  }, [jumpToPageFn]);
 
   // Handle HTML document load - wrapper for HTMLViewer (no parameters)
   // This handler matches HTMLViewer's expected signature: () => void
@@ -736,6 +786,198 @@ export default function DocumentDetailPage() {
     }
   }, [document, htmlUrl, pdfUrl]);
 
+  // Handle random page navigation (defined after handleTOCItemClick)
+  const handleRandomPage = useCallback(() => {
+    // Visible debugging - alert to confirm function is called
+    console.log('[RandomPage] ========== BUTTON CLICKED ==========');
+    console.log('[RandomPage] Button clicked');
+    console.log('[RandomPage] Document:', document?.title, 'Status:', document?.status);
+    console.log('[RandomPage] PDF URL:', pdfUrl, 'Num Pages:', numPages);
+    console.log('[RandomPage] HTML URL:', htmlUrl, 'TOC Items:', tocItems.length);
+    console.log('[RandomPage] PDF Viewer Ref:', pdfViewerRef.current);
+    console.log('[RandomPage] jumpToPageFn:', jumpToPageFn);
+    
+    // Also log to window for easier debugging
+    if (typeof window !== 'undefined') {
+      (window as any).lastRandomPageClick = {
+        timestamp: new Date().toISOString(),
+        document: document?.title,
+        status: document?.status,
+        pdfUrl: !!pdfUrl,
+        numPages,
+        htmlUrl: !!htmlUrl,
+        tocItemsCount: tocItems.length,
+        hasRef: !!pdfViewerRef.current,
+        hasCallback: !!jumpToPageFn
+      };
+    }
+    
+    if (!document || document.status !== 'ready') {
+      console.log('[RandomPage] Document not ready');
+      alert(`Document not ready. Status: ${document?.status || 'null'}`);
+      return;
+    }
+
+    // Structured text - random chapter
+    if (document.metadata?.isStructuredText && document.metadata.chapters) {
+      const chapters = document.metadata.chapters;
+      if (chapters.length === 0) {
+        console.log('[RandomPage] No chapters available');
+        return;
+      }
+      
+      const randomIndex = Math.floor(Math.random() * chapters.length);
+      const randomChapter = chapters[randomIndex];
+      console.log('[RandomPage] Jumping to random chapter:', randomChapter.title);
+      setActiveChapterId(randomChapter.id);
+      setActiveTOCItemId(randomChapter.id);
+      return;
+    }
+
+    // HTML document - random heading
+    if (htmlUrl && tocItems.length > 0) {
+      const randomIndex = Math.floor(Math.random() * tocItems.length);
+      const randomItem = tocItems[randomIndex];
+      console.log('[RandomPage] Jumping to random heading:', randomItem.title);
+      handleTOCItemClick(randomItem);
+      return;
+    }
+
+    // PDF document - random page
+    if (pdfUrl && numPages && numPages > 0) {
+      const randomPage = Math.floor(Math.random() * numPages) + 1; // 1-indexed
+      console.log('[RandomPage] ========== PDF NAVIGATION ==========');
+      console.log('[RandomPage] Jumping to random page:', randomPage, 'of', numPages);
+      console.log('[RandomPage] jumpToPageFn available:', !!jumpToPageFn);
+      console.log('[RandomPage] pdfViewerRef.current available:', !!pdfViewerRef.current);
+      
+      // Try global function first (most reliable with dynamic imports)
+      if (globalJumpToPageFn) {
+        console.log('[RandomPage] Calling jumpToPage via global function with page:', randomPage);
+        try {
+          globalJumpToPageFn(randomPage);
+          console.log('[RandomPage] ✅ Global jumpToPageFn called successfully - jumping to page', randomPage);
+          return;
+        } catch (error) {
+          console.error('[RandomPage] ❌ Error calling global jumpToPageFn:', error);
+        }
+      }
+      
+      // Try callback function (fallback)
+      if (jumpToPageFn) {
+        console.log('[RandomPage] Calling jumpToPage via callback with page:', randomPage);
+        try {
+          jumpToPageFn(randomPage);
+          console.log('[RandomPage] ✅ jumpToPageFn called successfully - jumping to page', randomPage);
+          return;
+        } catch (error) {
+          console.error('[RandomPage] ❌ Error calling jumpToPageFn:', error);
+        }
+      }
+      
+      // Fallback to ref - try to access it directly
+      if (pdfViewerRef.current) {
+        console.log('[RandomPage] Calling jumpToPage on ref with page:', randomPage);
+        try {
+          pdfViewerRef.current.jumpToPage(randomPage);
+          console.log('[RandomPage] ✅ Ref jumpToPage called successfully - jumping to page', randomPage);
+          return; // Success, exit early
+        } catch (error) {
+          console.error('[RandomPage] ❌ Error calling ref jumpToPage:', error);
+          // Don't alert here, try to set up the function and retry
+        }
+      }
+      
+      // Last resort: try to set up the function now and retry
+      if (pdfViewerRef.current && !jumpToPageFn) {
+        console.log('[RandomPage] Setting up jumpToPageFn on-the-fly from ref');
+        const fn = (pageNumber: number) => {
+          if (pdfViewerRef.current) {
+            pdfViewerRef.current.jumpToPage(pageNumber);
+          }
+        };
+        setJumpToPageFn(() => fn);
+        // Retry immediately
+        try {
+          fn(randomPage);
+          console.log('[RandomPage] ✅ Successfully jumped after on-the-fly setup - jumping to page', randomPage);
+          return;
+        } catch (error) {
+          console.error('[RandomPage] ❌ Error even after on-the-fly setup:', error);
+        }
+      }
+      
+      // If we get here, nothing worked
+      console.error('[RandomPage] ❌ PDF Viewer ref is null and callback is not set!');
+      console.error('[RandomPage] Available state:', {
+        pdfUrl: !!pdfUrl,
+        numPages,
+        jumpToPageFn: !!jumpToPageFn,
+        pdfViewerRef: !!pdfViewerRef.current,
+        refReady
+      });
+      // Only show alert if it's been a while - otherwise the polling will catch it
+      if (refReady) {
+        alert(`Cannot jump: PDF Viewer not ready. Please wait a moment and try again.`);
+      } else {
+        console.log('[RandomPage] Waiting for PDF Viewer to be ready...');
+      }
+      return;
+    }
+    
+    console.log('[RandomPage] No navigation path matched');
+  }, [document, htmlUrl, pdfUrl, numPages, tocItems, handleTOCItemClick, jumpToPageFn]);
+
+  // Set up jumpToPageFn - check both global function and ref
+  useEffect(() => {
+    if (!pdfUrl || !numPages) return;
+    
+    const checkAndSetup = () => {
+      // First check global function (most reliable)
+      if (globalJumpToPageFn && !jumpToPageFn) {
+        console.log('[DocumentDetailPage] ✅ Global jumpToPageFn is available, setting up state');
+        setJumpToPageFn(() => globalJumpToPageFn!);
+        setRefReady(true);
+        return true;
+      }
+      
+      // Fallback: check ref
+      if (pdfViewerRef.current) {
+        if (typeof pdfViewerRef.current.jumpToPage === 'function') {
+          if (!jumpToPageFn) {
+            console.log('[DocumentDetailPage] ✅ PDF Viewer ref is available with jumpToPage method, setting up jumpToPageFn');
+            setJumpToPageFn((pageNumber: number) => {
+              if (pdfViewerRef.current && typeof pdfViewerRef.current.jumpToPage === 'function') {
+                pdfViewerRef.current.jumpToPage(pageNumber);
+              }
+            });
+            setRefReady(true);
+          }
+          return true;
+        }
+      }
+      return false;
+    };
+    
+    // Try immediately
+    if (checkAndSetup()) return;
+    
+    // Poll every 200ms for up to 10 seconds
+    let attempts = 0;
+    const maxAttempts = 50;
+    const intervalId = setInterval(() => {
+      attempts++;
+      if (checkAndSetup() || attempts >= maxAttempts) {
+        clearInterval(intervalId);
+        if (attempts >= maxAttempts && !globalJumpToPageFn && !pdfViewerRef.current) {
+          console.warn('[DocumentDetailPage] ⚠️ PDF Viewer not available after 10 seconds');
+        }
+      }
+    }, 200);
+    
+    return () => clearInterval(intervalId);
+  }, [pdfUrl, numPages, jumpToPageFn]);
+
   // Update active TOC item when chapter changes (for structured text)
   useEffect(() => {
     if (document?.metadata?.isStructuredText && activeChapterId) {
@@ -814,6 +1056,17 @@ export default function DocumentDetailPage() {
                 </button>
               )}
               <BookmarkButton textId={documentId} size="md" showLabel />
+              {/* Random Page Button - only show when viewing a ready document */}
+              {activeTab === 'viewer' && document?.status === 'ready' && (
+                <button
+                  onClick={handleRandomPage}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-purple-600/20 text-purple-300 border border-purple-600/30 hover:bg-purple-600/30 hover:border-purple-600/50 transition-colors"
+                  title="Jump to a random page/section"
+                >
+                  <Dice6 className="w-4 h-4" />
+                  Random Page
+                </button>
+              )}
               {isAdmin && (
                 <button
                   onClick={handleDelete}
@@ -949,12 +1202,14 @@ export default function DocumentDetailPage() {
                   />
                 ) : pdfUrl && document.status === 'ready' ? (
                   <PDFViewer 
+                    ref={pdfViewerRef}
                     fileUrl={pdfUrl} 
                     fileName={document.title}
                     onDocumentLoad={handleDocumentLoad}
                     onTextSelected={handleTextSelected}
                     annotations={annotations}
                     onAnnotationClick={handleAnnotationClick}
+                    // Don't pass onJumpToPageReady - the wrapper handles it globally to avoid infinite loops
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">

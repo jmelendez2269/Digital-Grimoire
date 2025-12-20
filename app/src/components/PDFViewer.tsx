@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useImperativeHandle, forwardRef, useEffect, useRef } from 'react';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { highlightPlugin, RenderHighlightContentProps, RenderHighlightTargetProps, RenderHighlightsProps } from '@react-pdf-viewer/highlight';
+import { pageNavigationPlugin } from '@react-pdf-viewer/page-navigation';
 import type { HighlightArea } from '@react-pdf-viewer/highlight';
 import { TextPosition } from '@/lib/types';
 
@@ -11,6 +12,7 @@ import { TextPosition } from '@/lib/types';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import '@react-pdf-viewer/highlight/lib/styles/index.css';
+import '@react-pdf-viewer/page-navigation/lib/styles/index.css';
 
 interface Annotation {
   id: string;
@@ -53,9 +55,16 @@ interface PDFViewerProps {
   onTextSelected?: (selection: { text: string; position: TextPosition }) => void;
   annotations?: Annotation[];
   onAnnotationClick?: (annotation: Annotation) => void;
+  onJumpToPageReady?: (jumpToPageFn: (pageNumber: number) => void) => void;
 }
 
-export default function PDFViewer({
+export interface PDFViewerRef {
+  jumpToPage: (pageNumber: number) => void;
+  getCurrentPage: () => number;
+  getTotalPages: () => number | null;
+}
+
+const PDFViewer = forwardRef<PDFViewerRef, PDFViewerProps>(({
   fileUrl,
   fileName,
   onDocumentLoad,
@@ -63,8 +72,10 @@ export default function PDFViewer({
   onTextSelected,
   annotations = [],
   onAnnotationClick,
-}: PDFViewerProps) {
+  onJumpToPageReady,
+}, ref) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState<number | null>(null);
 
   // Convert annotations to highlight areas for rendering
   const convertToHighlightAreas = useCallback((): ExtendedHighlightArea[] => {
@@ -196,6 +207,71 @@ export default function PDFViewer({
 
   const { jumpToHighlightArea } = highlightPluginInstance;
 
+  // Configure page navigation plugin for programmatic navigation
+  const pageNavigationPluginInstance = pageNavigationPlugin();
+  const { jumpToPage: jumpToPagePlugin } = pageNavigationPluginInstance;
+
+  // Create the jumpToPage wrapper function
+  const jumpToPageWrapper = useCallback((pageNumber: number) => {
+    // pageNumber is 1-indexed, but jumpToPagePlugin expects 0-indexed
+    console.log('[PDFViewer] jumpToPage called with page:', pageNumber, 'totalPages:', totalPages);
+    
+    // Basic validation - but allow the plugin to handle edge cases
+    if (pageNumber < 1) {
+      console.warn('[PDFViewer] Page number must be >= 1, got:', pageNumber);
+      return;
+    }
+    
+    if (totalPages && pageNumber > totalPages) {
+      console.warn('[PDFViewer] Page number exceeds total pages:', pageNumber, '>', totalPages);
+      return;
+    }
+    
+    try {
+      const targetPage = pageNumber - 1; // Convert to 0-indexed
+      console.log('[PDFViewer] Calling jumpToPagePlugin with 0-indexed page:', targetPage);
+      jumpToPagePlugin(targetPage);
+      console.log('[PDFViewer] Successfully called jumpToPagePlugin');
+    } catch (error) {
+      console.error('[PDFViewer] Error calling jumpToPagePlugin:', error);
+    }
+  }, [jumpToPagePlugin, totalPages]);
+
+  // Store the latest jumpToPageWrapper in a ref to avoid dependency issues
+  const jumpToPageWrapperRef = useRef(jumpToPageWrapper);
+  useEffect(() => {
+    jumpToPageWrapperRef.current = jumpToPageWrapper;
+  }, [jumpToPageWrapper]);
+
+  // Expose jumpToPage function via callback (works better with dynamic imports)
+  // Only call once when onJumpToPageReady prop is first provided
+  const callbackCalledRef = useRef(false);
+  useEffect(() => {
+    if (onJumpToPageReady && !callbackCalledRef.current) {
+      console.log('[PDFViewer] ========== SETTING UP CALLBACK ==========');
+      console.log('[PDFViewer] Setting up jumpToPage callback');
+      try {
+        // Use the ref to get the latest version without causing re-renders
+        onJumpToPageReady((pageNumber: number) => {
+          jumpToPageWrapperRef.current(pageNumber);
+        });
+        callbackCalledRef.current = true;
+        console.log('[PDFViewer] ✅ Callback set successfully');
+      } catch (error) {
+        console.error('[PDFViewer] ❌ Error setting callback:', error);
+      }
+    } else if (!onJumpToPageReady) {
+      console.log('[PDFViewer] onJumpToPageReady prop is not provided');
+    }
+  }, [onJumpToPageReady]); // Only depend on onJumpToPageReady prop
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    jumpToPage: jumpToPageWrapper,
+    getCurrentPage: () => currentPage,
+    getTotalPages: () => totalPages,
+  }), [currentPage, totalPages, jumpToPageWrapper]);
+
   // Configure default layout plugin (toolbar with all features)
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
     sidebarTabs: (defaultTabs) => [
@@ -213,7 +289,12 @@ export default function PDFViewer({
 
   const handleDocumentLoad = useCallback((e: any) => {
     const numPages = e.doc.numPages;
+    console.log('[PDFViewer] ========== DOCUMENT LOADED ==========');
     console.log('[PDFViewer] Document loaded with', numPages, 'pages');
+    setTotalPages(numPages);
+    
+    // Don't re-call the callback here - the useEffect will handle it when totalPages changes
+    // The callback function will automatically use the updated totalPages via the ref
     
     if (onDocumentLoad) {
       onDocumentLoad(numPages);
@@ -290,7 +371,7 @@ export default function PDFViewer({
         >
           <Viewer
             fileUrl={fileUrl}
-            plugins={[defaultLayoutPluginInstance, highlightPluginInstance]}
+            plugins={[defaultLayoutPluginInstance, highlightPluginInstance, pageNavigationPluginInstance]}
             onDocumentLoad={handleDocumentLoad}
             onPageChange={handlePageChange}
             renderError={renderError}
@@ -306,14 +387,24 @@ export default function PDFViewer({
         /* Dark theme for PDF viewer */
         .rpv-core__viewer {
           background-color: rgba(24, 24, 27, 0.5) !important;
+          width: 100% !important;
+          height: 100% !important;
         }
 
         .rpv-core__inner-pages {
           background-color: transparent !important;
+          width: 100% !important;
         }
 
         .rpv-core__page-layer {
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Fix layout issues with page navigation plugin */
+        .rpv-core__viewer .rpv-core__inner-pages {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
         }
 
         /* Toolbar styling */
@@ -430,4 +521,8 @@ export default function PDFViewer({
       `}</style>
     </div>
   );
-}
+});
+
+PDFViewer.displayName = 'PDFViewer';
+
+export default PDFViewer;
