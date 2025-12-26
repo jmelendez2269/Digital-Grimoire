@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 
     // Remove content field from listing (it's large and not needed for cards)
     // Content should only be fetched on the detail page
-    const coursesWithoutContent = (courses || []).map(({ content, ...course }) => course);
+    const coursesWithoutContent = (courses || []).map(({ content, ...course }: { content?: any; [key: string]: any }) => course);
 
     return NextResponse.json({
       success: true,
