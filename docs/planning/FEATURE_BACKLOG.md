@@ -23,7 +23,30 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
-**Latest Session Updates (January 2026 - Multi-Source Claims System Complete):**
+**Latest Session Updates (January 15, 2026 - Property to Entity Conversion System Complete):**
+- ✅ **Property to Entity Conversion System** - Complete implementation
+  - Field-to-relationship type mapping configuration
+  - Entity utility functions (parsing, category suggestion, slug generation, backwards field mapping)
+  - Conversion API endpoint (`/api/graph/convert-property`) with comprehensive duplicate prevention
+  - Connection status checking API (`/api/graph/check-entity-connection`) with bidirectional queries
+  - Convert Property Modal component with real-time status checking and warnings
+  - EntityDetails component updates with "Convert to Entity" button and connection status indicators
+  - EntityModal integration for admin interface
+  - Graph auto-refresh mechanism after conversions
+  - Visual connection status badges (Connected/Exists)
+  - Duplicate prevention for entities, relationships, and backwards claims
+  - Support for multiple relationship types between same entities
+  - Backwards-compatible claims creation (e.g., Water entity shows Moonstone in gemstone field)
+- ✅ **Knowledge Graph Route Fix**
+  - Created `/knowledge-graph` redirect route to `/graph`
+  - Fixed 404 error for knowledge graph access
+- ✅ **Property Information Display Enhancement**
+  - Added knowledge claims fetching to EntityDetails component
+  - Displays all property fields from knowledge_claims table
+  - Shows source information for each claim
+  - Individual value parsing and display
+
+**Previous Session Updates (January 2026 - Multi-Source Claims System Complete):**
 - ✅ **Multi-Source Knowledge Claims System** - Complete implementation
   - `knowledge_sources` and `knowledge_claims` tables (Migration 032)
   - Admin UI for managing sources and field-specific claims

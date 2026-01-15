@@ -36,7 +36,35 @@
 
 ### What's Been Built (4 weeks of work compressed into ~8 hours!)
 
-**🚀 LATEST UPDATE: TTS Read-Aloud Click-to-Read Feature Fixed! (January 2025)**
+**🚀 LATEST UPDATE: Property to Entity Conversion System Complete! (January 15, 2026)**
+- ✅ Property to Entity Conversion System - Complete implementation
+  - Field-to-relationship type mapping configuration
+  - Entity utility functions (parsing, category suggestion, slug generation)
+  - Conversion API endpoint with duplicate prevention
+  - Connection status checking API (bidirectional)
+  - Convert Property Modal with real-time status checking
+  - EntityDetails component with "Convert to Entity" button (admin-only)
+  - EntityModal integration for admin interface
+  - Graph auto-refresh after conversion
+  - Visual connection status indicators (Connected/Exists badges)
+  - Duplicate relationship prevention (same type)
+  - Support for multiple relationship types between same entities
+  - Backwards-compatible claims creation
+- ✅ Knowledge Graph Route Fix
+  - Created `/knowledge-graph` redirect route to `/graph`
+  - Fixed 404 error for knowledge graph access
+- ✅ Property Information Display
+  - Added knowledge claims fetching to EntityDetails component
+  - Displays all property fields from knowledge_claims table
+  - Shows source information for each claim
+- ✅ Connection Status System
+  - Real-time bidirectional connection checking
+  - Visual indicators for connected/existing entities
+  - Auto-refresh after conversions
+  - Parallel API calls for performance
+- **Status:** Property conversion system fully functional, ready for graph expansion
+
+**🚀 PREVIOUS UPDATE: TTS Read-Aloud Click-to-Read Feature Fixed! (January 2025)**
 - ✅ Fixed click-to-read functionality across all document formats (HTML, Markdown, Plaintext)
 - ✅ Restored hover effects on clickable text blocks
 - ✅ Fixed MutationObserver infinite loop issues with debouncing and WeakSet tracking
@@ -681,6 +709,69 @@ associated_names: Related figures
 - Import remaining CSVs (plants, chakras, angels, orishas, gods)
 - Add more field mappings as needed
 - Enhance consensus algorithm (weighted by source credibility)
+
+---
+
+### Phase 3D: Property to Entity Conversion System (January 15, 2026)
+
+**Goal:** Enable admins to convert property values from knowledge claims into entities, creating bidirectional relationships and backwards-compatible claims while preventing duplicates.
+
+**Status:** ✅ Complete (100%) - Ready for use
+
+#### Core Infrastructure
+- [x] Field-to-relationship type mapping ✅ **Configurable mapping system**
+- [x] Entity utility functions ✅ **Parsing, category suggestion, slug generation**
+- [x] Backwards compatibility field mapping ✅ **Category to field key mapping**
+
+#### API Endpoints
+- [x] Conversion API endpoint ✅ **`/api/graph/convert-property`**
+  - Creates entities from property values
+  - Creates bidirectional relationships
+  - Creates backwards-compatible claims
+  - Prevents duplicate entities (by slug)
+  - Prevents duplicate relationships (same type)
+  - Allows multiple relationship types between same entities
+- [x] Connection status API ✅ **`/api/graph/check-entity-connection`**
+  - Checks if property value is already an entity
+  - Checks bidirectional connections
+  - Returns relationship types
+
+#### UI Components
+- [x] Convert Property Modal ✅ **Full-featured conversion interface**
+  - Value selection (handles comma-separated)
+  - Category and relationship type selection
+  - Real-time connection status checking
+  - Warnings for already-connected entities
+  - Success summary with detailed results
+- [x] EntityDetails integration ✅ **Public graph view**
+  - "Convert to Entity" button (admin-only)
+  - Connection status indicators
+  - Individual value display with badges
+- [x] EntityModal integration ✅ **Admin interface**
+  - Convert action in claims section
+
+#### Graph Integration
+- [x] Graph refresh mechanism ✅ **Auto-refresh after conversion**
+- [x] Increased display limits ✅ **100 entities, 300 edges**
+- [x] Route redirect ✅ **`/knowledge-graph` → `/graph`**
+
+#### Duplicate Prevention
+- [x] Entity duplicate check ✅ **By slug**
+- [x] Relationship duplicate check ✅ **By type, bidirectional**
+- [x] Backwards claim duplicate check ✅ **By field_key and field_value**
+
+**Deliverables:**
+- ✅ Complete property to entity conversion system
+- ✅ Duplicate prevention at all levels
+- ✅ Connection status checking and display
+- ✅ Graph auto-refresh functionality
+- ✅ Backwards-compatible claims system
+
+**Impact:**
+- Enables organic graph expansion from existing data
+- Prevents data quality issues with automatic duplicate prevention
+- Provides visual feedback for connection status
+- Maintains data integrity with bidirectional claims
 
 ---
 

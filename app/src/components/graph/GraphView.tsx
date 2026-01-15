@@ -4,8 +4,12 @@ import { useMemo } from "react";
 
 interface Entity {
   id: string;
+  slug?: string;
   name: string;
   category: string;
+  aliases?: string[];
+  description?: string;
+  lenses?: string[];
 }
 
 interface Edge {
@@ -28,14 +32,16 @@ export default function GraphView({
   const placeholderLayout = useMemo(() => {
     const width = 900;
     const height = 540;
-    const nodes = entities.slice(0, 40).map((e, i) => ({
+    // Increase limit to show more entities (up to 100)
+    const nodes = entities.slice(0, 100).map((e, i) => ({
       ...e,
       x: (Math.sin(i) * 0.4 + 0.5) * width,
       y: (Math.cos(i * 1.3) * 0.4 + 0.5) * height,
     }));
     const byId = new Map(nodes.map((n) => [n.id, n] as const));
+    // Increase limit to show more edges (up to 300)
     const links = edges
-      .filter((_, i) => i < 120)
+      .filter((_, i) => i < 300)
       .map((edge) => ({
         source: byId.get(edge.source_id),
         target: byId.get(edge.target_id),
@@ -46,7 +52,7 @@ export default function GraphView({
         target: { x: number; y: number };
         weight: number;
       }>;
-    return { width, height, nodes, links };
+    return { width, height, nodes, links, byId };
   }, [entities, edges]);
 
   return (
@@ -73,26 +79,30 @@ export default function GraphView({
           ))}
         </g>
         <g>
-          {placeholderLayout.nodes.map((n) => (
-            <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
-              <circle
-                r={10}
-                className="cursor-pointer"
-                fill="#b48f4a"
-                fillOpacity={0.8}
-                onClick={() => onSelectEntity(n)}
-              />
-              <text
-                x={12}
-                y={4}
-                fontSize={11}
-                fill="#e5e7eb"
-                className="select-none"
-              >
-                {n.name}
-              </text>
-            </g>
-          ))}
+          {placeholderLayout.nodes.map((n) => {
+            // Find the full entity data from the original entities array
+            const fullEntity = entities.find(e => e.id === n.id) || n;
+            return (
+              <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
+                <circle
+                  r={10}
+                  className="cursor-pointer"
+                  fill="#b48f4a"
+                  fillOpacity={0.8}
+                  onClick={() => onSelectEntity(fullEntity)}
+                />
+                <text
+                  x={12}
+                  y={4}
+                  fontSize={11}
+                  fill="#e5e7eb"
+                  className="select-none"
+                >
+                  {n.name}
+                </text>
+              </g>
+            );
+          })}
         </g>
       </svg>
     </div>

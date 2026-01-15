@@ -39,39 +39,87 @@ export default function GraphPage() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Entity | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [entRes, edgeRes] = await Promise.all([
-          fetch("/api/graph/entities?limit=200"),
-          fetch("/api/graph/edges?limit=400&minWeight=0"),
-        ]);
+  const loadGraphData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [entRes, edgeRes] = await Promise.all([
+        fetch("/api/graph/entities?limit=200"),
+        fetch("/api/graph/edges?limit=400&minWeight=0"),
+      ]);
 
-        // Check if responses are successful
-        if (!entRes.ok) {
-          const errorData = await entRes.json().catch(() => ({ error: entRes.statusText }));
-          throw new Error(errorData.error || `Failed to load entities: ${entRes.status} ${entRes.statusText}`);
-        }
-
-        if (!edgeRes.ok) {
-          const errorData = await edgeRes.json().catch(() => ({ error: edgeRes.statusText }));
-          throw new Error(errorData.error || `Failed to load edges: ${edgeRes.status} ${edgeRes.statusText}`);
-        }
-
-        const entJson = await entRes.json();
-        const edgeJson = await edgeRes.json();
-        setEntities(entJson.items || []);
-        setEdges(edgeJson.items || []);
-      } catch (e: any) {
-        console.error("Error loading graph data:", e);
-        setError(e?.message || "Failed to load graph data. Please try refreshing the page.");
-      } finally {
-        setLoading(false);
+      // Check if responses are successful
+      if (!entRes.ok) {
+        const errorData = await entRes.json().catch(() => ({ error: entRes.statusText }));
+        throw new Error(errorData.error || `Failed to load entities: ${entRes.status} ${entRes.statusText}`);
       }
-    };
-    load();
+
+      if (!edgeRes.ok) {
+        const errorData = await edgeRes.json().catch(() => ({ error: edgeRes.statusText }));
+        throw new Error(errorData.error || `Failed to load edges: ${edgeRes.status} ${edgeRes.statusText}`);
+      }
+
+      const entJson = await entRes.json();
+      const edgeJson = await edgeRes.json();
+      
+      // Ensure entities have all expected fields, handling potential null/undefined values
+      // Preserve original data as much as possible - don't filter out valid empty arrays
+      const normalizedEntities = (entJson.items || []).map((e: any) => {
+        // Handle aliases - preserve array structure, filter only truly empty/null values
+        let aliases: string[] = [];
+        if (Array.isArray(e.aliases)) {
+          aliases = e.aliases
+            .map((a: any) => (a != null ? String(a).trim() : ''))
+            .filter((a: string) => a !== '');
+        } else if (e.aliases != null) {
+          // Handle case where it might be a string or other format
+          aliases = [String(e.aliases).trim()].filter(a => a !== '');
+        }
+        
+        // Handle lenses - preserve array structure
+        let lenses: string[] = [];
+        if (Array.isArray(e.lenses)) {
+          lenses = e.lenses
+            .map((l: any) => (l != null ? String(l).trim() : ''))
+            .filter((l: string) => l !== '');
+        } else if (e.lenses != null) {
+          lenses = [String(e.lenses).trim()].filter(l => l !== '');
+        }
+        
+        // Handle description - preserve original if it exists
+        const description = (e.description != null && String(e.description).trim() !== '') 
+          ? String(e.description).trim() 
+          : (e.description || null); // Keep original value even if empty for debugging
+        
+        return {
+          id: e.id,
+          slug: e.slug,
+          name: e.name,
+          category: e.category,
+          aliases,
+          description,
+          lenses,
+          // Preserve all other fields in case we need them
+          ...Object.fromEntries(
+            Object.entries(e).filter(([key]) => 
+              !['id', 'slug', 'name', 'category', 'aliases', 'description', 'lenses'].includes(key)
+            )
+          ),
+        };
+      });
+      
+      setEntities(normalizedEntities);
+      setEdges(edgeJson.items || []);
+    } catch (e: any) {
+      console.error("Error loading graph data:", e);
+      setError(e?.message || "Failed to load graph data. Please try refreshing the page.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadGraphData();
   }, []);
 
   return (
@@ -121,7 +169,10 @@ export default function GraphPage() {
                 </div>
                 <div>
                   <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4">
-                    <EntityDetails entity={selected} />
+                    <EntityDetails 
+                      entity={selected} 
+                      onGraphRefresh={loadGraphData}
+                    />
                   </div>
                 </div>
               </div>
