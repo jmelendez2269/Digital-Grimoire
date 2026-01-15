@@ -48,8 +48,6 @@ function Header({ librarySearch }: HeaderProps = {}) {
   };
 
   const isActive = (path: string) => {
-    // Only check pathname after mount to prevent hydration mismatch
-    if (!mounted) return false;
     return pathname === path;
   };
 
@@ -79,6 +77,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
     { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
     { label: "Import Sacred Text", icon: "🌐", href: "/admin/import-sacred-text" },
     { label: "Courses", icon: "📚", href: "/admin/courses" },
+    { label: "Knowledge Graph", icon: "🕸️", href: "/admin/knowledge-graph" },
     { label: "Feedback", icon: "💬", href: "/admin/feedback" },
     // To add new admin pages, add entries here!
   ];
@@ -105,41 +104,45 @@ function Header({ librarySearch }: HeaderProps = {}) {
         <div className="hidden items-center gap-8 md:flex flex-1 ml-8">
           <Link
             href="/library"
-            className={`text-sm font-medium transition-colors ${
-              mounted && isActive("/library")
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
+            className={`text-sm font-medium transition-colors ${isActive("/library")
+              ? "text-amber-400"
+              : "text-zinc-400 hover:text-amber-300"
+              }`}
           >
             📚 Library
           </Link>
           <Link
             href="/courses"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/courses") || (mounted && pathname?.startsWith("/courses/"))
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
+            className={`text-sm font-medium transition-colors ${isActive("/courses") || pathname?.startsWith("/courses/")
+              ? "text-amber-400"
+              : "text-zinc-400 hover:text-amber-300"
+              }`}
+            // #region agent log
+            data-debug-href="/courses"
+            data-debug-text="🎓 Courses"
+          // #endregion
           >
             🎓 Courses
           </Link>
           <Link
             href="/journal"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/journal") || (mounted && pathname?.startsWith("/journal/"))
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
+            className={`text-sm font-medium transition-colors ${isActive("/journal") || pathname?.startsWith("/journal/")
+              ? "text-amber-400"
+              : "text-zinc-400 hover:text-amber-300"
+              }`}
+            // #region agent log
+            data-debug-href="/journal"
+            data-debug-text="📝 Journal"
+          // #endregion
           >
             📝 Journal
           </Link>
           <Link
             href="/convergence-machine"
-            className={`text-sm font-medium transition-colors ${
-              mounted && isActive("/convergence-machine")
-                ? "text-amber-400"
-                : "text-zinc-400 hover:text-amber-300"
-            }`}
+            className={`text-sm font-medium transition-colors ${isActive("/convergence-machine")
+              ? "text-amber-400"
+              : "text-zinc-400 hover:text-amber-300"
+              }`}
           >
             ⚡ Convergence Machine
           </Link>
@@ -196,7 +199,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
               {loading ? '⏳' : user ? '👤' : '🚫'}
             </div>
           )}
-          
+
           {/* Only render auth-dependent UI after mount to prevent hydration mismatch */}
           {!mounted ? (
             <div className="h-9 w-20 animate-pulse rounded-md bg-zinc-800">
@@ -226,12 +229,12 @@ function Header({ librarySearch }: HeaderProps = {}) {
                     {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
                   </div>
                 )}
-                
+
                 {/* Username - visible on larger screens */}
                 <span className="hidden sm:inline text-amber-100">
                   {user.user_metadata?.username || user.email?.split("@")[0] || "User"}
                 </span>
-                
+
                 {/* Dropdown indicator */}
                 <svg
                   className={`h-4 w-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}
@@ -256,7 +259,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                     className="fixed inset-0 z-[9998]"
                     onClick={() => setMenuOpen(false)}
                   />
-                  
+
                   {/* Menu */}
                   <div className="absolute right-0 z-[9999] mt-2 w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/50 overflow-y-auto max-h-[90vh]">
                     {/* User Info Header */}

@@ -48,12 +48,25 @@ export default function GraphPage() {
           fetch("/api/graph/entities?limit=200"),
           fetch("/api/graph/edges?limit=400&minWeight=0"),
         ]);
+
+        // Check if responses are successful
+        if (!entRes.ok) {
+          const errorData = await entRes.json().catch(() => ({ error: entRes.statusText }));
+          throw new Error(errorData.error || `Failed to load entities: ${entRes.status} ${entRes.statusText}`);
+        }
+
+        if (!edgeRes.ok) {
+          const errorData = await edgeRes.json().catch(() => ({ error: edgeRes.statusText }));
+          throw new Error(errorData.error || `Failed to load edges: ${edgeRes.status} ${edgeRes.statusText}`);
+        }
+
         const entJson = await entRes.json();
         const edgeJson = await edgeRes.json();
         setEntities(entJson.items || []);
         setEdges(edgeJson.items || []);
       } catch (e: any) {
-        setError(e?.message || "Failed to load graph data");
+        console.error("Error loading graph data:", e);
+        setError(e?.message || "Failed to load graph data. Please try refreshing the page.");
       } finally {
         setLoading(false);
       }
@@ -80,7 +93,21 @@ export default function GraphPage() {
                 </div>
               </div>
             ) : error ? (
-              <div className="text-red-400">{error}</div>
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="text-center max-w-md">
+                  <div className="w-16 h-16 border-4 border-red-500/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">⚠️</span>
+                  </div>
+                  <h2 className="text-xl font-semibold text-red-400 mb-2">Error Loading Knowledge Graph</h2>
+                  <p className="text-red-300/80 mb-6">{error}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
+                  >
+                    Refresh Page
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">

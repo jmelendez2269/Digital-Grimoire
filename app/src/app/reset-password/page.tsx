@@ -170,7 +170,7 @@ export default function ResetPasswordPage() {
 
   if (checkingToken) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black select-none pointer-events-none">
         <div className="text-center">
           <div className="mb-4 inline-block animate-spin">
             <svg

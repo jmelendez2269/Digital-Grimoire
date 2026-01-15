@@ -148,27 +148,58 @@ export async function GET(
     }
     console.log('[API] Document ID:', id);
     
-    const supabase = await createClient();
-    console.log('[API] Supabase client created');
-    
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      console.log('[API] Authentication failed:', authError?.message);
+    let supabase;
+    try {
+      supabase = await createClient();
+      console.log('[API] Supabase client created');
+    } catch (clientError) {
+      console.error('[API] Error creating Supabase client:', clientError);
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Failed to initialize database connection', details: clientError instanceof Error ? clientError.message : 'Unknown error' },
+        { status: 500 }
       );
     }
-    console.log('[API] User authenticated:', user.id);
+    
+    // Check authentication
+    let user;
+    try {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
+        console.log('[API] Authentication failed:', authError?.message);
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      user = authUser;
+      console.log('[API] User authenticated:', user.id);
+    } catch (authError) {
+      console.error('[API] Error during authentication:', authError);
+      return NextResponse.json(
+        { error: 'Authentication error', details: authError instanceof Error ? authError.message : 'Unknown error' },
+        { status: 500 }
+      );
+    }
 
     // Fetch document with all fields
     console.log('[API] Fetching document from database...');
-    const { data: document, error: docError } = await supabase
-      .from('texts')
-      .select('*')
-      .eq('id', id)
-      .single();
+    let document;
+    let docError;
+    try {
+      const result = await supabase
+        .from('texts')
+        .select('*')
+        .eq('id', id)
+        .single();
+      document = result.data;
+      docError = result.error;
+    } catch (queryError) {
+      console.error('[API] Exception during database query:', queryError);
+      return NextResponse.json(
+        { error: 'Database query failed', details: queryError instanceof Error ? queryError.message : 'Unknown error' },
+        { status: 500 }
+      );
+    }
 
     if (docError) {
       console.error('[API] Database error:', docError);

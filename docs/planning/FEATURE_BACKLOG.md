@@ -1,6 +1,6 @@
 # CONVERGENCE - FEATURE BACKLOG & PRIORITIES
 
-**Last Updated:** December 2024  
+**Last Updated:** January 2026  
 **Version:** 1.9  
 
 ## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
@@ -23,7 +23,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
-**Latest Session Updates (December 2024 - Multi-Source Claims System Complete):**
+**Latest Session Updates (January 2026 - Multi-Source Claims System Complete):**
 - ✅ **Multi-Source Knowledge Claims System** - Complete implementation
   - `knowledge_sources` and `knowledge_claims` tables (Migration 032)
   - Admin UI for managing sources and field-specific claims
@@ -34,7 +34,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
   - Successfully imported 10+ crystals with full field mapping
   - BOM normalization and robust error handling
 
-**Previous Session Updates (December 2024 - Convergence Graph UI Complete):**
+**Previous Session Updates (January 2026 - Convergence Graph UI Complete):**
 - ✅ **Convergence Graph UI** - Complete Phase 3B user interface implementation
   - D3.js force-directed network visualization with pan/zoom/drag
   - Comparative table view with sortable columns and similarity indicators
@@ -255,6 +255,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Voice selector | P1 | S | 5 | ✅ Complete | Choose from available voices (Sprint 5) |
 | Position bookmarking | P1 | M | 5 | ⚠️ Requires Testing | LocalStorage + DB sync (Sprint 5) |
 | Cross-tab persistence | P1 | S | 5 | ⚠️ Requires Testing | Sync across browser tabs (Sprint 5) |
+| **Click-to-read from position** | **P1** | **M** | **5** | **✅ Complete** | **Click any text block to start reading (Jan 2025)** |
 | Keyboard shortcuts | P2 | S | 5 | ✅ Complete | Play/pause/stop shortcuts (Sprint 5) |
 | Premium upgrade path | P2 | S | 5 | ✅ Complete | Clear Azure benefits messaging (Sprint 5) |
 
@@ -262,7 +263,8 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - **Migration Required:** 012 (`012_add_reading_positions.sql`)
 - **Testing:** See [TTS Testing Checklist](../testing/SPRINT_5_TESTING_CHECKLIST.md#a-text-to-speech-feature-testing)
 - **Documentation:** `docs/TEXT_TO_SPEECH_FEATURE.md`, `docs/TTS_IMPLEMENTATION_SUMMARY.md`
-- **Status:** Implementation complete, requires user testing before marking fully complete
+- **Latest Fix (Jan 2025):** Fixed click-to-read functionality with improved text matching, MutationObserver fixes, and position calculation improvements
+- **Status:** Implementation complete, click-to-read feature fully functional
 
 ### 5. CORRESPONDENCE TABLES (Phase 3A)
 

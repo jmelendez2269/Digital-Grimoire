@@ -21,13 +21,18 @@ export async function GET(req: NextRequest) {
     const supabase = await createSupabaseServerClient();
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
+    const typeId = searchParams.get("typeId");
     const minWeight = Number(searchParams.get("minWeight") || 0);
     const sourceId = searchParams.get("sourceId");
     const targetId = searchParams.get("targetId");
     const limit = Math.min(Number(searchParams.get("limit") || 100), 400);
 
-    let query = supabase.from("correspondence_relationships").select("*").limit(limit);
+    let query = supabase
+      .from("correspondence_relationships")
+      .select("*, relationship_type:correspondence_relationship_types(id, slug, label, color, icon)")
+      .limit(limit);
     if (type) query = query.eq("type", type);
+    if (typeId) query = query.eq("relationship_type_id", typeId);
     if (!Number.isNaN(minWeight)) query = query.gte("weight", minWeight);
     if (sourceId) query = query.eq("source_id", sourceId);
     if (targetId) query = query.eq("target_id", targetId);
@@ -58,14 +63,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await req.json();
-    const { sourceId, targetId, type, weight = 0.5, confidence = "tradition", source_citation, notes } = body || {};
-    if (!sourceId || !targetId || !type) {
-      return NextResponse.json({ error: "sourceId, targetId, and type are required" }, { status: 400 });
+    const {
+      sourceId,
+      targetId,
+      type,
+      typeId,
+      weight = 0.5,
+      confidence = "tradition",
+      source_citation,
+      notes,
+    } = body || {};
+    if (!sourceId || !targetId || (!type && !typeId)) {
+      return NextResponse.json(
+        { error: "sourceId, targetId, and type/typeId are required" },
+        { status: 400 }
+      );
     }
     const svc = createServiceClient();
+    let resolvedTypeId = typeId as string | undefined;
+    let resolvedType = type as string | undefined;
+
+    if (resolvedTypeId && !resolvedType) {
+      const { data: typeRow, error: typeError } = await svc
+        .from("correspondence_relationship_types")
+        .select("slug")
+        .eq("id", resolvedTypeId)
+        .single();
+      if (typeError) throw typeError;
+      resolvedType = typeRow.slug;
+    }
+
+    if (!resolvedTypeId && resolvedType) {
+      const { data: typeRow } = await svc
+        .from("correspondence_relationship_types")
+        .select("id")
+        .eq("slug", resolvedType)
+        .single();
+      resolvedTypeId = typeRow?.id;
+    }
+
     const { data, error } = await svc
       .from("correspondence_relationships")
-      .insert({ source_id: sourceId, target_id: targetId, type, weight, confidence, source_citation, notes })
+      .insert({
+        source_id: sourceId,
+        target_id: targetId,
+        type: resolvedType,
+        relationship_type_id: resolvedTypeId,
+        weight,
+        confidence,
+        source_citation,
+        notes,
+      })
       .select("*")
       .single();
     if (error) throw error;

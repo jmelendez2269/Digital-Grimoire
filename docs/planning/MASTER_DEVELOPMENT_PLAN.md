@@ -1,7 +1,7 @@
 # CONVERGENCE - MASTER DEVELOPMENT PLAN
 
 **Version:** 3.4  
-**Last Updated:** December 2024  
+**Last Updated:** January 2026  
 **Status:** Phase 1 - 95% Complete | Phase 3B UI Complete | Multi-Source Claims System Complete  
 **Latest:** Multi-Source Knowledge Claims System + CSV Auto-Import Complete  
 
@@ -36,7 +36,18 @@
 
 ### What's Been Built (4 weeks of work compressed into ~8 hours!)
 
-**🚀 LATEST UPDATE: Multi-Source Knowledge Claims System Complete!**
+**🚀 LATEST UPDATE: TTS Read-Aloud Click-to-Read Feature Fixed! (January 2025)**
+- ✅ Fixed click-to-read functionality across all document formats (HTML, Markdown, Plaintext)
+- ✅ Restored hover effects on clickable text blocks
+- ✅ Fixed MutationObserver infinite loop issues with debouncing and WeakSet tracking
+- ✅ Improved text matching with 6 progressive search strategies
+- ✅ Enhanced position calculation accuracy (searches in actual fullText)
+- ✅ Fixed playback continuation issues (TTS now continues correctly from clicked position)
+- ✅ Added exact click position detection using Range API
+- ✅ Better error handling and comprehensive logging
+- **Status:** Read-aloud feature fully functional, ready for user testing
+
+**🚀 PREVIOUS UPDATE: Multi-Source Knowledge Claims System Complete!**
 - ✅ Multi-source claims architecture (knowledge_sources + knowledge_claims tables)
 - ✅ Admin UI for managing sources and field-specific claims
 - ✅ Consensus vs Sources view on entity detail cards
@@ -107,7 +118,7 @@
 **Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)  
 **New Feature:** Universal AI Search & Chat System complete (100% - ready for use!)
 
-### Latest Session Updates (December 2024) - Concept Search Feature Complete! 🎉
+### Latest Session Updates (January 2026) - Concept Search Feature Complete! 🎉
 
 **🔍 Concept Search (Deep Search) Implementation:**
 - ✅ **Semantic Vector Search** - Deep search across all books using OpenAI embeddings
@@ -135,6 +146,28 @@
 - `app/src/components/DeepSearch/DeepSearchPanel.tsx` - Better error messages
 
 **Status:** Feature complete, requires embeddings to be generated for texts to return results
+
+### Previous Session Updates (January 2025) - TTS Read-Aloud Fixes Complete! 🎉
+
+**🔊 TTS Read-Aloud Click-to-Read Feature Fixes:**
+- ✅ **Fixed click handlers** - All paragraphs now clickable (HTML, Markdown, Plaintext formats)
+- ✅ **MutationObserver fixes** - Debouncing and WeakSet tracking prevent infinite loops
+- ✅ **Hover effects restored** - Visual feedback on all clickable text blocks
+- ✅ **Improved text matching** - 6 progressive search strategies ensure text is found
+- ✅ **Position calculation fixes** - Searches in actual fullText for accurate positions
+- ✅ **Playback continuation** - TTS now continues correctly from clicked position
+- ✅ **Exact click detection** - Range API calculates precise character position
+- ✅ **Better error handling** - Comprehensive validation and logging
+- 📄 **Session Summary:** `sprint_summaries/TTS_READ_ALOUD_FIX_SESSION_2026-01-15.md`
+
+**Files Modified:**
+- `app/src/components/ChapterViewer.tsx` - Fixed MutationObserver, added click position detection
+- `app/src/components/HTMLViewer.tsx` - Fixed MutationObserver, improved click handlers
+- `app/src/app/library/[id]/page.tsx` - Enhanced text matching with multiple strategies
+- `app/src/components/AudioPlayer.tsx` - Added position validation
+- `app/src/lib/services/web-speech-tts.ts` - Improved error handling and validation
+
+**Status:** Read-aloud feature fully functional across all document types
 
 ### Previous Session Updates (Current Session) - Monitoring Setup Complete! 🎉
 

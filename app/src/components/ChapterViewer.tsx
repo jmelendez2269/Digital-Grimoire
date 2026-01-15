@@ -44,6 +44,7 @@ interface ChapterViewerProps {
   onAnnotationClick?: (annotation: Annotation) => void;
   externalChapterId?: string | null;
   onChapterChange?: (chapterId: string) => void;
+  onParagraphClick?: (text: string) => void;
 }
 
 // Highlight color mapping
@@ -57,15 +58,16 @@ const HIGHLIGHT_COLOR_MAP: Record<Annotation['highlight_color'], string> = {
   orange: 'rgba(249, 115, 22, 0.3)',
 };
 
-export default function ChapterViewer({ 
-  chapters, 
-  documentTitle, 
+export default function ChapterViewer({
+  chapters,
+  documentTitle,
   format = 'plaintext',
   onTextSelected,
   annotations = [],
   onAnnotationClick,
   externalChapterId,
   onChapterChange,
+  onParagraphClick,
 }: ChapterViewerProps) {
   const [activeChapterId, setActiveChapterId] = useState<string>(
     chapters[0]?.id || ''
@@ -190,13 +192,13 @@ export default function ChapterViewer({
     setTimeout(() => {
       const selection = window.getSelection();
       const selectedText = selection?.toString().trim();
-      
+
       if (selectedText && selectedText.length > 0) {
         const range = selection?.getRangeAt(0);
         if (range && contentRef.current) {
           const rect = range.getBoundingClientRect();
           const containerRect = contentRef.current.getBoundingClientRect();
-          
+
           // Calculate relative position (account for zoom by dividing by zoom scale)
           const position = {
             chapterId: activeChapterId,
@@ -207,7 +209,7 @@ export default function ChapterViewer({
               height: rect.height / zoom,
             }],
           };
-          
+
           onTextSelected({
             text: selectedText,
             position,
@@ -235,31 +237,173 @@ export default function ChapterViewer({
     return '';
   }, [format, activeChapter]);
 
+  // Add click listeners to HTML content for read-aloud functionality
+  useEffect(() => {
+    if (format !== 'html' || !onParagraphClick) return;
+
+    let attachTimeout: NodeJS.Timeout | null = null;
+    let isAttaching = false;
+    const attachedElements = new WeakSet<Element>();
+
+    const attachListeners = () => {
+      // Prevent concurrent attachment
+      if (isAttaching) return;
+      isAttaching = true;
+
+      const htmlContentElement = contentRef.current?.querySelector('.chapter-html-content');
+      if (!htmlContentElement) {
+        isAttaching = false;
+        return;
+      }
+
+      // Use a more comprehensive selector that catches nested elements too
+      const blockElements = htmlContentElement.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+
+      const handleClick = (e: MouseEvent) => {
+        // Only trigger if no text is selected (to allow selection without triggering TTS)
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim().length > 0) return;
+
+        e.stopPropagation();
+        e.preventDefault();
+        const target = e.currentTarget as HTMLElement;
+        const text = target.textContent || '';
+        
+        if (!text.trim()) return;
+
+        // Get exact click position within the element
+        let clickOffset = 0;
+        try {
+          if (typeof document.caretRangeFromPoint === 'function') {
+            const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+            if (range) {
+              const textNode = range.startContainer;
+              if (textNode.nodeType === Node.TEXT_NODE) {
+                // Calculate offset from start of element
+                const elementRange = document.createRange();
+                elementRange.selectNodeContents(target);
+                elementRange.setEnd(range.startContainer, range.startOffset);
+                clickOffset = elementRange.toString().length;
+              }
+            }
+          }
+        } catch (err) {
+          // Fallback: use 0 offset (start of paragraph)
+          console.warn('[ChapterViewer] Could not get exact click position:', err);
+        }
+
+        // Store click offset for the handler to use
+        (target as any)._ttsClickOffset = clickOffset;
+        (target as any)._ttsParagraphText = text.trim();
+
+        console.log('[ChapterViewer] HTML paragraph clicked:', {
+          text: text.substring(0, 50),
+          clickOffset,
+          elementTextLength: text.length
+        });
+
+        onParagraphClick(text.trim());
+      };
+
+      blockElements.forEach(el => {
+        // Skip if already attached
+        if (attachedElements.has(el)) return;
+
+        // Remove existing listener if any (safety check)
+        const existingEl = el as any;
+        if (existingEl._ttsClickHandler) {
+          el.removeEventListener('click', existingEl._ttsClickHandler);
+        }
+        
+        el.addEventListener('click', handleClick as EventListener);
+        existingEl._ttsClickHandler = handleClick; // Store reference for cleanup
+        el.classList.add('cursor-read-aloud'); // Add marker class
+        (el as HTMLElement).style.cursor = 'pointer';
+        attachedElements.add(el);
+      });
+
+      console.log(`[ChapterViewer] Attached click listeners to ${blockElements.length} HTML elements`);
+      isAttaching = false;
+    };
+
+    // Debounced attachment function
+    const debouncedAttach = () => {
+      if (attachTimeout) clearTimeout(attachTimeout);
+      attachTimeout = setTimeout(() => {
+        attachListeners();
+      }, 200); // 200ms debounce
+    };
+
+    // Initial attachment
+    attachListeners();
+
+    // Use MutationObserver with debouncing to catch dynamically added content
+    const observer = new MutationObserver((mutations) => {
+      // Only re-attach if new elements were added
+      const hasNewElements = mutations.some(mutation => 
+        mutation.addedNodes.length > 0 && 
+        Array.from(mutation.addedNodes).some(node => 
+          node.nodeType === Node.ELEMENT_NODE && 
+          (node as Element).matches?.('p, h1, h2, h3, h4, h5, h6, li, blockquote')
+        )
+      );
+      
+      if (hasNewElements) {
+        debouncedAttach();
+      }
+    });
+
+    const htmlContentElement = contentRef.current?.querySelector('.chapter-html-content');
+    if (htmlContentElement) {
+      observer.observe(htmlContentElement, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    return () => {
+      if (attachTimeout) clearTimeout(attachTimeout);
+      observer.disconnect();
+      const htmlContentElement = contentRef.current?.querySelector('.chapter-html-content');
+      if (htmlContentElement) {
+        const blockElements = htmlContentElement.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+        blockElements.forEach(el => {
+          const existingEl = el as any;
+          if (existingEl._ttsClickHandler) {
+            el.removeEventListener('click', existingEl._ttsClickHandler);
+            delete existingEl._ttsClickHandler;
+          }
+          (el as HTMLElement).style.cursor = '';
+        });
+      }
+    };
+  }, [format, onParagraphClick, activeChapterId, sanitizedHtml]);
+
   // Format content for display (simple markdown-like rendering for plaintext)
   const formatContent = (content: string) => {
     if (!content) return null;
-    
+
     // Debug logging - always log to see if this is being called
     console.log('[ChapterViewer] formatContent called, format:', format, 'content length:', content.length);
     console.log('[ChapterViewer] First 300 chars:', content.substring(0, 300));
-    
+
     // Normalize line breaks: handle different line break types
     let normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
+
     const hasLineBreaks = normalized.includes('\n');
     console.log('[ChapterViewer] Has line breaks:', hasLineBreaks);
-    
+
     // If content has no line breaks, add paragraph breaks more aggressively
     if (!hasLineBreaks && normalized.length > 100) {
       console.log('[ChapterViewer] Adding paragraph breaks...');
-      
+
       // Strategy 1: Split on sentence endings (more aggressive)
       normalized = normalized.replace(/([.!?])\s+([A-Z])/g, '$1\n\n$2');
-      
+
       // Strategy 2: Split on periods with quotes or emphasis
       normalized = normalized.replace(/(\.|!|\?)\s*["']\s*([A-Z])/g, '$1"$2');
       normalized = normalized.replace(/\.\s+["']([^"']+)["']\s+([A-Z])/g, '.\n\n"$1"\n\n$2');
-      
+
       // Strategy 3: Split before common paragraph starters (case insensitive)
       const paragraphStarters = [
         'In the', 'It was', 'The ', 'This ', 'That ', 'These ', 'Those ',
@@ -267,12 +411,12 @@ export default function ChapterViewer({
         'First', 'Second', 'Third', 'Finally', 'Also', 'Another',
         'The Master', 'The student', 'The teacher', 'Hermetic', 'Kybalion'
       ];
-      
+
       paragraphStarters.forEach(starter => {
         const regex = new RegExp(`\\s+(${starter})`, 'gi');
         normalized = normalized.replace(regex, '\n\n$1');
       });
-      
+
       // Strategy 4: Split long paragraphs (every 300 chars after a sentence)
       // But only if no breaks were added above
       if (!normalized.includes('\n\n')) {
@@ -284,45 +428,68 @@ export default function ChapterViewer({
           return match;
         });
       }
-      
+
       console.log('[ChapterViewer] After processing, has breaks:', normalized.includes('\n\n'));
     }
-    
+
     // Split into paragraphs by double line breaks
     const paragraphs = normalized.split(/\n\n+/).filter(p => p.trim());
     console.log('[ChapterViewer] Paragraphs created:', paragraphs.length);
-    
+
     return paragraphs.map((para, index) => {
       const trimmed = para.trim();
-      
+
       // Check if it's an italicized quote (Kybalion maxim)
       if (trimmed.startsWith('_"') && trimmed.includes('—The Kybalion')) {
+        const textContent = trimmed.replace(/^_"|"_$/g, '"').replace('—The Kybalion', '').trim();
         return (
-          <blockquote 
-            key={index} 
-            className="my-6 pl-6 border-l-4 border-amber-600/50 italic text-amber-200/90 text-lg leading-relaxed"
+          <blockquote
+            key={index}
+            className="my-6 pl-6 border-l-4 border-amber-600/50 italic text-amber-200/90 text-lg leading-relaxed cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded pr-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              console.log('[ChapterViewer] Blockquote clicked:', textContent.substring(0, 50));
+              onParagraphClick?.(textContent);
+            }}
+            title="Click to read aloud"
           >
-            {trimmed.replace(/^_"|"_$/g, '"').replace('—The Kybalion', '').trim()}
+            {textContent}
             <cite className="block mt-2 text-sm not-italic text-amber-400/70">—The Kybalion</cite>
           </blockquote>
         );
       }
-      
+
       // Check if it's a numbered list item
       if (/^\d+\.\s/.test(trimmed)) {
         return (
-          <p key={index} className="my-4 text-amber-100/80 leading-relaxed pl-4 whitespace-pre-line">
+          <p
+            key={index}
+            className="my-4 text-amber-100/80 leading-relaxed pl-4 whitespace-pre-line cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded px-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              console.log('[ChapterViewer] Paragraph clicked:', trimmed.substring(0, 50));
+              onParagraphClick?.(trimmed);
+            }}
+            title="Click to read aloud"
+          >
             {trimmed}
           </p>
         );
       }
-      
+
       // Regular paragraph - manually render line breaks with <br /> tags
       // This ensures line breaks always display even if CSS fails
       const lines = trimmed.split('\n').filter(line => line.trim());
-      
+
       return (
-        <p key={index} className="my-4 text-amber-100/80 leading-relaxed text-justify">
+        <p
+          key={index}
+          className="my-4 text-amber-100/80 leading-relaxed text-justify cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded px-2"
+          onClick={() => onParagraphClick?.(trimmed)}
+          title="Click to read aloud"
+        >
           {lines.map((line, lineIndex) => (
             <span key={lineIndex}>
               {lineIndex > 0 && <br />}
@@ -337,14 +504,14 @@ export default function ChapterViewer({
   // Render content based on format
   const renderContent = () => {
     if (!activeChapter) return null;
-    
+
     console.log('[ChapterViewer] renderContent - format:', format, 'has content:', !!activeChapter.content);
-    
+
     if (format === 'html') {
       // Use the sanitized HTML directly - it should already be well-formatted
       // from the parser's cleanHtml function
       let htmlToRender = sanitizedHtml;
-      
+
       // Enhance the HTML structure if needed (client-side only)
       if (typeof window !== 'undefined' && htmlToRender && htmlToRender.trim().length > 0) {
         // If HTML lacks proper structure, try to fix it
@@ -354,7 +521,7 @@ export default function ChapterViewer({
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = htmlToRender;
           const textContent = tempDiv.textContent || tempDiv.innerText || '';
-          
+
           if (textContent.trim() && !htmlToRender.trim().startsWith('<')) {
             // It's likely plain text, wrap in paragraphs
             const paragraphs = textContent
@@ -363,7 +530,7 @@ export default function ChapterViewer({
               .map(p => `<p>${p.trim().replace(/\n/g, ' ')}</p>`)
               .join('\n');
             htmlToRender = paragraphs;
-            
+
             // Re-sanitize after processing
             htmlToRender = DOMPurify.sanitize(htmlToRender, {
               ALLOWED_TAGS: [
@@ -379,10 +546,10 @@ export default function ChapterViewer({
           }
         }
       }
-      
+
       return (
         <>
-          <div 
+          <div
             className="chapter-html-content prose prose-invert prose-amber max-w-none"
             dangerouslySetInnerHTML={{ __html: htmlToRender }}
           />
@@ -542,6 +709,13 @@ export default function ChapterViewer({
             .chapter-html-content div {
               margin: 0.5em 0;
             }
+
+            /* Read Aloud Hover Effect */
+            .chapter-html-content .cursor-read-aloud:hover {
+              background-color: rgba(245, 158, 11, 0.1); /* amber-500/10 */
+              border-radius: 4px;
+              transition: background-color 0.2s ease;
+            }
           `}</style>
         </>
       );
@@ -550,14 +724,37 @@ export default function ChapterViewer({
     if (format === 'markdown') {
       return (
         <div className="chapter-content prose prose-invert prose-amber max-w-none">
-          <ReactMarkdown 
+          <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              p: ({ children }) => (
-                <p className="my-4 text-amber-100/80 leading-relaxed text-justify">
-                  {children}
-                </p>
-              ),
+              p: ({ children }) => {
+                const handleClick = (e: React.MouseEvent<HTMLParagraphElement>) => {
+                  // Only trigger if no text is selected
+                  const selection = window.getSelection();
+                  if (selection && selection.toString().trim().length > 0) return;
+                  
+                  e.stopPropagation();
+                  e.preventDefault();
+                  
+                  if (onParagraphClick) {
+                    const text = e.currentTarget.textContent || '';
+                    if (text.trim()) {
+                      console.log('[ChapterViewer] Markdown paragraph clicked:', text.substring(0, 50));
+                      onParagraphClick(text.trim());
+                    }
+                  }
+                };
+
+                return (
+                  <p 
+                    className="my-4 text-amber-100/80 leading-relaxed text-justify cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded px-2"
+                    onClick={handleClick}
+                    title="Click to read aloud"
+                  >
+                    {children}
+                  </p>
+                );
+              },
               h1: ({ children }) => (
                 <h1 className="text-2xl font-bold text-amber-100 mt-8 mb-4">
                   {children}
@@ -594,8 +791,8 @@ export default function ChapterViewer({
                 </code>
               ),
               a: ({ href, children }) => (
-                <a 
-                  href={href} 
+                <a
+                  href={href}
                   className="text-amber-400 hover:text-amber-300 underline"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -635,11 +832,10 @@ export default function ChapterViewer({
             <button
               key={chapter.id}
               onClick={() => handleChapterChange(chapter.id)}
-              className={`text-left px-4 py-2 rounded-lg transition-colors ${
-                chapter.id === activeChapterId
-                  ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
-                  : 'bg-zinc-900/50 text-amber-100/80 hover:bg-zinc-900/70 hover:text-amber-100 border border-transparent hover:border-amber-900/30'
-              }`}
+              className={`text-left px-4 py-2 rounded-lg transition-colors ${chapter.id === activeChapterId
+                ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
+                : 'bg-zinc-900/50 text-amber-100/80 hover:bg-zinc-900/70 hover:text-amber-100 border border-transparent hover:border-amber-900/30'
+                }`}
             >
               <span className="text-sm font-medium text-amber-100/50 mr-2">
                 {index + 1}.
@@ -655,7 +851,7 @@ export default function ChapterViewer({
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="h-full flex flex-col"
     >
@@ -669,7 +865,7 @@ export default function ChapterViewer({
             {(zoom * 100).toFixed(0)}%
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
           <button
@@ -680,7 +876,7 @@ export default function ChapterViewer({
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          
+
           <button
             onClick={handleResetZoom}
             className="px-3 py-2 hover:bg-zinc-700 rounded text-amber-100 text-sm transition-colors"
@@ -688,7 +884,7 @@ export default function ChapterViewer({
           >
             <RotateCw className="w-4 h-4" />
           </button>
-          
+
           <button
             onClick={handleZoomIn}
             disabled={zoom >= MAX_ZOOM}
@@ -697,9 +893,9 @@ export default function ChapterViewer({
           >
             <ZoomIn className="w-4 h-4" />
           </button>
-          
+
           <div className="w-px h-6 bg-amber-900/20 mx-1" />
-          
+
           {/* Fullscreen toggle */}
           <button
             onClick={handleFullscreen}
@@ -722,11 +918,10 @@ export default function ChapterViewer({
             <button
               key={chapter.id}
               onClick={() => handleChapterChange(chapter.id)}
-              className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                activeChapterId === chapter.id
-                  ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
-                  : 'text-amber-100/60 hover:text-amber-100 hover:bg-zinc-900/50'
-              }`}
+              className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${activeChapterId === chapter.id
+                ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
+                : 'text-amber-100/60 hover:text-amber-100 hover:bg-zinc-900/50'
+                }`}
             >
               {chapter.title.replace(/^Chapter\s+[IVX]+:\s*/i, '')}
             </button>
@@ -743,13 +938,12 @@ export default function ChapterViewer({
           <span className="font-medium">
             {activeChapter?.title || 'Select Chapter'}
           </span>
-          <ChevronDown 
-            className={`w-5 h-5 transition-transform ${
-              isMobileMenuOpen ? 'rotate-180' : ''
-            }`} 
+          <ChevronDown
+            className={`w-5 h-5 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''
+              }`}
           />
         </button>
-        
+
         {isMobileMenuOpen && (
           <div className="border-t border-amber-900/20 max-h-[50vh] overflow-y-auto">
             {chapters.map((chapter) => (
@@ -759,11 +953,10 @@ export default function ChapterViewer({
                   handleChapterChange(chapter.id);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`w-full px-4 py-3 text-left text-sm transition-colors ${
-                  activeChapterId === chapter.id
-                    ? 'bg-amber-600/10 text-amber-400 border-l-4 border-amber-600'
-                    : 'text-amber-100/70 hover:bg-zinc-900/50 hover:text-amber-100'
-                }`}
+                className={`w-full px-4 py-3 text-left text-sm transition-colors ${activeChapterId === chapter.id
+                  ? 'bg-amber-600/10 text-amber-400 border-l-4 border-amber-600'
+                  : 'text-amber-100/70 hover:bg-zinc-900/50 hover:text-amber-100'
+                  }`}
               >
                 {chapter.title}
               </button>
@@ -775,7 +968,7 @@ export default function ChapterViewer({
       {/* Chapter content */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-zinc-900/50 border border-amber-900/20 rounded-b-lg relative">
         {activeChapter ? (
-          <article 
+          <article
             ref={contentRef}
             className="max-w-4xl mx-auto px-6 py-8 relative"
             style={{
@@ -791,21 +984,21 @@ export default function ChapterViewer({
               .filter((annotation) => annotation.position?.chapterId === activeChapterId)
               .map((annotation) => {
                 if (!annotation.position?.rects || annotation.position.rects.length === 0) return null;
-                
+
                 const rect = annotation.position.rects[0];
-                const highlightColor = annotation.highlight_color 
-                  ? HIGHLIGHT_COLOR_MAP[annotation.highlight_color] 
+                const highlightColor = annotation.highlight_color
+                  ? HIGHLIGHT_COLOR_MAP[annotation.highlight_color]
                   : 'rgba(251, 191, 36, 0.3)';
-                const borderColor = annotation.highlight_color 
-                  ? highlightColor.replace('0.3', '0.5') 
+                const borderColor = annotation.highlight_color
+                  ? highlightColor.replace('0.3', '0.5')
                   : 'rgba(217, 119, 6, 0.5)';
-                
+
                 // Account for zoom when rendering highlights
                 const scaledX = rect.x * zoom;
                 const scaledY = rect.y * zoom;
                 const scaledWidth = rect.width * zoom;
                 const scaledHeight = rect.height * zoom;
-                
+
                 return (
                   <div
                     key={annotation.id}
@@ -862,11 +1055,11 @@ export default function ChapterViewer({
               >
                 ← Previous
               </button>
-              
+
               <span className="text-sm text-amber-100/50">
                 {chapters.findIndex(ch => ch.id === activeChapterId) + 1} of {chapters.length}
               </span>
-              
+
               <button
                 onClick={() => {
                   const currentIndex = chapters.findIndex(ch => ch.id === activeChapterId);

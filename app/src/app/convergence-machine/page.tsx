@@ -599,7 +599,7 @@ function ConvergenceMachineContent() {
 export default function ConvergenceMachinePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center select-none pointer-events-none">
         <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
       </div>
     }>

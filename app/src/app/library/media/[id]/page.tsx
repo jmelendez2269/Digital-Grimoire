@@ -17,7 +17,7 @@ import { createClient } from '@/lib/supabase/client';
 const AudioViewer = dynamic(() => import('@/components/AudioViewer'), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg select-none pointer-events-none">
       <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
     </div>
   ),
@@ -26,7 +26,7 @@ const AudioViewer = dynamic(() => import('@/components/AudioViewer'), {
 const VideoViewer = dynamic(() => import('@/components/VideoViewer'), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg select-none pointer-events-none">
       <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
     </div>
   ),
@@ -35,7 +35,7 @@ const VideoViewer = dynamic(() => import('@/components/VideoViewer'), {
 const ImageViewer = dynamic(() => import('@/components/ImageViewer'), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg select-none pointer-events-none">
       <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
     </div>
   ),
@@ -201,7 +201,7 @@ export default function MediaDetailPage() {
     return (
       <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
         <Header />
-        <main className="flex-1 flex items-center justify-center">
+        <main className="flex-1 flex items-center justify-center select-none pointer-events-none">
           <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
         </main>
         <Footer />

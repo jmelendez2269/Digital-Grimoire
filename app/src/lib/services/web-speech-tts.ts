@@ -79,14 +79,42 @@ export class WebSpeechTTS extends TTSService {
       throw new Error('Speech synthesis not initialized');
     }
 
+    // Validate inputs
+    if (!text || text.length === 0) {
+      throw new Error('Text is empty');
+    }
+
+    if (startPosition < 0 || startPosition >= text.length) {
+      console.warn('[WebSpeechTTS] Invalid startPosition, clamping', {
+        startPosition,
+        textLength: text.length
+      });
+      startPosition = Math.max(0, Math.min(startPosition, text.length - 1));
+    }
+
     // Stop any ongoing speech
     this.stop();
 
     this.currentText = text;
     this.currentPosition = startPosition;
 
-    // Extract text from startPosition
+    // Extract text from startPosition to end
     const textToSpeak = startPosition > 0 ? text.substring(startPosition) : text;
+
+    if (!textToSpeak || textToSpeak.length === 0) {
+      console.warn('[WebSpeechTTS] No text to speak after position', {
+        startPosition,
+        textLength: text.length
+      });
+      return;
+    }
+
+    console.log('[WebSpeechTTS] Speaking from position', {
+      startPosition,
+      textLength: text.length,
+      textToSpeakLength: textToSpeak.length,
+      preview: textToSpeak.substring(0, 100)
+    });
 
     this.utterance = new SpeechSynthesisUtterance(textToSpeak);
 

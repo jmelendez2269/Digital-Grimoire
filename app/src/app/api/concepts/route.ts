@@ -22,11 +22,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
     const tradition = searchParams.get("tradition");
+    const traditionId = searchParams.get("traditionId");
     const tag = searchParams.get("tag");
     const limit = Math.min(Number(searchParams.get("limit") || 50), 200);
 
-    let query = supabase.from("convergence_concepts").select("*").limit(limit);
+    let query = supabase
+      .from("convergence_concepts")
+      .select("*, tradition_ref:convergence_traditions(id, slug, label, color, icon)")
+      .limit(limit);
     if (tradition) query = query.eq("tradition", tradition);
+    if (traditionId) query = query.eq("tradition_id", traditionId);
     if (tag) query = query.contains("tags", [tag]);
     if (q) query = query.ilike("name", `%${q}%`);
 
@@ -56,14 +61,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await req.json();
-    const { name, slug, tradition, era, short_definition, primary_sources = [], tags = [] } = body || {};
-    if (!name || !tradition) {
-      return NextResponse.json({ error: "name and tradition are required" }, { status: 400 });
+    const {
+      name,
+      slug,
+      tradition,
+      traditionId,
+      era,
+      short_definition,
+      primary_sources = [],
+      tags = [],
+    } = body || {};
+    if (!name || (!tradition && !traditionId)) {
+      return NextResponse.json(
+        { error: "name and tradition/traditionId are required" },
+        { status: 400 }
+      );
     }
     const svc = createServiceClient();
+    let resolvedTraditionId = traditionId as string | undefined;
+    let resolvedTradition = tradition as string | undefined;
+
+    if (resolvedTraditionId && !resolvedTradition) {
+      const { data: traditionRow, error: traditionError } = await svc
+        .from("convergence_traditions")
+        .select("label")
+        .eq("id", resolvedTraditionId)
+        .single();
+      if (traditionError) throw traditionError;
+      resolvedTradition = traditionRow.label;
+    }
+
+    if (!resolvedTraditionId && resolvedTradition) {
+      const { data: traditionRow } = await svc
+        .from("convergence_traditions")
+        .select("id")
+        .eq("label", resolvedTradition)
+        .single();
+      resolvedTraditionId = traditionRow?.id;
+    }
+
     const { data, error } = await svc
       .from("convergence_concepts")
-      .insert({ name, slug, tradition, era, short_definition, primary_sources, tags })
+      .insert({
+        name,
+        slug,
+        tradition: resolvedTradition,
+        tradition_id: resolvedTraditionId,
+        era,
+        short_definition,
+        primary_sources,
+        tags,
+      })
       .select("*")
       .single();
     if (error) throw error;

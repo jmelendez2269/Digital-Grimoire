@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  User, 
-  Tag, 
-  BookOpen, 
+import {
+  ArrowLeft,
+  Calendar,
+  User,
+  Tag,
+  BookOpen,
   FileText,
   Loader2,
   AlertCircle,
@@ -17,8 +17,7 @@ import {
   Sparkles,
   RefreshCw,
   Edit,
-  Trash2,
-  Dice6
+  Trash2
 } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
@@ -28,43 +27,16 @@ import TableOfContents, { TOCItem } from '@/components/TableOfContents';
 import { formatFileSize, formatDate } from '@/lib/utils/formatting';
 import { useAuth } from '@/contexts/AuthContext';
 import * as pdfjsLib from 'pdfjs-dist';
-import type { PDFViewerRef } from '@/components/PDFViewer';
 
 // Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
-// Use a wrapper to ensure refs and callbacks work properly
-const PDFViewerDynamic = dynamic(() => import('@/components/PDFViewer'), {
+const PDFViewer = dynamic(() => import('@/components/PDFViewer'), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg select-none pointer-events-none">
       <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
     </div>
   ),
 });
-
-// Store jumpToPage function globally to avoid ref issues with dynamic imports
-let globalJumpToPageFn: ((pageNumber: number) => void) | null = null;
-
-// Wrapper component to capture the jumpToPage function
-// Use React.memo and useCallback to prevent infinite loops
-const PDFViewer = React.memo((props: React.ComponentProps<typeof PDFViewerDynamic> & { onJumpToPageReady?: (fn: (pageNumber: number) => void) => void }) => {
-  const handleJumpToPageReadyRef = React.useRef<(fn: (pageNumber: number) => void) => void | null>(null);
-  
-  // Store the callback in a ref to avoid recreating it
-  if (!handleJumpToPageReadyRef.current) {
-    handleJumpToPageReadyRef.current = (fn: (pageNumber: number) => void) => {
-      // Only log once to avoid spam
-      if (!globalJumpToPageFn) {
-        console.log('[PDFViewer Wrapper] ✅ onJumpToPageReady callback received in wrapper!');
-      }
-      globalJumpToPageFn = fn;
-      // Don't call props.onJumpToPageReady here - it causes infinite loops
-      // The global function is enough, and the parent can access it via polling
-    };
-  }
-  
-  return <PDFViewerDynamic {...props} onJumpToPageReady={handleJumpToPageReadyRef.current} />;
-});
-PDFViewer.displayName = 'PDFViewer';
 
 // Lazy load AnnotationPanel - only needed when user switches to notes tab
 const AnnotationPanelLazy = dynamic(() => import('@/components/AnnotationPanel'), {
@@ -88,7 +60,7 @@ const AudioPlayer = dynamic(() => import('@/components/AudioPlayer'), {
 const ChapterViewer = dynamic(() => import('@/components/ChapterViewer'), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg select-none pointer-events-none">
       <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
     </div>
   ),
@@ -98,7 +70,7 @@ const ChapterViewer = dynamic(() => import('@/components/ChapterViewer'), {
 const HTMLViewer = dynamic(() => import('@/components/HTMLViewer'), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+    <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg select-none pointer-events-none">
       <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
     </div>
   ),
@@ -161,7 +133,7 @@ export default function DocumentDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'notes'>('viewer');
   const [numPages, setNumPages] = useState<number | null>(null);
-  
+
   // Text selection and annotations state
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [selectedPosition, setSelectedPosition] = useState<any>(null);
@@ -180,17 +152,13 @@ export default function DocumentDetailPage() {
   const [reimporting, setReimporting] = useState(false);
   const [reimportError, setReimportError] = useState<string | null>(null);
   const [reimportSuccess, setReimportSuccess] = useState(false);
-  
-  // Ref for PDFViewer to enable programmatic navigation
-  const pdfViewerRef = useRef<PDFViewerRef>(null);
-  // Alternative: callback function for jumpToPage (works better with dynamic imports)
-  const [jumpToPageFn, setJumpToPageFn] = useState<((pageNumber: number) => void) | null>(null);
-  // Track when ref is available
-  const [refReady, setRefReady] = useState(false);
-  
+
   // Dynamically load FloatingAISearch only when needed
   const [FloatingAISearchComponent, setFloatingAISearchComponent] = useState<React.ComponentType<{ defaultCollapsed?: boolean }> | null>(null);
-  
+
+  // TTS Controls Reference
+  const audioControlsRef = useRef<any>(null);
+
   useEffect(() => {
     // Load FloatingAISearch after component mounts to avoid webpack resolution issues
     import('@/components/FloatingAISearch').then((mod) => {
@@ -200,17 +168,333 @@ export default function DocumentDetailPage() {
     });
   }, []);
 
+  // Memoize full text and chapter offsets for TTS synchronization
+  const { fullText, chapterOffsets } = useMemo(() => {
+    if (!document?.metadata?.chapters || !document.metadata.isStructuredText) {
+      // For non-structured text, just use the document content if available
+      return {
+        fullText: document?.content || '',
+        chapterOffsets: {} as Record<string, number>
+      };
+    }
+
+    const separator = '\n\n';
+    let currentOffset = 0;
+    const offsets: Record<string, number> = {};
+    const texts: string[] = [];
+
+    // Helper to normalize text (must match ChapterViewer's logic)
+    const normalizeContent = (content: string) => {
+      let normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const hasLineBreaks = normalized.includes('\n');
+
+      // Apply paragraph splitting logic if needed (matching ChapterViewer)
+      if (!hasLineBreaks && normalized.length > 100) {
+        normalized = normalized.replace(/([.!?])\s+([A-Z])/g, '$1\n\n$2');
+        normalized = normalized.replace(/(\.|!|\?)\s*["']\s*([A-Z])/g, '$1"$2');
+        normalized = normalized.replace(/\.\s+["']([^"']+)["']\s+([A-Z])/g, '.\n\n"$1"\n\n$2');
+
+        const paragraphStarters = [
+          'In the', 'It was', 'The ', 'This ', 'That ', 'These ', 'Those ',
+          'However', 'Therefore', 'Moreover', 'Furthermore', 'Additionally',
+          'First', 'Second', 'Third', 'Finally', 'Also', 'Another',
+          'The Master', 'The student', 'The teacher', 'Hermetic', 'Kybalion'
+        ];
+
+        paragraphStarters.forEach(starter => {
+          const regex = new RegExp(`\\s+(${starter})`, 'gi');
+          normalized = normalized.replace(regex, '\n\n$1');
+        });
+
+        if (!normalized.includes('\n\n')) {
+          normalized = normalized.replace(/([.!?])\s+([^.!?]{200,})/g, (match, punct, text) => {
+            if (text.length > 200) return punct + '\n\n' + text;
+            return match;
+          });
+        }
+      }
+      return normalized;
+    };
+
+    // Process all chapters
+    document.metadata.chapters.forEach(chapter => {
+      offsets[chapter.id] = currentOffset;
+      const normalized = normalizeContent(chapter.content);
+      texts.push(normalized);
+      currentOffset += normalized.length + separator.length;
+    });
+
+    return {
+      fullText: texts.join(separator),
+      chapterOffsets: offsets
+    };
+  }, [document]);
+
+  // Handle Audio Player Ready
+  const handleAudioPlayerReady = useCallback((controls: any) => {
+    console.log('[DocumentDetailPage] Audio Player ready');
+    audioControlsRef.current = controls;
+  }, []);
+
+  // Find all occurrences of text in a string
+  const findAllOccurrences = useCallback((text: string, searchText: string): number[] => {
+    const indices: number[] = [];
+    let index = text.indexOf(searchText);
+    while (index !== -1) {
+      indices.push(index);
+      index = text.indexOf(searchText, index + 1);
+    }
+    return indices;
+  }, []);
+
+  // Handle paragraph click for TTS (Structured Text)
+  const handleParagraphClick = useCallback((text: string) => {
+    if (!audioControlsRef.current || !activeChapterId || !document?.metadata?.chapters || !fullText) {
+      console.warn('[TTS] Missing required data for paragraph click', {
+        hasControls: !!audioControlsRef.current,
+        activeChapterId,
+        hasChapters: !!document?.metadata?.chapters,
+        hasFullText: !!fullText
+      });
+      return;
+    }
+
+    // Find the active chapter
+    const activeChapter = document.metadata.chapters.find(c => c.id === activeChapterId);
+    if (!activeChapter) {
+      console.warn('[TTS] Active chapter not found', { activeChapterId });
+      return;
+    }
+
+    // Calculate global position
+    // 1. Get chapter start offset
+    const chapterStart = chapterOffsets[activeChapterId] || 0;
+    
+    // 2. Get the chapter text from fullText (most reliable)
+    const chapterKeys = Object.keys(chapterOffsets).sort((a, b) => chapterOffsets[a] - chapterOffsets[b]);
+    const currentChapterIndex = chapterKeys.indexOf(activeChapterId);
+    const nextChapterId = currentChapterIndex >= 0 && currentChapterIndex < chapterKeys.length - 1 
+      ? chapterKeys[currentChapterIndex + 1] 
+      : null;
+    const chapterEnd = nextChapterId ? chapterOffsets[nextChapterId] : fullText.length;
+    
+    const chapterTextInFull = fullText.substring(chapterStart, chapterEnd);
+    
+    if (!chapterTextInFull) {
+      console.warn('[TTS] Chapter text is empty', { chapterStart, chapterEnd, fullTextLength: fullText.length });
+      return;
+    }
+    
+    // 3. Normalize both texts for better matching
+    const normalizeForSearch = (t: string) => t.replace(/\s+/g, ' ').trim();
+    const normalizedClicked = normalizeForSearch(text);
+    const normalizedChapter = normalizeForSearch(chapterTextInFull);
+    
+    // Try multiple search strategies
+    let localIndex = -1;
+    let searchMethod = '';
+    
+    // Strategy 1: Exact match in original text
+    localIndex = chapterTextInFull.indexOf(text);
+    if (localIndex !== -1) {
+      searchMethod = 'exact';
+    }
+    
+    // Strategy 2: Normalized match
+    if (localIndex === -1) {
+      localIndex = normalizedChapter.indexOf(normalizedClicked);
+      if (localIndex !== -1) {
+        searchMethod = 'normalized';
+      }
+    }
+    
+    // Strategy 3: First 50 chars match (for long paragraphs)
+    if (localIndex === -1 && text.length > 50) {
+      const shortText = text.substring(0, 50);
+      localIndex = chapterTextInFull.indexOf(shortText);
+      if (localIndex !== -1) {
+        searchMethod = 'short-exact';
+      }
+    }
+    
+    // Strategy 4: First 50 chars normalized
+    if (localIndex === -1 && normalizedClicked.length > 50) {
+      const shortNormalized = normalizedClicked.substring(0, 50);
+      localIndex = normalizedChapter.indexOf(shortNormalized);
+      if (localIndex !== -1) {
+        searchMethod = 'short-normalized';
+      }
+    }
+    
+    // Strategy 5: Fuzzy match with regex (handles whitespace variations)
+    if (localIndex === -1) {
+      try {
+        // Escape special regex characters but allow flexible whitespace
+        const escaped = normalizedClicked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const flexiblePattern = escaped.replace(/\s+/g, '\\s+');
+        const regex = new RegExp(flexiblePattern, 'i');
+        const match = chapterTextInFull.match(regex);
+        if (match && match.index !== undefined) {
+          localIndex = match.index;
+          searchMethod = 'regex';
+        }
+      } catch (err) {
+        console.warn('[TTS] Regex search failed:', err);
+      }
+    }
+
+    // Strategy 6: Search in raw chapter content and estimate
+    if (localIndex === -1) {
+      const rawChapterContent = activeChapter.content;
+      const rawIndex = rawChapterContent.indexOf(text);
+      
+      if (rawIndex !== -1) {
+        // Found in raw content, estimate position in fullText chapter
+        const ratio = rawIndex / Math.max(rawChapterContent.length, 1);
+        localIndex = Math.floor(chapterTextInFull.length * ratio);
+        searchMethod = 'estimated';
+      }
+    }
+
+    if (localIndex !== -1 && localIndex >= 0) {
+      const globalIndex = chapterStart + localIndex;
+      console.log(`[TTS] Seek to ${globalIndex} (Chapter: ${activeChapterId}, Local: ${localIndex}, Method: ${searchMethod}, Text length: ${text.length})`);
+      
+      // Verify the position is within bounds
+      if (globalIndex >= 0 && globalIndex < fullText.length) {
+        audioControlsRef.current.startFromPosition(globalIndex);
+      } else {
+        console.warn('[TTS] Calculated position out of bounds', { globalIndex, fullTextLength: fullText.length });
+      }
+    } else {
+      console.warn('[TTS] Could not find clicked text in active chapter content', { 
+        text: text.substring(0, 50),
+        chapterId: activeChapterId,
+        chapterStart,
+        chapterEnd,
+        chapterTextLength: chapterTextInFull.length,
+        normalizedClicked: normalizedClicked.substring(0, 50)
+      });
+      
+      // Final Fallback: Search anywhere in fullText (might jump to another chapter if text is duplicate)
+      const allGlobalOccurrences = findAllOccurrences(fullText, text);
+      if (allGlobalOccurrences.length > 0) {
+        // Try to find the one closest to the chapter start
+        const closestIndex = allGlobalOccurrences.reduce((closest, current) => {
+          const closestDist = Math.abs(closest - chapterStart);
+          const currentDist = Math.abs(current - chapterStart);
+          return currentDist < closestDist ? current : closest;
+        });
+        console.log(`[TTS] Global Fallback Seek to ${closestIndex} (${allGlobalOccurrences.length} occurrences found, using closest to chapter)`);
+        
+        if (closestIndex >= 0 && closestIndex < fullText.length) {
+          audioControlsRef.current.startFromPosition(closestIndex);
+        }
+      }
+    }
+  }, [activeChapterId, chapterOffsets, document, fullText, findAllOccurrences]);
+
+  // Handle block click for TTS (HTML)
+  const handleBlockClick = useCallback((text: string) => {
+    try {
+      if (!audioControlsRef.current || !fullText || typeof fullText !== 'string') {
+        console.warn('[TTS] Missing required data for block click', {
+          hasControls: !!audioControlsRef.current,
+          hasFullText: !!fullText,
+          fullTextType: typeof fullText
+        });
+        return;
+      }
+
+      if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        console.warn('[TTS] Invalid text for block click', { text: text?.substring(0, 50) });
+        return;
+      }
+
+      // Normalize function for search
+      const normalizeForSearch = (t: string) => t.replace(/\s+/g, ' ').trim();
+      const normalizedClicked = normalizeForSearch(text);
+      const normalizedFull = normalizeForSearch(fullText);
+
+      // Try multiple search strategies
+      let index = -1;
+      let searchMethod = '';
+
+      // Strategy 1: Exact match in original text
+      index = fullText.indexOf(text);
+      if (index !== -1) {
+        searchMethod = 'exact';
+      }
+
+      // Strategy 2: Normalized match
+      if (index === -1) {
+        index = normalizedFull.indexOf(normalizedClicked);
+        if (index !== -1) {
+          searchMethod = 'normalized';
+        }
+      }
+
+      // Strategy 3: First 100 chars match (for long paragraphs)
+      if (index === -1 && text.length > 100) {
+        const shortText = text.substring(0, 100);
+        index = fullText.indexOf(shortText);
+        if (index !== -1) {
+          searchMethod = 'short-exact';
+        }
+      }
+
+      // Strategy 4: First 100 chars normalized
+      if (index === -1 && normalizedClicked.length > 100) {
+        const shortNormalized = normalizedClicked.substring(0, 100);
+        index = normalizedFull.indexOf(shortNormalized);
+        if (index !== -1) {
+          searchMethod = 'short-normalized';
+        }
+      }
+
+      // Strategy 5: Fuzzy match with regex (handles whitespace variations)
+      if (index === -1) {
+        try {
+          // Escape special regex characters but allow flexible whitespace
+          const escaped = normalizedClicked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const flexiblePattern = escaped.replace(/\s+/g, '\\s+');
+          const regex = new RegExp(flexiblePattern, 'i');
+          const match = fullText.match(regex);
+          if (match && match.index !== undefined) {
+            index = match.index;
+            searchMethod = 'regex';
+          }
+        } catch (regexError) {
+          console.warn('[TTS] Regex search failed:', regexError);
+        }
+      }
+
+      if (index !== -1 && index >= 0 && index < fullText.length) {
+        console.log(`[TTS] Seek to ${index} (HTML, Method: ${searchMethod}, Text length: ${text.length})`);
+        audioControlsRef.current.startFromPosition(index);
+      } else {
+        console.warn('[TTS] Could not find clicked text in full content', { 
+          clickedText: text.substring(0, 50),
+          normalizedClicked: normalizedClicked.substring(0, 50),
+          fullTextLength: fullText.length
+        });
+      }
+    } catch (error) {
+      console.error('[TTS] Error in handleBlockClick:', error);
+    }
+  }, [fullText]);
+
   const fetchDocument = useCallback(async () => {
     if (!documentId) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('[DocumentDetailPage] Fetching document via API:', documentId);
 
       const response = await fetch(`/api/texts/${documentId}`);
-      
+
       if (!response.ok) {
         let errorMessage = 'Failed to load document';
         try {
@@ -225,7 +509,7 @@ export default function DocumentDetailPage() {
       }
 
       const { document: data } = await response.json();
-      
+
       if (!data) {
         setError('Document not found');
         return;
@@ -239,35 +523,38 @@ export default function DocumentDetailPage() {
 
       // If document has S3 key, fetch the signed URL from R2
       if (data.s3_key && data.status === 'ready') {
-        console.log('[DocumentDetailPage] Fetching signed URL for document', isHtmlFile ? '(HTML)' : '(PDF)');
-        try {
-          const response = await fetch(`/api/documents/${documentId}`);
-          
-          if (response.ok) {
-            const result = await response.json();
-            console.log('[DocumentDetailPage] Signed URL received, length:', result.url?.length || 0);
-            if (isHtmlFile) {
-              setHtmlUrl(result.url);
-            } else {
+        if (isHtmlFile) {
+          // For HTML files, use the proxy route to avoid CORS issues
+          console.log('[DocumentDetailPage] Using HTML proxy route for document');
+          setHtmlUrl(`/api/documents/${documentId}/html`);
+        } else {
+          // For PDF files, fetch the signed URL
+          console.log('[DocumentDetailPage] Fetching signed URL for PDF document');
+          try {
+            const response = await fetch(`/api/documents/${documentId}`);
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log('[DocumentDetailPage] Signed URL received, length:', result.url?.length || 0);
               setPdfUrl(result.url);
+            } else {
+              // Handle error response - try to parse as JSON, fallback to status text
+              let errorMessage = 'Failed to load document from storage';
+              try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+                console.error('[DocumentDetailPage] API error response:', errorData);
+              } catch (e) {
+                // Response wasn't JSON, use status text
+                errorMessage = `${errorMessage}: ${response.statusText}`;
+                console.error('[DocumentDetailPage] Non-JSON error response:', response.statusText);
+              }
+              setError(errorMessage);
             }
-          } else {
-            // Handle error response - try to parse as JSON, fallback to status text
-            let errorMessage = 'Failed to load document from storage';
-            try {
-              const errorData = await response.json();
-              errorMessage = errorData.error || errorMessage;
-              console.error('[DocumentDetailPage] API error response:', errorData);
-            } catch (e) {
-              // Response wasn't JSON, use status text
-              errorMessage = `${errorMessage}: ${response.statusText}`;
-              console.error('[DocumentDetailPage] Non-JSON error response:', response.statusText);
-            }
-            setError(errorMessage);
+          } catch (fetchError) {
+            console.error('[DocumentDetailPage] Error fetching document URL:', fetchError);
+            setError('Failed to connect to document service. Please try again.');
           }
-        } catch (fetchError) {
-          console.error('[DocumentDetailPage] Error fetching document URL:', fetchError);
-          setError('Failed to connect to document service. Please try again.');
         }
       } else {
         console.log('[DocumentDetailPage] Document not ready for viewing:', {
@@ -294,7 +581,7 @@ export default function DocumentDetailPage() {
   useEffect(() => {
     const chunkParam = searchParams.get('chunk');
     const chunkIndexParam = searchParams.get('chunkIndex');
-    
+
     if (chunkParam) {
       setTargetChunkId(chunkParam);
       fetchChunkContent(chunkParam);
@@ -322,11 +609,11 @@ export default function DocumentDetailPage() {
       if (response.ok) {
         const data = await response.json();
         setChunkContent(data.chunk.content);
-        
+
         // For structured text, try to find matching chapter
         if (document?.metadata?.isStructuredText && document.metadata.chapters) {
           // Search for chunk content in chapters
-          const matchingChapter = document.metadata.chapters.find(ch => 
+          const matchingChapter = document.metadata.chapters.find(ch =>
             ch.content.includes(data.chunk.content.substring(0, 100))
           );
           if (matchingChapter) {
@@ -355,7 +642,7 @@ export default function DocumentDetailPage() {
   // Fetch annotations for this document
   const fetchAnnotations = async () => {
     if (!documentId) return;
-    
+
     try {
       const response = await fetch(`/api/annotations?text_id=${documentId}`);
       if (response.ok) {
@@ -372,7 +659,7 @@ export default function DocumentDetailPage() {
     console.log('[DocumentDetailPage] Text selected:', selection.text.substring(0, 50) + '...');
     setSelectedText(selection.text);
     setSelectedPosition(selection.position);
-    
+
     // Auto-switch to notes tab when text is selected
     setActiveTab('notes');
   }, []);
@@ -386,11 +673,11 @@ export default function DocumentDetailPage() {
   // Handle re-import content
   const handleReimport = async () => {
     if (!documentId || !document) return;
-    
+
     setReimporting(true);
     setReimportError(null);
     setReimportSuccess(false);
-    
+
     try {
       const response = await fetch('/api/reimport-content', {
         method: 'POST',
@@ -399,21 +686,21 @@ export default function DocumentDetailPage() {
         },
         body: JSON.stringify({ textId: documentId }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to re-import content');
       }
-      
+
       const data = await response.json();
       setReimportSuccess(true);
-      
+
       // Refresh the document to show new content
       setTimeout(() => {
         fetchDocument();
         setReimportSuccess(false);
       }, 1000);
-      
+
     } catch (error) {
       console.error('Error re-importing content:', error);
       setReimportError(error instanceof Error ? error.message : 'Failed to re-import content');
@@ -425,7 +712,7 @@ export default function DocumentDetailPage() {
   // Handle delete document
   const handleDelete = async () => {
     if (!document || !documentId) return;
-    
+
     if (!confirm(`Are you sure you want to permanently delete "${document.title}"?\n\nThis will remove the document and all associated data (bookmarks, annotations, etc.). This action cannot be undone.`)) {
       return;
     }
@@ -466,22 +753,7 @@ export default function DocumentDetailPage() {
   const handleDocumentLoad = useCallback((totalPages: number) => {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
-    // Ensure jumpToPageFn is set up after document loads
-    setTimeout(() => {
-      console.log('[DocumentDetailPage] PDF Viewer Ref after load:', pdfViewerRef.current);
-      if (pdfViewerRef.current && !jumpToPageFn) {
-        console.log('[DocumentDetailPage] Setting up jumpToPageFn after document load');
-        setJumpToPageFn((pageNumber: number) => {
-          console.log('[DocumentDetailPage] jumpToPageFn called with page:', pageNumber);
-          if (pdfViewerRef.current) {
-            pdfViewerRef.current.jumpToPage(pageNumber);
-          } else {
-            console.error('[DocumentDetailPage] pdfViewerRef.current is null in jumpToPageFn');
-          }
-        });
-      }
-    }, 500);
-  }, [jumpToPageFn]);
+  }, []);
 
   // Handle HTML document load - wrapper for HTMLViewer (no parameters)
   // This handler matches HTMLViewer's expected signature: () => void
@@ -519,24 +791,24 @@ export default function DocumentDetailPage() {
     try {
       const response = await fetch(htmlUrl);
       if (!response.ok) return [];
-      
+
       const html = await response.text();
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
-      
+
       const headings: TOCItem[] = [];
       const headingElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
       const usedIds = new Set<string>();
-      
+
       headingElements.forEach((heading, index) => {
         const level = parseInt(heading.tagName.charAt(1));
         let id = heading.id;
-        
+
         // Generate ID if missing (using same logic as HTMLViewer)
         if (!id) {
           const text = heading.textContent?.trim() || '';
           id = generateSlug(text, index);
-          
+
           // Ensure uniqueness by appending index if duplicate
           let uniqueId = id;
           let counter = 0;
@@ -555,15 +827,15 @@ export default function DocumentDetailPage() {
           }
           id = uniqueId;
         }
-        
+
         usedIds.add(id);
-        
+
         const title = heading.textContent?.trim() || `Heading ${index + 1}`;
         if (title) {
           headings.push({ id, title, level });
         }
       });
-      
+
       return headings;
     } catch (error) {
       console.error('Error extracting HTML TOC:', error);
@@ -577,19 +849,19 @@ export default function DocumentDetailPage() {
       const loadingTask = pdfjsLib.getDocument(pdfUrl);
       const pdf = await loadingTask.promise;
       const outline = await pdf.getOutline();
-      
+
       if (!outline || outline.length === 0) {
         return [];
       }
 
       const flattenOutline = async (items: any[], level: number = 1): Promise<TOCItem[]> => {
         const result: TOCItem[] = [];
-        
+
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           // Get page number from destination
           let pageNumber: number | undefined;
-          
+
           if (item.dest) {
             try {
               if (typeof item.dest === 'string') {
@@ -611,7 +883,7 @@ export default function DocumentDetailPage() {
 
           const id = `pdf-outline-${result.length}`;
           const title = item.title || `Section ${result.length + 1}`;
-          
+
           result.push({
             id,
             title,
@@ -625,7 +897,7 @@ export default function DocumentDetailPage() {
             result.push(...subItems);
           }
         }
-        
+
         return result;
       };
 
@@ -655,9 +927,12 @@ export default function DocumentDetailPage() {
         return;
       }
 
-      // HTML document
+      // HTML document - use proxy route if it's a relative URL (proxy), otherwise use direct URL
       if (htmlUrl && document.status === 'ready') {
-        const items = await extractHTMLTOC(htmlUrl);
+        // If htmlUrl is a relative path (starts with /), it's our proxy route
+        // Otherwise, it's a direct R2 URL (shouldn't happen anymore, but handle it)
+        const tocUrl = htmlUrl.startsWith('/') ? htmlUrl : `/api/documents/${documentId}/html`;
+        const items = await extractHTMLTOC(tocUrl);
         setTocItems(items);
         return;
       }
@@ -680,7 +955,7 @@ export default function DocumentDetailPage() {
   const handleTOCItemsUpdate = useCallback((updatedItems: TOCItem[]) => {
     // Update the sidebar TOC items
     setTocItems(updatedItems);
-    
+
     // If admin saved, update the document metadata to reflect saved changes
     if (isAdmin && document?.metadata?.isStructuredText && document.metadata.chapters) {
       const updatedChapters = document.metadata.chapters.map((chapter) => {
@@ -695,7 +970,7 @@ export default function DocumentDetailPage() {
         }
         return chapter;
       });
-      
+
       // Update document with saved chapter titles
       setDocument({
         ...document,
@@ -704,7 +979,7 @@ export default function DocumentDetailPage() {
           chapters: updatedChapters,
         },
       });
-      
+
       // Refresh the document to get the latest from database (with a small delay to avoid race conditions)
       setTimeout(() => {
         fetchDocument();
@@ -726,21 +1001,21 @@ export default function DocumentDetailPage() {
     if (htmlUrl && document?.status === 'ready') {
       // Ensure we're in the browser environment
       if (typeof window === 'undefined') return;
-      
+
       // Try to find the element in the HTML viewer's content
       // The HTML viewer renders content in a div with class 'html-viewer-content'
       setTimeout(() => {
         // Use window.document to avoid conflict with the 'document' state variable
         const domDocument = window.document;
         if (!domDocument) return;
-        
+
         // Find the viewer content container
         const viewerContent = domDocument.querySelector('.html-viewer-content');
         if (viewerContent) {
           // Use attribute selector to handle IDs that start with numbers
           // IDs starting with numbers are invalid CSS selectors (#2-...) but valid HTML IDs
           let element: Element | null = null;
-          
+
           try {
             // Try attribute selector first (handles special characters and numbers)
             element = viewerContent.querySelector(`[id="${CSS.escape(item.id)}"]`);
@@ -754,22 +1029,22 @@ export default function DocumentDetailPage() {
               }
             }
           }
-          
+
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         } else {
           // Fallback: try in the main document
           let element: Element | null = null;
-          
+
           try {
-            element = domDocument.querySelector(`[id="${CSS.escape(item.id)}"]`) || 
-                      domDocument.getElementById(item.id);
+            element = domDocument.querySelector(`[id="${CSS.escape(item.id)}"]`) ||
+              domDocument.getElementById(item.id);
           } catch (e) {
             // If CSS.escape fails, use getElementById which handles any ID
             element = domDocument.getElementById(item.id);
           }
-          
+
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
@@ -786,198 +1061,6 @@ export default function DocumentDetailPage() {
     }
   }, [document, htmlUrl, pdfUrl]);
 
-  // Handle random page navigation (defined after handleTOCItemClick)
-  const handleRandomPage = useCallback(() => {
-    // Visible debugging - alert to confirm function is called
-    console.log('[RandomPage] ========== BUTTON CLICKED ==========');
-    console.log('[RandomPage] Button clicked');
-    console.log('[RandomPage] Document:', document?.title, 'Status:', document?.status);
-    console.log('[RandomPage] PDF URL:', pdfUrl, 'Num Pages:', numPages);
-    console.log('[RandomPage] HTML URL:', htmlUrl, 'TOC Items:', tocItems.length);
-    console.log('[RandomPage] PDF Viewer Ref:', pdfViewerRef.current);
-    console.log('[RandomPage] jumpToPageFn:', jumpToPageFn);
-    
-    // Also log to window for easier debugging
-    if (typeof window !== 'undefined') {
-      (window as any).lastRandomPageClick = {
-        timestamp: new Date().toISOString(),
-        document: document?.title,
-        status: document?.status,
-        pdfUrl: !!pdfUrl,
-        numPages,
-        htmlUrl: !!htmlUrl,
-        tocItemsCount: tocItems.length,
-        hasRef: !!pdfViewerRef.current,
-        hasCallback: !!jumpToPageFn
-      };
-    }
-    
-    if (!document || document.status !== 'ready') {
-      console.log('[RandomPage] Document not ready');
-      alert(`Document not ready. Status: ${document?.status || 'null'}`);
-      return;
-    }
-
-    // Structured text - random chapter
-    if (document.metadata?.isStructuredText && document.metadata.chapters) {
-      const chapters = document.metadata.chapters;
-      if (chapters.length === 0) {
-        console.log('[RandomPage] No chapters available');
-        return;
-      }
-      
-      const randomIndex = Math.floor(Math.random() * chapters.length);
-      const randomChapter = chapters[randomIndex];
-      console.log('[RandomPage] Jumping to random chapter:', randomChapter.title);
-      setActiveChapterId(randomChapter.id);
-      setActiveTOCItemId(randomChapter.id);
-      return;
-    }
-
-    // HTML document - random heading
-    if (htmlUrl && tocItems.length > 0) {
-      const randomIndex = Math.floor(Math.random() * tocItems.length);
-      const randomItem = tocItems[randomIndex];
-      console.log('[RandomPage] Jumping to random heading:', randomItem.title);
-      handleTOCItemClick(randomItem);
-      return;
-    }
-
-    // PDF document - random page
-    if (pdfUrl && numPages && numPages > 0) {
-      const randomPage = Math.floor(Math.random() * numPages) + 1; // 1-indexed
-      console.log('[RandomPage] ========== PDF NAVIGATION ==========');
-      console.log('[RandomPage] Jumping to random page:', randomPage, 'of', numPages);
-      console.log('[RandomPage] jumpToPageFn available:', !!jumpToPageFn);
-      console.log('[RandomPage] pdfViewerRef.current available:', !!pdfViewerRef.current);
-      
-      // Try global function first (most reliable with dynamic imports)
-      if (globalJumpToPageFn) {
-        console.log('[RandomPage] Calling jumpToPage via global function with page:', randomPage);
-        try {
-          globalJumpToPageFn(randomPage);
-          console.log('[RandomPage] ✅ Global jumpToPageFn called successfully - jumping to page', randomPage);
-          return;
-        } catch (error) {
-          console.error('[RandomPage] ❌ Error calling global jumpToPageFn:', error);
-        }
-      }
-      
-      // Try callback function (fallback)
-      if (jumpToPageFn) {
-        console.log('[RandomPage] Calling jumpToPage via callback with page:', randomPage);
-        try {
-          jumpToPageFn(randomPage);
-          console.log('[RandomPage] ✅ jumpToPageFn called successfully - jumping to page', randomPage);
-          return;
-        } catch (error) {
-          console.error('[RandomPage] ❌ Error calling jumpToPageFn:', error);
-        }
-      }
-      
-      // Fallback to ref - try to access it directly
-      if (pdfViewerRef.current) {
-        console.log('[RandomPage] Calling jumpToPage on ref with page:', randomPage);
-        try {
-          pdfViewerRef.current.jumpToPage(randomPage);
-          console.log('[RandomPage] ✅ Ref jumpToPage called successfully - jumping to page', randomPage);
-          return; // Success, exit early
-        } catch (error) {
-          console.error('[RandomPage] ❌ Error calling ref jumpToPage:', error);
-          // Don't alert here, try to set up the function and retry
-        }
-      }
-      
-      // Last resort: try to set up the function now and retry
-      if (pdfViewerRef.current && !jumpToPageFn) {
-        console.log('[RandomPage] Setting up jumpToPageFn on-the-fly from ref');
-        const fn = (pageNumber: number) => {
-          if (pdfViewerRef.current) {
-            pdfViewerRef.current.jumpToPage(pageNumber);
-          }
-        };
-        setJumpToPageFn(() => fn);
-        // Retry immediately
-        try {
-          fn(randomPage);
-          console.log('[RandomPage] ✅ Successfully jumped after on-the-fly setup - jumping to page', randomPage);
-          return;
-        } catch (error) {
-          console.error('[RandomPage] ❌ Error even after on-the-fly setup:', error);
-        }
-      }
-      
-      // If we get here, nothing worked
-      console.error('[RandomPage] ❌ PDF Viewer ref is null and callback is not set!');
-      console.error('[RandomPage] Available state:', {
-        pdfUrl: !!pdfUrl,
-        numPages,
-        jumpToPageFn: !!jumpToPageFn,
-        pdfViewerRef: !!pdfViewerRef.current,
-        refReady
-      });
-      // Only show alert if it's been a while - otherwise the polling will catch it
-      if (refReady) {
-        alert(`Cannot jump: PDF Viewer not ready. Please wait a moment and try again.`);
-      } else {
-        console.log('[RandomPage] Waiting for PDF Viewer to be ready...');
-      }
-      return;
-    }
-    
-    console.log('[RandomPage] No navigation path matched');
-  }, [document, htmlUrl, pdfUrl, numPages, tocItems, handleTOCItemClick, jumpToPageFn]);
-
-  // Set up jumpToPageFn - check both global function and ref
-  useEffect(() => {
-    if (!pdfUrl || !numPages) return;
-    
-    const checkAndSetup = () => {
-      // First check global function (most reliable)
-      if (globalJumpToPageFn && !jumpToPageFn) {
-        console.log('[DocumentDetailPage] ✅ Global jumpToPageFn is available, setting up state');
-        setJumpToPageFn(() => globalJumpToPageFn!);
-        setRefReady(true);
-        return true;
-      }
-      
-      // Fallback: check ref
-      if (pdfViewerRef.current) {
-        if (typeof pdfViewerRef.current.jumpToPage === 'function') {
-          if (!jumpToPageFn) {
-            console.log('[DocumentDetailPage] ✅ PDF Viewer ref is available with jumpToPage method, setting up jumpToPageFn');
-            setJumpToPageFn((pageNumber: number) => {
-              if (pdfViewerRef.current && typeof pdfViewerRef.current.jumpToPage === 'function') {
-                pdfViewerRef.current.jumpToPage(pageNumber);
-              }
-            });
-            setRefReady(true);
-          }
-          return true;
-        }
-      }
-      return false;
-    };
-    
-    // Try immediately
-    if (checkAndSetup()) return;
-    
-    // Poll every 200ms for up to 10 seconds
-    let attempts = 0;
-    const maxAttempts = 50;
-    const intervalId = setInterval(() => {
-      attempts++;
-      if (checkAndSetup() || attempts >= maxAttempts) {
-        clearInterval(intervalId);
-        if (attempts >= maxAttempts && !globalJumpToPageFn && !pdfViewerRef.current) {
-          console.warn('[DocumentDetailPage] ⚠️ PDF Viewer not available after 10 seconds');
-        }
-      }
-    }, 200);
-    
-    return () => clearInterval(intervalId);
-  }, [pdfUrl, numPages, jumpToPageFn]);
-
   // Update active TOC item when chapter changes (for structured text)
   useEffect(() => {
     if (document?.metadata?.isStructuredText && activeChapterId) {
@@ -987,7 +1070,7 @@ export default function DocumentDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center select-none pointer-events-none">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-amber-400 animate-spin" />
           <p className="text-amber-100/60">Loading document...</p>
@@ -1022,391 +1105,379 @@ export default function DocumentDetailPage() {
         <div className="min-h-screen bg-zinc-950 text-amber-50">
           {/* Header */}
           <div className="border-b border-amber-900/20 bg-zinc-900/50 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <Link
-              href="/library"
-              className="flex items-center gap-2 text-amber-100/60 hover:text-amber-100 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back to Library</span>
-            </Link>
-
-            <div className="flex items-center gap-3">
-              {isAdmin && (
+            <div className="max-w-7xl mx-auto px-6 py-4">
+              <div className="flex items-center justify-between mb-4">
                 <Link
-                  href={`/admin/edit/${documentId}`}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/30 hover:bg-blue-600/30 hover:border-blue-600/50 transition-colors"
-                  title="Edit document metadata and content"
+                  href="/library"
+                  className="flex items-center gap-2 text-amber-100/60 hover:text-amber-100 transition-colors"
                 >
-                  <Edit className="w-4 h-4" />
-                  Edit
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>Back to Library</span>
                 </Link>
+
+                <div className="flex items-center gap-3">
+                  {isAdmin && (
+                    <Link
+                      href={`/admin/edit/${documentId}`}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600/20 text-blue-300 border border-blue-600/30 hover:bg-blue-600/30 hover:border-blue-600/50 transition-colors"
+                      title="Edit document metadata and content"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit
+                    </Link>
+                  )}
+                  {/* Re-import button for structured text with source URL */}
+                  {isAdmin && document.metadata?.isStructuredText && (document.metadata as any)?.sourceUrl && (
+                    <button
+                      onClick={handleReimport}
+                      disabled={reimporting}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-600/20 text-amber-300 border border-amber-600/30 hover:bg-amber-600/30 hover:border-amber-600/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Re-fetch content from source URL"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${reimporting ? 'animate-spin' : ''}`} />
+                      {reimporting ? 'Re-importing...' : 'Re-import Content'}
+                    </button>
+                  )}
+                  <BookmarkButton textId={documentId} size="md" showLabel />
+                  {isAdmin && (
+                    <button
+                      onClick={handleDelete}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-red-600/20 text-red-300 border border-red-600/30 hover:bg-red-600/30 hover:border-red-600/50 transition-colors"
+                      title="Delete document"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <h1 className="text-2xl font-bold text-amber-100 mb-2">
+                {document.title}
+              </h1>
+
+              {/* Re-import status messages */}
+              {reimportSuccess && (
+                <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm">
+                  Content successfully re-imported! The page will refresh shortly.
+                </div>
               )}
-              {/* Re-import button for structured text with source URL */}
-              {isAdmin && document.metadata?.isStructuredText && (document.metadata as any)?.sourceUrl && (
+              {reimportError && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  {reimportError}
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="flex gap-2 mt-4">
                 <button
-                  onClick={handleReimport}
-                  disabled={reimporting}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-amber-600/20 text-amber-300 border border-amber-600/30 hover:bg-amber-600/30 hover:border-amber-600/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Re-fetch content from source URL"
+                  onClick={() => setActiveTab('viewer')}
+                  className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${activeTab === 'viewer'
+                    ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
+                    : 'text-amber-100/60 hover:text-amber-100'
+                    }`}
                 >
-                  <RefreshCw className={`w-4 h-4 ${reimporting ? 'animate-spin' : ''}`} />
-                  {reimporting ? 'Re-importing...' : 'Re-import Content'}
+                  <FileText className="w-4 h-4 inline mr-2" />
+                  Viewer
                 </button>
-              )}
-              <BookmarkButton textId={documentId} size="md" showLabel />
-              {/* Random Page Button - only show when viewing a ready document */}
-              {activeTab === 'viewer' && document?.status === 'ready' && (
                 <button
-                  onClick={handleRandomPage}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-purple-600/20 text-purple-300 border border-purple-600/30 hover:bg-purple-600/30 hover:border-purple-600/50 transition-colors"
-                  title="Jump to a random page/section"
+                  onClick={() => setActiveTab('metadata')}
+                  className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${activeTab === 'metadata'
+                    ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
+                    : 'text-amber-100/60 hover:text-amber-100'
+                    }`}
                 >
-                  <Dice6 className="w-4 h-4" />
-                  Random Page
+                  <BookOpen className="w-4 h-4 inline mr-2" />
+                  Metadata
                 </button>
-              )}
-              {isAdmin && (
                 <button
-                  onClick={handleDelete}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-red-600/20 text-red-300 border border-red-600/30 hover:bg-red-600/30 hover:border-red-600/50 transition-colors"
-                  title="Delete document"
+                  onClick={() => setActiveTab('notes')}
+                  className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${activeTab === 'notes'
+                    ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
+                    : 'text-amber-100/60 hover:text-amber-100'
+                    }`}
                 >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
+                  <Highlighter className="w-4 h-4 inline mr-2" />
+                  Notes
                 </button>
-              )}
+              </div>
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-amber-100 mb-2">
-            {document.title}
-          </h1>
-
-          {/* Re-import status messages */}
-          {reimportSuccess && (
-            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm">
-              Content successfully re-imported! The page will refresh shortly.
-            </div>
-          )}
-          {reimportError && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              {reimportError}
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={() => setActiveTab('viewer')}
-              className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                activeTab === 'viewer'
-                  ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
-                  : 'text-amber-100/60 hover:text-amber-100'
-              }`}
-            >
-              <FileText className="w-4 h-4 inline mr-2" />
-              Viewer
-            </button>
-            <button
-              onClick={() => setActiveTab('metadata')}
-              className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                activeTab === 'metadata'
-                  ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
-                  : 'text-amber-100/60 hover:text-amber-100'
-              }`}
-            >
-              <BookOpen className="w-4 h-4 inline mr-2" />
-              Metadata
-            </button>
-            <button
-              onClick={() => setActiveTab('notes')}
-              className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                activeTab === 'notes'
-                  ? 'bg-zinc-900 text-amber-400 border-t border-x border-amber-900/20'
-                  : 'text-amber-100/60 hover:text-amber-100'
-              }`}
-            >
-              <Highlighter className="w-4 h-4 inline mr-2" />
-              Notes
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content Area */}
-          <div className="lg:col-span-2">
-            {activeTab === 'viewer' && (
-              <div className="h-[calc(100vh-250px)]">
-                {/* Chunk Navigation Indicator */}
-                {(targetChunkId || targetChunkIndex !== null) && (
-                  <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Sparkles className="w-4 h-4 text-purple-400" />
-                          <span className="text-sm font-medium text-purple-300">
-                            Viewing section from Convergence Machine
-                          </span>
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Content Area */}
+              <div className="lg:col-span-2">
+                {activeTab === 'viewer' && (
+                  <div className="h-[calc(100vh-250px)]">
+                    {/* Chunk Navigation Indicator */}
+                    {(targetChunkId || targetChunkIndex !== null) && (
+                      <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Sparkles className="w-4 h-4 text-purple-400" />
+                              <span className="text-sm font-medium text-purple-300">
+                                Viewing section from Convergence Machine
+                              </span>
+                            </div>
+                            {targetChunkIndex !== null && (
+                              <p className="text-xs text-amber-100/70">
+                                Section {targetChunkIndex + 1}
+                              </p>
+                            )}
+                            {chunkContent && (
+                              <p className="text-xs text-amber-100/60 mt-2 line-clamp-2">
+                                {chunkContent.substring(0, 150)}...
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setTargetChunkId(null);
+                              setTargetChunkIndex(null);
+                              setChunkContent(null);
+                              router.replace(`/library/${documentId}`, { scroll: false });
+                            }}
+                            className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                          >
+                            Clear
+                          </button>
                         </div>
-                        {targetChunkIndex !== null && (
-                          <p className="text-xs text-amber-100/70">
-                            Section {targetChunkIndex + 1}
-                          </p>
-                        )}
-                        {chunkContent && (
-                          <p className="text-xs text-amber-100/60 mt-2 line-clamp-2">
-                            {chunkContent.substring(0, 150)}...
-                          </p>
-                        )}
                       </div>
-                      <button
-                        onClick={() => {
-                          setTargetChunkId(null);
-                          setTargetChunkIndex(null);
-                          setChunkContent(null);
-                          router.replace(`/library/${documentId}`, { scroll: false });
+                    )}
+                    {/* Show ChapterViewer for structured text documents */}
+                    {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                      <ChapterViewer
+                        chapters={document.metadata.chapters}
+                        documentTitle={document.title}
+                        format={document.metadata.format || 'plaintext'}
+                        onTextSelected={handleTextSelected}
+                        annotations={annotations}
+                        onAnnotationClick={handleAnnotationClick}
+                        externalChapterId={activeChapterId}
+                        onChapterChange={(chapterId) => {
+                          setActiveChapterId(chapterId);
                         }}
-                        className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                      >
-                        Clear
-                      </button>
-                    </div>
+                        onParagraphClick={handleParagraphClick}
+                      />
+                    ) : htmlUrl && document.status === 'ready' ? (
+                      <HTMLViewer
+                        fileUrl={htmlUrl}
+                        fileName={document.title}
+                        onDocumentLoad={handleHTMLDocumentLoad}
+                        onTextSelected={handleTextSelected}
+                        onBlockClick={handleBlockClick}
+                      />
+                    ) : pdfUrl && document.status === 'ready' ? (
+                      <PDFViewer
+                        fileUrl={pdfUrl}
+                        fileName={document.title}
+                        onDocumentLoad={handleDocumentLoad}
+                        onTextSelected={handleTextSelected}
+                        annotations={annotations}
+                        onAnnotationClick={handleAnnotationClick}
+                        onTextClick={handleBlockClick}
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+                        <div className="text-center">
+                          <FileText className="w-16 h-16 text-amber-100/20 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-amber-100 mb-2">
+                            {document.status === 'processing' ? 'Document Processing' : 'Document Not Available'}
+                          </h3>
+                          <p className="text-sm text-amber-100/60">
+                            {document.status === 'processing'
+                              ? 'This document is currently being processed. Please check back later.'
+                              : 'The PDF viewer is not available for this document.'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-                {/* Show ChapterViewer for structured text documents */}
-                {document.metadata?.isStructuredText && document.metadata.chapters ? (
-                  <ChapterViewer 
-                    chapters={document.metadata.chapters}
-                    documentTitle={document.title}
-                    format={document.metadata.format || 'plaintext'}
-                    onTextSelected={handleTextSelected}
-                    annotations={annotations}
-                    onAnnotationClick={handleAnnotationClick}
-                    externalChapterId={activeChapterId}
-                    onChapterChange={(chapterId) => {
-                      setActiveChapterId(chapterId);
-                    }}
-                  />
-                ) : htmlUrl && document.status === 'ready' ? (
-                  <HTMLViewer 
-                    fileUrl={htmlUrl} 
-                    fileName={document.title}
-                    onDocumentLoad={handleHTMLDocumentLoad}
-                    onTextSelected={handleTextSelected}
-                  />
-                ) : pdfUrl && document.status === 'ready' ? (
-                  <PDFViewer 
-                    ref={pdfViewerRef}
-                    fileUrl={pdfUrl} 
-                    fileName={document.title}
-                    onDocumentLoad={handleDocumentLoad}
-                    onTextSelected={handleTextSelected}
-                    annotations={annotations}
-                    onAnnotationClick={handleAnnotationClick}
-                    // Don't pass onJumpToPageReady - the wrapper handles it globally to avoid infinite loops
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
-                    <div className="text-center">
-                      <FileText className="w-16 h-16 text-amber-100/20 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-amber-100 mb-2">
-                        {document.status === 'processing' ? 'Document Processing' : 'Document Not Available'}
-                      </h3>
-                      <p className="text-sm text-amber-100/60">
-                        {document.status === 'processing' 
-                          ? 'This document is currently being processed. Please check back later.'
-                          : 'The PDF viewer is not available for this document.'}
+
+                {activeTab === 'metadata' && (
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                      <h2 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
+                        <BookOpen className="w-5 h-5 text-amber-600" />
+                        Document Information
+                      </h2>
+                      <dl className="space-y-3">
+                        {document.author && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 flex items-center gap-2 mb-1">
+                              <User className="w-4 h-4" />
+                              Author
+                            </dt>
+                            <dd className="text-amber-100 ml-6">{document.author}</dd>
+                          </div>
+                        )}
+                        {document.year && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 flex items-center gap-2 mb-1">
+                              <Calendar className="w-4 h-4" />
+                              Year
+                            </dt>
+                            <dd className="text-amber-100 ml-6">{document.year}</dd>
+                          </div>
+                        )}
+                        {document.publisher && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Publisher</dt>
+                            <dd className="text-amber-100">{document.publisher}</dd>
+                          </div>
+                        )}
+                        {document.domain && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Domain</dt>
+                            <dd className="text-amber-100 capitalize">{document.domain}</dd>
+                          </div>
+                        )}
+                        {document.lenses && document.lenses.length > 0 && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-2">Lenses</dt>
+                            <dd className="flex flex-wrap gap-2">
+                              {document.lenses.map((lens, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-purple-600/10 text-purple-400 rounded-full text-xs font-medium border border-purple-600/20"
+                                >
+                                  {lens.replace(/_/g, ' ')}
+                                </span>
+                              ))}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+
+                    <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                      <h2 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
+                        <Tag className="w-5 h-5 text-amber-600" />
+                        Tags & Details
+                      </h2>
+                      <dl className="space-y-3">
+                        {document.tags && document.tags.length > 0 && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-2">Tags</dt>
+                            <dd className="flex flex-wrap gap-2">
+                              {document.tags.map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-amber-600/10 text-amber-400 rounded-full text-xs font-medium border border-amber-600/20"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </dd>
+                          </div>
+                        )}
+                        {document.type && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Type</dt>
+                            <dd className="text-amber-100">{document.type.replace(/_/g, ' ')}</dd>
+                          </div>
+                        )}
+                        {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Chapters</dt>
+                            <dd className="text-amber-100">{document.metadata.chapters.length} chapters</dd>
+                          </div>
+                        ) : (document.metadata?.pageCount || numPages) && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Pages</dt>
+                            <dd className="text-amber-100">{document.metadata?.pageCount || numPages} pages</dd>
+                          </div>
+                        )}
+                        {document.metadata?.lineCount && (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Lines</dt>
+                            <dd className="text-amber-100">{document.metadata.lineCount.toLocaleString()} lines</dd>
+                          </div>
+                        )}
+                        <div>
+                          <dt className="text-sm text-amber-100/60 mb-1">File Size</dt>
+                          <dd className="text-amber-100">{formatFileSize(document.file_size)}</dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    {document.summary && (
+                      <div className="md:col-span-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                        <h2 className="text-lg font-semibold text-amber-100 mb-4">Summary</h2>
+                        <p className="text-amber-100/80 leading-relaxed">{document.summary}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'notes' && (
+                  <div className="space-y-6">
+                    <AnnotationPanelLazy
+                      textId={documentId}
+                      selectedText={selectedText}
+                      selectedPosition={selectedPosition}
+                      onSelectionCleared={handleSelectionCleared}
+                      onAnnotationAdded={handleAnnotationAdded}
+                      documentTitle={document.title}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Sidebar */}
+              <div className="lg:col-span-1 space-y-6">
+                {/* Curator Note Section */}
+                {document.curator_note && (
+                  <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-amber-600" />
+                      Curator Note
+                    </h3>
+                    <div className="max-h-64 overflow-y-auto pr-2">
+                      <p className="text-sm text-amber-100/80 leading-relaxed">
+                        {document.curator_note}
                       </p>
                     </div>
                   </div>
                 )}
-              </div>
-            )}
 
-            {activeTab === 'metadata' && (
-              <div className="grid gap-6 md:grid-cols-2">
-            <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-amber-600" />
-                Document Information
-              </h2>
-              <dl className="space-y-3">
-                {document.author && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 flex items-center gap-2 mb-1">
-                      <User className="w-4 h-4" />
-                      Author
-                    </dt>
-                    <dd className="text-amber-100 ml-6">{document.author}</dd>
-                  </div>
-                )}
-                {document.year && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 flex items-center gap-2 mb-1">
-                      <Calendar className="w-4 h-4" />
-                      Year
-                    </dt>
-                    <dd className="text-amber-100 ml-6">{document.year}</dd>
-                  </div>
-                )}
-                {document.publisher && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-1">Publisher</dt>
-                    <dd className="text-amber-100">{document.publisher}</dd>
-                  </div>
-                )}
-                {document.domain && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-1">Domain</dt>
-                    <dd className="text-amber-100 capitalize">{document.domain}</dd>
-                  </div>
-                )}
-                {document.lenses && document.lenses.length > 0 && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-2">Lenses</dt>
-                    <dd className="flex flex-wrap gap-2">
-                      {document.lenses.map((lens, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-purple-600/10 text-purple-400 rounded-full text-xs font-medium border border-purple-600/20"
-                        >
-                          {lens.replace(/_/g, ' ')}
-                        </span>
-                      ))}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-
-            <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
-                <Tag className="w-5 h-5 text-amber-600" />
-                Tags & Details
-              </h2>
-              <dl className="space-y-3">
-                {document.tags && document.tags.length > 0 && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-2">Tags</dt>
-                    <dd className="flex flex-wrap gap-2">
-                      {document.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-amber-600/10 text-amber-400 rounded-full text-xs font-medium border border-amber-600/20"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </dd>
-                  </div>
-                )}
-                {document.type && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-1">Type</dt>
-                    <dd className="text-amber-100">{document.type.replace(/_/g, ' ')}</dd>
-                  </div>
-                )}
-                {document.metadata?.isStructuredText && document.metadata.chapters ? (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-1">Chapters</dt>
-                    <dd className="text-amber-100">{document.metadata.chapters.length} chapters</dd>
-                  </div>
-                ) : (document.metadata?.pageCount || numPages) && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-1">Pages</dt>
-                    <dd className="text-amber-100">{document.metadata?.pageCount || numPages} pages</dd>
-                  </div>
-                )}
-                {document.metadata?.lineCount && (
-                  <div>
-                    <dt className="text-sm text-amber-100/60 mb-1">Lines</dt>
-                    <dd className="text-amber-100">{document.metadata.lineCount.toLocaleString()} lines</dd>
-                  </div>
-                )}
-                <div>
-                  <dt className="text-sm text-amber-100/60 mb-1">File Size</dt>
-                  <dd className="text-amber-100">{formatFileSize(document.file_size)}</dd>
-                </div>
-              </dl>
-            </div>
-
-            {document.summary && (
-              <div className="md:col-span-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-amber-100 mb-4">Summary</h2>
-                <p className="text-amber-100/80 leading-relaxed">{document.summary}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'notes' && (
-              <div className="space-y-6">
-                <AnnotationPanelLazy 
+                {/* Table of Contents */}
+                <TableOfContents
+                  items={tocItems}
+                  activeItemId={activeTOCItemId}
+                  onItemClick={handleTOCItemClick}
+                  chapters={document?.metadata?.isStructuredText ? document.metadata.chapters : undefined}
+                  documentTitle={document?.title}
                   textId={documentId}
-                  selectedText={selectedText}
-                  selectedPosition={selectedPosition}
-                  onSelectionCleared={handleSelectionCleared}
-                  onAnnotationAdded={handleAnnotationAdded}
-                  documentTitle={document.title}
+                  isAdmin={isAdmin}
+                  onItemsUpdate={handleTOCItemsUpdate}
                 />
+
+                <CollectionsPanel textId={documentId} />
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Curator Note Section */}
-            {document.curator_note && (
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-amber-600" />
-                  Curator Note
-                </h3>
-                <div className="max-h-64 overflow-y-auto pr-2">
-                  <p className="text-sm text-amber-100/80 leading-relaxed">
-                    {document.curator_note}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Table of Contents */}
-            <TableOfContents
-              items={tocItems}
-              activeItemId={activeTOCItemId}
-              onItemClick={handleTOCItemClick}
-              chapters={document?.metadata?.isStructuredText ? document.metadata.chapters : undefined}
-              documentTitle={document?.title}
-              textId={documentId}
-              isAdmin={isAdmin}
-              onItemsUpdate={handleTOCItemsUpdate}
+          {/* Floating Audio Player for TTS */}
+          {document && document.status === 'ready' && (
+            <AudioPlayer
+              documentId={documentId}
+              ocrText={fullText || document.content}
+              pdfUrl={pdfUrl}
+              defaultCollapsed={true}
+              onReady={handleAudioPlayerReady}
             />
-            
-            <CollectionsPanel textId={documentId} />
-          </div>
-        </div>
-      </div>
+          )}
 
-      {/* Floating Audio Player for TTS */}
-      {document && document.status === 'ready' && (
-        <AudioPlayer
-          documentId={documentId}
-          ocrText={document.content}
-          pdfUrl={pdfUrl}
-          defaultCollapsed={true}
-        />
-      )}
-
-      {/* Floating AI Search */}
-      {FloatingAISearchComponent && (
-        <FloatingAISearchComponent defaultCollapsed={true} />
-      )}
+          {/* Floating AI Search */}
+          {FloatingAISearchComponent && (
+            <FloatingAISearchComponent defaultCollapsed={true} />
+          )}
         </div>
       </main>
       <Footer />

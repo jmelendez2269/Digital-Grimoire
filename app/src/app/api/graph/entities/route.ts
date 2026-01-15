@@ -21,13 +21,18 @@ export async function GET(req: NextRequest) {
     const supabase = await createSupabaseServerClient();
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
+    const typeId = searchParams.get("typeId");
     const q = searchParams.get("q");
     const lens = searchParams.get("lens");
     const limit = Math.min(Number(searchParams.get("limit") || 50), 200);
 
-    let query = supabase.from("correspondences").select("*").limit(limit);
+    let query = supabase
+      .from("correspondences")
+      .select("*, type:correspondence_entity_types(id, slug, label, color, icon)")
+      .limit(limit);
 
     if (category) query = query.eq("category", category);
+    if (typeId) query = query.eq("type_id", typeId);
     if (lens) query = query.contains("lenses", [lens]);
     if (q) query = query.ilike("name", `%${q}%`);
 
@@ -57,14 +62,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await req.json();
-    const { name, slug, category, aliases = [], description, lenses = [] } = body || {};
-    if (!name || !category) {
-      return NextResponse.json({ error: "name and category are required" }, { status: 400 });
+    const {
+      name,
+      slug,
+      category,
+      typeId,
+      aliases = [],
+      description,
+      lenses = [],
+    } = body || {};
+    if (!name || (!category && !typeId)) {
+      return NextResponse.json(
+        { error: "name and category/typeId are required" },
+        { status: 400 }
+      );
     }
     const svc = createServiceClient();
+    let resolvedTypeId = typeId as string | undefined;
+    let resolvedCategory = category as string | undefined;
+
+    if (resolvedTypeId && !resolvedCategory) {
+      const { data: typeRow, error: typeError } = await svc
+        .from("correspondence_entity_types")
+        .select("slug")
+        .eq("id", resolvedTypeId)
+        .single();
+      if (typeError) throw typeError;
+      resolvedCategory = typeRow.slug;
+    }
+
+    if (!resolvedTypeId && resolvedCategory) {
+      const { data: typeRow } = await svc
+        .from("correspondence_entity_types")
+        .select("id")
+        .eq("slug", resolvedCategory)
+        .single();
+      resolvedTypeId = typeRow?.id;
+    }
+
     const { data, error } = await svc
       .from("correspondences")
-      .insert({ name, slug, category, aliases, description, lenses })
+      .insert({
+        name,
+        slug,
+        category: resolvedCategory,
+        type_id: resolvedTypeId,
+        aliases,
+        description,
+        lenses,
+      })
       .select("*")
       .single();
     if (error) throw error;

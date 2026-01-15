@@ -185,16 +185,36 @@ export default function AudioPlayer({
     if (onReady && currentText) {
       onReady({
         startFromPosition: (charIndex: number) => {
+          // Validate position
+          if (charIndex < 0 || charIndex >= currentText.length) {
+            console.warn('[AudioPlayer] Invalid position for startFromPosition', {
+              charIndex,
+              textLength: currentText.length
+            });
+            return;
+          }
+
           // Stop current playback if any
           if (isPlaying) {
             stop();
           }
+          
+          // Clear any saved position to prevent resuming from wrong place
+          localStorage.removeItem(`tts-position-${documentId}`);
+          
+          console.log('[AudioPlayer] Starting from position', {
+            charIndex,
+            textLength: currentText.length,
+            remainingChars: currentText.length - charIndex,
+            preview: currentText.substring(charIndex, charIndex + 50)
+          });
+          
           // Start from the clicked position
           handlePlay(charIndex);
         },
       });
     }
-  }, [onReady, currentText, isPlaying]);
+  }, [onReady, currentText, isPlaying, documentId, stop, handlePlay]);
 
   // Handle pause/resume
   const handleTogglePlayPause = () => {

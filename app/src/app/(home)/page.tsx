@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DashboardSearchHub from "@/components/DashboardSearchHub";
@@ -38,7 +39,9 @@ export default function Home() {
 
           {/* Integrated Search Hub - Primary Focus */}
           <div className="mb-16">
-            <DashboardSearchHub />
+            <Suspense fallback={<div className="w-full h-64 bg-zinc-900/30 rounded-xl animate-pulse" />}>
+              <DashboardSearchHub />
+            </Suspense>
           </div>
 
           {/* Explore Your Tools Section */}

@@ -10,6 +10,7 @@ interface HTMLViewerProps {
   fileName?: string;
   onDocumentLoad?: () => void;
   onTextSelected?: (selection: { text: string; position: TextPosition }) => void;
+  onBlockClick?: (text: string) => void;
 }
 
 const MIN_ZOOM = 0.25;
@@ -21,6 +22,7 @@ export default function HTMLViewer({
   fileName,
   onDocumentLoad,
   onTextSelected,
+  onBlockClick,
 }: HTMLViewerProps) {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,146 @@ export default function HTMLViewer({
   const [zoom, setZoom] = useState(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Add click listeners to block elements
+  useEffect(() => {
+    if (!contentRef.current || !onBlockClick) return;
+
+    let attachTimeout: NodeJS.Timeout | null = null;
+    let isAttaching = false;
+    const attachedElements = new WeakSet<Element>();
+
+    const attachListeners = () => {
+      // Prevent concurrent attachment
+      if (isAttaching) return;
+      isAttaching = true;
+
+      const container = contentRef.current;
+      if (!container) {
+        isAttaching = false;
+        return;
+      }
+
+      // Use a more comprehensive selector
+      const blockElements = container.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+
+      const handleClick = (e: MouseEvent) => {
+        // Only trigger if no text is selected (to allow selection without triggering TTS)
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim().length > 0) return;
+
+        e.stopPropagation();
+        e.preventDefault();
+        const target = e.currentTarget as HTMLElement;
+        const text = target.textContent || '';
+        
+        if (!text.trim()) return;
+
+        // Get exact click position within the element
+        let clickOffset = 0;
+        try {
+          if (typeof document.caretRangeFromPoint === 'function') {
+            const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+            if (range) {
+              const textNode = range.startContainer;
+              if (textNode.nodeType === Node.TEXT_NODE) {
+                // Calculate offset from start of element
+                const elementRange = document.createRange();
+                elementRange.selectNodeContents(target);
+                elementRange.setEnd(range.startContainer, range.startOffset);
+                clickOffset = elementRange.toString().length;
+              }
+            }
+          }
+        } catch (err) {
+          // Fallback: use 0 offset (start of paragraph)
+          console.warn('[HTMLViewer] Could not get exact click position:', err);
+        }
+
+        // Store click offset for the handler to use
+        (target as any)._ttsClickOffset = clickOffset;
+        (target as any)._ttsParagraphText = text.trim();
+
+        console.log('[HTMLViewer] Block clicked:', {
+          text: text.substring(0, 50),
+          clickOffset,
+          elementTextLength: text.length
+        });
+
+        onBlockClick(text.trim());
+      };
+
+      blockElements.forEach(el => {
+        // Skip if already attached
+        if (attachedElements.has(el)) return;
+
+        // Remove existing listener if any (safety check)
+        const existingEl = el as any;
+        if (existingEl._ttsClickHandler) {
+          el.removeEventListener('click', existingEl._ttsClickHandler);
+        }
+        
+        el.addEventListener('click', handleClick as EventListener);
+        existingEl._ttsClickHandler = handleClick; // Store reference for cleanup
+        el.classList.add('cursor-read-aloud'); // Add marker class
+        (el as HTMLElement).style.cursor = 'pointer';
+        attachedElements.add(el);
+      });
+
+      console.log(`[HTMLViewer] Attached click listeners to ${blockElements.length} elements`);
+      isAttaching = false;
+    };
+
+    // Debounced attachment function
+    const debouncedAttach = () => {
+      if (attachTimeout) clearTimeout(attachTimeout);
+      attachTimeout = setTimeout(() => {
+        attachListeners();
+      }, 200); // 200ms debounce
+    };
+
+    // Initial attachment
+    attachListeners();
+
+    // Use MutationObserver with debouncing to catch dynamically added content
+    const observer = new MutationObserver((mutations) => {
+      // Only re-attach if new elements were added
+      const hasNewElements = mutations.some(mutation => 
+        mutation.addedNodes.length > 0 && 
+        Array.from(mutation.addedNodes).some(node => 
+          node.nodeType === Node.ELEMENT_NODE && 
+          (node as Element).matches?.('p, h1, h2, h3, h4, h5, h6, li, blockquote')
+        )
+      );
+      
+      if (hasNewElements) {
+        debouncedAttach();
+      }
+    });
+
+    if (contentRef.current) {
+      observer.observe(contentRef.current, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    return () => {
+      if (attachTimeout) clearTimeout(attachTimeout);
+      observer.disconnect();
+      if (contentRef.current) {
+        const blockElements = contentRef.current.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+        blockElements.forEach(el => {
+          const existingEl = el as any;
+          if (existingEl._ttsClickHandler) {
+            el.removeEventListener('click', existingEl._ttsClickHandler);
+            delete existingEl._ttsClickHandler;
+          }
+          (el as HTMLElement).style.cursor = '';
+        });
+      }
+    };
+  }, [htmlContent, onBlockClick]);
 
   // Generate a slug from text for use as ID
   const generateSlug = (text: string, index: number): string => {
@@ -48,14 +190,32 @@ export default function HTMLViewer({
       try {
         setLoading(true);
         setError(null);
-        
+
+        console.log('[HTMLViewer] Fetching HTML from:', fileUrl);
         const response = await fetch(fileUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to load HTML: ${response.statusText}`);
+        
+        // Check if response is JSON (error) or HTML (success)
+        const contentType = response.headers.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+        
+        if (!response.ok || isJson) {
+          // Try to parse as JSON for error details
+          let errorMessage = `Failed to load HTML: ${response.status} ${response.statusText}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.details || errorMessage;
+          } catch {
+            // Not JSON, use status text
+            const errorText = await response.text().catch(() => response.statusText);
+            errorMessage = errorText || errorMessage;
+          }
+          console.error('[HTMLViewer] Failed to load HTML:', response.status, errorMessage);
+          throw new Error(errorMessage);
         }
-        
+
         const html = await response.text();
-        
+        console.log('[HTMLViewer] HTML loaded, length:', html.length);
+
         // Sanitize HTML for security
         const sanitized = DOMPurify.sanitize(html, {
           ALLOWED_TAGS: [
@@ -69,18 +229,18 @@ export default function HTMLViewer({
           ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id'],
           ALLOW_DATA_ATTR: false,
         });
-        
+
         // Add IDs to headings that don't have them
         const parser = new DOMParser();
         const doc = parser.parseFromString(sanitized, 'text/html');
         const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
         const usedIds = new Set<string>();
-        
+
         headings.forEach((heading, index) => {
           if (!heading.id) {
             const text = heading.textContent || '';
             let id = generateSlug(text, index);
-            
+
             // Ensure uniqueness by appending counter if duplicate
             let uniqueId = id;
             let counter = 0;
@@ -102,10 +262,10 @@ export default function HTMLViewer({
             usedIds.add(uniqueId);
           }
         });
-        
+
         // Get the body HTML (or root HTML if no body)
         const processedHtml = doc.body ? doc.body.innerHTML : doc.documentElement.innerHTML;
-        
+
         setHtmlContent(processedHtml);
         onDocumentLoad?.();
       } catch (err) {
@@ -195,13 +355,13 @@ export default function HTMLViewer({
 
     const selection = window.getSelection();
     const selectedText = selection?.toString().trim();
-    
+
     if (selectedText && selectedText.length > 0) {
       const range = selection?.getRangeAt(0);
       if (range && contentRef.current) {
         const rect = range.getBoundingClientRect();
         const containerRect = contentRef.current.getBoundingClientRect();
-        
+
         onTextSelected({
           text: selectedText,
           position: {
@@ -217,7 +377,7 @@ export default function HTMLViewer({
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+      <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg select-none pointer-events-none">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-amber-400 animate-spin mx-auto mb-4" />
           <p className="text-amber-100/60 text-sm">Loading HTML content...</p>
@@ -251,7 +411,7 @@ export default function HTMLViewer({
             {(zoom * 100).toFixed(0)}%
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
           <button
@@ -262,7 +422,7 @@ export default function HTMLViewer({
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          
+
           <button
             onClick={handleResetZoom}
             className="px-3 py-2 hover:bg-zinc-700 rounded text-amber-100 text-sm transition-colors"
@@ -270,7 +430,7 @@ export default function HTMLViewer({
           >
             <RotateCw className="w-4 h-4" />
           </button>
-          
+
           <button
             onClick={handleZoomIn}
             disabled={zoom >= MAX_ZOOM}
@@ -279,9 +439,9 @@ export default function HTMLViewer({
           >
             <ZoomIn className="w-4 h-4" />
           </button>
-          
+
           <div className="w-px h-6 bg-amber-900/20 mx-1" />
-          
+
           {/* Fullscreen toggle */}
           <button
             onClick={handleFullscreen}
@@ -394,6 +554,13 @@ export default function HTMLViewer({
         .html-viewer-content pre code {
           background-color: transparent;
           padding: 0;
+        }
+
+        /* Read Aloud Hover Effect */
+        .cursor-read-aloud:hover {
+          background-color: rgba(245, 158, 11, 0.1); /* amber-500/10 */
+          border-radius: 4px;
+          transition: background-color 0.2s ease;
         }
       `}</style>
     </div>
