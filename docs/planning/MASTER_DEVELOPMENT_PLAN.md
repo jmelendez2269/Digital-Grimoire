@@ -1,9 +1,9 @@
 # CONVERGENCE - MASTER DEVELOPMENT PLAN
 
-**Version:** 3.2  
-**Last Updated:** November 3, 2025  
-**Status:** Phase 1 - 95% Complete | Active Development  
-**Latest:** Universal AI Search & Chat System Complete  
+**Version:** 3.4  
+**Last Updated:** December 2024  
+**Status:** Phase 1 - 95% Complete | Phase 3B UI Complete | Multi-Source Claims System Complete  
+**Latest:** Multi-Source Knowledge Claims System + CSV Auto-Import Complete  
 
 ---
 
@@ -35,6 +35,16 @@
 ## 🎉 PROGRESS REPORT (As of Latest Session)
 
 ### What's Been Built (4 weeks of work compressed into ~8 hours!)
+
+**🚀 LATEST UPDATE: Multi-Source Knowledge Claims System Complete!**
+- ✅ Multi-source claims architecture (knowledge_sources + knowledge_claims tables)
+- ✅ Admin UI for managing sources and field-specific claims
+- ✅ Consensus vs Sources view on entity detail cards
+- ✅ CSV auto-import script with schema detection (plants, angels, orishas, gods, crystals, chakras)
+- ✅ Dynamic type management system (admin-manageable entity/relationship types)
+- ✅ AI-powered text rewrite/generation buttons in admin forms
+- ✅ Successfully imported 10+ crystals with full field mapping
+- **Migration 031 & 032 complete, ready for bulk data import**
 
 **🚀 MAJOR UPDATE: Convergence Machine MVP Complete!**
 - ✅ Full 7-lens AI reasoning system implemented
@@ -97,7 +107,36 @@
 **Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)  
 **New Feature:** Universal AI Search & Chat System complete (100% - ready for use!)
 
-### Latest Session Updates (Current Session) - Monitoring Setup Complete! 🎉
+### Latest Session Updates (December 2024) - Concept Search Feature Complete! 🎉
+
+**🔍 Concept Search (Deep Search) Implementation:**
+- ✅ **Semantic Vector Search** - Deep search across all books using OpenAI embeddings
+- ✅ **Related Terms Generation** - AI-generated semantically related concepts (GPT-4o)
+- ✅ **Top 3 Passages Per Book** - Automatically highlights most relevant passages
+- ✅ **Clickable Navigation** - Direct links to exact pages in library
+- ✅ **Embedding Diagnostic Tools** - Status check and generation endpoints
+- ✅ **Error Handling** - Comprehensive error messages and diagnostics
+- ✅ **Vector Search Optimization** - Improved algorithm with similarity thresholds
+- 📄 **Documentation** - Complete feature guide (`docs/CONCEPT_SEARCH_FEATURE.md`)
+
+**Files Created:**
+- `app/src/components/DeepSearch/DeepSearchPanel.tsx` - Main search interface
+- `app/src/components/DeepSearch/RelatedTerms.tsx` - Related concepts display
+- `app/src/components/DeepSearch/BookResultCard.tsx` - Book result cards
+- `app/src/app/api/convergence/deep-search/route.ts` - Search API endpoint
+- `app/src/app/api/convergence/embeddings-status/route.ts` - Diagnostic endpoint
+- `app/src/app/api/convergence/generate-embeddings-by-title/route.ts` - Embedding generation helper
+- `docs/CONCEPT_SEARCH_FEATURE.md` - Complete feature documentation
+- `docs/EMBEDDINGS_DIAGNOSTIC_GUIDE.md` - Diagnostic and troubleshooting guide
+
+**Files Modified:**
+- `app/src/lib/convergence/vector-search.ts` - Improved search algorithm
+- `app/src/app/api/convergence/deep-search/route.ts` - Enhanced error handling
+- `app/src/components/DeepSearch/DeepSearchPanel.tsx` - Better error messages
+
+**Status:** Feature complete, requires embeddings to be generated for texts to return results
+
+### Previous Session Updates (Current Session) - Monitoring Setup Complete! 🎉
 
 **📊 Error Tracking & Uptime Monitoring:**
 - ✅ **Sentry Error Tracking** - Complete setup with @sentry/nextjs SDK
@@ -438,6 +477,7 @@ associated_names: Related figures
 - [x] ✅ User profiles with avatar management
 - [x] ✅ Library browsing with basic search
 - [x] ✅ Full-text search (PostgreSQL FTS)
+- [x] ✅ **Concept Search (Deep Search)** - Semantic vector search across all books with related terms (Dec 2024)
 - [x] ✅ Document viewer (PDF display with @react-pdf-viewer)
 - [x] ✅ Advanced filtering (domain, year, tags, 7 lenses)
 - [x] ✅ Pagination for document listings
@@ -532,25 +572,82 @@ associated_names: Related figures
 
 **Goal:** Cross-tradition conceptual unity visualization
 
+**Status:** UI Complete (100%) - Ready for data seeding
+
 #### Week 19-20: Convergence Concepts System
-- [ ] Create `convergence_concepts` table
-- [ ] Create `convergence_relationships` table
+- [x] Create `convergence_concepts` table ✅ **Migration 019**
+- [x] Create `convergence_relationships` table ✅ **Migration 019**
+- [x] Build comparative table view ✅ **ComparativeTable.tsx component**
+- [x] Create convergence network graph visualization ✅ **ConvergenceGraph.tsx with D3.js**
+- [x] Implement similarity strength indicators ✅ **Visual bars + percentage display**
+- [x] Add source citation for each connection ✅ **Citation field in relationships**
+- [x] Search across traditions interface ✅ **SimilarityControls + TraditionLegend**
+- [x] Concept detail modal ✅ **ConceptDetailModal.tsx**
 - [ ] Seed cross-tradition concepts:
   - Buddhist Emptiness ↔ Quantum Zero-point ↔ Christian Void ↔ Taoist Wu
   - Divine Unity across traditions
   - Consciousness concepts
   - Enlightenment/Awakening parallels
-- [ ] Build comparative table view
-- [ ] Create convergence network graph visualization
-- [ ] Implement similarity strength indicators
-- [ ] Add source citation for each connection
-- [ ] Search across traditions interface
 
 **Deliverables:**
-- Convergence concepts database with 30+ concepts
-- Cross-tradition relationship mapping
-- Dual interface: comparative table + convergence network
-- Shows how all wisdom paths converge
+- ✅ Convergence concepts database schema (30+ concepts capacity)
+- ✅ Cross-tradition relationship mapping system
+- ✅ Dual interface: comparative table + convergence network
+- ✅ Full UI implementation ready for data
+- ⬜ Data seeding (30+ concepts, 40+ relationships) - **Next step**
+
+---
+
+### Phase 3C: Multi-Source Knowledge Claims System (Latest Session)
+
+**Goal:** Support multiple sources for entity attributes with consensus vs source-specific views
+
+**Status:** ✅ Complete (100%) - Ready for bulk data import
+
+#### Multi-Source Architecture
+- [x] Create `knowledge_sources` table ✅ **Migration 032**
+- [x] Create `knowledge_claims` table ✅ **Migration 032**
+- [x] Support field-specific claims per entity ✅ **Claims linked to entity_id + field_key**
+- [x] Source metadata (title, author, year, citation, URL) ✅ **Full source tracking**
+
+#### Admin UI Features
+- [x] Admin form for adding sources ✅ **Inline source creation in EntityModal**
+- [x] Multi-claim management per entity ✅ **Add/edit/delete claims by field**
+- [x] Field-specific claim dropdowns ✅ **Dynamic field options by entity type**
+- [x] Consensus vs Sources view toggle ✅ **EntityDetailModal with tabbed interface**
+- [x] Source grouping in detail view ✅ **Claims grouped by source**
+
+#### CSV Auto-Import System
+- [x] Schema detection (plants, angels, orishas, gods, crystals, chakras) ✅ **Auto-detection from headers**
+- [x] Field mapping configuration ✅ **Type-specific field mappings**
+- [x] BOM and header normalization ✅ **Handles UTF-8 BOM and whitespace**
+- [x] Batch entity + claim creation ✅ **Single source per CSV, multiple claims per entity**
+- [x] Type auto-creation ✅ **Creates entity types if missing**
+
+#### Dynamic Type Management
+- [x] Admin-manageable entity types ✅ **Migration 031 - correspondence_entity_types**
+- [x] Admin-manageable relationship types ✅ **Migration 031 - correspondence_relationship_types**
+- [x] Admin-manageable traditions ✅ **Migration 031 - convergence_traditions**
+- [x] Type metadata (color, icon, sort_order) ✅ **Full type customization**
+- [x] Backfill existing data ✅ **Migrates text columns to FK references**
+
+#### AI Integration
+- [x] AI rewrite/generate buttons ✅ **Sparkles icon buttons in EntityModal**
+- [x] Field-specific AI prompts ✅ **Context-aware generation per field**
+- [x] Usage tracking ✅ **logMetadataExtractionUsage integration**
+
+**Deliverables:**
+- ✅ Multi-source claims database schema
+- ✅ Complete admin UI for source/claim management
+- ✅ CSV import script with 6 schema types supported
+- ✅ Successfully imported 10+ crystals with full field mapping
+- ✅ Dynamic type system with admin UI
+- ✅ AI-powered text generation/rewriting
+
+**Next Steps:**
+- Import remaining CSVs (plants, chakras, angels, orishas, gods)
+- Add more field mappings as needed
+- Enhance consensus algorithm (weighted by source credibility)
 
 ---
 
