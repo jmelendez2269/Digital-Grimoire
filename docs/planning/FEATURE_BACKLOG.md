@@ -1,7 +1,7 @@
 # CONVERGENCE - FEATURE BACKLOG & PRIORITIES
 
-**Last Updated:** November 10, 2025  
-**Version:** 1.7  
+**Last Updated:** December 2024  
+**Version:** 1.9  
 
 ## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
 
@@ -23,7 +23,28 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
-**Latest Session Updates (November 10, 2025 - Production Infrastructure & Documentation):**
+**Latest Session Updates (December 2024 - Multi-Source Claims System Complete):**
+- ✅ **Multi-Source Knowledge Claims System** - Complete implementation
+  - `knowledge_sources` and `knowledge_claims` tables (Migration 032)
+  - Admin UI for managing sources and field-specific claims
+  - Consensus vs Sources view toggle in entity detail modal
+  - CSV auto-import script with schema detection (6 types: plants, angels, orishas, gods, crystals, chakras)
+  - Dynamic type management system (Migration 031) - admin-manageable entity/relationship types
+  - AI-powered text rewrite/generation buttons in admin forms
+  - Successfully imported 10+ crystals with full field mapping
+  - BOM normalization and robust error handling
+
+**Previous Session Updates (December 2024 - Convergence Graph UI Complete):**
+- ✅ **Convergence Graph UI** - Complete Phase 3B user interface implementation
+  - D3.js force-directed network visualization with pan/zoom/drag
+  - Comparative table view with sortable columns and similarity indicators
+  - Concept detail modal with related concepts display
+  - Similarity controls (search, threshold slider, tradition filter)
+  - Tradition legend with color-coded sidebar
+  - Full page route at `/convergence-graph`
+  - Ready for data seeding (see `CONVERGENCE_GRAPH_DATA_GUIDE.md`)
+
+**Previous Session Updates (November 10, 2025 - Production Infrastructure & Documentation):**
 - ✅ **SendGrid Email Infrastructure** - Complete email setup with domain authentication (convergencelibrary.com)
   - Domain authenticated, DNS records configured (SPF, DKIM, DMARC, link branding)
   - Supabase SMTP configured with SendGrid credentials
@@ -208,6 +229,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Admin usage tracking | P1 | L | 4 | ✅ Complete | Analytics dashboard with cost monitoring |
 | **Annotation search (Fuse.js)** | **P1** | **XS** | **4** | **✅ Complete** | **Client-side fuzzy search across all annotations (Oct 27)** |
 | **PostgreSQL FTS annotation search** | **P1** | **S** | **5** | **✅ Complete** | **Server-side full-text search with tsvector + GIN index (Sprint 5)** |
+| **Concept Search (Deep Search)** | **P1** | **M** | **Current** | **🔄 Active** | **Semantic vector search across all books with related terms (Dec 2024)** |
 | Collection sharing | P1 | M | Post | ⬜ Planned | Share collections with others |
 | Export annotations to Markdown | P1 | XS | 5 | ✅ Complete | Download annotations as Markdown (Sprint 5) |
 | Export annotations to CSV | P1 | XS | 5 | ✅ Complete | Download annotations as CSV (Sprint 5) |
@@ -247,6 +269,12 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
 | **PostgreSQL schema (Migration 018)** | **P0** | **M** | **5** | **✅ Complete** | **Correspondences + relationships tables (Sprint 5)** |
+| **Dynamic type management (Migration 031)** | **P0** | **M** | **Latest** | **✅ Complete** | **Admin-manageable entity/relationship types with metadata** |
+| **Multi-source claims system (Migration 032)** | **P0** | **M** | **Latest** | **✅ Complete** | **knowledge_sources + knowledge_claims tables** |
+| **Admin CRUD interface** | **P0** | **M** | **Latest** | **✅ Complete** | **EntityModal with source/claim management** |
+| **Consensus vs Sources view** | **P0** | **M** | **Latest** | **✅ Complete** | **EntityDetailModal with tabbed interface** |
+| **CSV auto-import script** | **P0** | **L** | **Latest** | **✅ Complete** | **6 schema types, field mapping, BOM handling** |
+| **AI text rewrite/generate** | **P1** | **S** | **Latest** | **✅ Complete** | **Sparkles buttons in admin forms** |
 | **Basic API routes** | **P1** | **M** | **5** | **🔄 Partial** | **entities/edges endpoints exist (Sprint 5)** |
 | **GraphView component** | **P1** | **M** | **5** | **🔄 Placeholder** | **Basic rendering, needs D3 (Sprint 5)** |
 | Neptune cluster setup | P0 | L | 8 | ⬜ Deferred | Graph database (optional for Phase 3) |
@@ -272,6 +300,50 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Temporal graph | P2 | XL | Post | ⬜ Planned | Evolution over time |
 | Community graph editing | P3 | XL | Year 2 | ⬜ Planned | Collaborative |
 | VR graph exploration | P3 | XL | Year 3 | ⬜ Planned | WebXR |
+
+### 5A. CONVERGENCE GRAPH (Phase 3B) - ✅ UI COMPLETE
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| **PostgreSQL schema (Migration 019)** | **P0** | **M** | **5** | **✅ Complete** | **convergence_concepts + convergence_relationships tables** |
+| **API routes (/api/concepts)** | **P0** | **M** | **5** | **✅ Complete** | **GET/POST endpoints for concepts and relationships** |
+| **Convergence Graph page (/convergence-graph)** | **P0** | **M** | **Current** | **✅ Complete** | **Main page with view mode toggle** |
+| **D3.js network visualization** | **P0** | **L** | **Current** | **✅ Complete** | **Force-directed graph with pan/zoom/drag** |
+| **Comparative table view** | **P0** | **M** | **Current** | **✅ Complete** | **Sortable table with similarity indicators** |
+| **Concept detail modal** | **P0** | **M** | **Current** | **✅ Complete** | **Full concept info + related concepts** |
+| **Similarity controls** | **P0** | **S** | **Current** | **✅ Complete** | **Search, threshold slider, tradition filter** |
+| **Tradition legend** | **P0** | **S** | **Current** | **✅ Complete** | **Color-coded tradition sidebar** |
+| Seed cross-tradition concepts | P0 | M | Current | ⬜ Next | 30+ concepts (Emptiness, Unity, etc.) |
+| Seed relationships | P0 | M | Current | ⬜ Next | 40+ cross-tradition connections |
+| Source citations | P0 | S | Current | ✅ Complete | Citation field in relationships |
+| Export to CSV/Markdown | P1 | S | Post | ⬜ Planned | Export functionality |
+| Path finding algorithm | P1 | M | Post | ⬜ Planned | Shortest path between concepts |
+| Cluster detection | P1 | M | Post | ⬜ Planned | Auto-group similar concepts |
+| Admin CRUD interface | P1 | M | Latest | ✅ Complete | Create/edit entities with sources/claims via UI |
+| Relationship strength editor | P1 | S | Post | ⬜ Planned | Adjust similarity scores |
+| Cross-tradition search | P1 | S | Post | ⬜ Planned | Search across all traditions |
+| Concept suggestions | P2 | L | Post | ⬜ Planned | AI-suggested new concepts |
+| Temporal evolution view | P2 | XL | Post | ⬜ Planned | How concepts evolved over time |
+
+### 5B. MULTI-SOURCE KNOWLEDGE CLAIMS SYSTEM - ✅ COMPLETE
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| **knowledge_sources table (Migration 032)** | **P0** | **M** | **Latest** | **✅ Complete** | **Source metadata (title, author, year, citation, URL)** |
+| **knowledge_claims table (Migration 032)** | **P0** | **M** | **Latest** | **✅ Complete** | **Field-specific claims linked to entities + sources** |
+| **Admin source management UI** | **P0** | **M** | **Latest** | **✅ Complete** | **Inline source creation in EntityModal** |
+| **Multi-claim management UI** | **P0** | **M** | **Latest** | **✅ Complete** | **Add/edit/delete claims by field in EntityModal** |
+| **Consensus vs Sources view** | **P0** | **M** | **Latest** | **✅ Complete** | **EntityDetailModal with tabbed interface** |
+| **CSV auto-import script** | **P0** | **L** | **Latest** | **✅ Complete** | **6 schema types, field mapping, BOM handling** |
+| **Schema detection** | **P0** | **M** | **Latest** | **✅ Complete** | **Auto-detect: plants, angels, orishas, gods, crystals, chakras** |
+| **Field mapping system** | **P0** | **M** | **Latest** | **✅ Complete** | **Type-specific CSV field → claim field mappings** |
+| **Dynamic type management (Migration 031)** | **P0** | **M** | **Latest** | **✅ Complete** | **Admin-manageable entity/relationship types** |
+| **AI text rewrite/generate** | **P1** | **S** | **Latest** | **✅ Complete** | **Sparkles buttons for description/short_definition** |
+| Consensus algorithm | P1 | M | Post | ⬜ Planned | Weighted by source credibility |
+| Source credibility scoring | P1 | M | Post | ⬜ Planned | Academic vs popular sources |
+| Bulk claim import | P1 | M | Post | ⬜ Planned | Import multiple CSVs at once |
+| Claim conflict detection | P1 | M | Post | ⬜ Planned | Flag conflicting claims |
+| Source verification workflow | P2 | L | Post | ⬜ Planned | Admin review for new sources |
 
 ### 5. THE CONVERGENCE MACHINE (7-Lens AI System) - ✅ MVP COMPLETE
 
@@ -604,6 +676,9 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | User management | P0 | M | 2 | ⬜ Planned | View, ban, delete |
 | Content moderation | P0 | M | Post | ⬜ Planned | Review queue |
 | **Reliable admin access check** | **P0** | **S** | **Latest** | **✅ Complete** | **Server-side API route for admin verification** |
+| **Knowledge Graph admin UI** | **P0** | **M** | **Latest** | **✅ Complete** | **Entity/claim management with sources** |
+| **CSV import tool** | **P0** | **L** | **Latest** | **✅ Complete** | **Auto-import from CSV with schema detection** |
+| **Type management UI** | **P0** | **M** | **Latest** | **✅ Complete** | **Create/edit entity/relationship types** |
 | Analytics dashboard | P1 | L | Post | ⬜ Planned | Revenue, users |
 | Feature flags | P1 | M | Post | ⬜ Planned | A/B tests |
 | Announcement system | P2 | M | Post | ⬜ Planned | In-app banners |

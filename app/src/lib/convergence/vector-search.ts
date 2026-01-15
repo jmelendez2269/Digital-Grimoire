@@ -41,7 +41,14 @@ export async function vectorSearch(
   
   // Try RPC first (more efficient), fallback to manual if needed
   try {
-    return await vectorSearchRPC(queryEmbedding, limit, filters);
+    const rpcResults = await vectorSearchRPC(queryEmbedding, limit, filters);
+    // If RPC returns empty results, it might mean the function doesn't exist
+    // or there are no matching chunks. Try manual search as fallback.
+    if (rpcResults.length === 0) {
+      console.warn('RPC search returned 0 results, trying manual search...');
+      return await vectorSearchManual(queryEmbedding, limit, filters);
+    }
+    return rpcResults;
   } catch (error) {
     console.warn('RPC search failed, using manual calculation:', error);
     // Fallback: manual similarity calculation (slower but works)
@@ -59,9 +66,12 @@ async function vectorSearchManual(
   filters?: LensFilters
 ): Promise<VectorSearchResult[]> {
   const supabase = await createClient();
+  const MIN_SIMILARITY = 0.2; // Lower threshold to catch more results (was 0.3)
 
-  // Build filter query
+  // Build filter query for texts (to get metadata)
+  // If no filters, we'll fetch all texts for metadata mapping
   let textQuery = supabase.from('texts').select('id, title, author, type, lenses');
+  const hasFilters = filters && (filters.lenses?.length || filters.documentTypes?.length || filters.domains?.length);
 
   // Apply filters
   if (filters?.lenses && filters.lenses.length > 0) {
@@ -74,32 +84,51 @@ async function vectorSearchManual(
     textQuery = textQuery.in('domain', filters.domains);
   }
 
-  const { data: texts } = await textQuery;
-  const textIds = texts?.map(t => t.id) || [];
+  // Get texts (for metadata mapping)
+  // If no filters, fetch all texts (with a reasonable limit for metadata)
+  const { data: allTexts } = hasFilters 
+    ? await textQuery 
+    : await textQuery.limit(10000); // Large limit to get all texts for metadata
+  
+  const textMap = new Map(
+    (allTexts || []).map(t => [t.id, { title: t.title, author: t.author, type: t.type }])
+  );
 
-  if (textIds.length === 0) {
-    return [];
-  }
-
-  // Get chunks for matching texts
-  const { data: chunks, error: chunksError } = await supabase
+  // If filters are provided, only search chunks from those texts
+  // Otherwise, search ALL chunks (to find any relevant content)
+  let chunksQuery = supabase
     .from('text_chunks')
     .select('id, text_id, chunk_index, content, embedding')
-    .in('text_id', textIds)
-    .not('embedding', 'is', null)
-    .limit(limit * 3); // Get more for filtering
+    .not('embedding', 'is', null);
 
-  if (chunksError || !chunks || chunks.length === 0) {
+  // Apply text filter only if we have specific text filters
+  if (hasFilters) {
+    const textIds = allTexts?.map(t => t.id) || [];
+    if (textIds.length === 0) {
+      return [];
+    }
+    chunksQuery = chunksQuery.in('text_id', textIds);
+  }
+
+  // Fetch more chunks than needed to account for similarity filtering
+  // For deep search with limit=500, we want to check many chunks
+  const chunkFetchLimit = Math.max(limit * 20, 2000); // Fetch at least 2000 chunks for better coverage
+  const { data: chunks, error: chunksError } = await chunksQuery.limit(chunkFetchLimit);
+  
+  console.log(`[Vector Search] Fetched ${chunks?.length || 0} chunks from database`);
+
+  if (chunksError) {
     console.error('Error fetching chunks:', chunksError);
     return [];
   }
 
-  // Create map of text_id to text metadata
-  const textMap = new Map(
-    (texts || []).map(t => [t.id, { title: t.title, author: t.author, type: t.type }])
-  );
+  if (!chunks || chunks.length === 0) {
+    console.warn('No chunks found in database. Texts may need embeddings generated.');
+    return [];
+  }
 
   // Calculate similarity scores manually (cosine similarity)
+  const similarities: number[] = [];
   const resultsWithSimilarity = chunks
     .map(chunk => {
       if (!chunk.embedding || !Array.isArray(chunk.embedding)) {
@@ -107,7 +136,20 @@ async function vectorSearchManual(
       }
 
       const similarity = cosineSimilarity(queryEmbedding, chunk.embedding);
-      const textMeta = textMap.get(chunk.text_id);
+      similarities.push(similarity); // Track all similarities for debugging
+      
+      // Filter by minimum similarity
+      if (similarity < MIN_SIMILARITY) {
+        return null;
+      }
+
+      // Get text metadata
+      let textMeta = textMap.get(chunk.text_id);
+      if (!textMeta) {
+        // If text not in our map, try to fetch it (shouldn't happen often)
+        // For now, skip it to avoid extra queries
+        return null;
+      }
       
       return {
         text_id: chunk.text_id,
@@ -115,14 +157,25 @@ async function vectorSearchManual(
         content: chunk.content,
         chunk_index: chunk.chunk_index,
         similarity,
-        text_title: textMeta?.title,
-        text_author: textMeta?.author,
-        text_type: textMeta?.type,
+        text_title: textMeta.title,
+        text_author: textMeta.author,
+        text_type: textMeta.type,
       } as VectorSearchResult;
     })
     .filter((r): r is VectorSearchResult => r !== null)
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, limit);
+
+  // Log diagnostic info
+  if (similarities.length > 0) {
+    const maxSim = Math.max(...similarities);
+    const minSim = Math.min(...similarities);
+    const avgSim = similarities.reduce((a, b) => a + b, 0) / similarities.length;
+    const aboveThreshold = similarities.filter(s => s >= MIN_SIMILARITY).length;
+    console.log(`[Vector Search] Similarity stats: max=${maxSim.toFixed(3)}, min=${minSim.toFixed(3)}, avg=${avgSim.toFixed(3)}, above threshold (${MIN_SIMILARITY})=${aboveThreshold}/${similarities.length}`);
+  }
+
+  console.log(`[Vector Search] Returning ${resultsWithSimilarity.length} results after filtering`);
 
   return resultsWithSimilarity;
 }
@@ -149,7 +202,7 @@ async function vectorSearchRPC(
   // Call RPC function (if it exists)
   const { data, error } = await supabase.rpc('match_text_chunks', {
     query_embedding: queryEmbedding,
-    match_threshold: 0.5, // Minimum similarity score
+    match_threshold: 0.2, // Minimum similarity score (lowered to match manual search)
     match_count: limit,
     lens_filter: lensFilter,
     type_filter: typeFilter,
