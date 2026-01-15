@@ -370,6 +370,26 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Claim conflict detection | P1 | M | Post | ⬜ Planned | Flag conflicting claims |
 | Source verification workflow | P2 | L | Post | ⬜ Planned | Admin review for new sources |
 
+### 5D. PROPERTY TO ENTITY CONVERSION SYSTEM - ✅ COMPLETE (January 15, 2026)
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| **Field-to-relationship mapping** | **P0** | **S** | **Latest** | **✅ Complete** | **Configurable mapping system** |
+| **Entity utility functions** | **P0** | **S** | **Latest** | **✅ Complete** | **Parsing, category suggestion, slug generation** |
+| **Conversion API endpoint** | **P0** | **M** | **Latest** | **✅ Complete** | **Creates entities, relationships, backwards claims** |
+| **Connection status API** | **P0** | **M** | **Latest** | **✅ Complete** | **Bidirectional connection checking** |
+| **Convert Property Modal** | **P0** | **M** | **Latest** | **✅ Complete** | **Full-featured conversion UI with status checking** |
+| **EntityDetails conversion UI** | **P0** | **M** | **Latest** | **✅ Complete** | **Convert button and connection status indicators** |
+| **EntityModal conversion UI** | **P0** | **S** | **Latest** | **✅ Complete** | **Convert action in claims section** |
+| **Graph refresh mechanism** | **P0** | **S** | **Latest** | **✅ Complete** | **Auto-refresh after conversion** |
+| **Duplicate prevention** | **P0** | **M** | **Latest** | **✅ Complete** | **Entities, relationships, backwards claims** |
+| **Connection status display** | **P0** | **M** | **Latest** | **✅ Complete** | **Visual indicators (Connected/Exists badges)** |
+| **Knowledge graph route** | **P0** | **XS** | **Latest** | **✅ Complete** | **`/knowledge-graph` redirect to `/graph`** |
+| **Property information display** | **P0** | **M** | **Latest** | **✅ Complete** | **Knowledge claims in EntityDetails** |
+| Batch conversion | P1 | M | Post | ⬜ Planned | Convert multiple properties at once |
+| Conversion history | P1 | S | Post | ⬜ Planned | Track what was converted when |
+| Undo conversion | P2 | M | Post | ⬜ Planned | Revert entity creation |
+
 ### 5. THE CONVERGENCE MACHINE (7-Lens AI System) - ✅ MVP COMPLETE
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
