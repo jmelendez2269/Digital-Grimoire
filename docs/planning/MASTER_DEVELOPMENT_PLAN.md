@@ -36,7 +36,20 @@
 
 ### What's Been Built (4 weeks of work compressed into ~8 hours!)
 
-**🚀 LATEST UPDATE: Property to Entity Conversion System Complete! (January 15, 2026)**
+**🚀 LATEST UPDATE: Annotation Save to Journal Feature Restored! (January 2026)**
+- ✅ Save Annotation to Journal Button - Feature restoration
+  - Re-implemented "Save to Journal" button in annotation form
+  - Purple button with BookOpen icon for visual distinction
+  - TipTap document formatting (heading, blockquote, paragraph, citation)
+  - Smart title generation from quote text
+  - Comprehensive error handling and user feedback
+  - Loading and disabled states for better UX
+  - Seamless journal API integration
+- ✅ State Management - Added savingToJournal state tracking
+- ✅ Icon Integration - Added BookOpen icon from lucide-react
+- **Status:** Feature fully restored and functional, ready for user testing
+
+**🚀 PREVIOUS UPDATE: Property to Entity Conversion System Complete! (January 15, 2026)**
 - ✅ Property to Entity Conversion System - Complete implementation
   - Field-to-relationship type mapping configuration
   - Entity utility functions (parsing, category suggestion, slug generation)

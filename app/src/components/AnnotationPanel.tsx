@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Highlighter, MessageSquare, Trash2, Edit3, Save, X, Sparkles } from 'lucide-react';
+import { Highlighter, MessageSquare, Trash2, Edit3, Save, X, Sparkles, BookOpen, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils/formatting';
 import { TextPosition } from '@/lib/types';
 
@@ -68,12 +68,20 @@ export default function AnnotationPanel({
   const [newHighlightColor, setNewHighlightColor] = useState<Annotation['highlight_color']>('yellow');
   const [newPosition, setNewPosition] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [savingToJournal, setSavingToJournal] = useState(false);
   
   // Filter state
   const [filterCategory, setFilterCategory] = useState<Annotation['category'] | 'all'>('all');
   
   // Convergence Machine modal state
   const [showConvergenceModal, setShowConvergenceModal] = useState(false);
+
+  // Journal save modal state
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveMode, setSaveMode] = useState<'new' | 'existing'>('new');
+  const [existingPages, setExistingPages] = useState<Array<{ id: string; title: string; icon: string; updated_at: string }>>([]);
+  const [selectedPageId, setSelectedPageId] = useState<string>('');
+  const [loadingPages, setLoadingPages] = useState(false);
 
   // Update highlight color when category changes
   useEffect(() => {
@@ -144,6 +152,198 @@ export default function AnnotationPanel({
       console.error('Error adding annotation:', error);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const saveAnnotationToJournal = async () => {
+    if (!newQuote.trim()) return;
+
+    // Show modal to let user choose
+    setShowSaveModal(true);
+    
+    // Fetch existing pages
+    setLoadingPages(true);
+    try {
+      const pagesResponse = await fetch('/api/journal?include_archived=false');
+      if (pagesResponse.ok) {
+        const pagesData = await pagesResponse.json();
+        setExistingPages(pagesData.pages || []);
+      }
+    } catch (error) {
+      console.error('Error fetching pages:', error);
+    } finally {
+      setLoadingPages(false);
+    }
+  };
+
+  const performSave = async () => {
+    if (!newQuote.trim()) return;
+
+    setSavingToJournal(true);
+    try {
+      // Format content as TipTap document
+      const newContent: any = {
+        type: 'doc',
+        content: [
+          {
+            type: 'heading',
+            attrs: { level: 2 },
+            content: [{ type: 'text', text: 'Annotation' }]
+          },
+          {
+            type: 'blockquote',
+            content: [
+              {
+                type: 'paragraph',
+                content: [{ type: 'text', text: newQuote.trim() }]
+              }
+            ]
+          }
+        ]
+      };
+
+      // Add note if present
+      if (newNote.trim()) {
+        newContent.content.push({
+          type: 'paragraph',
+          content: [{ type: 'text', text: newNote.trim() }]
+        });
+      }
+
+      // Add source information if documentTitle is available
+      if (documentTitle) {
+        newContent.content.push({
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: '— ' },
+            { type: 'text', text: documentTitle, marks: [{ type: 'italic' }] }
+          ]
+        });
+      }
+
+      if (saveMode === 'new') {
+        // Create new journal page
+        const response = await fetch('/api/journal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `Annotation: ${newQuote.substring(0, 50)}${newQuote.length > 50 ? '...' : ''}`,
+            content: newContent,
+            icon: '📝',
+          }),
+        });
+
+        if (response.ok) {
+          alert('Annotation saved to journal!');
+          setShowSaveModal(false);
+          // Reset form
+          setNewQuote('');
+          setNewNote('');
+          setNewCategory('general');
+          setNewHighlightColor('yellow');
+          setNewPosition(null);
+          setShowForm(false);
+          onSelectionCleared?.();
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Failed to save to journal' }));
+          alert(errorData.error || 'Failed to save to journal');
+        }
+      } else {
+        // Add to existing page
+        if (!selectedPageId) {
+          alert('Please select a page to add to');
+          return;
+        }
+
+        // Fetch existing page
+        const getResponse = await fetch(`/api/journal/${selectedPageId}`);
+        if (!getResponse.ok) {
+          throw new Error('Failed to fetch existing page');
+        }
+
+        const { page: existingPage } = await getResponse.json();
+        
+        // Parse existing content
+        let existingContent = existingPage.content;
+        if (existingContent === null || existingContent === undefined) {
+          existingContent = { type: 'doc', content: [] };
+        } else if (typeof existingContent === 'string') {
+          try {
+            existingContent = JSON.parse(existingContent);
+          } catch (e) {
+            console.warn('Failed to parse existing content as JSON:', e);
+            existingContent = { type: 'doc', content: [] };
+          }
+        }
+
+        // Ensure it's a valid Tiptap doc
+        if (!existingContent || typeof existingContent !== 'object' || existingContent.type !== 'doc') {
+          existingContent = { type: 'doc', content: [] };
+        }
+
+        // Ensure content array exists
+        if (!Array.isArray(existingContent.content)) {
+          existingContent.content = [];
+        }
+
+        // Merge content: add a separator and then the new content
+        const horizontalRule = {
+          type: 'horizontalRule'
+        };
+
+        // Build merged content array
+        const mergedContentArray: any[] = [];
+        
+        // Add existing content
+        if (existingContent.content.length > 0) {
+          mergedContentArray.push(...existingContent.content);
+        }
+        
+        // Add separator (horizontal rule) if we have both existing and new content
+        if (existingContent.content.length > 0 && newContent.content.length > 0) {
+          mergedContentArray.push(horizontalRule);
+        }
+        
+        // Add new content
+        if (newContent.content.length > 0) {
+          mergedContentArray.push(...newContent.content);
+        }
+
+        const mergedContent = {
+          type: 'doc',
+          content: mergedContentArray
+        };
+
+        // Update existing page
+        const updateResponse = await fetch(`/api/journal/${selectedPageId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: mergedContent,
+          }),
+        });
+
+        if (updateResponse.ok) {
+          alert('Annotation added to journal page!');
+          setShowSaveModal(false);
+          // Reset form
+          setNewQuote('');
+          setNewNote('');
+          setNewCategory('general');
+          setNewHighlightColor('yellow');
+          setNewPosition(null);
+          setShowForm(false);
+          onSelectionCleared?.();
+        } else {
+          const errorData = await updateResponse.json().catch(() => ({ error: 'Failed to update journal page' }));
+          alert(errorData.error || 'Failed to update journal page');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving annotation to journal:', error);
+      alert(error instanceof Error ? error.message : 'Failed to save annotation to journal');
+    } finally {
+      setSavingToJournal(false);
     }
   };
 
@@ -424,6 +624,14 @@ export default function AnnotationPanel({
               className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-600/50 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
             >
               {submitting ? 'Saving...' : 'Save Annotation'}
+            </button>
+            <button
+              onClick={saveAnnotationToJournal}
+              disabled={!newQuote.trim() || savingToJournal}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" />
+              {savingToJournal ? 'Saving...' : 'Save to Journal'}
             </button>
             <button
               onClick={() => {

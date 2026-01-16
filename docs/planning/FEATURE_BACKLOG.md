@@ -23,7 +23,20 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
-**Latest Session Updates (January 15, 2026 - Property to Entity Conversion System Complete):**
+**Latest Session Updates (January 2026 - Annotation Save to Journal Feature Restored):**
+- ✅ **Save Annotation to Journal Button** - Feature restoration and enhancement
+  - Re-implemented "Save to Journal" button in annotation form
+  - Purple button with BookOpen icon positioned between "Save Annotation" and "Cancel"
+  - TipTap document formatting for structured journal entries
+  - Quote displayed as blockquote, note as paragraph, document title as citation
+  - Smart title generation from quote text (first 50 characters)
+  - Comprehensive error handling and user feedback
+  - Loading states and disabled states for better UX
+  - Seamless integration with existing journal API endpoint
+- ✅ **State Management** - Added `savingToJournal` state for operation tracking
+- ✅ **Icon Integration** - Added BookOpen icon from lucide-react
+
+**Previous Session Updates (January 15, 2026 - Property to Entity Conversion System Complete):**
 - ✅ **Property to Entity Conversion System** - Complete implementation
   - Field-to-relationship type mapping configuration
   - Entity utility functions (parsing, category suggestion, slug generation, backwards field mapping)
