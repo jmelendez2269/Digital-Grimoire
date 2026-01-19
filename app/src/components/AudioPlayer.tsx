@@ -5,7 +5,7 @@
  * Floating audio control bar for PDF read-aloud functionality
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Play, 
   Pause, 
@@ -20,6 +20,7 @@ import {
 import { useTTS } from '@/hooks/useTTS';
 import { TTSEngine, TTSVoice } from '@/lib/services/tts-service';
 import { extractPDFText } from '@/lib/utils/pdf-text-extractor';
+import { cleanHtmlText } from '@/lib/utils/formatting';
 import TTSSettings from './TTSSettings';
 
 export interface AudioPlayerControls {
@@ -136,6 +137,12 @@ export default function AudioPlayer({
     },
   });
 
+  // Use ref to track playing state for cleanup handlers
+  const isPlayingRef = useRef(isPlaying);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
   // Extract text from PDF if needed
   useEffect(() => {
     const loadText = async () => {
@@ -148,14 +155,34 @@ export default function AudioPlayer({
           console.error('Error extracting PDF text:', err);
           // Fallback to OCR
           if (ocrText) {
-            setCurrentText(ocrText);
+            const cleaned = cleanHtmlText(ocrText);
+            setCurrentText(cleaned);
             setTextSource('ocr');
           }
         } finally {
           setExtractingPdf(false);
         }
       } else if (textSource === 'ocr' && ocrText) {
-        setCurrentText(ocrText);
+        // Always clean HTML text to ensure TTS doesn't read HTML tags
+        // This is especially important for HTML documents
+        const cleanedText = cleanHtmlText(ocrText);
+        
+        // Debug: Always log when we have HTML text (even if cleaning didn't change it)
+        const hasHtml = ocrText.includes('<') || ocrText.includes('&');
+        if (hasHtml) {
+          console.log('[AudioPlayer] Processing HTML text for TTS:', {
+            originalLength: ocrText.length,
+            cleanedLength: cleanedText.length,
+            wasChanged: ocrText !== cleanedText,
+            originalPreview: ocrText.substring(0, 200),
+            cleanedPreview: cleanedText.substring(0, 200)
+          });
+        }
+        
+        setCurrentText(cleanedText);
+      } else if (!ocrText && !pdfUrl) {
+        console.warn('[AudioPlayer] No text source available');
+        setCurrentText('');
       }
     };
 
@@ -280,6 +307,34 @@ export default function AudioPlayer({
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isPlaying, isPaused]);
+
+  // Stop TTS when component unmounts or page unloads/refreshes
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isPlayingRef.current) {
+        stop();
+      }
+    };
+
+    const handleUnload = () => {
+      if (isPlayingRef.current) {
+        stop();
+      }
+    };
+
+    // Add event listeners for page navigation/refresh
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    // Stop on component unmount and cleanup event listeners
+    return () => {
+      if (isPlayingRef.current) {
+        stop();
+      }
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, [stop]);
 
   // Calculate progress percentage
   const progress = currentText.length > 0 

@@ -53,6 +53,11 @@ export interface MultiLensResponse {
   }>;
 }
 
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
 /**
  * Get max tokens based on response length preference
  */
@@ -334,7 +339,7 @@ export async function generateLensSummary(
   lens: Lens,
   context: HybridSearchResult[],
   maxTokens: number = 200
-): Promise<string> {
+): Promise<{ summary: string; tokenUsage: TokenUsage }> {
   const contextText = context
     .slice(0, 3) // Use top 3 results for summary
     .map((result, idx) => {
@@ -365,18 +370,25 @@ Provide a brief summary from the ${lens.name} perspective.`;
       max_tokens: maxTokens,
     });
 
-    // Track token usage (will be logged by caller)
+    // Return token usage
     const usage = completion.usage;
-    if (usage) {
-      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
-      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
-      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
-    }
+    const tokenUsage: TokenUsage = {
+      inputTokens: usage?.prompt_tokens || 0,
+      outputTokens: usage?.completion_tokens || 0,
+    };
 
-    return completion.choices[0]?.message?.content || '';
+    console.log(`[Token Tracking] ${lens.name} summary: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens`);
+
+    return {
+      summary: completion.choices[0]?.message?.content || '',
+      tokenUsage,
+    };
   } catch (error) {
     console.error(`Error generating ${lens.name} summary:`, error);
-    return '';
+    return {
+      summary: '',
+      tokenUsage: { inputTokens: 0, outputTokens: 0 },
+    };
   }
 }
 
@@ -388,7 +400,7 @@ export async function generateLensResponse(
   lens: Lens,
   context: HybridSearchResult[],
   maxTokens: number = 1000
-): Promise<LensResponse> {
+): Promise<LensResponse & { tokenUsage: TokenUsage }> {
   // Prepare context for the lens
   const contextText = context
     .slice(0, 5) // Use top 5 results
@@ -421,13 +433,14 @@ Please answer the question from the ${lens.name} perspective.`;
       max_tokens: maxTokens,
     });
 
-    // Track token usage (will be logged by caller)
+    // Return token usage
     const usage = completion.usage;
-    if (usage) {
-      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
-      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
-      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
-    }
+    const tokenUsage: TokenUsage = {
+      inputTokens: usage?.prompt_tokens || 0,
+      outputTokens: usage?.completion_tokens || 0,
+    };
+
+    console.log(`[Token Tracking] ${lens.name} response: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens`);
 
     const content = completion.choices[0]?.message?.content || 'No response generated.';
 
@@ -447,6 +460,7 @@ Please answer the question from the ${lens.name} perspective.`;
       lensName: lens.name,
       content,
       sources,
+      tokenUsage,
     };
   } catch (error) {
     console.error(`Error generating ${lens.name} response:`, error);
@@ -455,6 +469,7 @@ Please answer the question from the ${lens.name} perspective.`;
       lensName: lens.name,
       content: `Error generating ${lens.name} perspective. Please try again.`,
       sources: [],
+      tokenUsage: { inputTokens: 0, outputTokens: 0 },
     };
   }
 }
@@ -467,19 +482,27 @@ export async function generateSynthesisFromSummaries(
   lensWeights: LensWeights,
   context: HybridSearchResult[],
   lengthConfig: ResponseLengthConfig
-): Promise<string> {
+): Promise<{ synthesis: string; tokenUsage: TokenUsage }> {
   const activeLenses = getActiveLenses(lensWeights);
 
   if (activeLenses.length === 0) {
-    return 'No active lenses selected. Please enable at least one lens.';
+    return {
+      synthesis: 'No active lenses selected. Please enable at least one lens.',
+      tokenUsage: { inputTokens: 0, outputTokens: 0 },
+    };
   }
 
   // Generate brief summaries for each active lens (in parallel)
-  const lensSummaries = await Promise.all(
+  const lensSummaryResults = await Promise.all(
     activeLenses.map(lens => 
       generateLensSummary(query, lens, context, lengthConfig.lensSummaryMaxTokens)
     )
   );
+
+  // Extract summaries and accumulate token usage
+  const lensSummaries = lensSummaryResults.map(r => r.summary);
+  let totalInputTokens = lensSummaryResults.reduce((sum, r) => sum + r.tokenUsage.inputTokens, 0);
+  let totalOutputTokens = lensSummaryResults.reduce((sum, r) => sum + r.tokenUsage.outputTokens, 0);
 
   // Normalize weights and get intensity labels
   const normalizedWeights = normalizeWeights(lensWeights);
@@ -563,18 +586,28 @@ IMPORTANT: Your response must not exceed ${lengthConfig.synthesisMaxTokens} toke
       max_tokens: lengthConfig.synthesisMaxTokens,
     });
 
-    // Track token usage (will be logged by caller)
+    // Accumulate token usage from synthesis call
     const usage = completion.usage;
-    if (usage) {
-      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
-      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
-      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
-    }
+    totalInputTokens += usage?.prompt_tokens || 0;
+    totalOutputTokens += usage?.completion_tokens || 0;
 
-    return completion.choices[0]?.message?.content || 'Synthesis generation failed.';
+    const tokenUsage: TokenUsage = {
+      inputTokens: totalInputTokens,
+      outputTokens: totalOutputTokens,
+    };
+
+    console.log(`[Token Tracking] Synthesis: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens (total)`);
+
+    return {
+      synthesis: completion.choices[0]?.message?.content || 'Synthesis generation failed.',
+      tokenUsage,
+    };
   } catch (error) {
     console.error('Error generating synthesis:', error);
-    return 'Synthesis generation failed.';
+    return {
+      synthesis: 'Synthesis generation failed.',
+      tokenUsage: { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
+    };
   }
 }
 
@@ -586,7 +619,7 @@ export async function generateMultiLensResponse(
   lensWeights: LensWeights,
   context: HybridSearchResult[],
   lengthConfig?: ResponseLengthConfig
-): Promise<MultiLensResponse> {
+): Promise<MultiLensResponse & { tokenUsage: TokenUsage }> {
   const activeLenses = getActiveLenses(lensWeights);
   const config = lengthConfig || getResponseLengthConfig('medium');
 
@@ -596,6 +629,7 @@ export async function generateMultiLensResponse(
       responses: [],
       synthesis: 'No active lenses selected. Please enable at least one lens.',
       sources: [],
+      tokenUsage: { inputTokens: 0, outputTokens: 0 },
     };
   }
 
@@ -605,7 +639,10 @@ export async function generateMultiLensResponse(
   );
 
   // Merge responses based on weights
-  const synthesis = await mergeLensResponses(lensResponses, lensWeights, query, config.synthesisMaxTokens);
+  const synthesisResult = await mergeLensResponses(lensResponses, lensWeights, query, config.synthesisMaxTokens);
+  
+  // Extract lens responses without tokenUsage for the response object
+  const lensResponsesWithoutTokens: LensResponse[] = lensResponses.map(({ tokenUsage, ...rest }) => rest);
 
   // Collect unique sources (prefer highest relevance)
   const sourceMap = new Map<string, { 
@@ -634,9 +671,10 @@ export async function generateMultiLensResponse(
 
   return {
     query,
-    responses: lensResponses,
-    synthesis,
+    responses: lensResponsesWithoutTokens,
+    synthesis: synthesisResult.synthesis,
     sources: Array.from(sourceMap.values()),
+    tokenUsage: synthesisResult.tokenUsage,
   };
 }
 
@@ -644,17 +682,27 @@ export async function generateMultiLensResponse(
  * Merge multiple lens responses into a unified synthesis
  */
 export async function mergeLensResponses(
-  responses: LensResponse[],
+  responses: (LensResponse & { tokenUsage?: TokenUsage })[],
   weights: LensWeights,
   originalQuery: string,
   maxTokens: number = 1500
-): Promise<string> {
+): Promise<{ synthesis: string; tokenUsage: TokenUsage }> {
+  // Accumulate token usage from lens responses
+  let totalInputTokens = responses.reduce((sum, r) => sum + (r.tokenUsage?.inputTokens || 0), 0);
+  let totalOutputTokens = responses.reduce((sum, r) => sum + (r.tokenUsage?.outputTokens || 0), 0);
+
   if (responses.length === 0) {
-    return 'No perspectives available.';
+    return {
+      synthesis: 'No perspectives available.',
+      tokenUsage: { inputTokens: 0, outputTokens: 0 },
+    };
   }
 
   if (responses.length === 1) {
-    return responses[0].content;
+    return {
+      synthesis: responses[0].content,
+      tokenUsage: responses[0].tokenUsage || { inputTokens: 0, outputTokens: 0 },
+    };
   }
 
   // Normalize weights and get intensity labels
@@ -746,19 +794,29 @@ IMPORTANT: Your response must not exceed ${maxTokens} tokens. Stay strictly with
       max_tokens: maxTokens,
     });
 
-    // Track token usage (will be logged by caller)
+    // Accumulate token usage from synthesis call
     const usage = completion.usage;
-    if (usage) {
-      (globalThis as any).__convergenceTokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
-      (globalThis as any).__convergenceTokenUsage.input += usage.prompt_tokens || 0;
-      (globalThis as any).__convergenceTokenUsage.output += usage.completion_tokens || 0;
-    }
+    totalInputTokens += usage?.prompt_tokens || 0;
+    totalOutputTokens += usage?.completion_tokens || 0;
 
-    return completion.choices[0]?.message?.content || 'Synthesis generation failed.';
+    const tokenUsage: TokenUsage = {
+      inputTokens: totalInputTokens,
+      outputTokens: totalOutputTokens,
+    };
+
+    console.log(`[Token Tracking] Merge synthesis: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens (total)`);
+
+    return {
+      synthesis: completion.choices[0]?.message?.content || 'Synthesis generation failed.',
+      tokenUsage,
+    };
   } catch (error) {
     console.error('Error generating synthesis:', error);
     // Fallback: simple concatenation
-    return responses.map(r => `**${r.lensName}:** ${r.content}`).join('\n\n');
+    return {
+      synthesis: responses.map(r => `**${r.lensName}:** ${r.content}`).join('\n\n'),
+      tokenUsage: { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
+    };
   }
 }
 

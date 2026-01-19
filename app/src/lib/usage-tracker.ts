@@ -46,7 +46,7 @@ export async function logApiUsage(params: UsageLogParams): Promise<void> {
     // Calculate cost if not provided
     const cost = params.estimatedCost ?? calculateCost(params.service, params.unitsUsed, params.unitType);
     
-    await supabase.from('api_usage').insert({
+    const { data, error } = await supabase.from('api_usage').insert({
       service: params.service,
       endpoint: params.endpoint,
       operation: params.operation,
@@ -58,12 +58,30 @@ export async function logApiUsage(params: UsageLogParams): Promise<void> {
       request_metadata: params.requestMetadata || {},
       success: params.success !== false,
       error_message: params.errorMessage || null,
-    });
+    }).select();
     
-    console.log(`[Usage Tracker] ${params.service} - ${params.operation}: ${params.unitsUsed} ${params.unitType}, $${cost.toFixed(4)}`);
+    if (error) {
+      console.error(`[Usage Tracker] Failed to insert usage record for ${params.service}:`, error);
+      console.error(`[Usage Tracker] Error details:`, {
+        service: params.service,
+        operation: params.operation,
+        userId: params.userId,
+        unitsUsed: params.unitsUsed,
+        errorCode: error.code,
+        errorMessage: error.message,
+      });
+    } else {
+      console.log(`[Usage Tracker] ✅ Successfully logged ${params.service} - ${params.operation}: ${params.unitsUsed} ${params.unitType}, $${cost.toFixed(4)}`);
+      if (data && data.length > 0) {
+        console.log(`[Usage Tracker] Inserted record ID: ${data[0].id}`);
+      }
+    }
   } catch (error) {
     // Don't throw errors from usage tracking - just log them
-    console.error('Failed to log API usage:', error);
+    console.error('[Usage Tracker] Exception while logging API usage:', error);
+    if (error instanceof Error) {
+      console.error('[Usage Tracker] Error stack:', error.stack);
+    }
   }
 }
 

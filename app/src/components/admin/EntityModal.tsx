@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles, X, Plus, Trash2, Edit } from "lucide-react";
 import ConvertPropertyModal from "@/components/admin/ConvertPropertyModal";
 
@@ -56,6 +57,7 @@ interface EntityModalProps {
   graphType: GraphType;
   onClose: () => void;
   onSave: () => void;
+  initialConsensus?: string | null;
 }
 
 interface TypeRecord {
@@ -210,9 +212,11 @@ const CONVERGENCE_FIELDS = [
   { value: "notes", label: "Notes" },
 ];
 
-export default function EntityModal({ entity, graphType, onClose, onSave }: EntityModalProps) {
+export default function EntityModal({ entity, graphType, onClose, onSave, initialConsensus }: EntityModalProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [duplicateEntity, setDuplicateEntity] = useState<{ id: string; name: string; slug: string; category: string } | null>(null);
 
   // Correspondence fields
   const [name, setName] = useState("");
@@ -239,6 +243,11 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
   const [traditions, setTraditions] = useState<TypeRecord[]>([]);
   const [aiLoadingField, setAiLoadingField] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [generatingClaims, setGeneratingClaims] = useState(false);
+  const [claimsProgress, setClaimsProgress] = useState({ current: 0, total: 0 });
+  const [generatingAliases, setGeneratingAliases] = useState(false);
+  const [generatingLenses, setGeneratingLenses] = useState(false);
+  const [generatingConsensus, setGeneratingConsensus] = useState(false);
 
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [claims, setClaims] = useState<KnowledgeClaim[]>([]);
@@ -246,6 +255,28 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
   const [claimFieldKey, setClaimFieldKey] = useState("");
   const [claimValue, setClaimValue] = useState("");
   const [editingClaimId, setEditingClaimId] = useState<string | null>(null);
+
+  // Helper function to deduplicate sources by ID
+  const deduplicateSources = (sourcesList: KnowledgeSource[]): KnowledgeSource[] => {
+    const seen = new Map<string, KnowledgeSource>();
+    for (const source of sourcesList) {
+      if (source.id && !seen.has(source.id)) {
+        seen.set(source.id, source);
+      }
+    }
+    return Array.from(seen.values());
+  };
+
+  // Helper function to add a source only if it doesn't already exist
+  const addSourceIfNotExists = (newSource: KnowledgeSource) => {
+    setSources((prev) => {
+      const exists = prev.some((s) => s.id === newSource.id);
+      if (exists) {
+        return prev;
+      }
+      return deduplicateSources([newSource, ...prev]);
+    });
+  };
 
   const [newSourceTitle, setNewSourceTitle] = useState("");
   const [newSourceAuthor, setNewSourceAuthor] = useState("");
@@ -287,7 +318,7 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
         ]);
         const sourcesData = await sourcesRes.json();
         const claimsData = await claimsRes.json();
-        setSources(sourcesData.items || []);
+        setSources(deduplicateSources(sourcesData.items || []));
         setClaims(claimsData.items || []);
       } catch (err) {
         // ignore
@@ -307,14 +338,16 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
         setCategory(e.category);
         setTypeId((e as any).type_id || (e as any).type?.id || null);
         setAliases(e.aliases || []);
-        setDescription(e.description || "");
+        // Use initialConsensus if provided, otherwise use existing description
+        setDescription(initialConsensus || e.description || "");
         setLenses(e.lenses || []);
       } else {
         const e = entity as ConvergenceConcept;
         setTradition(e.tradition);
         setTraditionId((e as any).tradition_id || (e as any).tradition_ref?.id || null);
         setEra(e.era || "");
-        setShortDefinition(e.short_definition || "");
+        // Use initialConsensus if provided, otherwise use existing short_definition
+        setShortDefinition(initialConsensus || e.short_definition || "");
         setPrimarySources(e.primary_sources || []);
         setTags(e.tags || []);
       }
@@ -333,7 +366,7 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
       };
       // This will be handled in the name input onChange
     }
-  }, [entity, graphType]);
+  }, [entity, graphType, initialConsensus]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,14 +406,32 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
 
       if (!res.ok) {
         const data = await res.json();
+        
+        // Handle duplicate entity (409 Conflict)
+        if (res.status === 409 && data.existingEntity) {
+          setDuplicateEntity(data.existingEntity);
+          setError(`An entity named "${data.existingEntity.name}" already exists. Would you like to edit it instead?`);
+          setLoading(false);
+          return;
+        }
+        
         throw new Error(data.error || "Failed to save entity");
       }
 
+      // Clear duplicate state on success
+      setDuplicateEntity(null);
       onSave();
     } catch (err: any) {
       setError(err.message || "Failed to save entity");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditExisting = () => {
+    if (duplicateEntity) {
+      onClose();
+      router.push(`/admin/knowledge-graph?editId=${duplicateEntity.id}&graphType=${graphType === "correspondences" ? "correspondences" : "convergence"}`);
     }
   };
 
@@ -494,7 +545,7 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
         throw new Error(data.error || "Failed to create source");
       }
       const data = await res.json();
-      setSources((prev) => [data.source, ...prev]);
+      addSourceIfNotExists(data.source);
       setNewSourceTitle("");
       setNewSourceAuthor("");
       setNewSourceYear("");
@@ -572,6 +623,271 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
     }
   };
 
+  // Ensure "AI Generated" source exists
+  const ensureAIGeneratedSource = async (): Promise<string> => {
+    // Check if it already exists in sources
+    const existingSource = sources.find((s) => s.title === "AI Generated");
+    if (existingSource) {
+      return existingSource.id;
+    }
+
+    // Try to find it in the database
+    try {
+      const res = await fetch("/api/knowledge/sources");
+      if (res.ok) {
+        const data = await res.json();
+        const found = data.items?.find((s: any) => s.title === "AI Generated");
+        if (found) {
+          addSourceIfNotExists(found);
+          return found.id;
+        }
+      }
+    } catch (err) {
+      console.error("Error checking for AI Generated source:", err);
+    }
+
+    // Create it if it doesn't exist
+    try {
+      const res = await fetch("/api/knowledge/sources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "AI Generated",
+          author: "System",
+        }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to create AI Generated source");
+      }
+      const data = await res.json();
+      addSourceIfNotExists(data.source);
+      return data.source.id;
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to create AI Generated source");
+    }
+  };
+
+  const handleGenerateAllClaims = async () => {
+    if (!entity?.id) {
+      setAiError("Entity must be saved before generating claims");
+      return;
+    }
+    setGeneratingClaims(true);
+    setClaimsProgress({ current: 0, total: 0 });
+    setAiError(null);
+    try {
+      setClaimsProgress({ current: 0, total: 1 }); // API call stage
+      const res = await fetch("/api/ai/generate-claims", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityName: name,
+          entityCategory: category,
+          tradition: tradition,
+          entityDescription: description || shortDefinition,
+          graphType: graphType,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to generate claims");
+      }
+
+      const data = await res.json();
+      const generatedClaims = data.claims || [];
+
+      if (generatedClaims.length === 0) {
+        setAiError("No claims were generated. Try again or add claims manually.");
+        return;
+      }
+
+      // Get or create AI Generated source
+      setClaimsProgress({ current: 1, total: generatedClaims.length + 1 });
+      const aiSourceId = await ensureAIGeneratedSource();
+
+      // Create claims for each generated field/value pair
+      let successCount = 0;
+      for (let i = 0; i < generatedClaims.length; i++) {
+        const claim = generatedClaims[i];
+        setClaimsProgress({ current: i + 1, total: generatedClaims.length + 1 });
+        try {
+          const claimRes = await fetch("/api/knowledge/claims", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              entityType: graphType === "correspondences" ? "correspondence" : "convergence",
+              entityId: entity.id,
+              sourceId: aiSourceId,
+              field_key: claim.field_key,
+              field_value: claim.field_value,
+            }),
+          });
+
+          if (claimRes.ok) {
+            const claimData = await claimRes.json();
+            setClaims((prev) => [claimData.claim, ...prev]);
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`Failed to create claim for ${claim.field_key}:`, err);
+        }
+      }
+
+      if (successCount === 0) {
+        setAiError("Failed to create any claims. Please try again.");
+      } else if (successCount < generatedClaims.length) {
+        setAiError(`Created ${successCount} of ${generatedClaims.length} claims. Some may have failed.`);
+      }
+    } catch (err: any) {
+      setAiError(err.message || "Failed to generate claims");
+    } finally {
+      setGeneratingClaims(false);
+      setClaimsProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const handleGenerateAliases = async () => {
+    if (!name.trim()) {
+      setAiError("Entity name is required to generate aliases");
+      return;
+    }
+    setGeneratingAliases(true);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/ai/generate-aliases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityName: name,
+          entityCategory: category,
+          tradition: tradition,
+          entityDescription: description || shortDefinition,
+          graphType: graphType,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to generate aliases");
+      }
+
+      const data = await res.json();
+      const generatedAliases = data.aliases || [];
+
+      if (generatedAliases.length === 0) {
+        setAiError("No aliases were generated. Try again.");
+        return;
+      }
+
+      // Add aliases, avoiding duplicates
+      const newAliases = generatedAliases.filter(
+        (alias: string) => !aliases.includes(alias) && alias.toLowerCase() !== name.toLowerCase()
+      );
+      setAliases((prev) => [...prev, ...newAliases]);
+    } catch (err: any) {
+      setAiError(err.message || "Failed to generate aliases");
+    } finally {
+      setGeneratingAliases(false);
+    }
+  };
+
+  const handleGenerateLenses = async () => {
+    if (!name.trim()) {
+      setAiError("Entity name is required to generate lenses");
+      return;
+    }
+    setGeneratingLenses(true);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/ai/generate-lenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityName: name,
+          entityCategory: category,
+          tradition: tradition,
+          entityDescription: description || shortDefinition,
+          graphType: graphType,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to generate lenses");
+      }
+
+      const data = await res.json();
+      const generatedLenses = data.lenses || [];
+
+      if (generatedLenses.length === 0) {
+        setAiError("No lenses were generated. Try again.");
+        return;
+      }
+
+      // Add lenses, avoiding duplicates
+      const newLenses = generatedLenses.filter(
+        (lens: string) => !lenses.includes(lens)
+      );
+      setLenses((prev) => [...prev, ...newLenses]);
+    } catch (err: any) {
+      setAiError(err.message || "Failed to generate lenses");
+    } finally {
+      setGeneratingLenses(false);
+    }
+  };
+
+  const handleGenerateConsensus = async () => {
+    if (!entity?.id) {
+      setAiError("Entity must be saved before generating consensus from claims");
+      return;
+    }
+    if (!name.trim()) {
+      setAiError("Entity name is required");
+      return;
+    }
+    setGeneratingConsensus(true);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/ai/generate-consensus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityId: entity.id,
+          entityName: name,
+          entityCategory: category,
+          tradition: tradition,
+          entityType: graphType,
+          existingDescription: graphType === "correspondences" ? description : shortDefinition,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to generate consensus");
+      }
+
+      const data = await res.json();
+      const generatedConsensus = data.consensus || "";
+
+      if (!generatedConsensus) {
+        setAiError("No consensus was generated. Try again.");
+        return;
+      }
+
+      // Set the generated consensus to the appropriate field
+      if (graphType === "correspondences") {
+        setDescription(generatedConsensus);
+      } else {
+        setShortDefinition(generatedConsensus);
+      }
+    } catch (err: any) {
+      setAiError(err.message || "Failed to generate consensus");
+    } finally {
+      setGeneratingConsensus(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
@@ -598,8 +914,34 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {error && (
-            <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-3 text-red-400 text-sm">
-              {error}
+            <div className={`rounded-lg p-3 text-sm ${
+              duplicateEntity 
+                ? "bg-amber-900/20 border border-amber-700/50 text-amber-200" 
+                : "bg-red-900/20 border border-red-700/50 text-red-400"
+            }`}>
+              <div className="mb-2">{error}</div>
+              {duplicateEntity && (
+                <div className="flex items-center gap-3 mt-3">
+                  <button
+                    type="button"
+                    onClick={handleEditExisting}
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Existing "{duplicateEntity.name}"
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDuplicateEntity(null);
+                      setError(null);
+                    }}
+                    className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-amber-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
           )}
           {aiError && (
@@ -693,18 +1035,32 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
                   <label className="text-sm font-medium text-amber-100/80">
                     Description
                   </label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleAIRewrite("description", "description", description, setDescription)
-                    }
-                    disabled={aiLoadingField === "description" || !name}
-                    className="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-100/80 hover:bg-amber-900/50 disabled:opacity-50 flex items-center gap-1"
-                    title="Generate or rewrite with AI"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    {aiLoadingField === "description" ? "Working..." : "AI"}
-                  </button>
+                  <div className="flex gap-2">
+                    {entity?.id && (
+                      <button
+                        type="button"
+                        onClick={handleGenerateConsensus}
+                        disabled={generatingConsensus || !name.trim()}
+                        className="text-xs px-2 py-1 rounded bg-purple-600/80 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        title="Generate consensus from all claims"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        {generatingConsensus ? "Generating..." : "Consensus"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAIRewrite("description", "description", description, setDescription)
+                      }
+                      disabled={aiLoadingField === "description" || !name}
+                      className="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-100/80 hover:bg-amber-900/50 disabled:opacity-50 flex items-center gap-1"
+                      title="Generate or rewrite with AI"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {aiLoadingField === "description" ? "Working..." : "AI"}
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   value={description}
@@ -733,6 +1089,16 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
                     placeholder="Add alias..."
                     className="flex-1 px-3 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-600/50"
                   />
+                  <button
+                    type="button"
+                    onClick={handleGenerateAliases}
+                    disabled={generatingAliases || !name.trim()}
+                    className="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg flex items-center gap-1.5 transition-colors"
+                    title="Generate aliases with AI"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {generatingAliases ? "..." : "Generate"}
+                  </button>
                   <button
                     type="button"
                     onClick={addAlias}
@@ -779,6 +1145,16 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
                     placeholder="Add lens..."
                     className="flex-1 px-3 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-600/50"
                   />
+                  <button
+                    type="button"
+                    onClick={handleGenerateLenses}
+                    disabled={generatingLenses || !name.trim()}
+                    className="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg flex items-center gap-1.5 transition-colors"
+                    title="Generate lenses with AI"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {generatingLenses ? "..." : "Generate"}
+                  </button>
                   <button
                     type="button"
                     onClick={addLens}
@@ -866,18 +1242,32 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
                   <label className="text-sm font-medium text-amber-100/80">
                     Short Definition
                   </label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleAIRewrite("short_definition", "short definition", shortDefinition, setShortDefinition)
-                    }
-                    disabled={aiLoadingField === "short_definition" || !name}
-                    className="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-100/80 hover:bg-amber-900/50 disabled:opacity-50 flex items-center gap-1"
-                    title="Generate or rewrite with AI"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    {aiLoadingField === "short_definition" ? "Working..." : "AI"}
-                  </button>
+                  <div className="flex gap-2">
+                    {entity?.id && (
+                      <button
+                        type="button"
+                        onClick={handleGenerateConsensus}
+                        disabled={generatingConsensus || !name.trim()}
+                        className="text-xs px-2 py-1 rounded bg-purple-600/80 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        title="Generate consensus from all claims"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        {generatingConsensus ? "Generating..." : "Consensus"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAIRewrite("short_definition", "short definition", shortDefinition, setShortDefinition)
+                      }
+                      disabled={aiLoadingField === "short_definition" || !name}
+                      className="text-xs px-2 py-1 rounded bg-amber-900/30 text-amber-100/80 hover:bg-amber-900/50 disabled:opacity-50 flex items-center gap-1"
+                      title="Generate or rewrite with AI"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {aiLoadingField === "short_definition" ? "Working..." : "AI"}
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   value={shortDefinition}
@@ -984,9 +1374,41 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
 
           {/* Sources & Claims */}
           <div className="border-t border-amber-900/30 pt-4">
-            <h3 className="text-sm font-semibold text-amber-100/80 mb-3 uppercase tracking-wide">
-              Sources & Claims
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-amber-100/80 uppercase tracking-wide">
+                Sources & Claims
+              </h3>
+              {entity?.id && (
+                <button
+                  type="button"
+                  onClick={handleGenerateAllClaims}
+                  disabled={generatingClaims || !name.trim()}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg text-xs flex items-center gap-1.5 transition-colors"
+                  title="Generate claims for all available properties"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {generatingClaims ? "Generating..." : "Generate All Claims"}
+                </button>
+              )}
+            </div>
+            {generatingClaims && claimsProgress.total > 0 && (
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs text-amber-100/60 mb-1">
+                  <span>Generating claims...</span>
+                  <span>
+                    {claimsProgress.current} / {claimsProgress.total}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-600 transition-all duration-300"
+                    style={{ 
+                      width: `${Math.min(100, (claimsProgress.current / claimsProgress.total) * 100)}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             {!entity?.id ? (
               <div className="text-sm text-amber-100/60">
                 Save this entity first to add sources and claims.
@@ -1055,8 +1477,8 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
                       className="px-3 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100"
                     >
                       <option value="">Select source (optional)</option>
-                      {sources.map((source) => (
-                        <option key={source.id} value={source.id}>
+                      {sources.map((source, index) => (
+                        <option key={source.id || `source-${index}`} value={source.id}>
                           {source.title}
                           {source.author ? ` — ${source.author}` : ""}
                         </option>
@@ -1193,7 +1615,7 @@ export default function EntityModal({ entity, graphType, onClose, onSave }: Enti
                   ]);
                   const sourcesData = await sourcesRes.json();
                   const claimsData = await claimsRes.json();
-                  setSources(sourcesData.items || []);
+                  setSources(deduplicateSources(sourcesData.items || []));
                   setClaims(claimsData.items || []);
                 } catch (err) {
                   // ignore

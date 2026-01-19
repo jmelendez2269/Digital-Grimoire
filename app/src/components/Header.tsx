@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedbackModal from "./FeedbackModal";
-import { ChevronDown, Search, ArrowUpDown } from "lucide-react";
+import { ChevronDown, Search, ArrowUpDown, Network } from "lucide-react";
 import AdvancedFilters from "@/components/AdvancedFilters";
 
 interface LibrarySearchProps {
@@ -78,6 +78,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
     { label: "Import Sacred Text", icon: "🌐", href: "/admin/import-sacred-text" },
     { label: "Courses", icon: "📚", href: "/admin/courses" },
     { label: "Knowledge Graph", icon: "🕸️", href: "/admin/knowledge-graph" },
+    { label: "Embeddings", icon: "🔮", href: "/admin/embeddings" },
     { label: "Feedback", icon: "💬", href: "/admin/feedback" },
     // To add new admin pages, add entries here!
   ];
@@ -89,7 +90,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
         <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
           <svg
             viewBox="0 0 100 100"
-            className="h-8 w-8 text-amber-500/70"
+            className="h-10 w-10 text-amber-500/70"
             fill="currentColor"
           >
             <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -97,61 +98,75 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" />
             <circle cx="50" cy="50" r="3" fill="currentColor" />
           </svg>
-          <span className="text-xl font-bold text-amber-100">Convergence</span>
+          <span className="text-2xl font-serif font-semibold text-amber-100 tracking-wide">Convergence</span>
         </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden items-center gap-8 md:flex flex-1 ml-8">
           <Link
             href="/library"
-            className={`text-sm font-medium transition-colors ${isActive("/library")
+            className={`text-base font-medium tracking-wide transition-colors ${isActive("/library")
               ? "text-amber-400"
               : "text-zinc-400 hover:text-amber-300"
               }`}
           >
-            📚 Library
+            Library
           </Link>
           <Link
             href="/courses"
-            className={`text-sm font-medium transition-colors ${isActive("/courses") || pathname?.startsWith("/courses/")
+            onClick={async () => {
+              try {
+                await fetch('/api/track/courses-click', { method: 'POST', body: JSON.stringify({ source: 'header' }) });
+              } catch (e) {
+                // Silently fail - tracking shouldn't block navigation
+              }
+            }}
+            className={`text-base font-medium tracking-wide transition-colors ${isActive("/courses") || pathname?.startsWith("/courses/")
               ? "text-amber-400"
               : "text-zinc-400 hover:text-amber-300"
               }`}
-            // #region agent log
-            data-debug-href="/courses"
-            data-debug-text="🎓 Courses"
-          // #endregion
           >
-            🎓 Courses
+            Courses
           </Link>
           <Link
             href="/journal"
-            className={`text-sm font-medium transition-colors ${isActive("/journal") || pathname?.startsWith("/journal/")
+            className={`text-base font-medium tracking-wide transition-colors ${isActive("/journal") || pathname?.startsWith("/journal/")
               ? "text-amber-400"
               : "text-zinc-400 hover:text-amber-300"
               }`}
             // #region agent log
             data-debug-href="/journal"
-            data-debug-text="📝 Journal"
+            data-debug-text="Journal"
           // #endregion
           >
-            📝 Journal
+            Journal
           </Link>
           <Link
-            href="/convergence-machine"
-            className={`text-sm font-medium transition-colors ${isActive("/convergence-machine")
+            href="/dashboard"
+            className={`flex items-center gap-1.5 text-base font-medium tracking-wide transition-colors ${isActive("/dashboard")
               ? "text-amber-400"
               : "text-zinc-400 hover:text-amber-300"
               }`}
           >
-            ⚡ Convergence Machine
+            <Search className="w-4 h-4" />
+            Search
+          </Link>
+          <Link
+            href="/convergence-graph"
+            className={`flex items-center gap-1.5 text-base font-medium tracking-wide transition-colors ${isActive("/convergence-graph")
+              ? "text-amber-400"
+              : "text-zinc-400 hover:text-amber-300"
+              }`}
+          >
+            <Network className="w-4 h-4" />
+            Graph
           </Link>
 
           {/* More Menu - Coming Soon Features */}
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-              className="flex items-center gap-1 text-sm font-medium text-zinc-400 transition-colors hover:text-amber-300"
+              className="flex items-center gap-1 text-base font-medium tracking-wide text-zinc-400 transition-colors hover:text-amber-300"
             >
               More
               <ChevronDown className={`w-4 h-4 transition-transform ${moreMenuOpen ? 'rotate-180' : ''}`} />
@@ -164,15 +179,6 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 </div>
                 <div className="px-3 py-1.5 text-sm text-zinc-500">
                   <div className="flex items-center gap-2 py-1">
-                    <span>🎵</span>
-                    <span>Media</span>
-                  </div>
-                  <div className="flex items-center gap-2 py-1">
-                    <span>🔮</span>
-                    <span>Correspondences</span>
-                  </div>
-                  <div className="flex items-center gap-2 py-1">
-                    <span>⚗️</span>
                     <span>Ritual Machine</span>
                   </div>
                 </div>
@@ -186,7 +192,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
           {/* Feedback Button - Always accessible */}
           <button
             onClick={() => setFeedbackModalOpen(true)}
-            className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-medium text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+            className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base font-medium tracking-wide text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
             aria-label="Send Feedback"
           >
             <span className="text-base">💬</span>
@@ -213,7 +219,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-medium text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base font-medium tracking-wide text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
                 aria-label="User menu"
                 aria-expanded={menuOpen}
               >
@@ -355,15 +361,6 @@ function Header({ librarySearch }: HeaderProps = {}) {
                       </div>
                       <div className="px-4 py-2 text-sm text-zinc-500">
                         <div className="flex items-center gap-3 py-1">
-                          <span className="text-base">🎵</span>
-                          <span>Media</span>
-                        </div>
-                        <div className="flex items-center gap-3 py-1">
-                          <span className="text-base">🔮</span>
-                          <span>Correspondences</span>
-                        </div>
-                        <div className="flex items-center gap-3 py-1">
-                          <span className="text-base">⚗️</span>
                           <span>Ritual Machine</span>
                         </div>
                       </div>
@@ -455,13 +452,13 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-amber-300"
+                className="text-base font-medium tracking-wide text-zinc-400 transition-colors hover:text-amber-300"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-400"
+                className="rounded-md bg-amber-500 px-5 py-2.5 text-base font-semibold tracking-wide text-zinc-950 transition-colors hover:bg-amber-400"
               >
                 Sign Up
               </Link>

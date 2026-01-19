@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2, Book, AlertCircle } from 'lucide-react';
 import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
 import BookResultCard from '@/components/DeepSearch/BookResultCard';
+
+interface ConceptSuggestion {
+    id: string;
+    name: string;
+    slug: string;
+}
 
 interface BookResult {
     text_id: string;
@@ -14,6 +20,8 @@ interface BookResult {
         content: string;
         similarity: number;
         chunk_index: number;
+        sentence?: string;
+        summary?: string;
     }>;
 }
 
@@ -23,10 +31,105 @@ export default function DeepSearchPanel() {
     const [results, setResults] = useState<{ relatedTerms: string[], books: BookResult[] } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
+    
+    // Autocomplete suggestions state
+    const [suggestions, setSuggestions] = useState<ConceptSuggestion[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+    
+    const inputRef = useRef<HTMLInputElement>(null);
+    const suggestionsRef = useRef<HTMLDivElement>(null);
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
-    async function handleSearch(e?: React.FormEvent) {
+    // Fetch suggestions from API
+    const fetchSuggestions = useCallback(async (searchQuery: string) => {
+        // Cancel previous request if any
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        
+        // Create new abort controller
+        abortControllerRef.current = new AbortController();
+        
+        setLoadingSuggestions(true);
+        
+        try {
+            const res = await fetch(`/api/concepts?q=${encodeURIComponent(searchQuery)}&limit=8`, {
+                credentials: 'include',
+                signal: abortControllerRef.current.signal,
+            });
+            
+            if (!res.ok) {
+                throw new Error('Failed to fetch suggestions');
+            }
+            
+            const data = await res.json();
+            const concepts = (data.items || []).map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                slug: item.slug,
+            }));
+            
+            setSuggestions(concepts);
+            setShowSuggestions(concepts.length > 0);
+            setSelectedIndex(-1);
+        } catch (err: any) {
+            // Ignore abort errors
+            if (err.name !== 'AbortError') {
+                console.error('Error fetching suggestions:', err);
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } finally {
+            setLoadingSuggestions(false);
+        }
+    }, []);
+
+    // Debounced suggestion fetching
+    useEffect(() => {
+        // Clear previous timer
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        
+        // Cancel previous request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        
+        if (query.length >= 3) {
+            // Debounce API call
+            debounceTimerRef.current = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300);
+        } else {
+            // Hide suggestions if query is too short
+            setSuggestions([]);
+            setShowSuggestions(false);
+            setSelectedIndex(-1);
+        }
+        
+        // Cleanup
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, [query, fetchSuggestions]);
+
+    // Handle search
+    const handleSearch = useCallback(async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
         if (!query.trim()) return;
+
+        // Hide suggestions when searching
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
 
         setLoading(true);
         setError(null);
@@ -63,7 +166,78 @@ export default function DeepSearchPanel() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [query]);
+
+    // Handle keyboard navigation
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!showSuggestions || suggestions.length === 0) {
+            // If Enter is pressed without suggestions, trigger search
+            if (e.key === 'Enter') {
+                handleSearch(e);
+            }
+            return;
+        }
+        
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedIndex((prev) => 
+                    prev < suggestions.length - 1 ? prev + 1 : prev
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+                    const selected = suggestions[selectedIndex];
+                    setQuery(selected.name);
+                    setShowSuggestions(false);
+                    setSelectedIndex(-1);
+                    inputRef.current?.blur();
+                } else {
+                    handleSearch(e);
+                }
+                break;
+            case 'Escape':
+                e.preventDefault();
+                setShowSuggestions(false);
+                setSelectedIndex(-1);
+                break;
+            case 'Tab':
+                setShowSuggestions(false);
+                setSelectedIndex(-1);
+                break;
+        }
+    }, [showSuggestions, suggestions, selectedIndex, handleSearch]);
+
+    // Handle suggestion selection
+    const handleSuggestionClick = useCallback((suggestion: ConceptSuggestion) => {
+        setQuery(suggestion.name);
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        inputRef.current?.focus();
+    }, []);
+
+    // Handle input focus
+    const handleInputFocus = useCallback(() => {
+        if (query.length >= 3 && suggestions.length > 0) {
+            setShowSuggestions(true);
+        }
+    }, [query.length, suggestions.length]);
+
+    // Handle input blur (with delay to allow clicks)
+    const handleInputBlur = useCallback(() => {
+        // Small delay to allow click events on suggestions
+        setTimeout(() => {
+            if (suggestionsRef.current && !suggestionsRef.current.contains(document.activeElement)) {
+                setShowSuggestions(false);
+                setSelectedIndex(-1);
+            }
+        }, 200);
+    }, []);
 
     return (
         <div className="w-full">
@@ -71,11 +245,15 @@ export default function DeepSearchPanel() {
             <div className="mb-8">
                 <form onSubmit={handleSearch} className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-amber-600/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="relative flex items-center bg-zinc-900/80 border border-amber-900/30 rounded-xl overflow-hidden focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/50 shadow-2xl transition-all">
+                    <div className="relative flex items-center bg-zinc-900/80 border border-amber-900/30 rounded-xl overflow-visible focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/50 shadow-2xl transition-all">
                         <input
+                            ref={inputRef}
                             type="text"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
                             placeholder="Enter a complex concept like 'Parabrahman' or 'Alchemy'..."
                             className="w-full px-6 py-4 bg-transparent text-amber-100 placeholder-amber-100/30 outline-none text-lg"
                         />
@@ -91,6 +269,70 @@ export default function DeepSearchPanel() {
                             )}
                         </button>
                     </div>
+                    
+                    {/* Suggestions Dropdown */}
+                    {showSuggestions && (
+                        <div
+                            ref={suggestionsRef}
+                            className="absolute top-full left-0 right-0 mt-1 bg-zinc-900/95 border border-amber-900/30 rounded-lg shadow-2xl z-50 max-h-64 overflow-y-auto"
+                        >
+                            {loadingSuggestions ? (
+                                <div className="px-4 py-3 text-amber-100/60 text-sm flex items-center gap-2">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>Loading suggestions...</span>
+                                </div>
+                            ) : suggestions.length === 0 ? (
+                                <div className="px-4 py-3 text-amber-100/40 text-sm">
+                                    No suggestions found
+                                </div>
+                            ) : (
+                                <div className="py-1">
+                                    {suggestions.map((suggestion, index) => {
+                                        // Highlight the search query in the suggestion name
+                                        const highlightName = (name: string, searchQuery: string) => {
+                                            if (!searchQuery || searchQuery.length < 3) return name;
+                                            
+                                            const queryLower = searchQuery.toLowerCase();
+                                            const nameLower = name.toLowerCase();
+                                            const queryIndex = nameLower.indexOf(queryLower);
+                                            
+                                            if (queryIndex === -1) return name;
+                                            
+                                            const before = name.substring(0, queryIndex);
+                                            const match = name.substring(queryIndex, queryIndex + searchQuery.length);
+                                            const after = name.substring(queryIndex + searchQuery.length);
+                                            
+                                            return (
+                                                <>
+                                                    {before}
+                                                    <mark className="bg-amber-500/30 text-amber-200 px-0.5 rounded font-medium">
+                                                        {match}
+                                                    </mark>
+                                                    {after}
+                                                </>
+                                            );
+                                        };
+                                        
+                                        return (
+                                            <button
+                                                key={suggestion.id}
+                                                type="button"
+                                                onClick={() => handleSuggestionClick(suggestion)}
+                                                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                                                    index === selectedIndex
+                                                        ? 'bg-amber-900/30 text-amber-200'
+                                                        : 'text-amber-100/80 hover:bg-amber-900/20 hover:text-amber-100'
+                                                }`}
+                                                onMouseEnter={() => setSelectedIndex(index)}
+                                            >
+                                                {highlightName(suggestion.name, query)}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </form>
             </div>
 
@@ -127,7 +369,7 @@ export default function DeepSearchPanel() {
                     <div className="space-y-4">
                         {results.books.length > 0 ? (
                             results.books.map((book) => (
-                                <BookResultCard key={book.text_id} book={book} />
+                                <BookResultCard key={book.text_id} book={book} searchQuery={query} />
                             ))
                         ) : (
                             <div className="text-center py-12 text-amber-100/40">

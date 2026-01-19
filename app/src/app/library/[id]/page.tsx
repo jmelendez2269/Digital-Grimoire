@@ -24,7 +24,8 @@ import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TableOfContents, { TOCItem } from '@/components/TableOfContents';
-import { formatFileSize, formatDate } from '@/lib/utils/formatting';
+import { formatFileSize, formatDate, cleanHtmlText } from '@/lib/utils/formatting';
+import { extractPDFText } from '@/lib/utils/pdf-text-extractor';
 import { useAuth } from '@/contexts/AuthContext';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -159,6 +160,34 @@ export default function DocumentDetailPage() {
   // TTS Controls Reference
   const audioControlsRef = useRef<any>(null);
 
+  // Full text extracted from HTML for TTS matching
+  const [htmlFullText, setHtmlFullText] = useState<string | null>(null);
+  
+  // Full text extracted from PDF for TTS matching
+  const [pdfFullText, setPdfFullText] = useState<string | null>(null);
+  
+  // Handler to set HTML full text with logging
+  const handleHtmlFullTextExtracted = useCallback((text: string) => {
+    console.log('[DocumentDetailPage] ✅ HTML full text extracted callback called:', {
+      length: text.length,
+      preview: text.substring(0, 200),
+      firstChars: text.substring(0, 50)
+    });
+    setHtmlFullText(text);
+  }, []);
+  
+  // Debug: Log when htmlFullText changes
+  useEffect(() => {
+    if (htmlFullText) {
+      console.log('[DocumentDetailPage] ✅ htmlFullText state updated:', {
+        length: htmlFullText.length,
+        preview: htmlFullText.substring(0, 200)
+      });
+    } else {
+      console.log('[DocumentDetailPage] htmlFullText is null');
+    }
+  }, [htmlFullText]);
+
   useEffect(() => {
     // Load FloatingAISearch after component mounts to avoid webpack resolution issues
     import('@/components/FloatingAISearch').then((mod) => {
@@ -171,9 +200,68 @@ export default function DocumentDetailPage() {
   // Memoize full text and chapter offsets for TTS synchronization
   const { fullText, chapterOffsets } = useMemo(() => {
     if (!document?.metadata?.chapters || !document.metadata.isStructuredText) {
-      // For non-structured text, just use the document content if available
+      // For HTML documents, use extracted full text if available, otherwise fallback to document.content
+      // Check both source_format and htmlUrl to detect HTML documents
+      // If htmlUrl exists and we don't have pdfUrl, it's likely an HTML document
+      const isHtmlDocument = htmlUrl && !pdfUrl && !document?.metadata?.isStructuredText;
+      
+      console.log('[DocumentDetailPage] Computing fullText:', {
+        isHtmlDocument,
+        hasHtmlUrl: !!htmlUrl,
+        sourceFormat: document?.source_format,
+        isStructuredText: document?.metadata?.isStructuredText,
+        hasPdfUrl: !!pdfUrl,
+        hasHtmlFullText: !!htmlFullText,
+        htmlFullTextLength: htmlFullText?.length || 0,
+        documentContentLength: document?.content?.length || 0
+      });
+      
+      // If we have htmlFullText, use it regardless of detection (it means HTMLViewer extracted it)
+      if (htmlFullText && htmlFullText.length > 100) {
+        // Use the full text extracted from rendered HTML
+        console.log('[DocumentDetailPage] ✅ Using extracted HTML fullText for TTS:', {
+          length: htmlFullText.length,
+          preview: htmlFullText.substring(0, 200)
+        });
+        return {
+          fullText: htmlFullText,
+          chapterOffsets: {} as Record<string, number>
+        };
+      }
+      
+      // If we have pdfFullText, use it for PDF documents
+      if (pdfFullText && pdfFullText.length > 100) {
+        console.log('[DocumentDetailPage] ✅ Using extracted PDF fullText for TTS:', {
+          length: pdfFullText.length,
+          preview: pdfFullText.substring(0, 200)
+        });
+        return {
+          fullText: pdfFullText,
+          chapterOffsets: {} as Record<string, number>
+        };
+      }
+      
+      if (isHtmlDocument && !htmlFullText) {
+        console.warn('[DocumentDetailPage] ⚠️ HTML document but htmlFullText not available yet, using document.content fallback');
+      }
+      
+      // For non-structured text, clean HTML from document content before using for TTS
+      const rawContent = document?.content || '';
+      const cleanedContent = rawContent ? cleanHtmlText(rawContent) : '';
+      
+      // Debug: Log if we cleaned HTML
+      if (rawContent && (rawContent.includes('<') || rawContent.includes('&'))) {
+        console.log('[DocumentDetailPage] Cleaned fullText for TTS:', {
+          originalLength: rawContent.length,
+          cleanedLength: cleanedContent.length,
+          hadHtml: true,
+          originalPreview: rawContent.substring(0, 200),
+          cleanedPreview: cleanedContent.substring(0, 200)
+        });
+      }
+      
       return {
-        fullText: document?.content || '',
+        fullText: cleanedContent,
         chapterOffsets: {} as Record<string, number>
       };
     }
@@ -228,7 +316,7 @@ export default function DocumentDetailPage() {
       fullText: texts.join(separator),
       chapterOffsets: offsets
     };
-  }, [document]);
+  }, [document, htmlUrl, htmlFullText, pdfFullText]);
 
   // Handle Audio Player Ready
   const handleAudioPlayerReady = useCallback((controls: any) => {
@@ -397,92 +485,166 @@ export default function DocumentDetailPage() {
   // Handle block click for TTS (HTML)
   const handleBlockClick = useCallback((text: string) => {
     try {
+      console.log('[TTS] handleBlockClick called:', {
+        clickedTextLength: text.length,
+        clickedTextPreview: text.substring(0, 100),
+        fullTextLength: fullText?.length || 0,
+        fullTextPreview: fullText?.substring(0, 200) || 'null',
+        hasControls: !!audioControlsRef.current
+      });
+      
       if (!audioControlsRef.current || !fullText || typeof fullText !== 'string') {
         console.warn('[TTS] Missing required data for block click', {
           hasControls: !!audioControlsRef.current,
           hasFullText: !!fullText,
-          fullTextType: typeof fullText
+          fullTextType: typeof fullText,
+          fullTextLength: fullText?.length || 0
         });
         return;
       }
 
-      if (!text || typeof text !== 'string' || text.trim().length === 0) {
-        console.warn('[TTS] Invalid text for block click', { text: text?.substring(0, 50) });
+      // Clean the clicked text to ensure no HTML artifacts
+      const cleanedText = cleanHtmlText(text);
+      
+      // Debug: Log cleaning process
+      if (text !== cleanedText) {
+        console.log('[TTS] Cleaned clicked text:', {
+          original: text.substring(0, 100),
+          cleaned: cleanedText.substring(0, 100),
+          hadHtml: text.includes('<') || text.includes('&')
+        });
+      }
+      
+      if (!cleanedText || typeof cleanedText !== 'string' || cleanedText.trim().length === 0) {
+        console.warn('[TTS] Invalid text for block click after cleaning', { 
+          originalText: text?.substring(0, 50),
+          cleanedText: cleanedText?.substring(0, 50)
+        });
         return;
       }
+      
+      // Also check if fullText has HTML and warn
+      if (fullText.includes('<') || fullText.includes('&')) {
+        console.warn('[TTS] WARNING: fullText contains HTML! This will be read aloud. FullText preview:', fullText.substring(0, 200));
+      }
 
-      // Normalize function for search
-      const normalizeForSearch = (t: string) => t.replace(/\s+/g, ' ').trim();
-      const normalizedClicked = normalizeForSearch(text);
+      // Normalize function for search (preserve punctuation but normalize whitespace)
+      const normalizeForSearch = (t: string) => {
+        return t
+          .replace(/\s+/g, ' ') // Normalize all whitespace to single space
+          .trim();
+      };
+      
+      const normalizedClicked = normalizeForSearch(cleanedText);
       const normalizedFull = normalizeForSearch(fullText);
 
       // Try multiple search strategies
       let index = -1;
       let searchMethod = '';
+      const searchResults: Array<{ method: string; index: number }> = [];
 
-      // Strategy 1: Exact match in original text
-      index = fullText.indexOf(text);
+      // Strategy 1: Exact match in original text (using cleaned text)
+      index = fullText.indexOf(cleanedText);
       if (index !== -1) {
         searchMethod = 'exact';
+        searchResults.push({ method: 'exact', index });
       }
 
-      // Strategy 2: Normalized match
+      // Strategy 2: Normalized match (case-insensitive, whitespace normalized)
       if (index === -1) {
-        index = normalizedFull.indexOf(normalizedClicked);
+        const clickedLower = cleanedText.toLowerCase().replace(/\s+/g, ' ').trim();
+        const fullLower = fullText.toLowerCase().replace(/\s+/g, ' ').trim();
+        index = fullLower.indexOf(clickedLower);
         if (index !== -1) {
           searchMethod = 'normalized';
+          searchResults.push({ method: 'normalized', index });
         }
       }
 
-      // Strategy 3: First 100 chars match (for long paragraphs)
-      if (index === -1 && text.length > 100) {
-        const shortText = text.substring(0, 100);
+      // Strategy 3: First 50 chars match (for long paragraphs)
+      if (index === -1 && cleanedText.length > 50) {
+        const shortText = cleanedText.substring(0, 50).trim();
         index = fullText.indexOf(shortText);
         if (index !== -1) {
-          searchMethod = 'short-exact';
+          searchMethod = 'short-50-exact';
+          searchResults.push({ method: 'short-50-exact', index });
         }
       }
 
-      // Strategy 4: First 100 chars normalized
-      if (index === -1 && normalizedClicked.length > 100) {
-        const shortNormalized = normalizedClicked.substring(0, 100);
+      // Strategy 4: First 50 chars normalized
+      if (index === -1 && normalizedClicked.length > 50) {
+        const shortNormalized = normalizedClicked.substring(0, 50);
         index = normalizedFull.indexOf(shortNormalized);
         if (index !== -1) {
-          searchMethod = 'short-normalized';
+          searchMethod = 'short-50-normalized';
+          searchResults.push({ method: 'short-50-normalized', index });
         }
       }
 
-      // Strategy 5: Fuzzy match with regex (handles whitespace variations)
+      // Strategy 5: First 30 chars match (very short match)
+      if (index === -1 && cleanedText.length > 30) {
+        const veryShortText = cleanedText.substring(0, 30).trim();
+        index = fullText.indexOf(veryShortText);
+        if (index !== -1) {
+          searchMethod = 'short-30-exact';
+          searchResults.push({ method: 'short-30-exact', index });
+        }
+      }
+
+      // Strategy 6: Fuzzy match with regex (handles whitespace variations)
       if (index === -1) {
         try {
           // Escape special regex characters but allow flexible whitespace
-          const escaped = normalizedClicked.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const escaped = cleanedText
+            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            .substring(0, 100); // Limit length for performance
           const flexiblePattern = escaped.replace(/\s+/g, '\\s+');
           const regex = new RegExp(flexiblePattern, 'i');
           const match = fullText.match(regex);
           if (match && match.index !== undefined) {
             index = match.index;
             searchMethod = 'regex';
+            searchResults.push({ method: 'regex', index });
           }
         } catch (regexError) {
           console.warn('[TTS] Regex search failed:', regexError);
         }
       }
 
+      // Strategy 7: Find first few words
+      if (index === -1) {
+        const firstWords = cleanedText.split(/\s+/).slice(0, 5).join(' ').trim();
+        if (firstWords.length > 10) {
+          index = fullText.indexOf(firstWords);
+          if (index !== -1) {
+            searchMethod = 'first-words';
+            searchResults.push({ method: 'first-words', index });
+          }
+        }
+      }
+
       if (index !== -1 && index >= 0 && index < fullText.length) {
-        console.log(`[TTS] Seek to ${index} (HTML, Method: ${searchMethod}, Text length: ${text.length})`);
+        console.log(`[TTS] ✅ Found position ${index} using method: ${searchMethod}`, {
+          clickedTextPreview: cleanedText.substring(0, 80),
+          foundTextPreview: fullText.substring(index, index + 80),
+          allResults: searchResults
+        });
         audioControlsRef.current.startFromPosition(index);
       } else {
-        console.warn('[TTS] Could not find clicked text in full content', { 
-          clickedText: text.substring(0, 50),
-          normalizedClicked: normalizedClicked.substring(0, 50),
-          fullTextLength: fullText.length
+        console.error('[TTS] ❌ Could not find clicked text in full content', { 
+          clickedTextLength: cleanedText.length,
+          clickedTextPreview: cleanedText.substring(0, 100),
+          normalizedClickedPreview: normalizedClicked.substring(0, 100),
+          fullTextLength: fullText.length,
+          fullTextPreview: fullText.substring(0, 200),
+          normalizedFullPreview: normalizedFull.substring(0, 200),
+          searchResults
         });
       }
     } catch (error) {
       console.error('[TTS] Error in handleBlockClick:', error);
     }
-  }, [fullText]);
+  }, [fullText, audioControlsRef]);
 
   const fetchDocument = useCallback(async () => {
     if (!documentId) return;
@@ -519,7 +681,15 @@ export default function DocumentDetailPage() {
       setDocument(data as TextDocument);
 
       // Check if this is an HTML file (not structured text, source_format is html)
-      const isHtmlFile = data.source_format === 'html' && !data.metadata?.isStructuredText;
+      // Fallback: if source_format is null, check file extension from s3_key
+      let isHtmlFile = data.source_format === 'html' && !data.metadata?.isStructuredText;
+      
+      // Fallback detection: check file extension when source_format is null
+      if (!isHtmlFile && !data.source_format && data.s3_key && !data.metadata?.isStructuredText) {
+        const filename = data.s3_key.split('/').pop() || '';
+        const fileExtension = filename.split('.').pop()?.toLowerCase() || '';
+        isHtmlFile = fileExtension === 'html' || fileExtension === 'htm';
+      }
 
       // If document has S3 key, fetch the signed URL from R2
       if (data.s3_key && data.status === 'ready') {
@@ -572,6 +742,9 @@ export default function DocumentDetailPage() {
 
   useEffect(() => {
     if (documentId) {
+      // Reset extracted text when document changes
+      setHtmlFullText(null);
+      setPdfFullText(null);
       fetchDocument();
       fetchAnnotations();
     }
@@ -750,10 +923,24 @@ export default function DocumentDetailPage() {
   }, []);
 
   // Handle PDF document load - MEMOIZED to prevent re-creation
-  const handleDocumentLoad = useCallback((totalPages: number) => {
+  const handleDocumentLoad = useCallback(async (totalPages: number) => {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
-  }, []);
+    
+    // Extract full text from PDF for TTS matching
+    if (pdfUrl) {
+      try {
+        const extracted = await extractPDFText(pdfUrl);
+        console.log('[DocumentDetailPage] ✅ PDF full text extracted:', {
+          length: extracted.fullText.length,
+          preview: extracted.fullText.substring(0, 200)
+        });
+        setPdfFullText(extracted.fullText);
+      } catch (err) {
+        console.error('[DocumentDetailPage] Error extracting PDF text:', err);
+      }
+    }
+  }, [pdfUrl]);
 
   // Handle HTML document load - wrapper for HTMLViewer (no parameters)
   // This handler matches HTMLViewer's expected signature: () => void
@@ -1270,6 +1457,7 @@ export default function DocumentDetailPage() {
                         onDocumentLoad={handleHTMLDocumentLoad}
                         onTextSelected={handleTextSelected}
                         onBlockClick={handleBlockClick}
+                        onFullTextExtracted={handleHtmlFullTextExtracted}
                       />
                     ) : pdfUrl && document.status === 'ready' ? (
                       <PDFViewer
@@ -1467,7 +1655,7 @@ export default function DocumentDetailPage() {
           {document && document.status === 'ready' && (
             <AudioPlayer
               documentId={documentId}
-              ocrText={fullText || document.content}
+              ocrText={fullText || (document.content ? cleanHtmlText(document.content) : '')}
               pdfUrl={pdfUrl}
               defaultCollapsed={true}
               onReady={handleAudioPlayerReady}

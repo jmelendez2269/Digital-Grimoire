@@ -13,6 +13,7 @@
     "perf:debug": "npx @unlighthouse/cli --debug --no-cache",
     "seed:kybalion": "tsx scripts/seed-kybalion.ts",
     "seed:correspondences": "tsx scripts/seed-correspondences.ts",
+    "seed:convergence": "tsx scripts/seed-convergence.ts",
     "summary": "tsx scripts/generate-session-summary.ts",
     "verify:stripe": "tsx scripts/verify-stripe-prices.ts"
   },

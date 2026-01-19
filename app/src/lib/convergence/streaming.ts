@@ -37,10 +37,33 @@ export async function streamConvergenceResponse(
   });
 
   // Step 2: Generate multi-lens response
-  const response = await generateMultiLensResponse(query, lensWeights, context);
+  const responseWithTokens = await generateMultiLensResponse(query, lensWeights, context);
 
-  // Step 3: Save to conversation history
+  // Step 3: Save to conversation history (extract MultiLensResponse without tokenUsage)
+  const { tokenUsage, ...response } = responseWithTokens;
   await saveConversationHistory(userId, query, lensWeights, response);
+
+  // Log usage and costs
+  const supabase = await createClient();
+  const { data: recentQuery } = await supabase
+    .from('convergence_queries')
+    .select('id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  await logConvergenceQueryUsage({
+    inputTokens: tokenUsage.inputTokens,
+    outputTokens: tokenUsage.outputTokens,
+    userId,
+    queryId: recentQuery?.id,
+    queryText: query,
+    lensWeights: lensWeights as unknown as Record<string, number>,
+    success: true,
+  });
+
+  console.log(`[Usage Tracking] Logged convergence query usage for user ${userId} via streamConvergenceResponse`);
 
   return response;
 }
@@ -55,6 +78,8 @@ export async function* createSSEStream(
   userId: string,
   responseLength: ResponseLength = 'short'
 ): AsyncGenerator<string, void, unknown> {
+  let totalTokenUsage = { inputTokens: 0, outputTokens: 0 };
+  
   try {
     // Send initial message
     yield `data: ${JSON.stringify({ type: 'start', message: 'Starting convergence analysis...' })}\n\n`;
@@ -83,7 +108,9 @@ export async function* createSSEStream(
     // Generate synthesis FIRST using brief lens summaries (much faster and cheaper)
     yield `data: ${JSON.stringify({ type: 'status', message: 'Generating synthesis...' })}\n\n`;
     
-    const synthesis = await generateSynthesisFromSummaries(query, lensWeights, context, lengthConfig);
+    const synthesisResult = await generateSynthesisFromSummaries(query, lensWeights, context, lengthConfig);
+    const synthesis = synthesisResult.synthesis;
+    totalTokenUsage = synthesisResult.tokenUsage; // Update the outer variable, don't redeclare
 
     // Collect sources from context (for synthesis display)
     const sourceMap = new Map<string, { 
@@ -141,13 +168,17 @@ export async function* createSSEStream(
     await saveConversationHistory(userId, query, lensWeights, response);
 
     // Track token usage and costs
-    // Note: Token usage is tracked in lens-orchestrator via global variable
-    // This is a temporary solution - in production, functions should return usage
-    const tokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
+    // Token usage is now returned from generateSynthesisFromSummaries
+    console.log(`[Token Tracking] Total usage: ${totalTokenUsage.inputTokens} input, ${totalTokenUsage.outputTokens} output tokens`);
+    
+    // Validate token usage before logging
+    if (totalTokenUsage.inputTokens === 0 && totalTokenUsage.outputTokens === 0) {
+      console.warn(`[Usage Tracking] ⚠️ WARNING: Token usage is zero for user ${userId}. This may indicate a tracking issue.`);
+    }
     
     // Get query ID from the most recent query
     const supabase = await createClient();
-    const { data: recentQuery } = await supabase
+    const { data: recentQuery, error: queryError } = await supabase
       .from('convergence_queries')
       .select('id')
       .eq('user_id', userId)
@@ -155,10 +186,20 @@ export async function* createSSEStream(
       .limit(1)
       .single();
 
+    if (queryError) {
+      console.warn(`[Usage Tracking] Could not find recent query for user ${userId}:`, queryError);
+    }
+
     // Log usage and costs
+    console.log(`[Usage Tracking] Logging convergence query usage for user ${userId}:`, {
+      inputTokens: totalTokenUsage.inputTokens,
+      outputTokens: totalTokenUsage.outputTokens,
+      queryId: recentQuery?.id,
+    });
+    
     await logConvergenceQueryUsage({
-      inputTokens: tokenUsage.input,
-      outputTokens: tokenUsage.output,
+      inputTokens: totalTokenUsage.inputTokens,
+      outputTokens: totalTokenUsage.outputTokens,
       userId,
       queryId: recentQuery?.id,
       queryText: query,
@@ -167,8 +208,7 @@ export async function* createSSEStream(
       success: true,
     });
 
-    // Reset token usage tracker
-    (globalThis as any).__convergenceTokenUsage = { input: 0, output: 0 };
+    console.log(`[Usage Tracking] ✅ Logged convergence query usage for user ${userId}`);
 
     // Final message
     yield `data: ${JSON.stringify({ 
@@ -181,11 +221,15 @@ export async function* createSSEStream(
     console.error('Error in SSE stream:', error);
     
     // Log failed query usage if we have any token data
-    const tokenUsage = (globalThis as any).__convergenceTokenUsage || { input: 0, output: 0 };
-    if (tokenUsage.input > 0 || tokenUsage.output > 0) {
+    // Try to get token usage from the error context if available
+    const tokenUsage = (totalTokenUsage && (totalTokenUsage.inputTokens > 0 || totalTokenUsage.outputTokens > 0)) 
+      ? totalTokenUsage 
+      : { inputTokens: 0, outputTokens: 0 };
+    
+    if (tokenUsage.inputTokens > 0 || tokenUsage.outputTokens > 0) {
       await logConvergenceQueryUsage({
-        inputTokens: tokenUsage.input,
-        outputTokens: tokenUsage.output,
+        inputTokens: tokenUsage.inputTokens,
+        outputTokens: tokenUsage.outputTokens,
         userId,
         queryText: query,
         lensWeights: lensWeights as unknown as Record<string, number>,
@@ -193,7 +237,7 @@ export async function* createSSEStream(
         success: false,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });
-      (globalThis as any).__convergenceTokenUsage = { input: 0, output: 0 };
+      console.log(`[Usage Tracking] Logged failed convergence query usage for user ${userId}`);
     }
     
     yield `data: ${JSON.stringify({ 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { slugifyEntityName } from "@/lib/graph/entity-utils";
 
 async function isAdmin() {
   const supabase = await createSupabaseServerClient();
@@ -100,11 +101,49 @@ export async function POST(req: NextRequest) {
       resolvedTypeId = typeRow?.id;
     }
 
+    // Check for existing entity by slug (primary check)
+    const finalSlug = slug || slugifyEntityName(name);
+    let { data: existingEntity } = await svc
+      .from("correspondences")
+      .select("id, name, slug, category")
+      .eq("slug", finalSlug)
+      .maybeSingle();
+
+    // If not found by slug, check by exact name match (case-insensitive)
+    if (!existingEntity) {
+      const { data: nameMatch } = await svc
+        .from("correspondences")
+        .select("id, name, slug, category")
+        .ilike("name", name.trim())
+        .maybeSingle();
+      
+      // Only use if it's an exact match (case-insensitive)
+      if (nameMatch && nameMatch.name.toLowerCase().trim() === name.toLowerCase().trim()) {
+        existingEntity = nameMatch;
+      }
+    }
+
+    // If entity already exists, return error with existing entity info
+    if (existingEntity) {
+      return NextResponse.json(
+        { 
+          error: "Entity already exists",
+          existingEntity: {
+            id: existingEntity.id,
+            name: existingEntity.name,
+            slug: existingEntity.slug,
+            category: existingEntity.category
+          }
+        },
+        { status: 409 } // 409 Conflict
+      );
+    }
+
     const { data, error } = await svc
       .from("correspondences")
       .insert({
         name,
-        slug,
+        slug: finalSlug,
         category: resolvedCategory,
         type_id: resolvedTypeId,
         aliases,

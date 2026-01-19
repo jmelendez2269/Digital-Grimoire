@@ -80,3 +80,72 @@ export const LENS_DESCRIPTIONS: Record<string, string> = {
   'mathematical': 'Sacred geometry, numerology, patterns, universal ratios'
 };
 
+/**
+ * Clean HTML text by removing all HTML tags and decoding entities
+ * This ensures TTS doesn't read HTML markup
+ * 
+ * @param text - Text that may contain HTML tags or entities
+ * @returns Clean plain text suitable for TTS
+ */
+export function cleanHtmlText(text: string): string {
+  if (!text) return '';
+  
+  // Create a temporary DOM element to decode HTML entities
+  // This handles all HTML entities, not just the common ones
+  const tempDiv = typeof document !== 'undefined' 
+    ? document.createElement('div')
+    : null;
+  
+  if (tempDiv) {
+    // Use innerHTML to decode entities, then get textContent to remove tags
+    tempDiv.innerHTML = text;
+    let cleaned = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Fallback: if textContent still has HTML-like patterns, strip them
+    cleaned = cleaned
+      .replace(/<[^>]+>/g, ' ') // Remove any remaining tags
+      .replace(/&[#\w]+;/g, ' ') // Remove any remaining entities
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+    
+    return cleaned;
+  }
+  
+  // Server-side fallback: manual entity decoding
+  return text
+    .replace(/<[^>]+>/g, ' ') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–')
+    .replace(/&hellip;/g, '…')
+    .replace(/&copy;/g, '©')
+    .replace(/&reg;/g, '®')
+    .replace(/&trade;/g, '™')
+    // Decode numeric entities (&#123; and &#x1F;)
+    .replace(/&#(\d+);/g, (_, num) => {
+      try {
+        return String.fromCharCode(parseInt(num, 10));
+      } catch {
+        return ' ';
+      }
+    })
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+      try {
+        return String.fromCharCode(parseInt(hex, 16));
+      } catch {
+        return ' ';
+      }
+    })
+    // Remove any remaining entities
+    .replace(/&[#\w]+;/g, ' ')
+    // Normalize whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Maximize, Minimize, ZoomIn, ZoomOut, RotateCw, Loader2, AlertCircle } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { TextPosition } from '@/lib/types';
+import { cleanHtmlText } from '@/lib/utils/formatting';
 
 interface HTMLViewerProps {
   fileUrl: string;
@@ -11,6 +12,7 @@ interface HTMLViewerProps {
   onDocumentLoad?: () => void;
   onTextSelected?: (selection: { text: string; position: TextPosition }) => void;
   onBlockClick?: (text: string) => void;
+  onFullTextExtracted?: (fullText: string) => void;
 }
 
 const MIN_ZOOM = 0.25;
@@ -23,6 +25,7 @@ export default function HTMLViewer({
   onDocumentLoad,
   onTextSelected,
   onBlockClick,
+  onFullTextExtracted,
 }: HTMLViewerProps) {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -55,16 +58,43 @@ export default function HTMLViewer({
       const blockElements = container.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
 
       const handleClick = (e: MouseEvent) => {
-        // Only trigger if no text is selected (to allow selection without triggering TTS)
+        // Check for text selection FIRST - if user is selecting text, don't trigger TTS
         const selection = window.getSelection();
-        if (selection && selection.toString().trim().length > 0) return;
+        const hasSelection = selection && selection.toString().trim().length > 0;
+        
+        if (hasSelection) {
+          console.log('[HTMLViewer] Click ignored - text is selected:', selection?.toString().substring(0, 50));
+          return; // User is selecting text, don't trigger TTS
+        }
 
+        // IMPORTANT: Stop propagation FIRST to prevent text selection handler from interfering
         e.stopPropagation();
         e.preventDefault();
-        const target = e.currentTarget as HTMLElement;
-        const text = target.textContent || '';
         
-        if (!text.trim()) return;
+        const target = e.currentTarget as HTMLElement;
+        const rawText = target.textContent || '';
+        
+        if (!rawText.trim()) {
+          console.warn('[HTMLViewer] Click ignored - no text content');
+          return;
+        }
+
+        // Clean the text to remove any HTML artifacts before passing to TTS
+        const text = cleanHtmlText(rawText);
+        
+        // Debug: Log what we're cleaning
+        if (rawText !== text) {
+          console.log('[HTMLViewer] Text cleaned:', {
+            before: rawText.substring(0, 100),
+            after: text.substring(0, 100),
+            hadHtml: rawText.includes('<') || rawText.includes('&')
+          });
+        }
+        
+        if (!text.trim()) {
+          console.warn('[HTMLViewer] Click ignored - no text after cleaning');
+          return;
+        }
 
         // Get exact click position within the element
         let clickOffset = 0;
@@ -91,13 +121,19 @@ export default function HTMLViewer({
         (target as any)._ttsClickOffset = clickOffset;
         (target as any)._ttsParagraphText = text.trim();
 
-        console.log('[HTMLViewer] Block clicked:', {
+        console.log('[HTMLViewer] ✅ Block clicked for TTS:', {
           text: text.substring(0, 50),
           clickOffset,
-          elementTextLength: text.length
+          elementTextLength: text.length,
+          hasOnBlockClick: !!onBlockClick
         });
 
-        onBlockClick(text.trim());
+        // Call the handler - ensure it exists
+        if (onBlockClick) {
+          onBlockClick(text.trim());
+        } else {
+          console.error('[HTMLViewer] ❌ onBlockClick handler is not defined!');
+        }
       };
 
       blockElements.forEach(el => {
@@ -107,10 +143,11 @@ export default function HTMLViewer({
         // Remove existing listener if any (safety check)
         const existingEl = el as any;
         if (existingEl._ttsClickHandler) {
-          el.removeEventListener('click', existingEl._ttsClickHandler);
+          el.removeEventListener('click', existingEl._ttsClickHandler, true);
         }
         
-        el.addEventListener('click', handleClick as EventListener);
+        // Use capture phase to ensure click handler runs before other handlers
+        el.addEventListener('click', handleClick as EventListener, true);
         existingEl._ttsClickHandler = handleClick; // Store reference for cleanup
         el.classList.add('cursor-read-aloud'); // Add marker class
         (el as HTMLElement).style.cursor = 'pointer';
@@ -163,7 +200,7 @@ export default function HTMLViewer({
         blockElements.forEach(el => {
           const existingEl = el as any;
           if (existingEl._ttsClickHandler) {
-            el.removeEventListener('click', existingEl._ttsClickHandler);
+            el.removeEventListener('click', existingEl._ttsClickHandler, true);
             delete existingEl._ttsClickHandler;
           }
           (el as HTMLElement).style.cursor = '';
@@ -266,6 +303,19 @@ export default function HTMLViewer({
         // Get the body HTML (or root HTML if no body)
         const processedHtml = doc.body ? doc.body.innerHTML : doc.documentElement.innerHTML;
 
+        // Extract full text for TTS matching - use the full document text content, not just innerHTML
+        // This ensures we get all text including from nested elements
+        const fullDocumentText = doc.body ? doc.body.textContent || doc.body.innerText || '' : doc.documentElement.textContent || doc.documentElement.innerText || '';
+        const fullText = cleanHtmlText(fullDocumentText || processedHtml || sanitized);
+        
+        console.log('[HTMLViewer] Extracted full text for TTS:', {
+          length: fullText.length,
+          preview: fullText.substring(0, 200),
+          hasCallback: !!onFullTextExtracted,
+          source: fullDocumentText ? 'textContent' : (processedHtml ? 'innerHTML' : 'sanitized')
+        });
+        onFullTextExtracted?.(fullText);
+
         setHtmlContent(processedHtml);
         onDocumentLoad?.();
       } catch (err) {
@@ -349,30 +399,35 @@ export default function HTMLViewer({
     };
   }, []);
 
-  // Handle text selection
-  const handleTextSelection = useCallback(() => {
+  // Handle text selection (with delay to avoid interfering with click handlers)
+  const handleTextSelection = useCallback((e: React.MouseEvent) => {
     if (!onTextSelected) return;
 
-    const selection = window.getSelection();
-    const selectedText = selection?.toString().trim();
+    // Add a small delay to ensure click handlers have processed first
+    // This prevents text selection from interfering with TTS click-to-read
+    setTimeout(() => {
+      const selection = window.getSelection();
+      const selectedText = selection?.toString().trim();
 
-    if (selectedText && selectedText.length > 0) {
-      const range = selection?.getRangeAt(0);
-      if (range && contentRef.current) {
-        const rect = range.getBoundingClientRect();
-        const containerRect = contentRef.current.getBoundingClientRect();
+      // Only trigger if there's actually selected text (not just a click)
+      if (selectedText && selectedText.length > 0) {
+        const range = selection?.getRangeAt(0);
+        if (range && contentRef.current) {
+          const rect = range.getBoundingClientRect();
+          const containerRect = contentRef.current.getBoundingClientRect();
 
-        onTextSelected({
-          text: selectedText,
-          position: {
-            x: rect.left - containerRect.left,
-            y: rect.top - containerRect.top,
-            width: rect.width,
-            height: rect.height,
-          },
-        });
+          onTextSelected({
+            text: selectedText,
+            position: {
+              x: rect.left - containerRect.left,
+              y: rect.top - containerRect.top,
+              width: rect.width,
+              height: rect.height,
+            },
+          });
+        }
       }
-    }
+    }, 150); // Delay to let click handlers process first
   }, [onTextSelected]);
 
   if (loading) {

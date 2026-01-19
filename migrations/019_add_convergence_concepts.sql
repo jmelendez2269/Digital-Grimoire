@@ -6,6 +6,7 @@ create table if not exists public.convergence_concepts (
   slug text unique not null,
   name text not null,
   tradition text not null,
+  tradition_id uuid, -- Optional FK to convergence_traditions (added by migration 031)
   era text,
   short_definition text,
   primary_sources text[] default '{}',

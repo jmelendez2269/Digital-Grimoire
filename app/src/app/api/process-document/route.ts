@@ -112,21 +112,51 @@ export async function POST(request: NextRequest) {
         const response = await s3Client.send(getCommand);
         const htmlContent = await response.Body?.transformToString() || '';
         
-        // Extract plain text from HTML (simple regex-based extraction)
-        // Remove script and style content
-        extractedText = htmlContent
+        // Extract plain text from HTML (improved extraction)
+        // Remove script and style content first
+        let cleanedHtml = htmlContent
           .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
           .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
           .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
-          // Replace HTML tags with spaces
-          .replace(/<[^>]+>/g, ' ')
-          // Decode common HTML entities
+          .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
+          .replace(/<object[^>]*>[\s\S]*?<\/object>/gi, '')
+          .replace(/<embed[^>]*>[\s\S]*?<\/embed>/gi, '');
+        
+        // Replace HTML tags with spaces (multiple passes to catch nested tags)
+        cleanedHtml = cleanedHtml.replace(/<[^>]+>/g, ' ');
+        
+        // Decode HTML entities (comprehensive list)
+        extractedText = cleanedHtml
           .replace(/&nbsp;/g, ' ')
           .replace(/&amp;/g, '&')
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'")
+          .replace(/&apos;/g, "'")
+          .replace(/&mdash;/g, '—')
+          .replace(/&ndash;/g, '–')
+          .replace(/&hellip;/g, '…')
+          .replace(/&copy;/g, '©')
+          .replace(/&reg;/g, '®')
+          .replace(/&trade;/g, '™')
+          // Decode numeric entities (&#123; and &#x1F;)
+          .replace(/&#(\d+);/g, (_, num) => {
+            try {
+              return String.fromCharCode(parseInt(num, 10));
+            } catch {
+              return ' ';
+            }
+          })
+          .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+            try {
+              return String.fromCharCode(parseInt(hex, 16));
+            } catch {
+              return ' ';
+            }
+          })
+          // Remove any remaining entities
+          .replace(/&[#\w]+;/g, ' ')
           // Clean up whitespace
           .replace(/\s+/g, ' ')
           .replace(/\n{3,}/g, '\n\n')

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { Sparkles, Link2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Link2, CheckCircle2, Edit, Maximize2 } from "lucide-react";
 import ConvertPropertyModal from "@/components/admin/ConvertPropertyModal";
+import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import { parsePropertyValue } from "@/lib/graph/entity-utils";
 
 interface KnowledgeClaim {
@@ -36,7 +38,10 @@ export default function EntityDetails({
   const [convertModalClaim, setConvertModalClaim] = useState<KnowledgeClaim | null>(null);
   const [entityConnectionStatus, setEntityConnectionStatus] = useState<Map<string, { exists: boolean; connected: boolean; relationships?: any[]; entity?: any }>>(new Map());
   const [checkingConnections, setCheckingConnections] = useState(false);
+  const [connectionsProgress, setConnectionsProgress] = useState({ current: 0, total: 0 });
+  const [showExpandModal, setShowExpandModal] = useState(false);
   const { isAdmin } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const loadClaims = async () => {
@@ -74,8 +79,9 @@ export default function EntityDetails({
     setCheckingConnections(true);
     const statusMap = new Map();
     
-    // Process all checks in parallel for better performance
-    const checkPromises: Promise<void>[] = [];
+    // Count total values to check for progress tracking
+    let totalChecks = 0;
+    const valuesToCheck: Array<{ claimId: string; value: string }> = [];
     
     for (const claim of claims) {
       if (!claim.field_value || !claim.field_value.trim()) continue;
@@ -84,32 +90,50 @@ export default function EntityDetails({
       const values = parsePropertyValue(claim.field_value);
       
       for (const value of values) {
-        const promise = (async () => {
-          try {
-            const res = await fetch(
-              `/api/graph/check-entity-connection?propertyValue=${encodeURIComponent(value)}&currentEntityId=${entity.id}`
-            );
-            if (res.ok) {
-              const data = await res.json();
-              // Ensure we have the expected structure
-              if (data && typeof data === 'object') {
-                statusMap.set(`${claim.id}-${value}`, {
-                  exists: data.exists === true,
-                  connected: data.connected === true,
-                  relationships: data.relationships || [],
-                  entity: data.entity,
-                });
-              }
-            } else {
-              const errorData = await res.json().catch(() => ({}));
-              console.error(`Failed to check connection for ${value}:`, errorData);
-            }
-          } catch (err) {
-            console.error(`Error checking connection for ${value}:`, err);
-          }
-        })();
-        checkPromises.push(promise);
+        valuesToCheck.push({ claimId: claim.id, value });
+        totalChecks++;
       }
+    }
+    
+    setConnectionsProgress({ current: 0, total: totalChecks });
+    
+    // Process all checks in parallel for better performance
+    const checkPromises: Promise<void>[] = [];
+    const completedChecksRef = { current: 0 };
+    
+    const updateProgress = () => {
+      completedChecksRef.current++;
+      setConnectionsProgress({ current: completedChecksRef.current, total: totalChecks });
+    };
+    
+    for (const { claimId, value } of valuesToCheck) {
+      const promise = (async () => {
+        try {
+          const res = await fetch(
+            `/api/graph/check-entity-connection?propertyValue=${encodeURIComponent(value)}&currentEntityId=${entity.id}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            // Ensure we have the expected structure
+            if (data && typeof data === 'object') {
+              statusMap.set(`${claimId}-${value}`, {
+                exists: data.exists === true,
+                connected: data.connected === true,
+                relationships: data.relationships || [],
+                entity: data.entity,
+              });
+            }
+          } else {
+            const errorData = await res.json().catch(() => ({}));
+            console.error(`Failed to check connection for ${value}:`, errorData);
+          }
+        } catch (err) {
+          console.error(`Error checking connection for ${value}:`, err);
+        } finally {
+          updateProgress();
+        }
+      })();
+      checkPromises.push(promise);
     }
     
     // Wait for all checks to complete
@@ -117,6 +141,7 @@ export default function EntityDetails({
     
     setEntityConnectionStatus(statusMap);
     setCheckingConnections(false);
+    setConnectionsProgress({ current: 0, total: 0 });
   }, [claims, entity?.id, isAdmin]);
 
   useEffect(() => {
@@ -149,13 +174,41 @@ export default function EntityDetails({
   
   const hasAdditionalInfo = hasDescription || hasAliases || hasLenses || hasClaims;
 
+  const handleEdit = () => {
+    router.push(`/admin/knowledge-graph?editId=${entity.id}&graphType=correspondences`);
+  };
+
   return (
     <div>
       <div className="mb-4">
-        <div className="text-xs uppercase tracking-wide text-amber-100/50 mb-1">
-          {entity.category}
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex-1">
+            <div className="inline-block px-2.5 py-1 bg-amber-900/30 border border-amber-700/40 rounded-md mb-2">
+              <div className="text-xs uppercase tracking-wide text-amber-200 font-medium">
+                {entity.category}
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-amber-100 leading-tight">{entity.name}</div>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            {isAdmin && (
+              <button
+                onClick={handleEdit}
+                className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-amber-100/70 hover:text-amber-100 transition-colors border border-amber-900/30 hover:border-amber-700/50"
+                title="Edit entity"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={() => setShowExpandModal(true)}
+              className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-amber-100/70 hover:text-amber-100 transition-colors border border-amber-900/30 hover:border-amber-700/50"
+              title="Expand view"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <div className="text-xl font-semibold text-amber-100">{entity.name}</div>
       </div>
       
       {hasDescription && (
@@ -198,6 +251,24 @@ export default function EntityDetails({
               <span className="text-xs text-amber-100/40 italic">Checking connections...</span>
             )}
           </div>
+          {checkingConnections && isAdmin && connectionsProgress.total > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-xs text-amber-100/60 mb-1">
+                <span>Loading connections...</span>
+                <span>
+                  {connectionsProgress.current} / {connectionsProgress.total}
+                </span>
+              </div>
+              <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-600 transition-all duration-300"
+                  style={{ 
+                    width: `${Math.min(100, (connectionsProgress.current / connectionsProgress.total) * 100)}%` 
+                  }}
+                />
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             {claims
               .filter(c => c.field_value && String(c.field_value).trim() !== '')
@@ -322,6 +393,15 @@ export default function EntityDetails({
             }, 1000);
             setConvertModalClaim(null);
           }}
+        />
+      )}
+
+      {/* Expand Detail Modal */}
+      {showExpandModal && entity && (
+        <EntityDetailModal
+          entity={entity}
+          graphType="correspondences"
+          onClose={() => setShowExpandModal(false)}
         />
       )}
     </div>

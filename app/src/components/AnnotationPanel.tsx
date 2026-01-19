@@ -513,6 +513,105 @@ export default function AnnotationPanel({
         </div>
       )}
 
+      {/* Save to Journal Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-amber-900/30 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-amber-100">Save to Journal</h3>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Mode Selection */}
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="saveMode"
+                    value="new"
+                    checked={saveMode === 'new'}
+                    onChange={(e) => setSaveMode(e.target.value as 'new' | 'existing')}
+                    className="w-4 h-4 text-amber-500"
+                  />
+                  <span className="text-amber-100">New Page</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="saveMode"
+                    value="existing"
+                    checked={saveMode === 'existing'}
+                    onChange={(e) => setSaveMode(e.target.value as 'new' | 'existing')}
+                    className="w-4 h-4 text-amber-500"
+                  />
+                  <span className="text-amber-100">Existing Page</span>
+                </label>
+              </div>
+
+              {/* Page Selection (only show if existing mode) */}
+              {saveMode === 'existing' && (
+                <div>
+                  <label className="block text-sm font-medium text-amber-100/80 mb-2">
+                    Select Page
+                  </label>
+                  {loadingPages ? (
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Loading pages...</span>
+                    </div>
+                  ) : existingPages.length === 0 ? (
+                    <p className="text-zinc-400 text-sm">No pages available. Create a new page instead.</p>
+                  ) : (
+                    <select
+                      value={selectedPageId}
+                      onChange={(e) => setSelectedPageId(e.target.value)}
+                      className="w-full bg-zinc-800 border border-amber-900/20 rounded-lg px-4 py-2 text-amber-100 focus:outline-none focus:border-amber-500/50"
+                    >
+                      <option value="">-- Select a page --</option>
+                      {existingPages.map((page) => (
+                        <option key={page.id} value={page.id}>
+                          {page.icon} {page.title}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-amber-900/20 rounded-lg text-sm text-amber-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={performSave}
+                  disabled={savingToJournal || (saveMode === 'existing' && !selectedPageId)}
+                  className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-zinc-900 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingToJournal ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Category Filter */}
       {annotations.length > 0 && (
         <div className="mb-4 flex items-center gap-2 flex-wrap">

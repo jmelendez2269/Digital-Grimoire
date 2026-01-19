@@ -7,7 +7,7 @@ import DashboardSearchHub from "@/components/DashboardSearchHub";
 import ConvergenceMachineInfo from "@/components/ConvergenceMachineInfo";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { BookOpen, Tablet } from "lucide-react";
+import { BookOpen, Tablet, Network, GraduationCap } from "lucide-react";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -49,12 +49,13 @@ export default function Home() {
             <h2 className="mb-6 text-2xl font-bold text-amber-100 text-center">
               Explore Your Tools
             </h2>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {/* Library Card */}
               <Link
                 href="/library"
-                className="group rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900"
+                className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
               >
+                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 to-amber-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 <div className="mb-4 flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
                     <BookOpen className="w-6 h-6 text-amber-400" />
@@ -71,13 +72,14 @@ export default function Home() {
               {/* Digital Grimoire Card */}
               <Link
                 href="/journal"
-                className="group rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-purple-500/50 hover:bg-zinc-900"
+                className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-indigo-500/50 hover:bg-zinc-900 overflow-visible"
               >
+                <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/30 to-indigo-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/20">
-                    <Tablet className="w-6 h-6 text-purple-400" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20">
+                    <Tablet className="w-6 h-6 text-indigo-400" />
                   </div>
-                  <h3 className="text-xl font-bold text-purple-100 group-hover:text-purple-400">
+                  <h3 className="text-xl font-bold text-indigo-100 group-hover:text-indigo-400">
                     {journalName}
                   </h3>
                 </div>
@@ -86,10 +88,57 @@ export default function Home() {
                 </p>
               </Link>
 
+              {/* Graph Card */}
+              <Link
+                href="/convergence-graph"
+                className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 to-cyan-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
+                    <Network className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
+                    Graph
+                  </h3>
+                </div>
+                <p className="text-sm text-zinc-400">
+                  Explore connections between concepts, traditions, and ideas through an interactive knowledge graph.
+                </p>
+              </Link>
+
+              {/* Courses Card */}
+              <Link
+                href="/courses"
+                onClick={async (e) => {
+                  try {
+                    await fetch('/api/track/courses-click', { 
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ source: 'card' }) 
+                    });
+                  } catch (err) {
+                    // Silently fail - tracking shouldn't block navigation
+                  }
+                }}
+                className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-blue-500/50 hover:bg-zinc-900 overflow-visible"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/30 to-blue-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/20">
+                    <GraduationCap className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-blue-100 group-hover:text-blue-400">
+                    Courses
+                  </h3>
+                </div>
+                <p className="text-sm text-zinc-400">
+                  Structured learning paths through esoteric wisdom traditions.
+                </p>
+              </Link>
+
               {/* Convergence Machine Card */}
-              <div>
-                <ConvergenceMachineInfo />
-              </div>
+              <ConvergenceMachineInfo />
             </div>
           </div>
 

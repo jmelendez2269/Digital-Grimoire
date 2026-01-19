@@ -29,28 +29,74 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const timeRange = searchParams.get('range') || '30'; // days
     const daysAgo = parseInt(timeRange);
+    const personal = searchParams.get('personal') === 'true';
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysAgo);
 
-    // Get daily usage summary
-    const { data: dailySummary, error: summaryError } = await supabase
-      .from('daily_usage_summary')
-      .select('*')
-      .gte('date', startDate.toISOString().split('T')[0])
-      .order('date', { ascending: true });
-
-    if (summaryError) throw summaryError;
-
-    // Get total API usage by service
-    const { data: usageByService, error: usageError } = await supabase
+    // Build base query for api_usage
+    let usageQuery = supabase
       .from('api_usage')
       .select('service, units_used, unit_type, estimated_cost')
       .gte('created_at', startDate.toISOString());
 
+    // If personal mode, filter by current user
+    if (personal) {
+      usageQuery = usageQuery.eq('user_id', user.id);
+      console.log(`[ADMIN USAGE] Personal mode: filtering for user ${user.id}`);
+    }
+
+    // Get total API usage by service
+    const { data: usageByService, error: usageError } = await usageQuery;
+
     if (usageError) throw usageError;
 
+    // Get daily usage summary (only if not personal mode, as daily summary is aggregated)
+    let dailySummary = [];
+    if (!personal) {
+      const { data: summaryData, error: summaryError } = await supabase
+        .from('daily_usage_summary')
+        .select('*')
+        .gte('date', startDate.toISOString().split('T')[0])
+        .order('date', { ascending: true });
+
+      if (summaryError) throw summaryError;
+      dailySummary = summaryData || [];
+    }
+
+    if (usageError) {
+      console.error('[ADMIN USAGE] Error fetching usage data:', usageError);
+      throw usageError;
+    }
+
     console.log(`[ADMIN USAGE] Found ${usageByService?.length || 0} usage records for the last ${daysAgo} days`);
+    
+    // Debug: Show breakdown by service
+    if (usageByService && usageByService.length > 0) {
+      const serviceBreakdown = (usageByService || []).reduce((acc: any, curr: any) => {
+        const service = curr.service || 'unknown';
+        acc[service] = (acc[service] || 0) + 1;
+        return acc;
+      }, {});
+      console.log('[ADMIN USAGE] Service breakdown:', serviceBreakdown);
+      
+      // Specifically check for convergence_query
+      const convergenceRecords = (usageByService || []).filter((r: any) => r.service === 'convergence_query');
+      console.log(`[ADMIN USAGE] Convergence query records: ${convergenceRecords.length}`);
+      if (convergenceRecords.length > 0) {
+        console.log('[ADMIN USAGE] Sample convergence record:', {
+          service: convergenceRecords[0].service,
+          units_used: convergenceRecords[0].units_used,
+          unit_type: convergenceRecords[0].unit_type,
+          estimated_cost: convergenceRecords[0].estimated_cost,
+        });
+      }
+    } else {
+      console.warn('[ADMIN USAGE] ⚠️ No usage records found. This may indicate:');
+      console.warn('  1. No API calls have been made in the selected time range');
+      console.warn('  2. Usage tracking is not working');
+      console.warn('  3. Database constraint may not allow convergence_query service');
+    }
 
     // Aggregate by service
     const serviceStats = (usageByService || []).reduce((acc: any, curr: any) => {
@@ -68,20 +114,32 @@ export async function GET(request: NextRequest) {
       acc[service].requests += 1;
       return acc;
     }, {});
+    
+    console.log('[ADMIN USAGE] Aggregated service stats:', Object.keys(serviceStats));
 
     // Get user activity summary
-    const { data: userActivity, error: activityError } = await supabase
+    let userActivityQuery = supabase
       .from('user_activity_summary')
       .select('*')
       .gte('date', startDate.toISOString().split('T')[0])
       .order('date', { ascending: true });
 
+    if (personal) {
+      userActivityQuery = userActivityQuery.eq('user_id', user.id);
+    }
+
+    const { data: userActivity, error: activityError } = await userActivityQuery;
+
     if (activityError) throw activityError;
 
-    // Get top users by activity
-    const { data: topUsers, error: topUsersError } = await supabase
-      .rpc('get_top_users_by_activity', { days: daysAgo })
-      .limit(10);
+    // Get top users by activity (only if not personal mode)
+    let topUsers = [];
+    if (!personal) {
+      const { data: topUsersData, error: topUsersError } = await supabase
+        .rpc('get_top_users_by_activity', { days: daysAgo })
+        .limit(10);
+      topUsers = topUsersData || [];
+    }
 
     // Get storage usage (latest snapshot)
     const { data: storageUsage, error: storageError } = await supabase
@@ -102,20 +160,31 @@ export async function GET(request: NextRequest) {
     const weekAgoDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const { data: dailyCostData } = await supabase
+    // Build cost queries with optional user filter
+    let dailyCostQuery = supabase
       .from('api_usage')
       .select('estimated_cost')
       .gte('created_at', dayAgoDate.toISOString());
 
-    const { data: weeklyCostData } = await supabase
+    let weeklyCostQuery = supabase
       .from('api_usage')
       .select('estimated_cost')
       .gte('created_at', weekAgoDate.toISOString());
 
-    const { data: monthlyCostData } = await supabase
+    let monthlyCostQuery = supabase
       .from('api_usage')
       .select('estimated_cost')
       .gte('created_at', monthStartDate.toISOString());
+
+    if (personal) {
+      dailyCostQuery = dailyCostQuery.eq('user_id', user.id);
+      weeklyCostQuery = weeklyCostQuery.eq('user_id', user.id);
+      monthlyCostQuery = monthlyCostQuery.eq('user_id', user.id);
+    }
+
+    const { data: dailyCostData } = await dailyCostQuery;
+    const { data: weeklyCostData } = await weeklyCostQuery;
+    const { data: monthlyCostData } = await monthlyCostQuery;
 
     const currentCosts = {
       daily: (dailyCostData || []).reduce((sum, row) => sum + parseFloat(row.estimated_cost || '0'), 0),
@@ -133,25 +202,41 @@ export async function GET(request: NextRequest) {
     });
     console.log('[ADMIN USAGE] Service stats:', Object.values(serviceStats));
 
-    // Get total users count
-    const { count: totalUsers } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
+    // Get total users count (only if not personal mode)
+    let totalUsers = 0;
+    let totalDocuments = 0;
+    let recentUploads = 0;
 
-    // Get total documents count
-    const { count: totalDocuments } = await supabase
-      .from('texts')
-      .select('*', { count: 'exact', head: true });
+    if (!personal) {
+      const { count: usersCount } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+      totalUsers = usersCount || 0;
 
-    // Get recent uploads (last 7 days)
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const { count: recentUploads } = await supabase
-      .from('texts')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', sevenDaysAgo.toISOString());
+      const { count: documentsCount } = await supabase
+        .from('texts')
+        .select('*', { count: 'exact', head: true });
+      totalDocuments = documentsCount || 0;
+
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const { count: uploadsCount } = await supabase
+        .from('texts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', sevenDaysAgo.toISOString());
+      recentUploads = uploadsCount || 0;
+    } else {
+      // In personal mode, get user's own document counts
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const { count: uploadsCount } = await supabase
+        .from('texts')
+        .select('*', { count: 'exact', head: true })
+        .eq('uploaded_by', user.id)
+        .gte('created_at', sevenDaysAgo.toISOString());
+      recentUploads = uploadsCount || 0;
+    }
 
     // Get recent errors
-    const { data: recentErrors, error: errorsError } = await supabase
+    let errorsQuery = supabase
       .from('api_usage')
       .select('*')
       .eq('success', false)
@@ -159,22 +244,35 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(20);
 
+    if (personal) {
+      errorsQuery = errorsQuery.eq('user_id', user.id);
+    }
+
+    const { data: recentErrors, error: errorsError } = await errorsQuery;
+
+    // Aggregate Courses clicks from user activity
+    const totalCoursesClicks = (userActivity || []).reduce((sum, activity) => {
+      return sum + (activity.courses_clicks || 0);
+    }, 0);
+
     return NextResponse.json({
       success: true,
+      personal,
       timeRange: daysAgo,
       startDate: startDate.toISOString(),
       overview: {
-        totalUsers: totalUsers || 0,
-        totalDocuments: totalDocuments || 0,
-        recentUploads: recentUploads || 0,
+        totalUsers,
+        totalDocuments,
+        recentUploads,
+        coursesClicks: totalCoursesClicks,
         currentCosts,
       },
-      dailySummary: dailySummary || [],
+      dailySummary,
       serviceStats: Object.values(serviceStats),
       userActivity: userActivity || [],
-      topUsers: topUsers || [],
-      storageUsage: storageUsage || null,
-      costAlerts: costAlerts || [],
+      topUsers,
+      storageUsage: personal ? null : (storageUsage || null), // Don't show storage in personal mode
+      costAlerts: personal ? [] : (costAlerts || []), // Don't show cost alerts in personal mode
       recentErrors: recentErrors || [],
     });
   } catch (error) {

@@ -12,6 +12,7 @@ interface UsageMetrics {
     totalUsers: number;
     totalDocuments: number;
     recentUploads: number;
+    coursesClicks: number;
     currentCosts: {
       daily: number;
       weekly: number;
@@ -97,11 +98,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [personalMode, setPersonalMode] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     checkAdminAndFetchMetrics();
-  }, [timeRange]);
+  }, [timeRange, personalMode]);
 
   const checkAdminAndFetchMetrics = async () => {
     const supabase = createClient();
@@ -132,8 +134,9 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       
-      // Fetch usage metrics
-      const metricsResponse = await fetch(`/api/admin/usage?range=${timeRange}`);
+      // Fetch usage metrics (with personal mode if enabled)
+      const personalParam = personalMode ? '&personal=true' : '';
+      const metricsResponse = await fetch(`/api/admin/usage?range=${timeRange}${personalParam}`);
       
       if (!metricsResponse.ok) {
         console.error('Failed to fetch metrics:', metricsResponse.status, metricsResponse.statusText);
@@ -190,6 +193,8 @@ export default function AdminDashboard() {
       openai_metadata: 'OpenAI Metadata',
       r2_storage: 'R2 Storage',
       r2_bandwidth: 'R2 Bandwidth',
+      convergence_query: 'Convergence Machine',
+      notion: 'Notion API',
       other: 'Other',
     };
     return names[service] || service;
@@ -201,6 +206,8 @@ export default function AdminDashboard() {
       openai_metadata: '🤖',
       r2_storage: '💾',
       r2_bandwidth: '📡',
+      convergence_query: '🔮',
+      notion: '📝',
       other: '📊',
     };
     return icons[service] || '📊';
@@ -243,8 +250,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Time Range Selector */}
-          <div className="flex gap-2">
+          {/* Time Range Selector and Personal Mode Toggle */}
+          <div className="flex gap-2 items-center">
             {['7', '30', '90'].map((days) => (
               <button
                 key={days}
@@ -258,6 +265,18 @@ export default function AdminDashboard() {
                 Last {days} days
               </button>
             ))}
+            <div className="ml-4 flex items-center gap-2">
+              <button
+                onClick={() => setPersonalMode(!personalMode)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  personalMode
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-zinc-800 text-amber-100 hover:bg-zinc-700'
+                }`}
+              >
+                {personalMode ? '👤 My Usage' : '🌐 All Usage'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -271,7 +290,7 @@ export default function AdminDashboard() {
         ) : metrics ? (
           <div className="space-y-6">
             {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <div className="text-amber-100/60 text-sm mb-1">Total Users</div>
                 <div className="text-3xl font-bold text-amber-100">
@@ -294,12 +313,36 @@ export default function AdminDashboard() {
               </div>
 
               <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                <div className="text-amber-100/60 text-sm mb-1">Courses Clicks</div>
+                <div className="text-3xl font-bold text-blue-400">
+                  {metrics.overview.coursesClicks || 0}
+                </div>
+                <div className="text-xs text-amber-100/60 mt-1">
+                  Total clicks on Courses
+                </div>
+              </div>
+
+              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
                 <div className="text-amber-100/60 text-sm mb-1">Monthly Cost</div>
                 <div className="text-3xl font-bold text-green-400">
                   {formatCurrency(metrics.overview.currentCosts.monthly)}
                 </div>
               </div>
             </div>
+
+            {/* Personal Usage Info Banner */}
+            {personalMode && (
+              <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">👤</span>
+                  <h3 className="text-lg font-semibold text-purple-200">Your Personal Usage</h3>
+                </div>
+                <p className="text-sm text-purple-200/80">
+                  Showing your personal AI usage statistics. This includes all queries you've made, even on the free tier.
+                  Your usage is tracked regardless of subscription status.
+                </p>
+              </div>
+            )}
 
             {/* Cost Overview */}
             <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
