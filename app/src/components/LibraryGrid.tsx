@@ -75,14 +75,21 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
                       ))}
                     </div>
 
-                    {/* Summary / Note */}
-                    {text.short_summary ? (
-                      <p className="text-xs text-zinc-300 leading-relaxed font-light">{text.short_summary}</p>
-                    ) : text.curator_note ? (
-                      <div className="pt-1 border-t border-white/10">
+                    {/* Summary */}
+                    {text.short_summary && (
+                      <div className="mb-2">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">Summary</span>
+                        <p className="text-xs text-zinc-300 leading-relaxed font-light">{text.short_summary}</p>
+                      </div>
+                    )}
+
+                    {/* Curator Note */}
+                    {text.curator_note && (
+                      <div className="pt-2 border-t border-white/10">
+                        <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-wider block mb-1">Curator Note</span>
                         <p className="text-xs text-zinc-400 italic font-serif">"{text.curator_note}"</p>
                       </div>
-                    ) : null}
+                    )}
                   </div>
 
                   {/* Footer: Actions */}
