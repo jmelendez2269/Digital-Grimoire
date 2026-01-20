@@ -5,134 +5,33 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-zinc-800 bg-zinc-900/95 backdrop-blur">
-      <div className="mx-auto max-w-7xl px-4 py-1.5 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
-          {/* About */}
-          <div className="flex flex-col">
-            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100">
-              About
-            </h3>
-            <ul className="space-y-0.5">
-              <li>
-                <Link
-                  href="/about"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/mission"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  Our Mission
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/team"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  Team
-                </Link>
-              </li>
-            </ul>
+    <footer className="border-t border-white/5 bg-black py-4 mt-auto">
+      <div className="mx-auto max-w-7xl px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+
+        {/* System ID / Copyright */}
+        <div className="flex items-center gap-4">
+          <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
+            SYS.VER.2.0 // CONVERGENCE
+          </div>
+          <div className="hidden md:block w-px h-3 bg-zinc-800"></div>
+          <p className="text-xs text-zinc-500 font-mono">
+            © {currentYear} ALL RIGHTS RESERVED
+          </p>
+        </div>
+
+        {/* Status Indicators */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-emerald-900 rounded-full border border-emerald-500/50"></div>
+            <span className="text-[10px] font-mono text-zinc-500 uppercase">Neural Link: STABLE</span>
           </div>
 
-          {/* Resources */}
-          <div className="flex flex-col">
-            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100">
-              Resources
-            </h3>
-            <ul className="space-y-0.5">
-              <li>
-                <Link
-                  href="/docs"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  Documentation
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/guides"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  Guides
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal - Column 1 */}
-          <div className="flex flex-col">
-            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100">
-              Legal
-            </h3>
-            <ul className="space-y-0.5">
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/cookies"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  Cookie Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal - Column 2 */}
-          <div className="flex flex-col">
-            <h3 className="mb-0.5 text-sm font-semibold uppercase tracking-wider text-amber-100 opacity-0">
-              Legal
-            </h3>
-            <ul className="space-y-0.5">
-              <li>
-                <Link
-                  href="/license"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  License
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/ai-disclaimer"
-                  className="text-sm text-zinc-400 transition-colors hover:text-amber-300"
-                >
-                  AI Disclaimer
-                </Link>
-              </li>
-            </ul>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-[10px] font-mono text-zinc-600 hover:text-cyan-400 uppercase transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-[10px] font-mono text-zinc-600 hover:text-cyan-400 uppercase transition-colors">Terms</Link>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-1.5 border-t border-zinc-800 pt-1.5">
-          <div className="flex items-center justify-center">
-            <p className="text-sm text-zinc-500">
-              © {currentYear} Convergence. All rights reserved.
-            </p>
-          </div>
-        </div>
       </div>
     </footer>
   );

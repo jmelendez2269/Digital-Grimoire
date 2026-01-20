@@ -18,8 +18,9 @@ async function isAdmin() {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -54,8 +55,9 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

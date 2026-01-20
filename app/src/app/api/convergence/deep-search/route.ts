@@ -15,16 +15,16 @@ function calculateKeywordFrequency(content: string, query: string): number {
   const queryLower = query.toLowerCase();
   const contentLower = content.toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
-  
+
   if (queryWords.length === 0) return 0;
-  
+
   let totalMatches = 0;
   for (const word of queryWords) {
     const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
     const matches = contentLower.match(regex);
     totalMatches += matches ? matches.length : 0;
   }
-  
+
   // Normalize by content length (words per 1000 words)
   const contentWords = contentLower.split(/\s+/).length;
   return contentWords > 0 ? (totalMatches / contentWords) * 1000 : 0;
@@ -44,10 +44,10 @@ function calculateRelevanceScore(
   const title = (result.text_title || '').toLowerCase();
   const contentLower = (result.content || '').toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
-  
+
   // Start with base semantic similarity (vector score)
   let score = vectorScore || 0;
-  
+
   // Boost for FTS matches (keyword matches) - more weight on exact keyword matches
   if (ftsScore) {
     // If we have both, favor the higher one but blend them
@@ -55,12 +55,12 @@ function calculateRelevanceScore(
     const minScore = Math.min(score, ftsScore);
     score = maxScore * 0.8 + minScore * 0.2;
   }
-  
+
   // Calculate keyword frequency in content
   const keywordFreq = calculateKeywordFrequency(contentLower, query);
   const keywordBoost = Math.min(0.15, keywordFreq / 100); // Max 0.15 boost for high frequency
   score += keywordBoost;
-  
+
   // STRONG boost if query appears in title (primary texts should rank much higher)
   if (title.includes(queryLower)) {
     score += 0.4; // Very strong boost for exact title match
@@ -71,18 +71,18 @@ function calculateRelevanceScore(
       score += 0.2 * (titleMatchCount / queryWords.length);
     }
   }
-  
+
   // Boost for exact keyword matches in content (word boundaries)
   const exactMatches = queryWords.filter(word => {
     const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     return regex.test(contentLower);
   }).length;
-  
+
   if (exactMatches > 0) {
     // More boost for more exact matches
     score += 0.15 * (exactMatches / Math.max(1, queryWords.length));
   }
-  
+
   // Boost for related terms (e.g., "alchemical" when searching "alchemy")
   const relatedTerms: { [key: string]: string[] } = {
     'alchemy': ['alchemical', 'alchemist', 'alchemists', 'alchemically', 'alchemie', 'alchimie'],
@@ -96,7 +96,7 @@ function calculateRelevanceScore(
     'divine': ['divinity', 'divinely', 'divinization'],
     'sacred': ['sacredness', 'sacrality', 'sacralization'],
   };
-  
+
   let relatedTermBoost = 0;
   for (const [key, variants] of Object.entries(relatedTerms)) {
     if (queryLower.includes(key) || queryWords.some(w => w.includes(key))) {
@@ -110,12 +110,12 @@ function calculateRelevanceScore(
     }
   }
   score += Math.min(0.2, relatedTermBoost); // Cap related term boost at 0.2
-  
+
   // Boost if query appears at the beginning of content (often more relevant)
   if (contentLower.substring(0, 200).includes(queryLower)) {
     score += 0.1;
   }
-  
+
   return Math.min(1.0, score); // Cap at 1.0
 }
 
@@ -125,21 +125,21 @@ function calculateRelevanceScore(
 function extractSentenceWithQuery(chunkContent: string, query: string): string {
   // Split into sentences (basic sentence detection)
   const sentences = chunkContent.split(/(?<=[.!?])\s+/);
-  
+
   // Find the sentence that contains the query (case-insensitive)
   const queryLower = query.toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2); // Filter out short words
-  
+
   // Try to find a sentence containing the query or its key words
   for (const sentence of sentences) {
     const sentenceLower = sentence.toLowerCase();
     // Check if sentence contains the full query or significant words
-    if (sentenceLower.includes(queryLower) || 
-        queryWords.some(word => sentenceLower.includes(word))) {
+    if (sentenceLower.includes(queryLower) ||
+      queryWords.some(word => sentenceLower.includes(word))) {
       return sentence.trim();
     }
   }
-  
+
   // If no exact match, return the first sentence
   return sentences[0]?.trim() || chunkContent.substring(0, 200) + '...';
 }
@@ -152,19 +152,19 @@ async function generateExcerptSummary(chunkContent: string, query: string): Prom
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Use cheaper model for summaries
       messages: [
-        { 
-          role: 'system', 
-          content: 'You are a helpful assistant. Generate a brief, one-sentence summary (max 20 words) of what this excerpt discusses in relation to the search query. Be concise and specific.' 
+        {
+          role: 'system',
+          content: 'You are a helpful assistant. Generate a brief, one-sentence summary (max 20 words) of what this excerpt discusses in relation to the search query. Be concise and specific.'
         },
-        { 
-          role: 'user', 
-          content: `Search query: "${query}"\n\nExcerpt: "${chunkContent.substring(0, 1000)}"\n\nProvide a one-sentence summary:` 
+        {
+          role: 'user',
+          content: `Search query: "${query}"\n\nExcerpt: "${chunkContent.substring(0, 1000)}"\n\nProvide a one-sentence summary:`
         }
       ],
       temperature: 0.3,
       max_tokens: 50,
     });
-    
+
     const summary = completion.choices[0]?.message?.content?.trim() || '';
     return summary || 'Discusses the concept in context.';
   } catch (e) {
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
           temperature: 0.7,
         });
         const content = completion.choices[0]?.message?.content || '[]';
-         // Clean up potential markdown code fence if present
+        // Clean up potential markdown code fence if present
         const cleanContent = content.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
         return JSON.parse(cleanContent);
       } catch (e) {
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
     ]).then(([vectorResults, ftsResults]) => {
       // Merge results: combine vector and FTS, deduplicate by chunk_id
       const resultsMap = new Map<string, VectorSearchResult & { ftsScore?: number; relevanceScore?: number }>();
-      
+
       // Add vector results
       for (const result of vectorResults) {
         const key = result.chunk_id;
@@ -272,12 +272,12 @@ export async function POST(request: NextRequest) {
           relevanceScore: calculateRelevanceScore(result, query, result.similarity)
         });
       }
-      
+
       // Merge FTS results (add keyword match scores)
       for (const ftsResult of ftsResults) {
         const key = ftsResult.chunk_id || ftsResult.text_id;
         const existing = resultsMap.get(key);
-        
+
         if (existing) {
           // Update relevance score with FTS boost
           existing.ftsScore = ftsResult.relevance;
@@ -303,7 +303,7 @@ export async function POST(request: NextRequest) {
           });
         }
       }
-      
+
       // Convert to array and sort by relevance score
       return Array.from(resultsMap.values()).sort((a, b) => {
         const scoreA = a.relevanceScore || a.similarity || 0;
@@ -313,9 +313,9 @@ export async function POST(request: NextRequest) {
     });
 
     const [relatedTerms, results] = await Promise.all([termsPromise, searchPromise]);
-    
+
     console.log(`Deep search for "${query}": Found ${results.length} chunks from hybrid search`);
-    
+
     // Log top 5 results for debugging
     if (results.length > 0) {
       const topResults = results.slice(0, 5);
@@ -338,6 +338,7 @@ export async function POST(request: NextRequest) {
         chunk_index: number;
         sentence: string;
         relevanceScore: number;
+        summary?: string;
       }>;
     }>();
 
@@ -350,18 +351,18 @@ export async function POST(request: NextRequest) {
           chunks: []
         });
       }
-      
+
       const book = booksMap.get(result.text_id)!;
       // Extract sentence containing the query
       const sentence = extractSentenceWithQuery(result.content, query);
-      
+
       // Use relevance score if available, otherwise calculate it from similarity
       let finalScore = (result as any).relevanceScore;
       if (!finalScore) {
         // Recalculate relevance score if not already calculated
         finalScore = calculateRelevanceScore(result, query, result.similarity);
       }
-      
+
       book.chunks.push({
         chunk_id: result.chunk_id,
         content: result.content,
@@ -378,7 +379,7 @@ export async function POST(request: NextRequest) {
       const sortedChunks = book.chunks
         .sort((a, b) => b.relevanceScore - a.relevanceScore)
         .slice(0, 3);
-      
+
       if (sortedChunks.length === 0) {
         return {
           ...book,
@@ -386,16 +387,16 @@ export async function POST(request: NextRequest) {
           relevanceScore: 0
         };
       }
-      
+
       // Calculate book-level relevance score from top chunks
       const bestChunkScore = sortedChunks[0].relevanceScore;
       const avgChunkScore = sortedChunks.reduce((sum, c) => sum + c.relevanceScore, 0) / sortedChunks.length;
-      
+
       // Calculate additional book-level signals
       const title = (book.title || '').toLowerCase();
       const queryLower = query.toLowerCase();
       const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
-      
+
       // Title boost (already calculated in chunk scores, but add extra for book-level)
       let titleBoost = 0;
       if (title.includes(queryLower)) {
@@ -406,19 +407,19 @@ export async function POST(request: NextRequest) {
           titleBoost = 0.15 * (titleMatchCount / queryWords.length);
         }
       }
-      
+
       // Boost for number of high-quality chunks (more chunks = more relevant)
       const highQualityChunks = sortedChunks.filter(c => c.relevanceScore > 0.5).length;
       const chunkCountBoost = Math.min(0.1, highQualityChunks * 0.03);
-      
+
       // Calculate total book relevance score
       // Weight: 60% best chunk, 20% average, 15% title, 5% chunk count
-      const bookRelevanceScore = 
-        (bestChunkScore * 0.6) + 
-        (avgChunkScore * 0.2) + 
-        titleBoost + 
+      const bookRelevanceScore =
+        (bestChunkScore * 0.6) +
+        (avgChunkScore * 0.2) +
+        titleBoost +
         chunkCountBoost;
-      
+
       return {
         ...book,
         chunks: sortedChunks.map(({ relevanceScore, ...chunk }) => chunk), // Remove relevanceScore from chunk before sending
@@ -428,15 +429,15 @@ export async function POST(request: NextRequest) {
       // Sort by relevance score (highest first) - this ensures most relevant books appear first
       const scoreA = a.relevanceScore || 0;
       const scoreB = b.relevanceScore || 0;
-      
+
       // If scores are very close (within 0.01), prefer books with more chunks
       if (Math.abs(scoreA - scoreB) < 0.01) {
         return b.chunks.length - a.chunks.length;
       }
-      
+
       return scoreB - scoreA;
     });
-    
+
     // Log top 5 books for debugging
     if (books.length > 0) {
       const topBooks = books.slice(0, 5);
@@ -459,7 +460,7 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-    
+
     // Wait for all summaries to complete (with timeout)
     await Promise.allSettled(summaryPromises);
 
@@ -473,12 +474,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in deep search:', error);
-    
+
     // Provide more specific error messages
     let errorMessage = 'Internal server error';
     if (error instanceof Error) {
       errorMessage = error.message;
-      
+
       // Check for common issues
       if (error.message.includes('OPENAI_API_KEY')) {
         errorMessage = 'OpenAI API key not configured';
@@ -488,12 +489,12 @@ export async function POST(request: NextRequest) {
         errorMessage = 'Vector search failed';
       }
     }
-    
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' && error instanceof Error 
-          ? error.stack 
+        details: process.env.NODE_ENV === 'development' && error instanceof Error
+          ? error.stack
           : undefined
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }

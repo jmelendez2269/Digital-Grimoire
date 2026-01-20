@@ -9,6 +9,27 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { tiptapToHtml } from '@/lib/tiptap/render';
 
+const PROSE_CLASSES = `prose prose-invert prose-amber max-w-none
+  prose-headings:text-amber-100
+  prose-p:text-zinc-300
+  prose-strong:text-amber-200
+  prose-em:text-amber-200
+  prose-code:text-amber-300
+  prose-code:bg-zinc-800/50
+  prose-code:px-1
+  prose-code:py-0.5
+  prose-code:rounded
+  prose-pre:bg-zinc-900/50
+  prose-pre:border
+  prose-pre:border-amber-900/20
+  prose-blockquote:border-amber-600/50
+  prose-blockquote:text-zinc-400
+  prose-a:text-amber-400
+  prose-a:hover:text-amber-300
+  prose-ul:text-zinc-300
+  prose-ol:text-zinc-300
+  prose-li:text-zinc-300`;
+
 interface Course {
   id: string;
   title: string;
@@ -44,7 +65,7 @@ function CourseDetailContent() {
 
       try {
         const response = await fetch(`/api/courses/${slug}`);
-        
+
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || 'Failed to fetch course');
@@ -91,6 +112,31 @@ function CourseDetailContent() {
       default:
         return 'All Levels';
     }
+  };
+
+  const renderRichText = (content: string | null, fallbackClassName: string = 'text-zinc-300 leading-relaxed') => {
+    if (!content) return null;
+
+    // Check if it looks like a JSON object/array (simple heuristic)
+    const trimmed = content.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        const html = tiptapToHtml(content);
+        if (html) {
+          return (
+            <div
+              className={PROSE_CLASSES}
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          );
+        }
+      } catch (e) {
+        // Fallback to plain text if something goes wrong
+      }
+    }
+
+    // Plain text fallback
+    return <p className={fallbackClassName}>{content}</p>;
   };
 
   const renderedContent = course?.content ? tiptapToHtml(course.content) : '';
@@ -175,7 +221,7 @@ function CourseDetailContent() {
               {course.description && (
                 <div>
                   <h2 className="text-xl font-semibold text-amber-100 mb-3">Description</h2>
-                  <p className="text-zinc-300 leading-relaxed">{course.description}</p>
+                  {renderRichText(course.description)}
                 </div>
               )}
 
@@ -183,7 +229,7 @@ function CourseDetailContent() {
               {course.premise && (
                 <div>
                   <h2 className="text-xl font-semibold text-amber-100 mb-3">Premise</h2>
-                  <p className="text-amber-100/80 italic leading-relaxed">{course.premise}</p>
+                  {renderRichText(course.premise, "text-amber-100/80 italic leading-relaxed")}
                 </div>
               )}
 
@@ -206,27 +252,8 @@ function CourseDetailContent() {
               {renderedContent && (
                 <div>
                   <h2 className="text-xl font-semibold text-amber-100 mb-3">Course Content</h2>
-                  <div 
-                    className="prose prose-invert prose-amber max-w-none
-                      prose-headings:text-amber-100
-                      prose-p:text-zinc-300
-                      prose-strong:text-amber-200
-                      prose-em:text-amber-200
-                      prose-code:text-amber-300
-                      prose-code:bg-zinc-800/50
-                      prose-code:px-1
-                      prose-code:py-0.5
-                      prose-code:rounded
-                      prose-pre:bg-zinc-900/50
-                      prose-pre:border
-                      prose-pre:border-amber-900/20
-                      prose-blockquote:border-amber-600/50
-                      prose-blockquote:text-zinc-400
-                      prose-a:text-amber-400
-                      prose-a:hover:text-amber-300
-                      prose-ul:text-zinc-300
-                      prose-ol:text-zinc-300
-                      prose-li:text-zinc-300"
+                  <div
+                    className={PROSE_CLASSES}
                     dangerouslySetInnerHTML={{ __html: renderedContent }}
                   />
                 </div>

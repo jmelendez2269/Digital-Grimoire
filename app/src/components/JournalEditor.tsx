@@ -13,15 +13,12 @@ import { DragHandle } from '@tiptap/extension-drag-handle-react';
 import {
   Bold,
   Italic,
+  Code,
   List,
   ListOrdered,
-  Heading1,
-  Heading2,
-  Heading3,
-  Code,
   Quote,
-  Undo,
-  Redo,
+  Heading1,
+  Heading2
 } from 'lucide-react';
 
 interface JournalEditorProps {
@@ -56,7 +53,7 @@ export default function JournalEditor({
     ],
     editorProps: {
       attributes: {
-        class: 'prose prose-invert max-w-none focus:outline-none min-h-[400px] px-4 py-3',
+        class: 'prose prose-invert max-w-none focus:outline-none min-h-[400px] px-8 py-6 font-mono',
       },
     },
     onUpdate: ({ editor }) => {
@@ -82,14 +79,6 @@ export default function JournalEditor({
 
     try {
       const parsed = JSON.parse(content);
-      console.log('JournalEditor: Setting content from JSON', {
-        hasType: !!parsed.type,
-        type: parsed.type,
-        hasContent: !!parsed.content,
-        contentLength: parsed.content?.length,
-        firstNode: parsed.content?.[0]
-      });
-      
       // Validate it's a valid Tiptap doc structure
       if (parsed.type === 'doc' && Array.isArray(parsed.content)) {
         editor.commands.setContent(parsed, { emitUpdate: false });
@@ -110,122 +99,92 @@ export default function JournalEditor({
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center min-h-[200px] text-zinc-400">
-        Loading editor...
+      <div className="flex items-center justify-center min-h-[200px] text-zinc-500 font-mono animate-pulse">
+        INITIALIZING_EDITOR_CORE...
       </div>
     );
   }
 
   return (
-    <div className="border border-zinc-700 rounded-lg bg-zinc-900/50 overflow-visible">
-      <div className="border-b border-zinc-700 bg-zinc-800/50 p-2 flex items-center gap-1 flex-wrap">
+    <div className="relative min-h-[60vh] flex flex-col bg-black border border-white/5 rounded-lg overflow-hidden">
+
+      {/* Fixed Toolbar */}
+      <div className="flex items-center gap-1 p-2 bg-zinc-900/50 border-b border-white/5 overflow-x-auto">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
           title="Bold"
         >
-          <Bold className="w-4 h-4" />
+          <Bold className="w-3.5 h-3.5" />
         </ToolbarButton>
-
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive('italic')}
           title="Italic"
         >
-          <Italic className="w-4 h-4" />
+          <Italic className="w-3.5 h-3.5" />
         </ToolbarButton>
-
-        <div className="w-px h-6 bg-zinc-600 mx-1" />
-
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          active={editor.isActive('code')}
+          title="Code"
+        >
+          <Code className="w-3.5 h-3.5" />
+        </ToolbarButton>
+        <div className="w-px h-4 bg-white/10 mx-1"></div>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           active={editor.isActive('heading', { level: 1 })}
-          title="Heading 1"
+          title="H1"
         >
-          <Heading1 className="w-4 h-4" />
+          <Heading1 className="w-3.5 h-3.5" />
         </ToolbarButton>
-
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           active={editor.isActive('heading', { level: 2 })}
-          title="Heading 2"
+          title="H2"
         >
-          <Heading2 className="w-4 h-4" />
+          <Heading2 className="w-3.5 h-3.5" />
         </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          active={editor.isActive('heading', { level: 3 })}
-          title="Heading 3"
-        >
-          <Heading3 className="w-4 h-4" />
+        <div className="w-px h-4 bg-white/10 mx-1"></div>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Bullet List">
+          <List className="w-3.5 h-3.5" />
         </ToolbarButton>
-
-        <div className="w-px h-6 bg-zinc-600 mx-1" />
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          active={editor.isActive('bulletList')}
-          title="Bullet List"
-        >
-          <List className="w-4 h-4" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="Ordered List">
+          <ListOrdered className="w-3.5 h-3.5" />
         </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          active={editor.isActive('orderedList')}
-          title="Numbered List"
-        >
-          <ListOrdered className="w-4 h-4" />
-        </ToolbarButton>
-
-        <div className="w-px h-6 bg-zinc-600 mx-1" />
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          active={editor.isActive('codeBlock')}
-          title="Code Block"
-        >
-          <Code className="w-4 h-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive('blockquote')}
-          title="Quote"
-        >
-          <Quote className="w-4 h-4" />
-        </ToolbarButton>
-
-        <div className="w-px h-6 bg-zinc-600 mx-1" />
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          title="Undo"
-        >
-          <Undo className="w-4 h-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          title="Redo"
-        >
-          <Redo className="w-4 h-4" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Quote">
+          <Quote className="w-3.5 h-3.5" />
         </ToolbarButton>
       </div>
 
-      <div className="relative">
+      {/* Editor Content */}
+      <div className="flex-1 relative bg-black">
         <EditorContent editor={editor} />
         {editor && (
           <DragHandle editor={editor} pluginKey="dragHandle$">
-            <div className="flex items-center justify-center w-6 h-6 text-zinc-400 hover:text-amber-400 cursor-grab active:cursor-grabbing text-lg leading-none">
+            <div className="flex items-center justify-center w-6 h-6 text-zinc-600 hover:text-amber-500 cursor-grab active:cursor-grabbing text-lg leading-none transition-colors">
               ⋮⋮
             </div>
           </DragHandle>
         )}
       </div>
+
+      {/* Bottom Status Bar */}
+      <div className="border-t border-white/10 bg-black/50 backdrop-blur px-4 py-1.5 flex items-center justify-between text-[10px] font-mono text-zinc-600 uppercase tracking-wider select-none">
+        <div className="flex gap-4">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-900 border border-emerald-500/50"></span>
+            SYSTEM_READY
+          </span>
+          <span>WORDS: {editor.storage.characterCount.words()}</span>
+          <span>CHARS: {editor.storage.characterCount.characters()}</span>
+        </div>
+        <div>
+          {/* Right side status items if needed */}
+        </div>
+      </div>
+
     </div>
   );
 }
@@ -258,12 +217,10 @@ function ToolbarButton({
       onMouseDown={handleMouseDown}
       disabled={disabled}
       title={title}
-      className={`p-2 rounded transition-colors ${
-        active ? 'bg-amber-500/20 text-amber-400' : 'text-zinc-300'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-zinc-700 cursor-pointer'}`}
+      className={`p-1.5 rounded-sm transition-colors ${active ? 'bg-amber-500/20 text-amber-500' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5'
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       {children}
     </button>
   );
 }
-

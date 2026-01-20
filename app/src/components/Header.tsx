@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, memo, useMemo, useRef, useEffect } from "react";
+import { useState, memo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedbackModal from "./FeedbackModal";
-import { ChevronDown, Search, ArrowUpDown, Network } from "lucide-react";
-import AdvancedFilters from "@/components/AdvancedFilters";
+import { ChevronDown, Search, Network } from "lucide-react";
 
 interface LibrarySearchProps {
   searchQuery: string;
@@ -29,14 +28,13 @@ interface HeaderProps {
 function Header({ librarySearch }: HeaderProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, signOut, isAdmin, refreshAdminStatus } = useAuth(); // Single source of truth
+  const { user, loading, signOut, isAdmin, refreshAdminStatus } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  // Ensure client-only rendering to prevent hydration mismatches
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -51,7 +49,6 @@ function Header({ librarySearch }: HeaderProps = {}) {
     return pathname === path;
   };
 
-  // Close more menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
@@ -68,10 +65,6 @@ function Header({ librarySearch }: HeaderProps = {}) {
     };
   }, [moreMenuOpen]);
 
-  // --- Admin Navigation Config ---
-  // All admin navigation must exist only in this array, and only inside the profile dropdown.
-  // Do not add admin links to the main navigation bar; new admin pages must be added to this array.
-  // REQUIRED: Admin Panel and Admin Upload must ALWAYS be in this array for admin users.
   const adminLinks = [
     { label: "Admin Panel", icon: "🔐", href: "/admin" },
     { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
@@ -80,105 +73,77 @@ function Header({ librarySearch }: HeaderProps = {}) {
     { label: "Knowledge Graph", icon: "🕸️", href: "/admin/knowledge-graph" },
     { label: "Embeddings", icon: "🔮", href: "/admin/embeddings" },
     { label: "Feedback", icon: "💬", href: "/admin/feedback" },
-    // To add new admin pages, add entries here!
   ];
 
   return (
-    <header className="relative z-50 border-b border-zinc-800 bg-zinc-900/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
-          <svg
-            viewBox="0 0 100 100"
-            className="h-10 w-10 text-amber-500/70"
-            fill="currentColor"
-          >
-            <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" />
-            <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="1" fill="none" />
-            <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" />
-            <circle cx="50" cy="50" r="3" fill="currentColor" />
-          </svg>
-          <span className="text-2xl font-serif font-semibold text-amber-100 tracking-wide">Convergence</span>
+    <header className="sticky top-0 z-50 pt-4 px-4 pb-2 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+      <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 glass-panel rounded-full relative">
+        {/* Decorative Grid Line */}
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/20 to-transparent opacity-50"></div>
+
+        {/* Logo Section */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-amber-500/30 bg-black/50 group-hover:border-amber-500/70 transition-colors">
+            <div className="w-4 h-4 rounded-full bg-amber-500/10 group-hover:bg-amber-500/30 blur-[1px]"></div>
+            <svg
+              viewBox="0 0 100 100"
+              className="absolute h-6 w-6 text-amber-500 group-hover:text-amber-400 transition-colors"
+              fill="currentColor"
+            >
+              <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" className="opacity-50" />
+              <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" />
+              <circle cx="50" cy="50" r="4" fill="currentColor" />
+            </svg>
+          </div>
+          <span className="text-lg font-bold tracking-tight text-zinc-100 group-hover:text-white font-sans uppercase">
+            Convergence <span className="text-amber-500 text-xs align-top opacity-70">OS</span>
+          </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden items-center gap-8 md:flex flex-1 ml-8">
-          <Link
-            href="/library"
-            className={`text-base font-medium tracking-wide transition-colors ${isActive("/library")
-              ? "text-amber-400"
-              : "text-zinc-400 hover:text-amber-300"
-              }`}
-          >
-            Library
-          </Link>
-          <Link
-            href="/courses"
-            onClick={async () => {
-              try {
-                await fetch('/api/track/courses-click', { method: 'POST', body: JSON.stringify({ source: 'header' }) });
-              } catch (e) {
-                // Silently fail - tracking shouldn't block navigation
-              }
-            }}
-            className={`text-base font-medium tracking-wide transition-colors ${isActive("/courses") || pathname?.startsWith("/courses/")
-              ? "text-amber-400"
-              : "text-zinc-400 hover:text-amber-300"
-              }`}
-          >
-            Courses
-          </Link>
-          <Link
-            href="/journal"
-            className={`text-base font-medium tracking-wide transition-colors ${isActive("/journal") || pathname?.startsWith("/journal/")
-              ? "text-amber-400"
-              : "text-zinc-400 hover:text-amber-300"
-              }`}
-            // #region agent log
-            data-debug-href="/journal"
-            data-debug-text="Journal"
-          // #endregion
-          >
-            Journal
-          </Link>
-          <Link
-            href="/dashboard"
-            className={`flex items-center gap-1.5 text-base font-medium tracking-wide transition-colors ${isActive("/dashboard")
-              ? "text-amber-400"
-              : "text-zinc-400 hover:text-amber-300"
-              }`}
-          >
-            <Search className="w-4 h-4" />
-            Search
-          </Link>
-          <Link
-            href="/convergence-graph"
-            className={`flex items-center gap-1.5 text-base font-medium tracking-wide transition-colors ${isActive("/convergence-graph")
-              ? "text-amber-400"
-              : "text-zinc-400 hover:text-amber-300"
-              }`}
-          >
-            <Network className="w-4 h-4" />
-            Graph
-          </Link>
+        {/* Desktop Navigation (HUD Tabs) */}
+        <div className="hidden items-center gap-1 md:flex ml-8">
+          {[
+            { name: 'Library', path: '/library' },
+            { name: 'Courses', path: '/courses' },
+            { name: 'Journal', path: '/journal' },
+            { name: 'Graph', path: '/convergence-graph', icon: <Network className="w-3.5 h-3.5" /> }
+          ].map((item) => (
+            <Link
+              key={item.path}
+              href={item.path}
+              className={`relative px-4 py-1.5 text-sm font-medium transition-all duration-300 rounded-md border border-transparent ${isActive(item.path) || pathname?.startsWith(item.path + '/')
+                ? "text-amber-400 bg-amber-500/10 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                : "text-zinc-400 hover:text-amber-200 hover:bg-white/5"
+                }`}
+            >
+              <div className="flex items-center gap-2">
+                {item.icon}
+                {item.name}
+              </div>
+              {/* Active Indicator Dot */}
+              {(isActive(item.path) || pathname?.startsWith(item.path + '/')) && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-400 shadow-[0_0_5px_#f59e0b]"></div>
+              )}
+            </Link>
+          ))}
 
-          {/* More Menu - Coming Soon Features */}
-          <div className="relative" ref={moreMenuRef}>
+          {/* More Menu */}
+          <div className="relative ml-2" ref={moreMenuRef}>
             <button
               onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-              className="flex items-center gap-1 text-base font-medium tracking-wide text-zinc-400 transition-colors hover:text-amber-300"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs uppercase tracking-wider font-mono text-zinc-500 transition-colors hover:text-amber-400"
             >
-              More
-              <ChevronDown className={`w-4 h-4 transition-transform ${moreMenuOpen ? 'rotate-180' : ''}`} />
+              EXTRAS <ChevronDown className={`w-3 h-3 transition-transform ${moreMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {moreMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl py-2 z-50">
-                <div className="px-3 py-2 text-xs font-semibold text-amber-500/70 uppercase tracking-wider">
-                  Coming Soon
+              <div className="absolute right-0 top-full mt-3 w-48 glass-panel rounded-lg py-2 z-50">
+                <div className="px-3 py-2 text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest border-b border-white/5 mb-1">
+                  Modules Unloaded
                 </div>
-                <div className="px-3 py-1.5 text-sm text-zinc-500">
-                  <div className="flex items-center gap-2 py-1">
+                <div className="px-3 py-1.5 text-sm text-zinc-500 font-mono">
+                  <div className="flex items-center gap-2 py-1 opacity-50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-700"></span>
                     <span>Ritual Machine</span>
                   </div>
                 </div>
@@ -187,261 +152,104 @@ function Header({ librarySearch }: HeaderProps = {}) {
           </div>
         </div>
 
-        {/* Auth Buttons / User Menu */}
-        <div className="flex items-center gap-4">
-          {/* Feedback Button - Always accessible */}
+        {/* Right Side: Status & User */}
+        <div className="flex items-center gap-3">
+          {/* System Status Indicator (Hidden on mobile) */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded bg-black/40 border border-white/5 mr-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span className="text-[10px] font-mono text-emerald-500/80 tracking-widest uppercase">Connected</span>
+          </div>
+
           <button
             onClick={() => setFeedbackModalOpen(true)}
-            className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base font-medium tracking-wide text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
-            aria-label="Send Feedback"
+            className="p-2 text-zinc-400 hover:text-amber-400 hover:bg-white/5 rounded-md transition-colors"
+            title="Send Feedback"
           >
-            <span className="text-base">💬</span>
-            <span className="hidden sm:inline">Feedback</span>
+            <span className="text-lg leading-none">💬</span>
           </button>
 
-          {/* Debug info - remove after testing */}
-          {process.env.NODE_ENV === 'development' && mounted && (
-            <div className="text-xs text-zinc-500">
-              {loading ? '⏳' : user ? '👤' : '🚫'}
-            </div>
-          )}
-
-          {/* Only render auth-dependent UI after mount to prevent hydration mismatch */}
-          {!mounted ? (
-            <div className="h-9 w-20 animate-pulse rounded-md bg-zinc-800">
-              <span className="sr-only">Loading user menu...</span>
-            </div>
-          ) : loading ? (
-            <div className="h-9 w-20 animate-pulse rounded-md bg-zinc-800">
-              <span className="sr-only">Loading user menu...</span>
-            </div>
+          {/* User Profile */}
+          {!mounted || loading ? (
+            <div className="h-8 w-8 animate-pulse rounded-full bg-white/10" />
           ) : user ? (
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-base font-medium tracking-wide text-amber-100 transition-all hover:bg-zinc-700 hover:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
-                aria-label="User menu"
-                aria-expanded={menuOpen}
+                className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full border border-white/10 hover:border-amber-500/30 bg-black/30 transition-all group"
               >
-                {/* User Avatar/Initial */}
+                <span className="hidden sm:block text-xs font-mono text-zinc-400 group-hover:text-amber-200 px-2 text-right">
+                  {user.user_metadata?.username || user.email?.split("@")[0]}
+                </span>
+
                 {user.user_metadata?.avatar_url ? (
                   <img
                     src={user.user_metadata.avatar_url}
-                    alt="User avatar"
-                    className="h-6 w-6 rounded-full object-cover ring-1 ring-amber-500/50"
+                    alt="User"
+                    className="h-7 w-7 rounded-full object-cover ring-1 ring-white/10 group-hover:ring-amber-500/50"
                   />
                 ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-xs font-bold text-zinc-900 ring-1 ring-amber-500/50">
+                  <div className="h-7 w-7 rounded-full bg-amber-900/40 flex items-center justify-center text-[10px] font-bold text-amber-500 ring-1 ring-amber-500/30">
                     {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
                   </div>
                 )}
-
-                {/* Username - visible on larger screens */}
-                <span className="hidden sm:inline text-amber-100">
-                  {user.user_metadata?.username || user.email?.split("@")[0] || "User"}
-                </span>
-
-                {/* Dropdown indicator */}
-                <svg
-                  className={`h-4 w-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Enhanced Dropdown */}
               {menuOpen && (
                 <>
-                  {/* Backdrop */}
-                  <div
-                    className="fixed inset-0 z-[9998]"
-                    onClick={() => setMenuOpen(false)}
-                  />
-
-                  {/* Menu */}
-                  <div className="absolute right-0 z-[9999] mt-2 w-64 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl shadow-black/50 overflow-y-auto max-h-[90vh]">
-                    {/* User Info Header */}
-                    <div className="border-b border-zinc-800 bg-zinc-800/50 px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {user.user_metadata?.avatar_url ? (
-                          <img
-                            src={user.user_metadata.avatar_url}
-                            alt="User avatar"
-                            className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-500/50"
-                          />
-                        ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-base font-bold text-zinc-900 ring-2 ring-amber-500/50">
-                            {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
-                          </div>
-                        )}
-                        <div className="flex-1 overflow-hidden">
-                          <div className="text-sm font-semibold text-amber-100 truncate">
-                            {user.user_metadata?.username || user.email?.split("@")[0] || "User"}
-                          </div>
-                          <div className="text-xs text-zinc-400 truncate">
-                            {user.email}
-                          </div>
-                          {isAdmin && (
-                            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400">
-                              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                              </svg>
-                              Admin
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                  <div className="fixed inset-0 z-[9998]" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 z-[9999] mt-3 w-64 bg-zinc-950 border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden">
+                    {/* Cyber Header */}
+                    <div className="bg-gradient-to-r from-amber-500/10 to-transparent px-4 py-3 border-b border-white/5">
+                      <div className="text-[10px] font-mono text-amber-500 uppercase tracking-widest mb-1">Identity</div>
+                      <div className="text-sm font-bold text-zinc-100 truncate">{user.email}</div>
+                      {isAdmin && <div className="text-[10px] text-cyan-400 mt-1 font-mono">[ ADMIN ACCESS GRANTED ]</div>}
                     </div>
 
-                    {/* Navigation Links */}
-                    <div className="py-1">
-                      <Link
-                        href="/profile"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <span className="text-base">👤</span>
-                        <span>Profile</span>
-                      </Link>
-                      <Link
-                        href="/dashboard"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <span className="text-base">📊</span>
-                        <span>Dashboard</span>
-                      </Link>
-                      <Link
-                        href="/library/my-library"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <span className="text-base">📖</span>
-                        <span>My Library</span>
-                      </Link>
-                      <Link
-                        href="/journal"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <span className="text-base">📝</span>
-                        <span>{user?.user_metadata?.journal_name || "Journal"}</span>
-                      </Link>
-                      <Link
-                        href="/annotations/search"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <span className="text-base">🔍</span>
-                        <span>Search Annotations</span>
-                      </Link>
-                      <Link
-                        href="/settings"
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-amber-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        <span className="text-base">⚙️</span>
-                        <span>Settings</span>
-                      </Link>
-                    </div>
+                    <div className="p-2 space-y-1">
+                      {[
+                        { href: '/profile', icon: '👤', label: 'Profile' },
+                        { href: '/dashboard', icon: '📊', label: 'Dashboard' },
+                        { href: '/library/my-library', icon: '📖', label: 'My Library' },
+                        { href: '/journal', icon: '📝', label: 'Journal' },
+                        { href: '/settings', icon: '⚙️', label: 'Settings' },
+                      ].map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-400 hover:text-amber-300 hover:bg-white/5 rounded-md transition-all font-medium"
+                        >
+                          <span className="opacity-70">{item.icon}</span> {item.label}
+                        </Link>
+                      ))}
 
-                    {/* Coming Soon Section */}
-                    <hr className="my-1 border-zinc-800" />
-                    <div className="py-1">
-                      <div className="px-4 py-1 text-xs font-semibold text-amber-500/70 uppercase tracking-wider">
-                        Coming Soon
-                      </div>
-                      <div className="px-4 py-2 text-sm text-zinc-500">
-                        <div className="flex items-center gap-3 py-1">
-                          <span>Ritual Machine</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Admin Section - Always render for admins */}
-                    {isAdmin && (
-                      <>
-                        <hr className="my-1 border-zinc-800" />
-                        <div className="py-1">
-                          <div className="px-4 py-1 text-xs font-semibold text-amber-500/70 uppercase tracking-wider">
-                            Admin
-                          </div>
+                      {isAdmin && (
+                        <>
+                          <div className="my-2 h-[1px] bg-white/5"></div>
+                          <div className="px-3 py-1 text-[10px] font-mono text-cyan-500/70 uppercase">Admin Utilities</div>
                           {adminLinks.map(link => (
                             <Link
                               key={link.href}
                               href={link.href}
-                              className="flex items-center gap-3 px-4 py-2 text-sm text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300 font-medium"
                               onClick={() => setMenuOpen(false)}
+                              className="flex items-center gap-3 px-3 py-2 text-xs text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/10 rounded-md transition-all font-mono"
                             >
-                              <span className="text-base">{link.icon}</span>
-                              <span>{link.label}</span>
+                              <span>{link.icon}</span> {link.label}
                             </Link>
                           ))}
-                        </div>
-                      </>
-                    )}
-                    {/* Debug info - temporarily visible in all environments for troubleshooting */}
-                    <hr className="my-1 border-zinc-800" />
-                    <div className="px-4 py-3 text-xs border-t-2 border-amber-500/30 bg-amber-500/5 space-y-2">
-                      <div className="font-semibold text-amber-400 mb-2">🔧 Debug Tools</div>
-                      <div className="text-zinc-400 space-y-1">
-                        <div>isAdmin: <span className={isAdmin ? "text-green-400" : "text-red-400"}>{String(isAdmin)}</span></div>
-                        <div>User ID: {user?.id?.substring(0, 8)}...</div>
-                      </div>
-                      <div className="space-y-1 pt-2">
-                        <button
-                          onClick={async () => {
-                            console.log('🔄 Manually refreshing admin status...');
-                            await refreshAdminStatus();
-                            // Don't close menu so user can see the result
-                          }}
-                          className="w-full rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-300 hover:bg-amber-500/20 font-medium"
-                        >
-                          🔄 Refresh Admin Status
-                        </button>
-                        <button
-                          onClick={async () => {
-                            console.log('🧪 Testing admin status API...');
-                            try {
-                              const response = await fetch('/api/auth/admin-status', {
-                                credentials: 'include',
-                              });
-                              const data = await response.json();
-                              console.log('🧪 API Response:', data);
-                              alert(`Admin Status Test:\n\nisAdmin: ${data.isAdmin}\nrole: ${data.role}\nuserId: ${data.userId}\n\nCheck console for full details.`);
-                              await refreshAdminStatus();
-                            } catch (err) {
-                              console.error('🧪 API Test Error:', err);
-                              alert('Error testing API. Check console.');
-                            }
-                          }}
-                          className="w-full rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-300 hover:bg-amber-500/20 font-medium"
-                        >
-                          🧪 Test Admin API
-                        </button>
-                      </div>
-                    </div>
+                        </>
+                      )}
 
-                    {/* Sign Out */}
-                    <hr className="my-1 border-zinc-800" />
-                    <div className="py-1">
+                      <div className="my-2 h-[1px] bg-white/5"></div>
                       <button
                         onClick={() => {
                           setMenuOpen(false);
                           handleSignOut();
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-red-400 transition-colors hover:bg-zinc-800 hover:text-red-300"
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/10 rounded-md transition-all text-left"
                       >
-                        <span className="text-base">🚪</span>
-                        <span>Sign Out</span>
+                        🚪 Disconnect
                       </button>
                     </div>
                   </div>
@@ -449,30 +257,16 @@ function Header({ librarySearch }: HeaderProps = {}) {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="text-base font-medium tracking-wide text-zinc-400 transition-colors hover:text-amber-300"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-md bg-amber-500 px-5 py-2.5 text-base font-semibold tracking-wide text-zinc-950 transition-colors hover:bg-amber-400"
-              >
-                Sign Up
+            <div className="flex items-center gap-2">
+              <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">Log In</Link>
+              <Link href="/register" className="px-4 py-1.5 text-sm font-bold text-black bg-amber-500 hover:bg-amber-400 rounded transition-colors shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                Initialize &gt;
               </Link>
             </div>
           )}
         </div>
       </nav>
-
-
-      {/* Feedback Modal */}
-      <FeedbackModal
-        isOpen={feedbackModalOpen}
-        onClose={() => setFeedbackModalOpen(false)}
-      />
+      <FeedbackModal isOpen={feedbackModalOpen} onClose={() => setFeedbackModalOpen(false)} />
     </header>
   );
 }

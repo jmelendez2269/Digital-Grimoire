@@ -8,27 +8,27 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     const checks = {
       // Database tables
       hasTextChunks: false,
       hasConvergenceConcepts: false,
       hasConvergenceQueries: false,
-      
+
       // Database functions
       hasMatchTextChunksRPC: false,
-      
+
       // Extensions
       hasPgVector: false,
-      
+
       // Data
       chunksWithEmbeddings: 0,
       textsWithEmbeddings: 0,
       totalTexts: 0,
-      
+
       // Environment
       hasOpenAIKey: !!process.env.OPENAI_API_KEY,
-      
+
       // Indexes
       hasChunkEmbeddingIndex: false,
     };
@@ -76,8 +76,8 @@ export async function GET(request: NextRequest) {
       // If error is about function not existing, it's missing
       // If error is about data/parameters, function exists
       if (error) {
-        checks.hasMatchTextChunksRPC = !error.message?.includes('does not exist') && 
-                                       !error.message?.includes('function match_text_chunks');
+        checks.hasMatchTextChunksRPC = !error.message?.includes('does not exist') &&
+          !error.message?.includes('function match_text_chunks');
       } else {
         checks.hasMatchTextChunksRPC = true;
       }
@@ -89,17 +89,14 @@ export async function GET(request: NextRequest) {
     try {
       const { data, error } = await supabase.rpc('exec_sql', {
         query: "SELECT EXISTS(SELECT FROM pg_extension WHERE extname = 'vector') as has_vector;"
-      }).catch(() => {
-        // Fallback: try direct query
-        return supabase.from('_realtime').select('*').limit(0);
       });
-      
+
       // Alternative check: try to query vector column
       const { error: vectorError } = await supabase
         .from('text_chunks')
         .select('embedding')
         .limit(1);
-      
+
       checks.hasPgVector = !vectorError || !vectorError.message?.includes('vector');
     } catch (error) {
       checks.hasPgVector = false;
@@ -111,7 +108,7 @@ export async function GET(request: NextRequest) {
         .from('text_chunks')
         .select('text_id')
         .not('embedding', 'is', null);
-      
+
       if (chunks) {
         const uniqueTextIds = new Set(chunks.map(c => c.text_id));
         checks.textsWithEmbeddings = uniqueTextIds.size;
@@ -131,7 +128,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Determine status
-    const isFullySetup = 
+    const isFullySetup =
       checks.hasTextChunks &&
       checks.hasConvergenceConcepts &&
       checks.hasPgVector &&

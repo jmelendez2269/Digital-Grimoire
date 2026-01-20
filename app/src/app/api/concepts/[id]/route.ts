@@ -18,8 +18,9 @@ async function isAdmin() {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -35,10 +36,10 @@ export async function PATCH(
       primary_sources,
       tags,
     } = body || {};
-    
+
     const svc = createServiceClient();
     const updateData: any = {};
-    
+
     if (name !== undefined) updateData.name = name;
     if (slug !== undefined) updateData.slug = slug;
     if (tradition !== undefined) updateData.tradition = tradition;
@@ -86,13 +87,14 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    
+
     const svc = createServiceClient();
     const { error } = await svc
       .from("convergence_concepts")

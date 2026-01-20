@@ -38,7 +38,7 @@ function LibraryPageContent() {
   const queryClient = useQueryClient();
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Read search query from URL params on mount
   useEffect(() => {
     const urlSearch = searchParams.get('search');
@@ -46,7 +46,7 @@ function LibraryPageContent() {
       setSearchQuery(decodeURIComponent(urlSearch));
     }
   }, [searchParams]);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 48; // Increased from 12 to 48 for better virtualization
@@ -153,7 +153,7 @@ function LibraryPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+    <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
         {/* Page Header - Compact with Search, Filters, and Sort */}
@@ -163,7 +163,7 @@ function LibraryPageContent() {
               <h1 className="text-lg font-semibold text-amber-100">
                 The Convergence Library
               </h1>
-              
+
               <div className="flex items-center gap-2 flex-1 justify-end">
                 {/* Compact Search Bar - Longer */}
                 <div className="relative">
@@ -185,7 +185,7 @@ function LibraryPageContent() {
                     onChange={handleFilterChange}
                   />
                 </div>
-              
+
                 {/* Sort Button */}
                 <div className="relative">
                   <button
@@ -204,14 +204,14 @@ function LibraryPageContent() {
                         className="fixed inset-0 z-10"
                         onClick={() => setShowSortDropdown(false)}
                       />
-                      
+
                       {/* Dropdown Menu */}
                       <div className="absolute right-0 z-20 mt-2 w-64 bg-zinc-900 border border-amber-900/20 rounded-lg shadow-xl shadow-black/50 overflow-hidden">
                         <div className="p-2">
                           <div className="px-3 py-2 text-xs font-medium text-amber-100/60 uppercase tracking-wide">
                             Sort By
                           </div>
-                          
+
                           {/* Sort Options */}
                           {(['title', 'author', 'year', 'created_at', 'domain', 'type'] as const).map((field) => {
                             const labels: Record<typeof field, string> = {
@@ -222,7 +222,7 @@ function LibraryPageContent() {
                               domain: 'Domain',
                               type: 'Type',
                             };
-                            
+
                             return (
                               <div key={field} className="py-1">
                                 <button
@@ -235,11 +235,10 @@ function LibraryPageContent() {
                                     }
                                     setShowSortDropdown(false);
                                   }}
-                                  className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${
-                                    sortBy === field
+                                  className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${sortBy === field
                                       ? 'bg-amber-600/20 text-amber-400'
                                       : 'text-amber-100/80 hover:bg-zinc-800/50'
-                                  }`}
+                                    }`}
                                 >
                                   <span>{labels[field]}</span>
                                   {sortBy === field && (
@@ -263,103 +262,103 @@ function LibraryPageContent() {
 
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 py-2 flex flex-col flex-1 min-h-0">
-        {/* Error Alert */}
-        {error && !authLoading && (
-          <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="flex-1">
-                <h3 className="text-sm font-medium text-red-400 mb-1">Error Loading Library</h3>
-                <p className="text-sm text-red-300/80">{error}</p>
-                {!user && (
-                  <Link
-                    href="/login"
-                    className="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Go to Login
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-
-        {/* Loading State */}
-        {!user ? null : loading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-zinc-900/30 border border-amber-900/20 rounded-xl overflow-hidden animate-pulse"
-              >
-                {/* Cover placeholder */}
-                <div className="aspect-[2/3] bg-zinc-800/50" />
-                {/* Content placeholder */}
-                <div className="p-5 space-y-3">
-                  <div className="h-6 bg-zinc-800/50 rounded w-3/4" />
-                  <div className="h-4 bg-zinc-800/50 rounded w-1/2" />
-                  <div className="h-8 bg-zinc-800/50 rounded w-full" />
+          {/* Error Alert */}
+          {error && !authLoading && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-red-400 mb-1">Error Loading Library</h3>
+                  <p className="text-sm text-red-300/80">{error}</p>
+                  {!user && (
+                    <Link
+                      href="/login"
+                      className="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Go to Login
+                    </Link>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        ) : error ? null : texts.length === 0 ? (
-          /* Empty State */
-          <div className="text-center py-16">
-            <FileText className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
-            <h3 className="text-lg font-medium text-amber-100 mb-2">
-              {searchQuery || filterValues.domain !== 'all' || filterValues.type !== 'all' 
-                ? 'No texts found' 
-                : 'No texts yet'}
-            </h3>
-            <p className="text-sm text-amber-100/60 mb-6">
-              {searchQuery || filterValues.domain !== 'all' || filterValues.type !== 'all'
-                ? 'Try adjusting your search or filters'
-                : 'Upload your first text to get started'}
-            </p>
-            {!searchQuery && filterValues.domain === 'all' && filterValues.type === 'all' && (
-              <Link
-                href="/admin/upload"
-                className="inline-block px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
-              >
-                Upload Text
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col flex-1 min-h-0">
-            {/* Document Grid - Virtualized */}
-            <div className="flex-1 min-h-0">
-              <LibraryGrid
-                texts={texts}
-                isAdmin={isAdmin}
-                onDelete={deleteText}
-              />
             </div>
+          )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-4 flex-shrink-0">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={totalCount}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={handlePageChange}
+
+          {/* Loading State */}
+          {!user ? null : loading ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-zinc-900/30 border border-amber-900/20 rounded-xl overflow-hidden animate-pulse"
+                >
+                  {/* Cover placeholder */}
+                  <div className="aspect-[2/3] bg-zinc-800/50" />
+                  {/* Content placeholder */}
+                  <div className="p-5 space-y-3">
+                    <div className="h-6 bg-zinc-800/50 rounded w-3/4" />
+                    <div className="h-4 bg-zinc-800/50 rounded w-1/2" />
+                    <div className="h-8 bg-zinc-800/50 rounded w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? null : texts.length === 0 ? (
+            /* Empty State */
+            <div className="text-center py-16">
+              <FileText className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
+              <h3 className="text-lg font-medium text-amber-100 mb-2">
+                {searchQuery || filterValues.domain !== 'all' || filterValues.type !== 'all'
+                  ? 'No texts found'
+                  : 'No texts yet'}
+              </h3>
+              <p className="text-sm text-amber-100/60 mb-6">
+                {searchQuery || filterValues.domain !== 'all' || filterValues.type !== 'all'
+                  ? 'Try adjusting your search or filters'
+                  : 'Upload your first text to get started'}
+              </p>
+              {!searchQuery && filterValues.domain === 'all' && filterValues.type === 'all' && (
+                <Link
+                  href="/admin/upload"
+                  className="inline-block px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Upload Text
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col flex-1 min-h-0">
+              {/* Document Grid - Virtualized */}
+              <div className="flex-1 min-h-0">
+                <LibraryGrid
+                  texts={texts}
+                  isAdmin={isAdmin}
+                  onDelete={deleteText}
                 />
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4 flex-shrink-0">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={totalCount}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
-      
+
       {/* Floating AI Search */}
       <FloatingAISearch defaultCollapsed={true} />
-      
+
       <Footer />
     </div>
   );

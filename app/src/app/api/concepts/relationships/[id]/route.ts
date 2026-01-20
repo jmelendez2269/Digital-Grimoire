@@ -18,18 +18,19 @@ async function isAdmin() {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const body = await req.json();
     const { similarity, source_citation, notes } = body || {};
-    
+
     const svc = createServiceClient();
     const updateData: any = {};
-    
+
     if (similarity !== undefined) updateData.similarity = similarity;
     if (source_citation !== undefined) updateData.source_citation = source_citation;
     if (notes !== undefined) updateData.notes = notes;

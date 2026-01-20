@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Header from "@/components/Header";
@@ -47,7 +47,7 @@ interface ConvergenceConcept {
 
 type Entity = CorrespondenceEntity | ConvergenceConcept;
 
-export default function AdminKnowledgeGraphPage() {
+function KnowledgeGraphContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -73,13 +73,13 @@ export default function AdminKnowledgeGraphPage() {
 
   // Handle editId query parameter to auto-open edit modal
   const [pendingConsensus, setPendingConsensus] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const editId = searchParams.get("editId");
     const urlGraphType = searchParams.get("graphType") as GraphType | null;
     const consensusText = searchParams.get("consensusText");
     const useStoredConsensus = searchParams.get("useStoredConsensus");
-    
+
     // Get consensus from URL or sessionStorage
     let consensus: string | null = null;
     if (useStoredConsensus === "true" && editId) {
@@ -90,11 +90,11 @@ export default function AdminKnowledgeGraphPage() {
     } else if (consensusText) {
       consensus = decodeURIComponent(consensusText);
     }
-    
+
     if (consensus) {
       setPendingConsensus(consensus);
     }
-    
+
     if (editId && entities.length > 0) {
       const entityToEdit = entities.find((e) => e.id === editId);
       if (entityToEdit) {
@@ -202,12 +202,12 @@ export default function AdminKnowledgeGraphPage() {
     }
 
     try {
-      const endpoint = graphType === "correspondences" 
+      const endpoint = graphType === "correspondences"
         ? `/api/graph/entities/${entityId}`
         : `/api/concepts/${entityId}`;
-      
+
       const res = await fetch(endpoint, { method: "DELETE" });
-      
+
       if (!res.ok) {
         throw new Error("Failed to delete entity");
       }
@@ -277,11 +277,10 @@ export default function AdminKnowledgeGraphPage() {
                   setGraphType("correspondences");
                   setSearchQuery("");
                 }}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                  graphType === "correspondences"
-                    ? "bg-amber-600 text-white"
-                    : "text-amber-100/60 hover:text-amber-100"
-                }`}
+                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${graphType === "correspondences"
+                  ? "bg-amber-600 text-white"
+                  : "text-amber-100/60 hover:text-amber-100"
+                  }`}
               >
                 Correspondences
               </button>
@@ -290,11 +289,10 @@ export default function AdminKnowledgeGraphPage() {
                   setGraphType("convergence");
                   setSearchQuery("");
                 }}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                  graphType === "convergence"
-                    ? "bg-amber-600 text-white"
-                    : "text-amber-100/60 hover:text-amber-100"
-                }`}
+                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${graphType === "convergence"
+                  ? "bg-amber-600 text-white"
+                  : "text-amber-100/60 hover:text-amber-100"
+                  }`}
               >
                 Convergence Concepts
               </button>
@@ -304,22 +302,20 @@ export default function AdminKnowledgeGraphPage() {
             <div className="flex gap-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("cards")}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
-                  viewMode === "cards"
-                    ? "bg-amber-600 text-white"
-                    : "text-amber-100/60 hover:text-amber-100"
-                }`}
+                className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === "cards"
+                  ? "bg-amber-600 text-white"
+                  : "text-amber-100/60 hover:text-amber-100"
+                  }`}
               >
                 <BookOpen className="w-4 h-4" />
                 Cards
               </button>
               <button
                 onClick={() => setViewMode("graph")}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
-                  viewMode === "graph"
-                    ? "bg-amber-600 text-white"
-                    : "text-amber-100/60 hover:text-amber-100"
-                }`}
+                className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === "graph"
+                  ? "bg-amber-600 text-white"
+                  : "text-amber-100/60 hover:text-amber-100"
+                  }`}
               >
                 <Network className="w-4 h-4" />
                 Graph
@@ -422,7 +418,7 @@ export default function AdminKnowledgeGraphPage() {
                 entities={filteredEntities}
                 relationships={relationships}
                 graphType={graphType}
-                onSelectEntity={(entity) => {
+                onSelectEntity={(entity: any) => {
                   setSelectedEntity(entity);
                   setEditingEntity(entity);
                   setShowCreateModal(true);
@@ -493,6 +489,14 @@ export default function AdminKnowledgeGraphPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function AdminKnowledgeGraphPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-zinc-950"><div className="text-amber-100/60">Loading Knowledge Graph...</div></div>}>
+      <KnowledgeGraphContent />
+    </Suspense>
   );
 }
 

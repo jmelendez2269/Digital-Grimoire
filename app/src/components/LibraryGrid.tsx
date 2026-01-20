@@ -1,11 +1,9 @@
 'use client';
 
-import { useRef, useMemo, useState, useEffect } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { User, BookOpen, Tag, Eye, Edit, Trash2 } from 'lucide-react';
+import { BookOpen, Edit } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import type { Text } from '@/hooks/useLibrary';
 
@@ -17,221 +15,155 @@ interface LibraryGridProps {
 
 export default function LibraryGrid({ texts, isAdmin = false, onDelete }: LibraryGridProps) {
   const router = useRouter();
-  const parentRef = useRef<HTMLDivElement>(null);
-  const [columns, setColumns] = useState(3);
-
-  // Calculate columns based on window width
-  useEffect(() => {
-    const updateColumns = () => {
-      if (typeof window === 'undefined') return;
-      const width = window.innerWidth;
-      if (width >= 1024) setColumns(3); // lg: 3 columns
-      else if (width >= 768) setColumns(2); // md: 2 columns
-      else setColumns(1); // sm: 1 column
-    };
-
-    updateColumns();
-    window.addEventListener('resize', updateColumns);
-    return () => window.removeEventListener('resize', updateColumns);
-  }, []);
-
-  // Create rows from texts (each row contains `columns` items)
-  const rows = useMemo(() => {
-    const result: Text[][] = [];
-    for (let i = 0; i < texts.length; i += columns) {
-      result.push(texts.slice(i, i + columns));
-    }
-    return result;
-  }, [texts, columns]);
-
-  // Virtualizer for rows
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 280, // Approximate height of a row (card + gap)
-    overscan: 2, // Render 2 extra rows above and below
-  });
 
   if (texts.length === 0) {
     return null;
   }
 
   return (
-    <div
-      ref={parentRef}
-      className="h-full overflow-auto"
-      style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}
-    >
-      <div
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
-        }}
-      >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const row = rows[virtualRow.index];
-          return (
-            <div
-              key={virtualRow.key}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: `${virtualRow.size}px`,
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-                {row.map((text) => (
-                  <div
-                    key={text.id}
-                    className="group bg-zinc-900/50 border border-amber-900/20 rounded-xl overflow-hidden hover:border-amber-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-900/20 flex flex-col md:flex-row"
-                  >
-                    {/* Book Cover */}
-                    <Link href={`/library/${text.id}`} className="relative md:w-40 md:h-56 w-full h-48 bg-zinc-800/50 overflow-hidden flex-shrink-0">
-                      {text.cover_image_url ? (
-                        <Image
-                          src={text.cover_image_url}
-                          alt={text.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 160px"
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          style={{
-                            objectPosition: (text.metadata as any)?.cover_position || 'center',
-                          }}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-900/20 to-zinc-900/50">
-                          <BookOpen className="w-12 h-12 text-amber-600/30" />
-                        </div>
-                      )}
-                      {/* Action buttons overlay - visible on hover */}
-                      <div className="absolute top-2 right-2 z-10 flex gap-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity duration-200">
-                        {isAdmin && (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                router.push(`/admin/edit/${text.id}`);
-                              }}
-                              className="p-1.5 bg-zinc-900/90 hover:bg-zinc-800 border border-amber-600/30 hover:border-amber-600/50 rounded-lg transition-colors backdrop-blur-sm"
-                              title="Edit document"
-                            >
-                              <Edit className="w-3.5 h-3.5 text-amber-400" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onDelete?.(text.id, text.title);
-                              }}
-                              className="p-1.5 bg-zinc-900/90 hover:bg-red-900 border border-red-600/30 hover:border-red-600/50 rounded-lg transition-colors backdrop-blur-sm"
-                              title="Delete document"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                            </button>
-                          </>
-                        )}
-                        <BookmarkButton textId={text.id} size="sm" />
-                      </div>
-                    </Link>
+    <div className="h-full overflow-y-auto pb-20">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 p-1">
+        {texts.map((text) => (
+          <div
+            key={text.id}
+            className="group relative flex flex-col h-full bg-zinc-900/40 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden transition-all duration-300 hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-zinc-800/60"
+          >
+            {/* Image Section (Inset) */}
+            <div className="px-3 pt-3">
+              <Link href={`/library/${text.id}`} className="relative block aspect-[3/4] w-full overflow-hidden rounded-sm border border-white/5 bg-black/50">
+                {/* Scanline Overlay */}
+                <div className="absolute inset-0 z-10 bg-[linear-gradient(rgba(18,18,18,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,6px_100%] pointer-events-none opacity-30" />
 
-                    {/* Card Content - Scrollable */}
-                    <div className="flex-1 p-4 overflow-y-auto max-h-56 space-y-3">
-                      {/* Title & Author */}
-                      <div>
-                        <Link href={`/library/${text.id}`}>
-                          <h3 className="text-base font-bold text-amber-100 mb-1 line-clamp-2 group-hover:text-amber-400 transition-colors">
-                            {text.title}
-                          </h3>
-                        </Link>
-                        {text.author && (
-                          <p className="text-xs text-amber-100/60 flex items-center gap-1.5">
-                            <User className="w-3 h-3" />
-                            {text.author}
-                            {text.year && <span className="ml-1">({text.year})</span>}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Domain */}
-                      {text.domain && (
-                        <div className="flex items-center gap-2">
-                          <div className="px-2 py-0.5 bg-amber-600/10 border border-amber-600/20 rounded-md text-xs font-medium text-amber-400">
-                            {text.domain}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Lenses */}
-                      {text.lenses && text.lenses.length > 0 && (
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-1 text-xs text-amber-100/50">
-                            <Eye className="w-3 h-3" />
-                            <span className="font-medium">Lenses</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {text.lenses.map((lens) => (
-                              <span
-                                key={lens}
-                                className="px-1.5 py-0.5 bg-zinc-800/50 border border-amber-900/30 rounded text-xs text-amber-100/70"
-                              >
-                                {lens.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tags */}
-                      {text.tags && text.tags.length > 0 && (
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-1 text-xs text-amber-100/50">
-                            <Tag className="w-3 h-3" />
-                            <span className="font-medium">Tags</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {text.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="px-1.5 py-0.5 bg-zinc-800/50 border border-amber-900/30 rounded text-xs text-amber-100/70"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Collection Reason */}
-                      {text.curator_note && (
-                        <div className="pt-2 border-t border-amber-900/20">
-                          <p className="text-xs text-amber-100/70 leading-relaxed">
-                            {text.curator_note}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* View Button */}
-                      <Link
-                        href={`/library/${text.id}`}
-                        className="block w-full py-2 text-center bg-amber-600/10 hover:bg-amber-600 text-amber-400 hover:text-white rounded-lg text-xs font-medium transition-all duration-200"
-                      >
-                        View Document
-                      </Link>
-                    </div>
+                {text.cover_image_url ? (
+                  <Image
+                    src={text.cover_image_url}
+                    alt={text.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover opacity-90 group-hover:opacity-40 transition-all duration-500 grayscale-[0.3] group-hover:grayscale-0"
+                    style={{ objectPosition: (text.metadata as any)?.cover_position || 'center' }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-zinc-900">
+                    <BookOpen className="w-8 h-8 text-zinc-700" />
                   </div>
+                )}
+
+                {/* Hover Overlay - Summary & Curator Note */}
+                <div className="absolute inset-0 z-20 flex flex-col p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 backdrop-blur-sm overflow-hidden">
+                  <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-amber-500/20 scrollbar-track-transparent pr-2 space-y-3">
+                    {text.short_summary && (
+                      <div className="space-y-1">
+                        <h4 className="text-xs uppercase tracking-wider text-amber-500 font-bold">Summary</h4>
+                        <p className="text-sm text-zinc-300 leading-relaxed font-light">
+                          {text.short_summary}
+                        </p>
+                      </div>
+                    )}
+
+                    {text.curator_note && (
+                      <div className="space-y-1 pt-2 border-t border-white/10">
+                        <h4 className="text-xs uppercase tracking-wider text-cyan-500 font-bold">Curator's Note</h4>
+                        <p className="text-sm text-zinc-400 italic font-serif leading-relaxed">
+                          "{text.curator_note}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Domain & Lenses */}
+                    {(text.domain || (text.lenses && text.lenses.length > 0)) && (
+                      <div className="space-y-2 pt-2 border-t border-white/10">
+                        {text.domain && (
+                          <div className="space-y-1">
+                            <h4 className="text-xs uppercase tracking-wider text-cyan-500 font-bold">Domain</h4>
+                            <span className="inline-block px-2 py-0.5 text-xs border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 rounded-sm">
+                              {text.domain}
+                            </span>
+                          </div>
+                        )}
+                        {text.lenses && text.lenses.length > 0 && (
+                          <div className="space-y-1">
+                            <h4 className="text-xs uppercase tracking-wider text-purple-500 font-bold">Lenses</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {text.lenses.map(lens => (
+                                <span key={lens} className="px-2 py-0.5 text-xs border border-white/10 bg-white/5 text-zinc-300 rounded-sm">
+                                  {lens}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!text.short_summary && !text.curator_note && !text.domain && (!text.lenses || text.lenses.length === 0) && (
+                      <div className="h-full flex items-center justify-center">
+                        <p className="text-xs text-zinc-600 uppercase tracking-widest">No details available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            </div>
+
+            {/* Content Section */}
+            <div className="flex flex-1 flex-col p-4 gap-3">
+              {/* Header */}
+              <div className="mb-1">
+                <Link href={`/library/${text.id}`} className="block">
+                  <h3 className="text-lg font-bold text-zinc-200 group-hover:text-amber-400 leading-tight mb-1.5 transition-colors line-clamp-2 uppercase tracking-tight">
+                    {text.title}
+                  </h3>
+                </Link>
+                {text.author && (
+                  <div className="flex items-center gap-1 text-xs text-zinc-500 font-mono uppercase tracking-wider">
+                    <span>//</span>
+                    <span className="truncate">{text.author}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Chips */}
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {text.domain && (
+                  <span className="px-2 py-0.5 text-xs border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 rounded-sm">
+                    {text.domain}
+                  </span>
+                )}
+                {text.lenses?.slice(0, 2).map(lens => (
+                  <span key={lens} className="px-2 py-0.5 text-xs border border-white/10 bg-white/5 text-zinc-400 rounded-sm">
+                    {lens}
+                  </span>
                 ))}
               </div>
+
+              {/* Action Footer */}
+              <div className="mt-auto pt-2 border-t border-white/5 flex items-center justify-between">
+                <div className="flex gap-1">
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => { e.preventDefault(); router.push(`/admin/edit/${text.id}`); }}
+                      title="Edit Node"
+                      aria-label="Edit Node"
+                      className="p-1 hover:text-amber-400 text-zinc-600 transition-colors"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+                  )}
+                  <BookmarkButton textId={text.id} size="sm" />
+                </div>
+
+                <Link
+                  href={`/library/${text.id}`}
+                  className="text-xs font-bold text-zinc-500 hover:text-white uppercase tracking-wider flex items-center gap-1 transition-colors"
+                >
+                  Access_Node <span className="text-amber-500">&gt;</span>
+                </Link>
+              </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
 }
-
