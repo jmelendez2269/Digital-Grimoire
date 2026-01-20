@@ -111,7 +111,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <Link
               key={item.path}
               href={item.path}
-              className={`relative px-4 py-1.5 text-sm font-medium transition-all duration-300 rounded-md border border-transparent ${isActive(item.path) || pathname?.startsWith(item.path + '/')
+              className={`relative px-4 py-1.5 text-base font-medium transition-all duration-300 rounded-md border border-transparent ${isActive(item.path) || pathname?.startsWith(item.path + '/')
                 ? "text-amber-400 bg-amber-500/10 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
                 : "text-zinc-400 hover:text-amber-200 hover:bg-white/5"
                 }`}
@@ -131,7 +131,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
           <div className="relative ml-2" ref={moreMenuRef}>
             <button
               onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs uppercase tracking-wider font-mono text-zinc-500 transition-colors hover:text-amber-400"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm uppercase tracking-wider font-mono text-zinc-500 transition-colors hover:text-amber-400"
             >
               EXTRAS <ChevronDown className={`w-3 h-3 transition-transform ${moreMenuOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -155,17 +155,15 @@ function Header({ librarySearch }: HeaderProps = {}) {
         {/* Right Side: Status & User */}
         <div className="flex items-center gap-3">
           {/* System Status Indicator (Hidden on mobile) */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded bg-black/40 border border-white/5 mr-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-            <span className="text-[10px] font-mono text-emerald-500/80 tracking-widest uppercase">Connected</span>
-          </div>
+          {/* System Status Indicator - Removed per user request */}
 
           <button
             onClick={() => setFeedbackModalOpen(true)}
-            className="p-2 text-zinc-400 hover:text-amber-400 hover:bg-white/5 rounded-md transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-zinc-400 hover:text-amber-400 hover:bg-white/5 rounded-md transition-colors"
             title="Send Feedback"
           >
             <span className="text-lg leading-none">💬</span>
+            <span className="text-sm font-medium">Feedback</span>
           </button>
 
           {/* User Profile */}
@@ -177,7 +175,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full border border-white/10 hover:border-amber-500/30 bg-black/30 transition-all group"
               >
-                <span className="hidden sm:block text-xs font-mono text-zinc-400 group-hover:text-amber-200 px-2 text-right">
+                <span className="hidden sm:block text-sm font-mono text-zinc-400 group-hover:text-amber-200 px-2 text-right">
                   {user.user_metadata?.username || user.email?.split("@")[0]}
                 </span>
 

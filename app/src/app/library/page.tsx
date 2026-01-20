@@ -236,8 +236,8 @@ function LibraryPageContent() {
                                     setShowSortDropdown(false);
                                   }}
                                   className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${sortBy === field
-                                      ? 'bg-amber-600/20 text-amber-400'
-                                      : 'text-amber-100/80 hover:bg-zinc-800/50'
+                                    ? 'bg-amber-600/20 text-amber-400'
+                                    : 'text-amber-100/80 hover:bg-zinc-800/50'
                                     }`}
                                 >
                                   <span>{labels[field]}</span>
@@ -288,20 +288,14 @@ function LibraryPageContent() {
 
           {/* Loading State */}
           {!user ? null : loading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(8)].map((_, i) => (
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 p-1">
+              {[...Array(16)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-zinc-900/30 border border-amber-900/20 rounded-xl overflow-hidden animate-pulse"
+                  className="bg-zinc-900/30 border border-amber-900/20 rounded-lg overflow-hidden animate-pulse h-full"
                 >
                   {/* Cover placeholder */}
-                  <div className="aspect-[2/3] bg-zinc-800/50" />
-                  {/* Content placeholder */}
-                  <div className="p-5 space-y-3">
-                    <div className="h-6 bg-zinc-800/50 rounded w-3/4" />
-                    <div className="h-4 bg-zinc-800/50 rounded w-1/2" />
-                    <div className="h-8 bg-zinc-800/50 rounded w-full" />
-                  </div>
+                  <div className="aspect-[2/3] bg-zinc-800/50 w-full" />
                 </div>
               ))}
             </div>

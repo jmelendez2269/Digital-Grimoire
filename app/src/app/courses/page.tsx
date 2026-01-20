@@ -61,7 +61,7 @@ function CoursesPageContent() {
         params.append('published', 'true'); // Only show published courses
 
         const response = await fetch(`/api/courses?${params.toString()}`);
-        
+
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || 'Failed to fetch courses');
@@ -117,36 +117,33 @@ function CoursesPageContent() {
   // Helper to clean description by removing redundant metadata
   const cleanDescription = (text: string | null | undefined): string | null => {
     if (!text || typeof text !== 'string') return null;
-    
+
     let cleaned = text;
-    
+
     // Remove the entire metadata block that appears in the description
-    // Pattern matches: "Course Length: X weeksLevel: ... (no prior...)Orientation: ..."
-    // This removes everything from "Course Length:" through "Orientation:" and the text after it
-    // until we hit a proper sentence (starts with capital letter followed by lowercase)
     cleaned = cleaned.replace(/Course\s*Length:.*?Orientation:\s*[A-Z][a-z]*?\s*[a-z]*?\.\.\./gi, '');
     cleaned = cleaned.replace(/Course\s*Length:.*?Orientation:\s*[^\n]*?(?=\s+[A-Z][a-z]|$)/gi, '');
-    
+
     // Remove "A Synthesis Course for the Seeker" if it appears as a prefix before metadata
     cleaned = cleaned.replace(/^A\s+Synthesis\s+Course\s+for\s+the\s+Seeker\s+(?=Course\s*Length:)/i, '');
-    
+
     // Clean up any remaining individual metadata fragments
     cleaned = cleaned.replace(/Course\s*Length:\s*\d+\s*weeks?/gi, '');
     cleaned = cleaned.replace(/Level:\s*[^\n(]*?(?=\s*\(|Orientation:|$)/gi, '');
     cleaned = cleaned.replace(/\(no\s+prior\s+academic\s+training\s+required\)/gi, '');
     cleaned = cleaned.replace(/Orientation:\s*[^\n]*?(?=\s+[A-Z][a-z]|$)/gi, '');
     cleaned = cleaned.replace(/\bFoundational-Intermediate\b/gi, '');
-    
+
     // Clean up multiple spaces and trim
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    
+
     return cleaned;
   };
 
   // Helper to safely extract text from description/premise (handles JSON strings)
   const getTextPreview = (text: string | null | undefined, maxLength: number = 150): string | null => {
     if (!text || typeof text !== 'string') return null;
-    
+
     // Check if it's a JSON string (starts with { or [)
     if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
       try {
@@ -164,89 +161,113 @@ function CoursesPageContent() {
         // Not valid JSON, treat as plain text
       }
     }
-    
+
     // Clean the text first, then truncate if needed
     const cleaned = cleanDescription(text);
     if (!cleaned) return null;
-    
+
     return cleaned.length > maxLength ? cleaned.substring(0, maxLength) + '...' : cleaned;
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-200 font-sans selection:bg-amber-500/30">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 relative">
+        {/* Background Gradients */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-900/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-900/10 rounded-full blur-[120px]" />
+        </div>
+
         {/* Page Header */}
-        <div className="border-b border-amber-900/20 bg-zinc-900/50">
-          <div className="max-w-screen-2xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="relative z-10 border-b border-white/10 bg-zinc-900/30 backdrop-blur-md">
+          <div className="max-w-screen-2xl mx-auto px-4 py-8">
+            <div className="flex items-center justify-between gap-6 flex-wrap">
               <div>
-                <h1 className="text-3xl font-bold text-amber-100 mb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-px w-8 bg-amber-500/50" />
+                  <span className="text-[10px] uppercase tracking-wider font-mono text-amber-500">System.Courses</span>
+                </div>
+                <h1 className="text-3xl font-bold text-white tracking-tight">
                   Convergence Courses
                 </h1>
-                <p className="text-zinc-400">
-                  Explore foundational courses and rotating themes
+                <p className="text-zinc-400 mt-2 max-w-xl">
+                  Explore foundational and thematic knowledge modules. Select a node to begin transmission.
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-3">
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-100/60 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Search courses..."
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    className="pl-10 pr-4 py-2 text-sm bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 transition-colors w-64"
-                  />
+                {/* Search Bar - Terminal Style */}
+                <div className="relative group">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/20 to-cyan-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-3 w-4 h-4 text-amber-500/60" />
+                    <input
+                      type="text"
+                      placeholder="SEARCH_COURSES..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      className="pl-10 pr-4 py-2 bg-black/50 border border-white/10 rounded-lg text-amber-500 placeholder-amber-500/30 font-mono text-sm focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 w-64 transition-all"
+                    />
+                  </div>
                 </div>
 
                 {/* Filter Toggle */}
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 px-4 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 text-sm hover:bg-zinc-800/50 hover:border-amber-600/50 transition-colors"
+                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-all ${showFilters
+                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                    : 'bg-zinc-900/40 border-white/10 text-zinc-400 hover:text-amber-400 hover:border-amber-500/30'
+                    }`}
                 >
                   <Filter className="w-4 h-4" />
-                  Filters
+                  FILTERS
                 </button>
               </div>
             </div>
 
             {/* Filters Panel */}
             {showFilters && (
-              <div className="mt-4 p-4 bg-zinc-900/30 border border-amber-900/20 rounded-lg">
-                <div className="flex items-center gap-6 flex-wrap">
-                  <div>
-                    <label className="block text-xs font-medium text-amber-100/60 mb-2">
-                      Course Type
+              <div className="mt-6 p-6 bg-black/40 border border-white/10 rounded-lg backdrop-blur-sm animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center gap-8 flex-wrap">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-mono text-amber-500/60">
+                      Module Type
                     </label>
-                    <select
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                      className="px-3 py-1.5 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 text-sm focus:outline-none focus:border-amber-600/50"
-                    >
-                      <option value="all">All Types</option>
-                      <option value="foundational">Foundational</option>
-                      <option value="theme">Theme</option>
-                      <option value="rotation">Rotation</option>
-                    </select>
+                    <div className="flex gap-2">
+                      {['all', 'foundational', 'theme', 'rotation'].map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setFilterType(type)}
+                          className={`px-3 py-1.5 text-xs font-mono border rounded uppercase transition-colors ${filterType === type
+                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                            : 'bg-transparent border-white/10 text-zinc-500 hover:border-amber-500/30 hover:text-amber-400/80'
+                            }`}
+                        >
+                          {type === 'all' ? 'All Types' : type}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-amber-100/60 mb-2">
-                      Level
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-wider font-mono text-amber-500/60">
+                      Access Level
                     </label>
-                    <select
-                      value={filterLevel}
-                      onChange={(e) => setFilterLevel(e.target.value)}
-                      className="px-3 py-1.5 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 text-sm focus:outline-none focus:border-amber-600/50"
-                    >
-                      <option value="all">All Levels</option>
-                      <option value="foundational">Foundational</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
-                    </select>
+                    <div className="flex gap-2">
+                      {['all', 'foundational', 'intermediate', 'advanced'].map((lvl) => (
+                        <button
+                          key={lvl}
+                          onClick={() => setFilterLevel(lvl)}
+                          className={`px-3 py-1.5 text-xs font-mono border rounded uppercase transition-colors ${filterLevel === lvl
+                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                            : 'bg-transparent border-white/10 text-zinc-500 hover:border-cyan-500/30 hover:text-cyan-400/80'
+                            }`}
+                        >
+                          {lvl === 'all' ? 'All Levels' : lvl}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -255,23 +276,25 @@ function CoursesPageContent() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-screen-2xl mx-auto px-4 py-8">
+        <div className="relative z-10 max-w-screen-2xl mx-auto px-4 py-8">
           {/* Error State */}
           {error && !authLoading && (
-            <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+            <div className="mb-6 p-4 bg-red-900/10 border border-red-500/20 rounded-lg backdrop-blur-sm">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <div className="p-1 bg-red-500/10 rounded">
+                  <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-red-400 mb-1">Error Loading Courses</h3>
-                  <p className="text-sm text-red-300/80">{error}</p>
+                  <h3 className="text-sm font-mono text-red-400 mb-1 uppercase tracking-wide">Error: Failed to Load Courses</h3>
+                  <p className="text-sm text-red-400/70">{error}</p>
                   {!user && (
                     <Link
                       href="/login"
-                      className="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="inline-block mt-3 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded text-xs font-mono uppercase tracking-wide transition-colors"
                     >
-                      Go to Login
+                      &gt; Authenticate
                     </Link>
                   )}
                 </div>
@@ -285,111 +308,100 @@ function CoursesPageContent() {
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-zinc-900/30 border border-amber-900/20 rounded-xl overflow-hidden animate-pulse"
+                  className="bg-zinc-900/20 border border-white/5 rounded-lg overflow-hidden h-64 animate-pulse"
                 >
-                  <div className="p-6 space-y-4">
-                    <div className="h-6 bg-zinc-800/50 rounded w-3/4" />
-                    <div className="h-4 bg-zinc-800/50 rounded w-full" />
-                    <div className="h-4 bg-zinc-800/50 rounded w-2/3" />
-                    <div className="flex gap-2 mt-4">
-                      <div className="h-6 bg-zinc-800/50 rounded w-20" />
-                      <div className="h-6 bg-zinc-800/50 rounded w-24" />
-                    </div>
-                  </div>
+                  <div className="h-full w-full bg-gradient-to-b from-transparent to-black/20" />
                 </div>
               ))}
             </div>
           ) : courses.length === 0 ? (
             /* Empty State */
-            <div className="text-center py-16">
-              <GraduationCap className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
-              <h3 className="text-lg font-medium text-amber-100 mb-2">
+            <div className="text-center py-24 border border-white/5 rounded-2xl bg-zinc-900/10 backdrop-blur-sm flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-zinc-900/50 border border-white/10 flex items-center justify-center mb-6">
+                <GraduationCap className="w-8 h-8 text-zinc-600" />
+              </div>
+              <h3 className="text-lg font-mono text-zinc-300 mb-2 uppercase tracking-wide">
                 {searchQuery || filterType !== 'all' || filterLevel !== 'all'
-                  ? 'No courses found'
-                  : 'No courses available yet'}
+                  ? 'No matching modules found'
+                  : 'No modules available'}
               </h3>
-              <p className="text-sm text-amber-100/60 mb-6">
+              <p className="text-sm text-zinc-500 max-w-sm mx-auto">
                 {searchQuery || filterType !== 'all' || filterLevel !== 'all'
-                  ? 'Try adjusting your search or filters'
-                  : 'Courses will appear here once they are published'}
+                  ? 'Adjust your query parameters to find data.'
+                  : 'Course availability is currently null. Check back later.'}
               </p>
             </div>
           ) : (
-            /* Courses Grid */
+            /* Courses Grid - Data Nodes */
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {courses.map((course) => (
                 <Link
                   key={course.id}
                   href={`/courses/${course.slug || course.id}`}
-                  className="bg-zinc-900/30 border border-amber-900/20 rounded-xl overflow-hidden hover:border-amber-600/50 hover:bg-zinc-900/50 transition-all group"
+                  className="group relative flex flex-col h-full bg-zinc-900/40 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all duration-300"
                 >
-                  <div className="p-6">
+                  {/* Card specific gradients */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-amber-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  {/* Node Header */}
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-black/20 text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                      <span>NODE_{course.id.substring(0, 6)}</span>
+                    </div>
+                    <span>{course.updated_at ? new Date(course.updated_at).toLocaleDateString() : 'N/A'}</span>
+                  </div>
+
+                  <div className="p-6 flex-1 flex flex-col relative z-10">
                     {/* Course Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-amber-100 group-hover:text-amber-400 transition-colors mb-2">
-                          {course.title}
-                        </h3>
-                        {course.course_type && (
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-amber-600/20 text-amber-400 rounded">
+                    <div className="mb-4">
+                      {course.course_type && (
+                        <div className="mb-3">
+                          <span className={`inline-block px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border rounded ${course.course_type === 'foundational'
+                            ? 'border-amber-500/30 text-amber-400 bg-amber-500/10'
+                            : 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10'
+                            }`}>
                             {getCourseTypeLabel(course.course_type)}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
+
+                      <h3 className="text-xl font-bold text-zinc-100 group-hover:text-amber-400 transition-colors line-clamp-2">
+                        {course.title}
+                      </h3>
                     </div>
 
                     {/* Course Description */}
-                    {(() => {
-                      const descriptionText = getTextPreview(course.description, 500);
-                      return descriptionText ? (
-                        <p className="text-sm text-zinc-400 mb-4 line-clamp-6">
-                          {descriptionText}
-                        </p>
-                      ) : null;
-                    })()}
-
-                    {/* Course Premise */}
-                    {(() => {
-                      const premiseText = getTextPreview(course.premise, 300);
-                      return premiseText ? (
-                        <p className="text-sm text-amber-100/80 italic mb-4 line-clamp-3">
-                          {premiseText}
-                        </p>
-                      ) : null;
-                    })()}
+                    <div className="flex-1 mb-6">
+                      {(() => {
+                        const descriptionText = getTextPreview(course.description, 180);
+                        return descriptionText ? (
+                          <p className="text-sm text-zinc-400 line-clamp-3 leading-relaxed">
+                            {descriptionText}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-zinc-600 italic">No briefing available.</p>
+                        );
+                      })()}
+                    </div>
 
                     {/* Course Metadata */}
-                    <div className="flex items-center gap-4 text-xs text-zinc-500 mt-4 pt-4 border-t border-amber-900/20">
+                    <div className="flex items-center gap-4 pt-4 border-t border-white/5 text-xs text-zinc-500 font-mono">
                       {course.duration_weeks && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{course.duration_weeks} week</span>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{course.duration_weeks} WKS</span>
                         </div>
                       )}
                       {course.level && (
-                        <div className="flex items-center gap-1">
-                          <GraduationCap className="w-3 h-3" />
-                          <span>{getLevelLabel(course.level)}</span>
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${course.level === 'foundational' ? 'bg-amber-500' :
+                            course.level === 'intermediate' ? 'bg-cyan-500' : 'bg-purple-500'
+                            }`} />
+                          <span className="uppercase">{course.level}</span>
                         </div>
                       )}
                     </div>
-
-                    {/* Learning Outcomes Preview */}
-                    {course.learning_outcomes && course.learning_outcomes.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-amber-900/20">
-                        <p className="text-xs font-medium text-amber-100/60 mb-2">
-                          Learning Outcomes:
-                        </p>
-                        <ul className="text-xs text-zinc-400 space-y-1">
-                          {course.learning_outcomes.map((outcome, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
-                              <span className="text-amber-600 mt-1">•</span>
-                              <span className="line-clamp-2">{outcome}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
                 </Link>
               ))}

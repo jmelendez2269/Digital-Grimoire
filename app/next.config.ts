@@ -1,4 +1,4 @@
-import {withSentryConfig} from '@sentry/nextjs';
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from "next";
 
 // Bundle analyzer for performance monitoring
@@ -60,14 +60,14 @@ const nextConfig: NextConfig = {
   // Security headers
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production';
-    
+
     // Content Security Policy
     // Allow necessary services: Supabase, Cloudflare R2, Azure, OpenAI, Vercel Analytics, Sentry
     // In development, allow localhost connections for Sentry tunnel
     const connectSrc = isProduction
       ? "'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com"
       : "'self' http://localhost:* http://127.0.0.1:* https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com";
-    
+
     const cspDirectives = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com",
@@ -81,7 +81,7 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "upgrade-insecure-requests",
+      ...(isProduction ? ["upgrade-insecure-requests"] : []),
     ].join('; ');
 
     return [
@@ -104,11 +104,11 @@ const nextConfig: NextConfig = {
           // Strict-Transport-Security (HSTS) - only in production
           ...(isProduction
             ? [
-                {
-                  key: 'Strict-Transport-Security',
-                  value: 'max-age=31536000; includeSubDomains; preload',
-                },
-              ]
+              {
+                key: 'Strict-Transport-Security',
+                value: 'max-age=31536000; includeSubDomains; preload',
+              },
+            ]
             : []),
           // Referrer Policy
           {
@@ -162,14 +162,14 @@ const nextConfig: NextConfig = {
         contextRegExp: /.*/,
       })
     );
-    
+
     // Set canvas alias to false
     config.resolve.alias = {
       ...config.resolve.alias,
       canvas: false,
       encoding: false,
     };
-    
+
     // Fallback for node modules  
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -178,7 +178,7 @@ const nextConfig: NextConfig = {
       os: false,
       canvas: false,
     };
-    
+
     // Ensure proper module resolution for TypeScript path aliases
     if (!isServer) {
       config.resolve.modules = [
@@ -186,10 +186,10 @@ const nextConfig: NextConfig = {
         require('path').join(__dirname, 'src'),
       ];
     }
-    
+
     // Note: OpenTelemetry instrumentation issues are handled by Sentry's Next.js SDK
     // If MODULE_NOT_FOUND errors occur, they're typically resolved by Sentry's webpack config
-    
+
     return config;
   },
 };
