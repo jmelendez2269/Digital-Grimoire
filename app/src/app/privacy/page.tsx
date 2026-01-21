@@ -26,17 +26,17 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPolicyPage() {
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         <h1 className="mb-8 text-4xl font-bold text-amber-100">Privacy Policy</h1>
-        
+
         <div className="prose prose-invert prose-amber max-w-none">
           <p className="text-zinc-400">
             <strong>Last Updated:</strong> {currentDate}<br />
@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">1. Introduction</h2>
             <p className="text-zinc-300">
-              Welcome to Convergence ("we," "our," or "us"). This Privacy Policy explains how we collect, 
+              Welcome to Convergence ("we," "our," or "us"). This Privacy Policy explains how we collect,
               use, disclose, and safeguard your information when you use our digital library platform (the "Service").
             </p>
             <p className="text-zinc-300">
@@ -56,7 +56,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">2. Information We Collect</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">2.1 Information You Provide Directly</h3>
             <p className="text-zinc-300 mb-2"><strong>Account Information:</strong></p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
@@ -116,12 +116,12 @@ export default function PrivacyPolicyPage() {
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">4. Third-Party Services and Data Sharing</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.1 Service Providers</h3>
             <p className="text-zinc-300 mb-4">
               We use the following third-party services to operate the platform:
             </p>
-            
+
             <div className="overflow-x-auto">
               <table className="min-w-full border border-zinc-700">
                 <thead className="bg-zinc-800">
@@ -185,8 +185,8 @@ export default function PrivacyPolicyPage() {
             <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 my-4">
               <p className="text-amber-200 font-semibold mb-2">⚠️ Important:</p>
               <p className="text-zinc-300">
-                When you use AI features (chat, metadata extraction), your content is sent to third-party AI providers 
-                (Anthropic, OpenAI, Google). These services process your content to generate responses and may temporarily 
+                When you use AI features (chat, metadata extraction), your content is sent to third-party AI providers
+                (Anthropic, OpenAI, Google). These services process your content to generate responses and may temporarily
                 store it for processing. They do NOT use your content to train their models (based on their current policies).
               </p>
               <p className="text-zinc-300 mt-2">
@@ -212,7 +212,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">5. Cookies and Tracking Technologies</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.1 Essential Cookies</h3>
             <p className="text-zinc-300 mb-2"><strong>Authentication Cookies:</strong></p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
@@ -233,14 +233,14 @@ export default function PrivacyPolicyPage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.3 Local Storage</h3>
             <p className="text-zinc-300">
-              We use browser local storage for text-to-speech preferences, wiki link activation history, 
+              We use browser local storage for text-to-speech preferences, wiki link activation history,
               and reading position bookmarks. Local storage is stored on your device and can be cleared via browser settings.
             </p>
           </section>
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">6. Data Storage and Security</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">6.1 Where Your Data is Stored</h3>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
               <li><strong>Account Data & User Content:</strong> Supabase (PostgreSQL database)</li>
@@ -258,7 +258,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Monitoring:</strong> Error tracking and security monitoring</li>
             </ul>
             <p className="text-zinc-300 mt-4 italic">
-              However: No method of transmission over the internet is 100% secure. While we strive to protect your data, 
+              However: No method of electronic transfer over the internet is 100% secure. While we strive to protect your data,
               we cannot guarantee absolute security.
             </p>
 
@@ -270,14 +270,14 @@ export default function PrivacyPolicyPage() {
               <li><strong>Error Logs:</strong> Retained for up to 90 days</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              <strong>Account Deletion:</strong> When you delete your account, we will delete your personal information 
+              <strong>Account Deletion:</strong> When you delete your account, we will delete your personal information
               and user-generated content within 30 days, except where we are required to retain it by law.
             </p>
           </section>
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">7. Your Rights and Choices</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">7.1 Access and Control</h3>
             <p className="text-zinc-300 mb-2">You have the right to:</p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
@@ -299,14 +299,14 @@ export default function PrivacyPolicyPage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">7.3 GDPR Rights (EU Users)</h3>
             <p className="text-zinc-300">
-              If you are in the European Union, you have additional rights: right to data portability, right to object 
+              If you are in the European Union, you have additional rights: right to data portability, right to object
               to processing, right to restrict processing, and right to lodge a complaint with a supervisory authority.
             </p>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">7.4 CCPA Rights (California Users)</h3>
             <p className="text-zinc-300">
-              If you are a California resident, you have the right to know what personal information is collected, 
-              know if personal information is sold or disclosed (we do not sell data), opt-out of the sale of personal 
+              If you are a California resident, you have the right to know what personal information is collected,
+              know if personal information is sold or disclosed (we do not sell data), opt-out of the sale of personal
               information, and non-discrimination for exercising your rights.
             </p>
           </section>
@@ -314,8 +314,8 @@ export default function PrivacyPolicyPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">8. Children's Privacy</h2>
             <p className="text-zinc-300">
-              Our Service is not intended for children under 13 years of age. We do not knowingly collect personal 
-              information from children under 13. If you are a parent or guardian and believe your child has provided 
+              Our Service is not intended for children under 13 years of age. We do not knowingly collect personal
+              information from children under 13. If you are a parent or guardian and believe your child has provided
               us with personal information, please contact us immediately at{" "}
               <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
                 privacy@convergencelibrary.com
@@ -329,12 +329,12 @@ export default function PrivacyPolicyPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">9. International Data Transfers</h2>
             <p className="text-zinc-300">
-              Your information may be transferred to and processed in countries other than your country of residence. 
+              Your information may be transferred to and processed in countries other than your country of residence.
               These countries may have data protection laws that differ from those in your country.
             </p>
             <p className="text-zinc-300 mt-2">
-              By using our Service, you consent to the transfer of your information to these countries. We ensure 
-              appropriate safeguards are in place when transferring data internationally, including standard contractual 
+              By using our Service, you consent to the transfer of your information to these countries. We ensure
+              appropriate safeguards are in place when transferring data internationally, including standard contractual
               clauses, adequacy decisions, and vendor privacy certifications.
             </p>
           </section>
@@ -378,7 +378,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">12. Additional Information</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">12.1 Data Controller</h3>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">

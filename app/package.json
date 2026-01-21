@@ -48,6 +48,7 @@
     "@tanstack/react-query-devtools": "^5.90.2",
     "@tanstack/react-virtual": "^3.13.12",
     "@tiptap/core": "^3.14.0",
+    "@tiptap/extension-character-count": "^3.16.0",
     "@tiptap/extension-document": "^3.10.1",
     "@tiptap/extension-drag-handle": "^3.14.0",
     "@tiptap/extension-drag-handle-react": "^3.14.0",

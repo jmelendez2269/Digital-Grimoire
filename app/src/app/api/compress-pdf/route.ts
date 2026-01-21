@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Convert to base64 for transmission
+    // Convert to base64 for transfer
     const base64 = Buffer.from(result.bytes).toString('base64');
 
     return NextResponse.json({

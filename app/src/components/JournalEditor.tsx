@@ -7,6 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import { WikiLink } from '../tiptap/extensions/WikiLinkExtension';
 import { SlashMenu } from '../tiptap/extensions/SlashMenu';
+import CharacterCount from '@tiptap/extension-character-count';
 import { NodeRange } from '@tiptap/extension-node-range';
 import { DragHandle as DragHandleExtension } from '@tiptap/extension-drag-handle';
 import { DragHandle } from '@tiptap/extension-drag-handle-react';
@@ -45,6 +46,7 @@ export default function JournalEditor({
       Placeholder.configure({
         placeholder,
       }),
+      CharacterCount,
       Typography,
       NodeRange,
       SlashMenu,
@@ -177,8 +179,8 @@ export default function JournalEditor({
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-900 border border-emerald-500/50"></span>
             SYSTEM_READY
           </span>
-          <span>WORDS: {editor.storage.characterCount.words()}</span>
-          <span>CHARS: {editor.storage.characterCount.characters()}</span>
+          <span>WORDS: {editor.storage.characterCount?.words?.() ?? 0}</span>
+          <span>CHARS: {editor.storage.characterCount?.characters?.() ?? 0}</span>
         </div>
         <div>
           {/* Right side status items if needed */}

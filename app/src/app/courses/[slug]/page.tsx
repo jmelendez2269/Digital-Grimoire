@@ -186,10 +186,7 @@ function CourseDetailContent() {
             <div className="space-y-12">
               {/* Course Header */}
               <div className="relative">
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 text-[10px] font-mono text-zinc-700 select-none hidden md:block">
-                  ID: {course.id.split('-')[0].toUpperCase()} // REF_SIG: {course.slug.substring(0, 4).toUpperCase()}
-                </div>
+                {/* Decorative Elements - ID Removed */}
 
                 <div className="flex flex-col gap-4 mb-2">
                   {course.course_type && (
@@ -218,12 +215,6 @@ function CourseDetailContent() {
                       <span>{getLevelLabel(course.level)}</span>
                     </div>
                   )}
-                  {course.created_at && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-zinc-600" />
-                      <span>INITIALIZED: {new Date(course.created_at).toLocaleDateString()}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -233,7 +224,7 @@ function CourseDetailContent() {
                   <div className="absolute top-0 right-0 p-2 opacity-10">
                     <BookOpen className="w-24 h-24 text-amber-500" />
                   </div>
-                  <h2 className="text-xs font-mono text-amber-500 uppercase tracking-widest mb-4">Core Premise</h2>
+                  <h2 className="text-lg font-bold text-amber-500 uppercase tracking-widest mb-4">Core Premise</h2>
                   <div className="relative z-10 text-lg md:text-xl text-zinc-200 font-light italic leading-relaxed">
                     {renderRichText(course.premise, "text-zinc-200")}
                   </div>
@@ -246,7 +237,7 @@ function CourseDetailContent() {
                   {/* Description */}
                   {course.description && (
                     <div>
-                      <h2 className="flex items-center gap-2 text-sm font-mono text-zinc-500 uppercase tracking-wider mb-4">
+                      <h2 className="flex items-center gap-2 text-2xl font-bold text-amber-500 mb-4">
                         <span className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
                         Module Overview
                       </h2>
@@ -271,7 +262,7 @@ function CourseDetailContent() {
                   {/* Learning Outcomes */}
                   {course.learning_outcomes && course.learning_outcomes.length > 0 && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="flex items-center gap-2 text-sm font-mono text-zinc-500 uppercase tracking-wider mb-4">
+                      <h2 className="flex items-center gap-2 text-2xl font-bold text-amber-500 mb-4">
                         <span className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
                         Learning Data Points
                       </h2>
@@ -292,7 +283,7 @@ function CourseDetailContent() {
                   <div className="sticky top-24 space-y-6">
                     <div className="p-1 rounded-xl bg-gradient-to-b from-amber-500/20 to-cyan-500/20">
                       <div className="bg-black/80 rounded-lg p-6 backdrop-blur-xl border border-white/10">
-                        <h3 className="text-lg font-bold text-white mb-2">Begin Transmission</h3>
+                        <h3 className="text-lg font-bold text-white mb-2">Initialize Module</h3>
                         <p className="text-sm text-zinc-400 mb-6">Initialize this learning module and access the knowledge data stream.</p>
 
                         <Link

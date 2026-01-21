@@ -192,7 +192,7 @@ function CoursesPageContent() {
                   Convergence Courses
                 </h1>
                 <p className="text-zinc-400 mt-2 max-w-xl">
-                  Explore foundational and thematic knowledge modules. Select a node to begin transmission.
+                  Explore foundational and thematic knowledge modules. Select a node to begin access.
                 </p>
               </div>
 
