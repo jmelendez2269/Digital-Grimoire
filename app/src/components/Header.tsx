@@ -2,6 +2,7 @@
 
 import { useState, memo, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedbackModal from "./FeedbackModal";
@@ -181,10 +182,12 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 </span>
 
                 {user.user_metadata?.avatar_url ? (
-                  <img
+                  <Image
                     src={user.user_metadata.avatar_url}
                     alt="User"
-                    className="h-7 w-7 rounded-full object-cover ring-1 ring-white/10 group-hover:ring-amber-500/50"
+                    width={28}
+                    height={28}
+                    className="rounded-full object-cover ring-1 ring-white/10 group-hover:ring-amber-500/50"
                   />
                 ) : (
                   <div className="h-7 w-7 rounded-full bg-amber-900/40 flex items-center justify-center text-[10px] font-bold text-amber-500 ring-1 ring-amber-500/30">

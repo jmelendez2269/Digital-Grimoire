@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Clock, Book, ArrowRight } from "lucide-react";
 
 interface RitualCardProps {
@@ -28,10 +29,12 @@ export default function RitualCard({
                 {/* Image/Decoration */}
                 <div className="relative h-48 w-full overflow-hidden bg-zinc-950">
                     {imageUrl ? (
-                        <img
+                        <Image
                             src={imageUrl}
                             alt={title}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100"
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                     ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-900 to-black">

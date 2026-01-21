@@ -6,6 +6,7 @@
 ## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
 
 **AWS → Cloudflare R2:**  
+
 - **Reason:** AWS requires paid support ($29-100/month) to troubleshoot issues
 - **Benefits:** No egress fees, free community support, simpler pricing
 - **Impact:** OCR deferred to Phase 2, manual metadata entry for MVP
@@ -23,11 +24,27 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 **Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
 **Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
-**Latest Session Updates (January 2026 - Annotation Save to Journal Feature Restored):**
-- ✅ **Save Annotation to Journal Button** - Feature restoration and enhancement
+**Sprint 6 Complete:** Akashic Design System Overhaul (Auth, Header, Library, Courses, Journal, Graph)
+**Sprint 9 Complete:** Performance & Mobile Optimization (Image, Code Splitting, Glassmorphism Tuning)
+
+**Latest Session Updates (January 2026 - Performance & Mobile Optimization):**
+
+- ✅ **Image Optimization** - Replaced `<img>` with `next/image` in Rituals, Profiles, and Headers
+- ✅ **Code Splitting** - Implemented `next/dynamic` for heavy components (`JournalEditor`)
+- ✅ **Mobile Performance** - Reduced glassmorphism blur (`backdrop-filter`) on mobile for better frame rates
+- ✅ **Layout Fixes** - Audited and fixed mobile layouts for `RitualRunner` and `Footer`
+
+- ✅ **Akashic Design System** - Implemented "Future Mystic" aesthetic across core pages
+  - **Auth:** Redesigned Login, Register, Email Verification
+  - **Header:** Refined UI, improved typography
+  - **Library:** Refined grid layout, hover-only details
+  - **Courses:** Improved layout and rich text rendering
+  - **Journal:** "Cover vibes" redesign
+  - **Graph:** Ported Admin Graph to Public View
+- ✅ **Annotation Save to Journal** - Feature restored and enhanced
   - Re-implemented "Save to Journal" button in annotation form
-  - Purple button with BookOpen icon positioned between "Save Annotation" and "Cancel"
-  - TipTap document formatting for structured journal entries
+  - Purple button with BookOpen icon
+  - TipTap document formatting integration
   - Quote displayed as blockquote, note as paragraph, document title as citation
   - Smart title generation from quote text (first 50 characters)
   - Comprehensive error handling and user feedback
@@ -37,6 +54,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - ✅ **Icon Integration** - Added BookOpen icon from lucide-react
 
 **Previous Session Updates (January 15, 2026 - Property to Entity Conversion System Complete):**
+
 - ✅ **Property to Entity Conversion System** - Complete implementation
   - Field-to-relationship type mapping configuration
   - Entity utility functions (parsing, category suggestion, slug generation, backwards field mapping)
@@ -60,6 +78,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
   - Individual value parsing and display
 
 **Previous Session Updates (January 2026 - Multi-Source Claims System Complete):**
+
 - ✅ **Multi-Source Knowledge Claims System** - Complete implementation
   - `knowledge_sources` and `knowledge_claims` tables (Migration 032)
   - Admin UI for managing sources and field-specific claims
@@ -71,6 +90,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
   - BOM normalization and robust error handling
 
 **Previous Session Updates (January 2026 - Convergence Graph UI Complete):**
+
 - ✅ **Convergence Graph UI** - Complete Phase 3B user interface implementation
   - D3.js force-directed network visualization with pan/zoom/drag
   - Comparative table view with sortable columns and similarity indicators
@@ -81,6 +101,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
   - Ready for data seeding (see `CONVERGENCE_GRAPH_DATA_GUIDE.md`)
 
 **Previous Session Updates (November 10, 2025 - Production Infrastructure & Documentation):**
+
 - ✅ **SendGrid Email Infrastructure** - Complete email setup with domain authentication (convergencelibrary.com)
   - Domain authenticated, DNS records configured (SPF, DKIM, DMARC, link branding)
   - Supabase SMTP configured with SendGrid credentials
@@ -112,6 +133,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - ✅ **Future Features Documentation** - All removed features properly documented in master development plan
 
 **Previous Session Updates (November 3, 2025 - Universal AI Search & Chat):**
+
 - ✅ **Floating AI Search Bar** - Expandable floating search component accessible from all pages
 - ✅ **Smart Model Selection** - Auto-selects least-used AI model (Claude, GPT, Gemini) based on usage stats
 - ✅ **AI Chat Modal** - Full-featured chat interface supporting Claude, GPT, and Gemini
@@ -124,6 +146,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - ✅ **Homepage AI Search** - AI search bar added to homepage for immediate access
 
 **Previous Session Updates (Convergence Machine MVP):**
+
 - ✅ **Convergence Machine MVP Complete** - Full 7-lens AI reasoning system with hybrid retrieval
 - ✅ **Database Schema** - Migrations 021 (convergence tables) + 022 (subscription status)
 - ✅ **Embedding System** - Text chunking, embedding generation, vector search (pgvector)
@@ -135,6 +158,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - ✅ **API Endpoints** - Query, history, rate-limit, and embedding generation routes
 
 **Previous Session Updates:**
+
 - ✅ **HTML File Upload & Viewer** - Complete HTML document support with zoom, fullscreen, and styled rendering
 - ✅ **Cover Image Management** - Cover cropping modal with 2:3 aspect ratio and position controls
 - ✅ **Chapter Viewer Enhancements** - Fullscreen mode, zoom controls, and text highlighting for annotations
@@ -143,11 +167,13 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 - ✅ **Improved HTML Styling** - Enhanced rendering for sacred-texts.com format with comprehensive CSS
 
 **Oct 30 Updates:**
+
 - Centralized admin navigation in `Header.tsx` via single `adminLinks` source (removed duplicates)
 - Added `QUICK_START.md` with server commands and quick reference
 - Maintained zero-lint policy; ensured Dark Academia UX consistency
 
-### Standout Features Delivered:
+### Standout Features Delivered
+
 - ✅ **Production-Ready Avatar System** (crop/zoom/compress/delete)
 - ✅ **Complete Authentication** (email/password + protected routes + password reset)
 - ✅ **Enhanced Dashboard** (animated stats, getting started, highlights)
@@ -182,6 +208,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 ### Bootstrap Strategy
 
 **P0 features are split across phases based on revenue milestones:**
+
 - Only build features when you have revenue to support their infrastructure costs
 - Don't build premium features until you have paying customers
 - Milestone-gated development ensures sustainable growth
@@ -296,6 +323,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Premium upgrade path | P2 | S | 5 | ✅ Complete | Clear Azure benefits messaging (Sprint 5) |
 
 **Implementation Notes:**
+
 - **Migration Required:** 012 (`012_add_reading_positions.sql`)
 - **Testing:** See [TTS Testing Checklist](../testing/SPRINT_5_TESTING_CHECKLIST.md#a-text-to-speech-feature-testing)
 - **Documentation:** `docs/TEXT_TO_SPEECH_FEATURE.md`, `docs/TTS_IMPLEMENTATION_SUMMARY.md`
@@ -452,6 +480,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Custom AI training | P3 | XL | Year 2 | ⬜ Planned | Pro tier |
 
 **The 7 Lenses:**
+
 1. **Scientific** - Physics, biology, cosmology
 2. **Psychological** - Jungian, cognitive science, archetypes  
 3. **Philosophical** - Metaphysics, ethics, epistemology
@@ -461,6 +490,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 7. **Mathematical** - Sacred geometry, numerology, universal patterns
 
 **Lens Weight Sliders Feature (NEW):**
+
 - Each lens gets a slider control (0-100%)
 - Default: All lenses at equal weight (≈14% each)
 - Users adjust to emphasize perspectives relevant to their query
@@ -488,6 +518,7 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | **Corpus layer UI** | **P1** | **S** | **Post-MVP** | **⬜ Planned** | **Display and filter by corpus layer in library** |
 
 **Discovery Engine Goals:**
+
 - Automated discovery of conceptual parallels across traditions
 - Pattern mining to surface emerging themes
 - Self-learning loop that improves from user interactions
@@ -521,38 +552,39 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Multi-language support | P2 | L | Post | ⬜ Planned | Translate queries/responses |
 
 **Technical Highlights:**
+
 - Smart model selection balances load across AI providers automatically
 - Usage tracking prevents API quota exhaustion by routing to least-used model
 - Floating UI provides consistent AI access across all pages without navigation
 - Modular architecture supports easy addition of new AI models
 - Full conversation history with model-specific tracking
 
-### 6. COMMUNITY & TOKENOMICS
+### 6. THE PRACTITIONER'S SUITE (Sprint 7 - THEME: "DOING")
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Points system (off-chain) | P0 | M | 15 | ⬜ Planned | Contribution tracking |
-| Award points for actions | P0 | M | 15 | ⬜ Planned | Upload, curate, etc. |
-| Badge system | P0 | M | 15 | ⬜ Planned | Scribe, Archivist |
-| User leaderboard | P0 | M | 15 | ⬜ Planned | Top contributors |
-| Display badges on profile | P0 | S | 15 | ⬜ Planned | Trophy case |
-| Rank progression | P0 | M | 16 | ⬜ Planned | Neophyte → Magus |
-| Forum/discussion system | P0 | L | 17 | ⬜ Planned | Topic-based |
-| Topic categories (guilds) | P0 | M | 17 | ⬜ Planned | Alchemy, Astrology |
-| Thread creation | P0 | M | 17 | ⬜ Planned | Posts + replies |
-| Moderation tools | P0 | M | 17 | ⬜ Planned | Flag, ban, delete |
-| ERC-20 token contract | P0 | L | 18 | ⬜ Planned | Create Coin |
-| Governance voting | P0 | L | 18 | ⬜ Planned | On-chain |
-| Token whitepaper | P0 | M | 18 | ⬜ Planned | Tokenomics doc |
-| Legal opinion | P0 | L | 18 | ⬜ Planned | Utility token |
-| Terms of Service | P0 | M | 18 | ⬜ Planned | Token clauses |
-| Testnet deployment | P0 | M | 18 | ⬜ Planned | Pre-mainnet |
-| Upvote/downvote posts | P1 | S | Post | ⬜ Planned | Community signal |
-| Reputation system | P1 | M | Post | ⬜ Planned | Quality score |
-| Notification system | P1 | L | Post | ⬜ Planned | Email + in-app |
-| Direct messaging | P2 | L | Post | ⬜ Planned | User-to-user |
-| NFT achievements | P2 | XL | Post | ⬜ Planned | Mint badges |
-| DAO governance | P3 | XL | Year 2 | ⬜ Planned | Full decentralization |
+| **Ritual Workbench UI** | **P0** | **L** | **7** | **⬜ Next** | **Interactive ritual construction interface** |
+| **Active Ritual Mode** | **P0** | **M** | **7** | **⬜ Next** | **Step-by-step player with timer/music** |
+| **Personal Ritual Log** | **P0** | **M** | **7** | **⬜ Next** | **Save/Edit created rituals (private)** |
+| **Tarot Logger UI** | **P0** | **M** | **7** | **⬜ Next** | **"Draw Card" interface + Reflection logging** |
+| **Tarot Deck Integration** | **P0** | **S** | **7** | **⬜ Next** | **78 card assets + basic meanings DB** |
+| **Dashboard Widgets** | **P1** | **S** | **7** | **⬜ Next** | **"Last Ritual" and "Daily Card" on home** |
+| **Journal Integration** | **P1** | **S** | **7** | **⬜ Next** | **Save Tarot/Rituals as rich Journal entries** |
+
+### 7. COMMUNITY & CONTRIBUTION (Sprint 8 - THEME: "SHARING")
+
+| Feature | Priority | Effort | Sprint | Status | Notes |
+|---------|----------|--------|--------|--------|-------|
+| **"Submit to Archives"** | **P0** | **M** | **8** | **⬜ Planned** | **User-submitted rituals (moderated)** |
+| **Attunement System** | **P0** | **M** | **8** | **⬜ Planned** | **"Star/Vote" high-quality submissions** |
+| **Public Profiles** | **P1** | **M** | **8** | **⬜ Planned** | **Show shared rituals & badges** |
+| **Contribution Points** | **P2** | **M** | **8** | **⬜ Planned** | **Internal "Karma" tracking (hidden initially)** |
+| Forum/discussion system | P2 | L | 17 | ⬜ Planned | Topic-based |
+| Topic categories (guilds) | P2 | M | 17 | ⬜ Planned | Alchemy, Astrology |
+| Thread creation | P2 | M | 17 | ⬜ Planned | Posts + replies |
+| Moderation tools | P1 | M | 17 | ⬜ Planned | Flag, ban, delete |
+| ERC-20 token contract | P3 | L | 18 | ⬜ Planned | Utility token (Future) |
+| Governance voting | P3 | L | 18 | ⬜ Planned | On-chain (Future) |
 
 ### 7. RITUAL INVENTORY (NEW)
 
@@ -607,10 +639,10 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
 | Database indexes | P0 | S | 1 | ✅ Complete | FTS, vector, RLS |
-| Image optimization | P0 | M | 2 | ✅ Complete | Avatar compression (1024px, 85%) |
+| Image optimization | P0 | M | 2 | ✅ Complete | Avatar compression + next/image (Sprint 9) |
 | Response caching | P0 | M | 11 | ⬜ Planned | AI responses |
 | CDN for static assets | P1 | S | Post | ⬜ Planned | CloudFront |
-| Lazy loading | P1 | M | Post | ⬜ Planned | Images, code splits |
+| Lazy loading | P1 | M | 9 | ✅ Complete | Dynamic imports (Sprint 9) |
 | Service worker | P2 | L | Post | ⬜ Planned | Offline support |
 | Redis caching | P2 | L | Post | ⬜ Planned | Beyond free tier |
 
@@ -677,9 +709,9 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 
 | Feature | Priority | Effort | Sprint | Status | Notes |
 |---------|----------|--------|--------|--------|-------|
-| Responsive design | P0 | L | 2-4 | ✅ Complete | Mobile-first with Tailwind |
-| Touch-friendly UI | P0 | M | Post | 🟡 Partial | Dashboard done, more to come |
-| Mobile navigation | P0 | M | 2 | 🟡 Partial | Header done, sidebar next |
+| Responsive design | P0 | L | 2-9 | ✅ Complete | Mobile-first with Tailwind + Optimizations |
+| Touch-friendly UI | P0 | M | 9 | ✅ Complete | Touch targets audited |
+| Mobile navigation | P0 | M | 2 | ✅ Complete | Header and menu optimized |
 | PWA support | P1 | L | Post | ⬜ Planned | Installable |
 | Offline mode | P2 | XL | Post | ⬜ Planned | Service worker |
 | Native mobile apps | P3 | XL | Year 2 | ⬜ Planned | React Native |
@@ -776,12 +808,14 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 Beyond the planned MVP scope, these features were completed ahead of schedule:
 
 **7 Convergence Lenses System:**
+
 - AI-powered classification of documents by perspective
 - Multi-select lens filtering interface
 - Database migration 007 with proper indexing
 - Integration with metadata extraction pipeline
 
 **User Library Features:**
+
 - Reading progress tracking with sidebar display
 - User collections (create, manage, organize)
 - Annotations & highlights with notes tab
@@ -789,6 +823,7 @@ Beyond the planned MVP scope, these features were completed ahead of schedule:
 - My Library page (personalized collection view)
 
 **Admin & Analytics:**
+
 - Complete usage tracking system
 - Cost monitoring dashboard
 - Service stats and top users analytics
@@ -833,6 +868,7 @@ Ask these questions:
 ### Example Applications
 
 **Feature:** "Export conversation to PDF"
+
 - P0? No (P1)
 - Blocks others? No
 - Ship MVP without? Yes
@@ -841,6 +877,7 @@ Ask these questions:
 - **Decision:** Backlog for post-launch
 
 **Feature:** "Auto-save grimoire"
+
 - P0? Yes
 - Blocks others? Yes (users will lose work)
 - Ship MVP without? No
@@ -861,4 +898,3 @@ Ask these questions:
 **Last Updated:** October 24, 2025  
 **Owner:** Project Lead  
 **Next Review:** End of Sprint 1
-

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Trash2, Archive } from 'lucide-react';
 import Link from 'next/link';
-import JournalEditor from '@/components/JournalEditor';
+// JournalEditor imported dynamically below
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -25,6 +25,15 @@ const FloatingAISearch = dynamic(
     loading: () => null,
   }
 );
+
+const JournalEditor = dynamic(() => import('@/components/JournalEditor'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-[60vh] flex items-center justify-center border border-white/5 rounded-lg bg-black text-zinc-500 font-mono">
+      Initializing Editor Protocol...
+    </div>
+  ),
+});
 
 interface JournalPage {
   id: string;
@@ -176,7 +185,7 @@ export default function JournalPageEditor() {
     }
 
     const cacheKey = targetTitle.toLowerCase();
-    
+
     // Check cache first
     if (previewCache.has(cacheKey)) {
       setPreviewData(previewCache.get(cacheKey));
@@ -298,7 +307,7 @@ export default function JournalPageEditor() {
   async function fetchPage() {
     try {
       const response = await fetch(`/api/journal/${pageId}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           setError('Page not found');
@@ -370,10 +379,10 @@ export default function JournalPageEditor() {
       setPage((prev) =>
         prev
           ? {
-              ...prev,
-              content: contentPayload,
-              updated_at: data.page.updated_at,
-            }
+            ...prev,
+            content: contentPayload,
+            updated_at: data.page.updated_at,
+          }
           : null
       );
       setDraftContent(newContent);
@@ -505,122 +514,122 @@ export default function JournalPageEditor() {
       <main className="flex-1">
         <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-900 to-amber-900/20">
           <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <Link
-              href="/journal"
-              className="flex items-center gap-2 text-zinc-400 hover:text-amber-400 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Journal
-            </Link>
+            {/* Header */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <Link
+                  href="/journal"
+                  className="flex items-center gap-2 text-zinc-400 hover:text-amber-400 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Journal
+                </Link>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleSave}
-                disabled={!isDirty || isSaving}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSaving ? 'Saving...' : isDirty ? 'Save Changes' : 'Saved'}
-              </button>
-              <button
-                onClick={toggleArchive}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
-              >
-                <Archive className="w-4 h-4" />
-                {page.is_archived ? 'Unarchive' : 'Archive'}
-              </button>
-              <button
-                onClick={deletePage}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-red-700 bg-red-900/20 text-red-400 hover:bg-red-900/40 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            </div>
-          </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={!isDirty || isSaving}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSaving ? 'Saving...' : isDirty ? 'Save Changes' : 'Saved'}
+                  </button>
+                  <button
+                    onClick={toggleArchive}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+                  >
+                    <Archive className="w-4 h-4" />
+                    {page.is_archived ? 'Unarchive' : 'Archive'}
+                  </button>
+                  <button
+                    onClick={deletePage}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-red-700 bg-red-900/20 text-red-400 hover:bg-red-900/40 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
 
-        {saveStatus === 'success' && (
-          <div className="mb-4 text-sm text-green-400">Changes saved.</div>
-        )}
+              {saveStatus === 'success' && (
+                <div className="mb-4 text-sm text-green-400">Changes saved.</div>
+              )}
 
-        {saveStatus === 'error' && (
-          <div className="mb-4 text-sm text-red-400">Failed to save changes. Try again.</div>
-        )}
+              {saveStatus === 'error' && (
+                <div className="mb-4 text-sm text-red-400">Failed to save changes. Try again.</div>
+              )}
 
-          {/* Page icon and title */}
-          <div className="flex items-start gap-4 mb-4">
-            <div className="relative">
-              <button
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="text-5xl hover:scale-110 transition-transform cursor-pointer"
-                title="Change icon"
-              >
-                {page.icon}
-              </button>
-              
-              {showEmojiPicker && (
-                <div className="absolute top-full left-0 mt-2 z-50">
-                  <div className="fixed inset-0" onClick={() => setShowEmojiPicker(false)} />
-                  <div className="relative">
-                    <EmojiPicker
-                      onEmojiClick={(emojiData) => updateIcon(emojiData.emoji)}
-                      theme={Theme.DARK}
-                      searchPlaceholder="Search emoji..."
-                    />
-                  </div>
+              {/* Page icon and title */}
+              <div className="flex items-start gap-4 mb-4">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="text-5xl hover:scale-110 transition-transform cursor-pointer"
+                    title="Change icon"
+                  >
+                    {page.icon}
+                  </button>
+
+                  {showEmojiPicker && (
+                    <div className="absolute top-full left-0 mt-2 z-50">
+                      <div className="fixed inset-0" onClick={() => setShowEmojiPicker(false)} />
+                      <div className="relative">
+                        <EmojiPicker
+                          onEmojiClick={(emojiData) => updateIcon(emojiData.emoji)}
+                          theme={Theme.DARK}
+                          searchPlaceholder="Search emoji..."
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <input
+                  type="text"
+                  value={page.title}
+                  onChange={(e) => setPage({ ...page, title: e.target.value })}
+                  onBlur={(e) => updateTitle(e.target.value)}
+                  className="flex-1 text-4xl font-bold bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600"
+                  placeholder="Untitled Page"
+                />
+              </div>
+
+              {/* Metadata */}
+              <div className="flex items-center gap-4 text-sm text-zinc-500">
+                <span>
+                  Created {new Date(page.created_at).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+                <span>•</span>
+                <span>
+                  Last updated {new Date(page.updated_at).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                  })}
+                </span>
+              </div>
+
+              {page.is_archived && (
+                <div className="mt-4 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 text-sm">
+                  ⚠️ This page is archived
                 </div>
               )}
             </div>
 
-            <input
-              type="text"
-              value={page.title}
-              onChange={(e) => setPage({ ...page, title: e.target.value })}
-              onBlur={(e) => updateTitle(e.target.value)}
-              className="flex-1 text-4xl font-bold bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600"
-              placeholder="Untitled Page"
-            />
-          </div>
-
-          {/* Metadata */}
-          <div className="flex items-center gap-4 text-sm text-zinc-500">
-            <span>
-              Created {new Date(page.created_at).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </span>
-            <span>•</span>
-            <span>
-              Last updated {new Date(page.updated_at).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-              })}
-            </span>
-          </div>
-
-          {page.is_archived && (
-            <div className="mt-4 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 text-sm">
-              ⚠️ This page is archived
-            </div>
-          )}
-        </div>
-
-        {/* Editor */}
-        <JournalEditor content={draftContent} onUpdate={handleEditorChange} />
+            {/* Editor */}
+            <JournalEditor content={draftContent} onUpdate={handleEditorChange} />
           </div>
         </div>
       </main>
-      
+
       {/* Floating AI Search */}
       <FloatingAISearch defaultCollapsed={true} />
-      
+
       <Footer />
       {showWikiLinkActions && activeLink && (
         <div className="fixed bottom-6 right-6 z-50 w-72 rounded-lg border border-amber-500/40 bg-zinc-900/95 p-4 shadow-lg shadow-amber-500/20">

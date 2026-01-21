@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -108,7 +109,7 @@ function ProfileContent() {
     }
 
     const file = e.target.files[0];
-    
+
     // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
@@ -145,7 +146,7 @@ function ProfileContent() {
 
       // Compress image
       file = await compressImage(file);
-      
+
       // Delete old avatar if exists
       if (avatarUrl) {
         const oldFileName = getAvatarFileName(avatarUrl);
@@ -291,21 +292,19 @@ function ProfileContent() {
             <nav className="flex gap-1" aria-label="Tabs">
               <Link
                 href="/profile?tab=profile"
-                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
-                  activeTab === "profile"
-                    ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
-                    : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
-                }`}
+                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "profile"
+                  ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
+                  : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
+                  }`}
               >
                 Profile
               </Link>
               <Link
                 href="/profile?tab=subscription"
-                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
-                  activeTab === "subscription"
-                    ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
-                    : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
-                }`}
+                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "subscription"
+                  ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
+                  : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
+                  }`}
               >
                 Subscription
               </Link>
@@ -317,206 +316,208 @@ function ProfileContent() {
             <SubscriptionTab />
           ) : (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* Profile Card */}
-            <div className="lg:col-span-1">
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-                {/* Avatar */}
-                <div className="mb-6 flex flex-col items-center">
-                  <div className="relative mb-4">
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Avatar"
-                        className="h-32 w-32 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-4xl font-bold text-zinc-950">
-                        {username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
-                      </div>
-                    )}
-                    
-                    {/* Upload Button Overlay */}
-                    <label
-                      htmlFor="avatar-upload"
-                      className="absolute bottom-0 right-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-amber-500 text-zinc-950 transition-colors hover:bg-amber-400"
-                    >
-                      {uploading ? (
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-950 border-t-transparent" />
+              {/* Profile Card */}
+              <div className="lg:col-span-1">
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                  {/* Avatar */}
+                  <div className="mb-6 flex flex-col items-center">
+                    <div className="relative mb-4">
+                      {avatarUrl ? (
+                        <Image
+                          src={avatarUrl}
+                          alt="Avatar"
+                          width={128}
+                          height={128}
+                          className="rounded-full object-cover"
+                        />
                       ) : (
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
+                        <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-4xl font-bold text-zinc-950">
+                          {username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+                        </div>
                       )}
-                    </label>
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      disabled={uploading}
-                      className="hidden"
-                    />
-                  </div>
-                  <p className="text-xs text-zinc-500">
-                    Click camera icon to upload
-                  </p>
-                  {avatarUrl && (
-                    <button
-                      onClick={handleRemoveAvatar}
-                      disabled={uploading}
-                      className="mt-3 text-xs text-red-400 transition-colors hover:text-red-300 disabled:opacity-50"
-                    >
-                      Remove Avatar
-                    </button>
-                  )}
-                </div>
 
-                {/* Stats */}
-                <div className="space-y-4">
-                  <div className="flex justify-around border-t border-zinc-800 pt-4">
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-amber-100">0</div>
-                      <div className="text-xs text-zinc-500">Texts</div>
+                      {/* Upload Button Overlay */}
+                      <label
+                        htmlFor="avatar-upload"
+                        className="absolute bottom-0 right-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-amber-500 text-zinc-950 transition-colors hover:bg-amber-400"
+                      >
+                        {uploading ? (
+                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-950 border-t-transparent" />
+                        ) : (
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        )}
+                      </label>
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        disabled={uploading}
+                        className="hidden"
+                      />
                     </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-amber-100">0</div>
-                      <div className="text-xs text-zinc-500">Entries</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-amber-100">0</div>
-                      <div className="text-xs text-zinc-500">Coins</div>
+                    <p className="text-xs text-zinc-500">
+                      Click camera icon to upload
+                    </p>
+                    {avatarUrl && (
+                      <button
+                        onClick={handleRemoveAvatar}
+                        disabled={uploading}
+                        className="mt-3 text-xs text-red-400 transition-colors hover:text-red-300 disabled:opacity-50"
+                      >
+                        Remove Avatar
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="space-y-4">
+                    <div className="flex justify-around border-t border-zinc-800 pt-4">
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-amber-100">0</div>
+                        <div className="text-xs text-zinc-500">Texts</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-amber-100">0</div>
+                        <div className="text-xs text-zinc-500">Entries</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-amber-100">0</div>
+                        <div className="text-xs text-zinc-500">Coins</div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Badges */}
-                <div className="mt-6 border-t border-zinc-800 pt-6">
-                  <h3 className="mb-3 text-sm font-semibold text-amber-100">Badges</h3>
-                  <div className="text-center text-sm text-zinc-500">
-                    No badges earned yet
+                  {/* Badges */}
+                  <div className="mt-6 border-t border-zinc-800 pt-6">
+                    <h3 className="mb-3 text-sm font-semibold text-amber-100">Badges</h3>
+                    <div className="text-center text-sm text-zinc-500">
+                      No badges earned yet
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Profile Form */}
-            <div className="lg:col-span-2">
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-8">
-                <h2 className="mb-6 text-2xl font-bold text-amber-100">
-                  Personal Information
-                </h2>
+              {/* Profile Form */}
+              <div className="lg:col-span-2">
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-8">
+                  <h2 className="mb-6 text-2xl font-bold text-amber-100">
+                    Personal Information
+                  </h2>
 
-                <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
-                  {/* Email (read-only) */}
-                  <div>
-                    <label className="block text-sm font-medium text-amber-100">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={user?.email || ""}
-                      disabled
-                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-500 opacity-60"
-                    />
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Email cannot be changed
-                    </p>
-                  </div>
-
-                  {/* Username */}
-                  <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-amber-100">
-                      Username
-                    </label>
-                    <input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                      placeholder="mystic_scholar"
-                    />
-                  </div>
-
-                  {/* Display Name */}
-                  <div>
-                    <label htmlFor="displayName" className="block text-sm font-medium text-amber-100">
-                      Display Name
-                    </label>
-                    <input
-                      id="displayName"
-                      type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                      placeholder="The Mystic Scholar"
-                    />
-                  </div>
-
-                  {/* Bio */}
-                  <div>
-                    <label htmlFor="bio" className="block text-sm font-medium text-amber-100">
-                      Bio
-                    </label>
-                    <textarea
-                      id="bio"
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      rows={4}
-                      className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                      placeholder="Share a bit about your esoteric journey..."
-                    />
-                  </div>
-
-                  {/* Journal Name Preference */}
-                  <div className="border-t border-zinc-800 pt-6">
-                    <JournalNamePreference />
-                  </div>
-
-                  {/* Privacy & Data */}
-                  <div className="border-t border-zinc-800 pt-6">
-                    <h3 className="mb-4 text-lg font-semibold text-amber-200">Privacy & Data</h3>
-                    <div className="space-y-3">
-                      <Link
-                        href="/settings/privacy"
-                        className="block rounded-md border border-zinc-600 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700 text-center"
-                      >
-                        Privacy Settings
-                      </Link>
-                      <p className="text-xs text-zinc-500">
-                        Manage your data, export your information, or delete your account
+                  <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
+                    {/* Email (read-only) */}
+                    <div>
+                      <label className="block text-sm font-medium text-amber-100">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={user?.email || ""}
+                        disabled
+                        className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-500 opacity-60"
+                      />
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Email cannot be changed
                       </p>
                     </div>
-                  </div>
 
-                  {/* Save Button */}
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="w-full rounded-md bg-amber-500 px-4 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {saving ? "Saving..." : "Save Changes"}
-                  </button>
-                </form>
+                    {/* Username */}
+                    <div>
+                      <label htmlFor="username" className="block text-sm font-medium text-amber-100">
+                        Username
+                      </label>
+                      <input
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        placeholder="mystic_scholar"
+                      />
+                    </div>
+
+                    {/* Display Name */}
+                    <div>
+                      <label htmlFor="displayName" className="block text-sm font-medium text-amber-100">
+                        Display Name
+                      </label>
+                      <input
+                        id="displayName"
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        placeholder="The Mystic Scholar"
+                      />
+                    </div>
+
+                    {/* Bio */}
+                    <div>
+                      <label htmlFor="bio" className="block text-sm font-medium text-amber-100">
+                        Bio
+                      </label>
+                      <textarea
+                        id="bio"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        rows={4}
+                        className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        placeholder="Share a bit about your esoteric journey..."
+                      />
+                    </div>
+
+                    {/* Journal Name Preference */}
+                    <div className="border-t border-zinc-800 pt-6">
+                      <JournalNamePreference />
+                    </div>
+
+                    {/* Privacy & Data */}
+                    <div className="border-t border-zinc-800 pt-6">
+                      <h3 className="mb-4 text-lg font-semibold text-amber-200">Privacy & Data</h3>
+                      <div className="space-y-3">
+                        <Link
+                          href="/settings/privacy"
+                          className="block rounded-md border border-zinc-600 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700 text-center"
+                        >
+                          Privacy Settings
+                        </Link>
+                        <p className="text-xs text-zinc-500">
+                          Manage your data, export your information, or delete your account
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="w-full rounded-md bg-amber-500 px-4 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
           )}
         </div>
       </main>

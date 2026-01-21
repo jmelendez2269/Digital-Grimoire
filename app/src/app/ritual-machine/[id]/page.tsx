@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "@/components/Header";
 import RitualRunner from "@/components/ritual/RitualRunner";
 import { ArrowLeft, Play, Clock, BarChart, ShieldCheck } from "lucide-react";
@@ -80,10 +81,13 @@ export default function RitualDetailPage() {
                         {/* Hero Header */}
                         <div className="relative rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 mb-8">
                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent z-10" />
-                            <img
+                            <Image
                                 src={ritual.imageUrl || "https://images.unsplash.com/photo-1514489024785-d5ba8df4e6ed?auto=format&fit=crop&q=80"}
                                 alt="Background"
-                                className="absolute inset-0 w-full h-full object-cover opacity-30"
+                                fill
+                                priority
+                                className="object-cover opacity-30"
+                                sizes="100vw"
                             />
 
                             <div className="relative z-20 p-8 md:p-12">

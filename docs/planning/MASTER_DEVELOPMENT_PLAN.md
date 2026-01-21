@@ -36,7 +36,28 @@
 
 ### What's Been Built (4 weeks of work compressed into ~8 hours!)
 
-**🚀 LATEST UPDATE: Annotation Save to Journal Feature Restored! (January 2026)**
+**🚀 LATEST UPDATE: Performance & Mobile Optimization Complete! (Sprint 9)**
+
+- ✅ **Image Optimization** - Replaced heavy `<img>` tags with `next/image` for Rituals, Profiles, and layouts
+- ✅ **Code Splitting** - Implemented dynamic imports for heavy components (JournalEditor, GraphVisualization)
+- ✅ **Mobile Performance** - Optimized glassmorphism blur effects for mobile devices
+- ✅ **Layout Audits** - Verified and fixed mobile layouts for RitualRunner and Footer
+- **Status:** Performance baseline established, mobile experience significantly smoother.
+
+**🚀 PREVIOUS UPDATE: Akashic Design System Overhaul Complete! (Sprint 6)**
+
+- ✅ **Major Design Overhaul** - Implemented "Future Mystic" aesthetic (Void Black, Glassmorphism, Neon)
+- ✅ **Auth Pages** - Redesigned Login, Register, Email Verification with new aesthetic
+- ✅ **Header & Navigation** - Refined UI, improved typography, mobile responsiveness
+- ✅ **Library Grid** - Refined card layout, hover-only details, removed clutter
+- ✅ **Courses Page** - Improved layout, fixed rich text rendering, fixed bookmarking
+- ✅ **Journal Page** - "Cover vibes" redesign, fixed editor bugs
+- ✅ **Knowledge Graph** - Ported Admin Graph to Public View, standardized nodes
+- ✅ **General** - Audited app for consistency, fixed "stuck" pages, Sentry monitoring
+- **Status:** Design system fully implemented across core pages.
+
+**🚀 PREVIOUS UPDATE: Annotation Save to Journal Feature Restored! (January 2026)**
+
 - ✅ Save Annotation to Journal Button - Feature restoration
   - Re-implemented "Save to Journal" button in annotation form
   - Purple button with BookOpen icon for visual distinction
@@ -50,6 +71,7 @@
 - **Status:** Feature fully restored and functional, ready for user testing
 
 **🚀 PREVIOUS UPDATE: Property to Entity Conversion System Complete! (January 15, 2026)**
+
 - ✅ Property to Entity Conversion System - Complete implementation
   - Field-to-relationship type mapping configuration
   - Entity utility functions (parsing, category suggestion, slug generation)
@@ -78,6 +100,7 @@
 - **Status:** Property conversion system fully functional, ready for graph expansion
 
 **🚀 PREVIOUS UPDATE: TTS Read-Aloud Click-to-Read Feature Fixed! (January 2025)**
+
 - ✅ Fixed click-to-read functionality across all document formats (HTML, Markdown, Plaintext)
 - ✅ Restored hover effects on clickable text blocks
 - ✅ Fixed MutationObserver infinite loop issues with debouncing and WeakSet tracking
@@ -89,6 +112,7 @@
 - **Status:** Read-aloud feature fully functional, ready for user testing
 
 **🚀 PREVIOUS UPDATE: Multi-Source Knowledge Claims System Complete!**
+
 - ✅ Multi-source claims architecture (knowledge_sources + knowledge_claims tables)
 - ✅ Admin UI for managing sources and field-specific claims
 - ✅ Consensus vs Sources view on entity detail cards
@@ -99,6 +123,7 @@
 - **Migration 031 & 032 complete, ready for bulk data import**
 
 **🚀 MAJOR UPDATE: Convergence Machine MVP Complete!**
+
 - ✅ Full 7-lens AI reasoning system implemented
 - ✅ Hybrid retrieval (vector + FTS) with RRF merging
 - ✅ Complete UI with lens sliders and presets
@@ -108,6 +133,7 @@
 - **18 new files created, MVP ready for testing!**
 
 **✅ Sprint 1: Infrastructure & Setup (1h 53m)**
+
 - Complete Next.js 14 application with TypeScript
 - Supabase PostgreSQL database with full schema
 - Cloudflare R2 object storage (migrated from AWS)
@@ -116,6 +142,7 @@
 - All dependencies installed (666 packages)
 
 **✅ Sprint 2: Authentication & Core UI (2.5h)**
+
 - Full authentication system (login, register, password reset, email verification)
 - User profiles with editable fields
 - Avatar system with crop/zoom modal and Supabase Storage
@@ -125,6 +152,7 @@
 - Protected routes with middleware
 
 **✅ Sprint 3: Document Processing Pipeline (4h)**
+
 - Admin upload page with drag-and-drop interface
 - Cloudflare R2 presigned URL uploads
 - Azure Computer Vision OCR integration
@@ -134,6 +162,7 @@
 - RLS policies and error handling
 
 **✅ Sprint 4: Public Library & Advanced Features (6h)**
+
 - Library browsing page with search and filters
 - PDF document viewer (@react-pdf-viewer)
 - Advanced filtering (domain, year range, tags, 7 lenses)
@@ -143,6 +172,7 @@
 - Bookmark functionality
 
 **✅ Sprint 5: Study Journal MVP + Power Features (6h)**
+
 - **Study Journal MVP** - Tiptap rich-text editor with full formatting toolbar
 - **Database schema** - journal_pages table with RLS policies (migration 015)
 - **Complete CRUD** - API endpoints and UI pages with auto-save
@@ -151,17 +181,26 @@
 - **Journal Navigation** - Header integration, search, grid layout
 - **Total:** 9 files created, 2 modified, 3 documentation files, 1,563 lines of code
 
-**📊 Total Development Time:** ~40 hours (including Convergence Machine MVP + Universal AI Search)  
-**Traditional Estimate:** ~900 hours  
-**Velocity:** 23x faster with AI-assisted development  
-**Phase 1 Progress:** 95% complete (only seeding library content remains)  
-**Phase 2 Status:** Study Journal MVP complete (~40% of Phase 2 - 10/17 features)  
-**Phase 4 Status:** Convergence Machine MVP complete (95% - ready for testing!)  
-**New Feature:** Universal AI Search & Chat System complete (100% - ready for use!)
+**✅ Sprint 6: Akashic Design System Overhaul (Current)**
+
+- **Design System** - Implemented "Future Mystic" aesthetic
+- **Auth & Onboarding** - Complete redesign of login/register flows
+- **Visual Polish** - Glassmorphism, neon accents, improved typography
+- **Graph Porting** - Admin graph features ported to public view
+- **Course Enhancements** - UI refinements and bug fixes
+
+**📊 Total Development Time:** ~50 hours (including Design Overhaul)  
+**Traditional Estimate:** ~1200 hours  
+**Velocity:** 25x faster with AI-assisted development  
+**Phase 1 Progress:** 98% complete
+**Phase 2 Status:** Study Journal MVP complete (~40% of Phase 2)  
+**Phase 4 Status:** Convergence Machine MVP complete (95%)  
+**New Feature:** Universal AI Search & Chat System complete (100%)
 
 ### Latest Session Updates (January 2026) - Concept Search Feature Complete! 🎉
 
 **🔍 Concept Search (Deep Search) Implementation:**
+
 - ✅ **Semantic Vector Search** - Deep search across all books using OpenAI embeddings
 - ✅ **Related Terms Generation** - AI-generated semantically related concepts (GPT-4o)
 - ✅ **Top 3 Passages Per Book** - Automatically highlights most relevant passages
@@ -172,6 +211,7 @@
 - 📄 **Documentation** - Complete feature guide (`docs/CONCEPT_SEARCH_FEATURE.md`)
 
 **Files Created:**
+
 - `app/src/components/DeepSearch/DeepSearchPanel.tsx` - Main search interface
 - `app/src/components/DeepSearch/RelatedTerms.tsx` - Related concepts display
 - `app/src/components/DeepSearch/BookResultCard.tsx` - Book result cards
@@ -182,6 +222,7 @@
 - `docs/EMBEDDINGS_DIAGNOSTIC_GUIDE.md` - Diagnostic and troubleshooting guide
 
 **Files Modified:**
+
 - `app/src/lib/convergence/vector-search.ts` - Improved search algorithm
 - `app/src/app/api/convergence/deep-search/route.ts` - Enhanced error handling
 - `app/src/components/DeepSearch/DeepSearchPanel.tsx` - Better error messages
@@ -191,6 +232,7 @@
 ### Previous Session Updates (January 2025) - TTS Read-Aloud Fixes Complete! 🎉
 
 **🔊 TTS Read-Aloud Click-to-Read Feature Fixes:**
+
 - ✅ **Fixed click handlers** - All paragraphs now clickable (HTML, Markdown, Plaintext formats)
 - ✅ **MutationObserver fixes** - Debouncing and WeakSet tracking prevent infinite loops
 - ✅ **Hover effects restored** - Visual feedback on all clickable text blocks
@@ -202,6 +244,7 @@
 - 📄 **Session Summary:** `sprint_summaries/TTS_READ_ALOUD_FIX_SESSION_2026-01-15.md`
 
 **Files Modified:**
+
 - `app/src/components/ChapterViewer.tsx` - Fixed MutationObserver, added click position detection
 - `app/src/components/HTMLViewer.tsx` - Fixed MutationObserver, improved click handlers
 - `app/src/app/library/[id]/page.tsx` - Enhanced text matching with multiple strategies
@@ -213,6 +256,7 @@
 ### Previous Session Updates (Current Session) - Monitoring Setup Complete! 🎉
 
 **📊 Error Tracking & Uptime Monitoring:**
+
 - ✅ **Sentry Error Tracking** - Complete setup with @sentry/nextjs SDK
   - Client, server, and edge runtime configurations created (`sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`)
   - Next.js instrumentation hook enabled (`instrumentation.ts`)
@@ -229,6 +273,7 @@
   - Speed Insights for Core Web Vitals monitoring
 
 **Files Created:**
+
 - `app/sentry.client.config.ts` - Client-side Sentry configuration
 - `app/sentry.server.config.ts` - Server-side Sentry configuration
 - `app/sentry.edge.config.ts` - Edge runtime Sentry configuration
@@ -238,12 +283,14 @@
 - `docs/Setup Docs/MONITORING_SETUP.md` - Complete monitoring setup guide
 
 **Files Modified:**
+
 - `app/package.json` - Added @sentry/nextjs dependency
 - `app/next.config.ts` - Enabled instrumentationHook
 - `app/src/app/layout.tsx` - Added SentryProvider wrapper
 - `docs/Setup Docs/ENVIRONMENT_VARIABLES.md` - Added Sentry DSN configuration
 
 **Next Steps (User Action Required):**
+
 1. Create Sentry account and project at [sentry.io](https://sentry.io/)
 2. Copy DSN from Sentry project settings
 3. Add `NEXT_PUBLIC_SENTRY_DSN` to `.env.local` and Vercel environment variables
@@ -252,6 +299,7 @@
 ### Previous Session Updates (November 10, 2025) - SendGrid Setup & Footer Cleanup! 🎉
 
 **📧 SendGrid Email Infrastructure Complete:**
+
 - ✅ SendGrid account created and domain authenticated (convergencelibrary.com)
 - ✅ DNS records configured (SPF, DKIM, DMARC, link branding)
 - ✅ Supabase SMTP configured with SendGrid credentials
@@ -260,17 +308,19 @@
 - ✅ Comprehensive documentation created (SENDGRID_SETUP.md)
 
 **🌐 DNS & Domain Configuration Complete:**
+
 - ✅ All SendGrid DNS records configured and verified (CNAME: 57219658, em2464, s1._domainkey, s2._domainkey, url1708)
 - ✅ DMARC TXT record configured
 - ✅ Vercel www CNAME record configured (pointing to Vercel DNS)
 - ✅ Root domain A record configured
 - ✅ Domain added and verified in Vercel project (convergencelibrary.com)
-- ✅ www subdomain configured in Vercel (www.convergencelibrary.com) - Production
+- ✅ www subdomain configured in Vercel (<www.convergencelibrary.com>) - Production
 - ✅ 307 redirect configured from root domain to www
 - ✅ SSL certificates automatically provisioned by Vercel (Let's Encrypt)
 - ✅ HTTPS redirect enabled
 
 **🧹 Footer Navigation Cleanup:**
+
 - ✅ Removed Blog, API, Communities, and social media links from footer
 - ✅ Removed "Future Plan" section from footer
 - ✅ Updated footer layout to 4 columns with better spacing (About, Resources, Legal split into 2 columns)
@@ -278,6 +328,7 @@
 - ✅ All future features documented in Phase 5 & Phase 6 of master plan
 
 **🎨 Library Page UI/UX Improvements:**
+
 - ✅ Compact header layout - Moved search, filters, and sort to compact header bar
 - ✅ Inline search bar - Compact search input with expand-on-focus behavior
 - ✅ Inline filters - AdvancedFilters component integrated into header
@@ -287,6 +338,7 @@
 - ✅ Improved spacing - Reduced padding for more content space
 
 **📝 Documentation Updates:**
+
 - ✅ Created FILE_NAMING_CONVENTIONS.md for sprint_summaries folder
 - ✅ Updated session summary naming to match conventions
 - ✅ Social media integration documented in Phase 5 (Week 31-32)
@@ -309,6 +361,7 @@
 **Previous Session Updates (November 3, 2025) - Universal AI Search & Chat System! 🎉**
 
 **🚀 MAJOR UPDATE: Universal AI Search & Chat System Complete!**
+
 - ✅ **Floating AI Search Bar** - Expandable floating search component accessible from all pages (Library, Graph, Journal, Document Viewer)
 - ✅ **Smart Model Selection** - Auto-selects least-used AI model (Claude, GPT, Gemini) based on usage statistics
 - ✅ **AI Chat Modal** - Full-featured chat interface supporting Claude, GPT, and Gemini with conversation history
@@ -321,6 +374,7 @@
 - ✅ **Homepage AI Search** - AI search bar added to homepage for immediate access
 
 **Technical Highlights:**
+
 - Smart model selection balances load across AI providers automatically
 - Usage tracking prevents API quota exhaustion by routing to least-used model
 - Floating UI provides consistent AI access across all pages without navigation
@@ -328,6 +382,7 @@
 - Full conversation history with model-specific tracking
 
 **Previous Session Updates (Convergence Machine MVP):**
+
 - ✅ **The Convergence Machine - Full MVP Implementation** - 7-lens AI reasoning system with hybrid retrieval
 - ✅ **Database Infrastructure** - Migrations 021 & 022: text_chunks, convergence_queries, convergence_responses, subscription_status
 - ✅ **Embedding System** - Text chunking with paragraph boundaries, OpenAI embedding generation, chunk storage
@@ -342,6 +397,7 @@
 - ✅ **18 New Files** - Complete backend services + UI components
 
 **Previous Session Updates (Document Management & HTML Support):**
+
 - ✅ **HTML File Upload Support** - Added ability to upload and process HTML files (sacred-texts.com format) with comprehensive styling
 - ✅ **HTML Viewer Component** - New `HTMLViewer.tsx` with fullscreen, zoom controls (25%-300%), text selection, and Dark Academia styling
 - ✅ **Chapter Viewer Enhancements** - Added fullscreen mode, zoom controls, and text highlighting with annotation support
@@ -350,11 +406,13 @@
 - ✅ **Cover Position Controls** - Admin can now adjust cover image positioning (center, top, bottom, left, right)
 
 **Admin Experience Improvements:**
+
 - ✅ **Reliable Admin Access Check** - Implemented server-side API route for admin status verification to prevent UI inconsistencies
 - ✅ **Admin Access Rules Documentation** - Added cursor rules and references to prevent future admin access issues
 - ✅ **Enhanced Admin Edit Page** - Improved cover image management workflow with crop/position controls
 
 **Technical Improvements:**
+
 - ✅ **Improved HTML Rendering** - Enhanced sacred-texts HTML styling with comprehensive CSS for tables, blockquotes, code blocks
 - ✅ **Text Selection & Annotation Integration** - ChapterViewer now supports text selection for annotation creation
 - ✅ **Component Architecture** - Created reusable `CoverCropModal` and `HTMLViewer` components following Dark Academia design system
@@ -368,17 +426,39 @@
 
 ### What's Next
 
-**Immediate (This Week):**
-- Seed initial library texts (20-50 public domain documents)
-- Production deployment preparation
-- Email infrastructure setup (SendGrid SMTP)
-- Performance optimization and testing
+**Immediate (Sprint 7: The Practitioner's Suite):**
 
-**Near-term (2-3 weeks):**
-- Complete Phase 1 MVP (library seeding)
-- Deploy to production (Vercel)
-- Beta testing with initial users
-- Complete remaining Phase 2 features (clip system, wikilinks, export enhancements)
+- **Ritual Workbench (Interactive Tool):**
+  - Dedicated UI for constructing rituals (Intention, Phase, Materials, Steps)
+  - "Active Ritual Mode" (Step-by-step player)
+  - Personal Ritual Log (Private grimoire entries)
+- **Tarot Logger (Interactive Tool):**
+  - Digital Tarot Journal (Pull card, log reflection)
+  - Integration with Journal system
+- **Dashboard Integration:**
+  - "Recent Rituals" and "Daily Card" widgets
+
+**Near-term (Sprint 8: Community & Social):**
+
+- **Ritual Sharing & Attunement:**
+  - "Submit to Archives" flow for user rituals
+  - "Attunement" system (Voting/Starring mechanism) for community curation
+- **Public Profiles:**
+  - Display shared rituals and badges (if earned)
+- **Activity Feeds:**
+  - Community activity (newly shared rituals, popular texts)
+
+**Recent (Sprint 9: Performance & Mobile):**
+
+- ✅ Mobile responsiveness audit (heavy glassmorphism optimization)
+- ✅ Accessibility checks (contrast, screen readers)
+- ✅ Performance tuning (Code splitting, Image optimization)
+
+**Future Goals:**
+
+- Seed initial library texts
+- Production deployment
+- Email infrastructure setup
 
 ---
 
@@ -400,6 +480,7 @@
 | **AI** | Claude API / GPT-4 | Metadata extraction & Multi-lens | 💰 Pay-per-use | 🔄 Partial (Metadata ✅) |
 
 **🔄 Infrastructure Migration Note (Oct 26, 2025):**
+
 - **AWS → Cloudflare R2:** ✅ Migrated due to AWS support paywall ($29-100/month minimum)
 - **Benefits:** No egress fees, better bootstrap economics, free community support
 - **S3 Compatibility:** Minimal code changes required
@@ -407,17 +488,21 @@
 - **Metadata Extraction:** ✅ Automated with OpenAI GPT-4o (switched from Claude for stability)
 
 **📊 Development Velocity (Latest Session):**
+
 - **Sprint 1:** Infrastructure & Setup - ✅ Complete (1h 53m, 20x velocity)
 - **Sprint 2:** Auth & Core UI - ✅ Complete (2.5h, 32x velocity)
 - **Sprint 3:** Document Processing - ✅ Complete (4h, full pipeline working)
 - **Sprint 4:** Library & Search - ✅ Complete (6h, 10x velocity)
 - **Sprint 5:** Advanced Features - ✅ Complete (4h, 10x velocity)
+- **Sprint 6:** Akashic Redesign - ✅ Complete (Design Overhaul)
+- **Sprint 9:** Performance & Mobile - ✅ Complete (~2h, High impact)
 - **Convergence Machine MVP** - ✅ Complete (~14.5h, 23x velocity)
 - **Total:** ~35 hours of development = ~800 hours traditional time saved
 
 ### Database Schema (Implemented in supabase-schema.sql)
 
 **Core Tables:**
+
 - `users` - Authentication & roles
 - `texts` - Main library documents with embeddings
 - `correspondences` - Traditional esoteric symbolic entities (planets, elements, deities, etc.)
@@ -431,6 +516,7 @@
 - `agent_logs` - Automated workflow tracking
 
 **Key Features:**
+
 - Row-Level Security (RLS) for privacy
 - Full-text search with PostgreSQL
 - Vector embeddings (1536 dimensions)
@@ -451,6 +537,7 @@ Allowed Types (20):
 ### Metadata Standards
 
 All documents must include:
+
 ```yaml
 title: Full title
 type: One of 20 allowed types
@@ -477,6 +564,7 @@ associated_names: Related figures
 **Status:** MVP scope complete + bonus features delivered ahead of schedule!
 
 #### Week 1-2: Infrastructure Setup - ✅ COMPLETE
+
 - [x] ~~AWS account configuration~~ → Migrated to Cloudflare R2
 - [x] Supabase project initialization
 - [x] Run `supabase-schema.sql` to create database
@@ -487,6 +575,7 @@ associated_names: Related figures
 - [x] Azure Computer Vision API setup
 
 #### Week 3-4: Document Ingestion Pipeline - ✅ COMPLETE
+
 - [x] Cloudflare R2 upload API with presigned URLs
 - [x] Direct browser-to-R2 upload (no server transfer)
 - [x] Azure Computer Vision OCR integration (full pipeline)
@@ -501,6 +590,7 @@ associated_names: Related figures
 - [ ] Vector embedding generation (deferred to Phase 2)
 
 #### Week 5-6: Public Library Frontend - ✅ COMPLETE (100%)
+
 - [x] Beautiful mystical homepage with Dark Academia theme
 - [x] Library page with document grid layout
 - [x] Basic search (title/author filtering)
@@ -513,6 +603,7 @@ associated_names: Related figures
 - [x] Pagination for large result sets
 
 #### Additional Features Completed (October 2025)
+
 - [x] **7 Convergence Lenses System** - Complete classification and filtering system (migration 007)
 - [x] Lens-based filtering in library with multi-select interface
 - [x] AI metadata extraction assigns 2-4 lenses per document
@@ -524,6 +615,7 @@ associated_names: Related figures
 - [x] **Admin Usage Tracking** - Complete analytics dashboard with cost monitoring
 
 #### Week 7-8: Authentication & User System - ✅ COMPLETE
+
 - [x] Supabase Auth (SSR) integration
 - [x] User registration page with validation
 - [x] Login page with error handling
@@ -543,6 +635,7 @@ associated_names: Related figures
 - [x] Toast notifications (Sonner integration)
 
 **Phase 1 Deliverables - Status:**
+
 - [x] ✅ Complete authentication system (login, register, password reset)
 - [x] ✅ Admin upload capability with drag-and-drop interface
 - [x] ✅ Automated OCR pipeline (Azure Computer Vision)
@@ -570,6 +663,7 @@ associated_names: Related figures
 **Goal:** Implement private note-taking workspace
 
 #### Week 9-10: Tiptap Editor Integration
+
 - [x] Install Tiptap with essential extensions
 - [x] Block-based editor component
 - [ ] Slash `/` command menu
@@ -579,6 +673,7 @@ associated_names: Related figures
 - [x] Auto-save with debouncing
 
 #### Week 11-12: Note Management
+
 - [x] Create/read/update/delete grimoire pages
 - [x] Nested page hierarchy (parent_id)
 - [x] Sidebar navigation
@@ -592,6 +687,7 @@ associated_names: Related figures
 - [x] WikiLink telemetry & history ✅ **Sprint 6**
 
 #### Week 13-14: Clip & Export System
+
 - [ ] "Clip to Grimoire" button on library texts
 - [ ] Passage selection and saving
 - [ ] Export to Markdown
@@ -600,6 +696,7 @@ associated_names: Related figures
 - [ ] Export to Notion format
 
 **Deliverables:**
+
 - Fully functional Notion-like editor
 - Private user workspace
 - Clipping from public library
@@ -612,6 +709,7 @@ associated_names: Related figures
 **Goal:** Traditional esoteric symbolic relationships knowledge graph
 
 #### Week 15-16: Neptune Graph Database
+
 - [ ] Amazon Neptune cluster setup
 - [ ] Gremlin API configuration
 - [ ] Graph schema design (vertices + edges)
@@ -619,6 +717,7 @@ associated_names: Related figures
 - [ ] PostgreSQL ↔ Neptune sync mechanism
 
 #### Week 17-18: Graph Visualization
+
 - [ ] D3.js force-directed graph component
 - [ ] Node rendering with colors by type
 - [ ] Edge rendering with strength weights
@@ -627,6 +726,7 @@ associated_names: Related figures
 - [ ] Pan and zoom controls
 
 #### Week 17-18: CRUD Interface
+
 - [ ] Table view of correspondences
 - [ ] Add/edit entity modal
 - [ ] Create relationship form
@@ -635,6 +735,7 @@ associated_names: Related figures
 - [ ] Export graph as JSON
 
 **Deliverables:**
+
 - Working traditional correspondence graph with 50+ entities
 - Visual and tabular interfaces
 - User-contributed correspondences
@@ -649,6 +750,7 @@ associated_names: Related figures
 **Status:** UI Complete (100%) - Ready for data seeding
 
 #### Week 19-20: Convergence Concepts System
+
 - [x] Create `convergence_concepts` table ✅ **Migration 019**
 - [x] Create `convergence_relationships` table ✅ **Migration 019**
 - [x] Build comparative table view ✅ **ComparativeTable.tsx component**
@@ -664,6 +766,7 @@ associated_names: Related figures
   - Enlightenment/Awakening parallels
 
 **Deliverables:**
+
 - ✅ Convergence concepts database schema (30+ concepts capacity)
 - ✅ Cross-tradition relationship mapping system
 - ✅ Dual interface: comparative table + convergence network
@@ -679,12 +782,14 @@ associated_names: Related figures
 **Status:** ✅ Complete (100%) - Ready for bulk data import
 
 #### Multi-Source Architecture
+
 - [x] Create `knowledge_sources` table ✅ **Migration 032**
 - [x] Create `knowledge_claims` table ✅ **Migration 032**
 - [x] Support field-specific claims per entity ✅ **Claims linked to entity_id + field_key**
 - [x] Source metadata (title, author, year, citation, URL) ✅ **Full source tracking**
 
 #### Admin UI Features
+
 - [x] Admin form for adding sources ✅ **Inline source creation in EntityModal**
 - [x] Multi-claim management per entity ✅ **Add/edit/delete claims by field**
 - [x] Field-specific claim dropdowns ✅ **Dynamic field options by entity type**
@@ -692,6 +797,7 @@ associated_names: Related figures
 - [x] Source grouping in detail view ✅ **Claims grouped by source**
 
 #### CSV Auto-Import System
+
 - [x] Schema detection (plants, angels, orishas, gods, crystals, chakras) ✅ **Auto-detection from headers**
 - [x] Field mapping configuration ✅ **Type-specific field mappings**
 - [x] BOM and header normalization ✅ **Handles UTF-8 BOM and whitespace**
@@ -699,6 +805,7 @@ associated_names: Related figures
 - [x] Type auto-creation ✅ **Creates entity types if missing**
 
 #### Dynamic Type Management
+
 - [x] Admin-manageable entity types ✅ **Migration 031 - correspondence_entity_types**
 - [x] Admin-manageable relationship types ✅ **Migration 031 - correspondence_relationship_types**
 - [x] Admin-manageable traditions ✅ **Migration 031 - convergence_traditions**
@@ -706,11 +813,13 @@ associated_names: Related figures
 - [x] Backfill existing data ✅ **Migrates text columns to FK references**
 
 #### AI Integration
+
 - [x] AI rewrite/generate buttons ✅ **Sparkles icon buttons in EntityModal**
 - [x] Field-specific AI prompts ✅ **Context-aware generation per field**
 - [x] Usage tracking ✅ **logMetadataExtractionUsage integration**
 
 **Deliverables:**
+
 - ✅ Multi-source claims database schema
 - ✅ Complete admin UI for source/claim management
 - ✅ CSV import script with 6 schema types supported
@@ -719,6 +828,7 @@ associated_names: Related figures
 - ✅ AI-powered text generation/rewriting
 
 **Next Steps:**
+
 - Import remaining CSVs (plants, chakras, angels, orishas, gods)
 - Add more field mappings as needed
 - Enhance consensus algorithm (weighted by source credibility)
@@ -732,11 +842,13 @@ associated_names: Related figures
 **Status:** ✅ Complete (100%) - Ready for use
 
 #### Core Infrastructure
+
 - [x] Field-to-relationship type mapping ✅ **Configurable mapping system**
 - [x] Entity utility functions ✅ **Parsing, category suggestion, slug generation**
 - [x] Backwards compatibility field mapping ✅ **Category to field key mapping**
 
 #### API Endpoints
+
 - [x] Conversion API endpoint ✅ **`/api/graph/convert-property`**
   - Creates entities from property values
   - Creates bidirectional relationships
@@ -750,6 +862,7 @@ associated_names: Related figures
   - Returns relationship types
 
 #### UI Components
+
 - [x] Convert Property Modal ✅ **Full-featured conversion interface**
   - Value selection (handles comma-separated)
   - Category and relationship type selection
@@ -764,16 +877,19 @@ associated_names: Related figures
   - Convert action in claims section
 
 #### Graph Integration
+
 - [x] Graph refresh mechanism ✅ **Auto-refresh after conversion**
 - [x] Increased display limits ✅ **100 entities, 300 edges**
 - [x] Route redirect ✅ **`/knowledge-graph` → `/graph`**
 
 #### Duplicate Prevention
+
 - [x] Entity duplicate check ✅ **By slug**
 - [x] Relationship duplicate check ✅ **By type, bidirectional**
 - [x] Backwards claim duplicate check ✅ **By field_key and field_value**
 
 **Deliverables:**
+
 - ✅ Complete property to entity conversion system
 - ✅ Duplicate prevention at all levels
 - ✅ Connection status checking and display
@@ -781,6 +897,7 @@ associated_names: Related figures
 - ✅ Backwards-compatible claims system
 
 **Impact:**
+
 - Enables organic graph expansion from existing data
 - Prevents data quality issues with automatic duplicate prevention
 - Provides visual feedback for connection status
@@ -791,11 +908,13 @@ associated_names: Related figures
 ### Phase 3 — Detailed Plan (Objectives, Architecture, Milestones)
 
 **Objectives (Phase 3 overall):**
+
 - Ship a performant, editable knowledge graph for traditional correspondences (Phase 3A) and a conceptual cross-tradition graph (Phase 3B).
 - Maintain bootstrap budget: prefer PostgreSQL fallback during development; enable Neptune behind a feature flag.
 - Deliver user-facing value: interactive graph + CRUD + searchable comparative tables.
 
 **Success Metrics:**
+
 - Performance: initial graph render <800ms for 200 nodes/400 edges; interactions <50ms.
 - Reliability: >99% success for CRUD operations with RLS preserved.
 - Content: ≥50 correspondence entities and ≥30 convergence concepts seeded with citations.
@@ -943,6 +1062,7 @@ create unique index if not exists idx_conv_unique_edge on convergence_relationsh
 ```
 
 RLS policies (sketch):
+
 - Select for all authenticated users; insert/update/delete only for admins.
 - Separate `pending_*` tables optional for user suggestions.
 
@@ -1013,6 +1133,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 **Status:** MVP fully implemented and ready for testing! All core features complete.
 
 #### Week 21-22: AI Infrastructure - ✅ COMPLETE (100%)
+
 - [x] OpenAI GPT-4o API integration (for metadata extraction)
 - [x] Attempted Claude API (switched to GPT-4o for stability)
 - [x] Prompt engineering for metadata classification
@@ -1024,6 +1145,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] AI response caching (hash-based) - Deferred to optimization phase
 
 #### Week 23-24: Retrieval System - ✅ COMPLETE (90%)
+
 - [x] Semantic search with pgvector ✅ **Hybrid approach implemented**
 - [x] Hybrid retrieval system (vector + FTS) ✅ **RRF merging algorithm**
 - [x] Text chunking with overlap ✅ **Smart paragraph boundaries**
@@ -1032,6 +1154,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Graph-based retrieval from Neptune - Deferred (Neptune not yet set up)
 
 #### Week 25-26: Lens Orchestration (The Convergence Machine) - ✅ COMPLETE (100%)
+
 - [x] Seven lens system prompts ✅ **All 7 lenses defined**
   - Scientific (physics, cosmology, biology) ✅
   - Psychological (Jungian, cognitive science, archetypes) ✅
@@ -1046,6 +1169,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [x] Source citation formatting ✅ **Links to library texts**
 
 #### Week 27-28: Premium Features UI - ✅ COMPLETE (100%)
+
 - [x] AI query interface ✅ **Full UI at /convergence-machine**
 - [x] **Lens weight sliders (7 sliders, 0-100% each)** ✅ **Individual sliders with percentage display**
 - [x] Lens on/off toggles ✅ **Built into sliders**
@@ -1058,6 +1182,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [x] Premium gate system ✅ **Subscription check + upgrade prompts**
 
 **Deliverables:**
+
 - ✅ Working AI answer system (The Convergence Machine)
 - ✅ Seven-lens perspective synthesis with adjustable weighting
 - ✅ Lens weight sliders and preset system
@@ -1065,6 +1190,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - ✅ Query history and conversation storage
 
 **Files Created (18 new files):**
+
 - `migrations/021_add_convergence_machine_schema.sql` - Database schema
 - `migrations/022_add_subscription_status.sql` - Premium tier support
 - `app/src/lib/convergence/chunking.ts` - Text chunking logic
@@ -1089,6 +1215,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - `app/src/components/convergence/PremiumGate.tsx` - Premium access control
 
 **Next Steps:**
+
 - Generate embeddings for existing library texts
 - Test end-to-end query flow
 - Add navigation link in Header
@@ -1105,23 +1232,27 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 #### Week 29-30: Enhanced Answer Quality & Epistemic Labeling
 
 **Epistemic Inline Labeling System:**
+
 - [ ] Add inline tags to Convergence Machine responses: `*(Established physics)*`, `*(Contested interpretation)*`, `*(Speculative analogy)*`, `*(Metaphor)*`, `*(Devotional view)*`
 - [ ] Modify `lens-orchestrator.ts` to include labeling logic in response generation
 - [ ] Update system prompts to instruct AI to tag claims appropriately
 - [ ] Add styling for epistemic labels in `ResponseStream.tsx`
 
 **Structured Answer Framing:**
+
 - [ ] Implement answer structure: "What we know (established) / What's debated / Where analogies are tempting but speculative"
 - [ ] Update synthesis prompt in `mergeLensResponses()` to use structured framing
 - [ ] Add UI component to display structured sections in response view
 
 **Discovery Ethos System Preface:**
+
 - [ ] Add overarching system preface to all Convergence Machine queries
 - [ ] Principles: curiosity, humility, pluralism, rigor
 - [ ] Instructions: cite primary sources, separate established from interpretation, present multiple traditions, avoid medical diagnoses
 - [ ] File: `app/src/lib/convergence/lens-orchestrator.ts` (add to system prompt)
 
 **Enhanced UI Controls:**
+
 - [ ] Add "Comparative" vs "Single-tradition" toggle
 - [ ] Add "Breadth ↔ Depth" slider (adjusts retrieval k and chunk size)
 - [ ] Add checkboxes: "Include physics", "Include psychology", "Only primary sources"
@@ -1132,6 +1263,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 #### Week 31-32: Enhanced Metadata Schema for Physics
 
 **Database Schema Expansion:**
+
 - [ ] Migration: Add columns to `texts` table:
   - `discipline` TEXT (physics, philosophy, psychology, religion)
   - `subfield` TEXT (QM, QFT, cosmology, clinical psych, depth psych, theology)
@@ -1141,17 +1273,20 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] File: `migrations/XXX_add_physics_metadata.sql`
 
 **Metadata Extraction Updates:**
+
 - [ ] Update `claude-metadata.ts` to extract new fields
 - [ ] Update `DocumentMetadata` interface
 - [ ] Update AI prompt to classify physics documents with new fields
 - [ ] File: `app/src/lib/claude-metadata.ts`
 
 **Library Filtering:**
+
 - [ ] Add filters for new metadata fields in library page
 - [ ] Update `AdvancedFilters.tsx` component
 - [ ] Add facet filters for `discipline`, `evidence_type`, `math_level`
 
 **Deliverables:**
+
 - Epistemic labeling system reduces confusion at physics-spirituality boundary
 - Structured answer framing improves user satisfaction
 - Enhanced UI controls provide better query customization
@@ -1164,6 +1299,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 **Goal:** Launch contribution reward system
 
 #### Week 29-30: Off-Chain Points System
+
 - [ ] Contribution points schema
 - [ ] Point allocation rules:
   - Document upload: +100 points
@@ -1175,6 +1311,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Rank progression (Neophyte → Adept → Magus)
 
 #### Week 31-32: Community Features
+
 - [ ] Discussion forums (by topic/guild)
 - [ ] User profiles with contributions
 - [ ] Comment system on texts
@@ -1194,6 +1331,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
   - [ ] Social sharing buttons for library texts
 
 #### Week 33-34: Smart Contract Development
+
 - [ ] Choose Layer 2 blockchain (Polygon/Solana)
 - [ ] ERC-20 token contract (Create Coin)
 - [ ] Staking mechanism
@@ -1201,6 +1339,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Security audit
 
 #### Week 35-36: Token Launch Preparation
+
 - [ ] Legal compliance review
 - [ ] Token Legal Opinion
 - [ ] Terms of Service updates
@@ -1209,6 +1348,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Airdrop allocation formula
 
 **Deliverables:**
+
 - Internal points system (off-chain)
 - Community forums and profiles
 - Smart contracts (testnet)
@@ -1223,27 +1363,32 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 **Goal:** Automated discovery of conceptual parallels across traditions
 
 **Embedding-Based Clustering:**
+
 - [ ] Use existing embeddings to cluster passages from different domains
 - [ ] Flag cross-cluster neighbors as candidate analogies
 - [ ] File: `app/src/lib/convergence/concept-alignment.ts` (new)
 
 **Natural Language Inference Filtering:**
+
 - [ ] Lightweight NLI pass (entailment/contradiction) to filter spurious links
 - [ ] Use OpenAI API for NLI classification
 - [ ] File: `app/src/lib/convergence/nli-filter.ts` (new)
 
 **Human-in-the-Loop Approval:**
+
 - [ ] Admin review interface for cross-domain edges
 - [ ] Store pending edges in `convergence_relationships` with `status = 'pending'`
 - [ ] Approval workflow before edges become public
 - [ ] Files: Admin UI component, API route for approval
 
 **UI: "Related across traditions/sciences":**
+
 - [ ] Display cross-domain concept map
 - [ ] Show related concepts from different domains
 - [ ] File: New component `CrossDomainConcepts.tsx`
 
 **Deliverables:**
+
 - Automated concept alignment system with human curation
 - 20+ validated cross-domain connections in first month
 - UI for exploring related concepts across traditions
@@ -1253,21 +1398,25 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 **Goal:** Discover emerging themes across corpus automatically
 
 **Unsupervised Topic Discovery:**
+
 - [ ] BERTopic-style pipeline using embeddings
 - [ ] Periodic batch job to find emerging themes (e.g., "nothingness," "observer," "causality")
 - [ ] File: `app/src/lib/convergence/topic-discovery.ts` (new)
 
 **Editorial Review Workflow:**
+
 - [ ] Present new topics to editorial reviewers
 - [ ] Accepted topics become filterable facets
 - [ ] Admin interface for topic approval
 - [ ] Files: Admin UI, topic management API
 
 **Topic Filtering in Library:**
+
 - [ ] Add discovered topics as filter options
 - [ ] Update library search interface
 
 **Deliverables:**
+
 - Topic discovery surfaces 10+ new filterable themes
 - Editorial workflow ensures quality control
 - Enhanced library filtering with discovered topics
@@ -1277,12 +1426,14 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 **Goal:** System improves by learning from user interactions
 
 **User Question Logging:**
+
 - [ ] Log user questions + which sources produced best answers
 - [ ] Track groundedness scores and user ratings
 - [ ] Database table: `convergence_learning_logs`
 - [ ] File: `migrations/XXX_add_learning_logs.sql`
 
 **Batch Job for Suggestions:**
+
 - [ ] Periodic job suggests:
   - New cross-domain edges
   - Missing books/editions
@@ -1290,16 +1441,19 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] File: `app/src/lib/convergence/learning-suggestions.ts` (new)
 
 **Human Review Panel:**
+
 - [ ] Admin interface for reviewing suggestions
 - [ ] Approval workflow before changes go live
 - [ ] Files: Admin UI for learning suggestions
 
 **Evaluation System:**
+
 - [ ] Re-run gold tests after changes
 - [ ] Only keep changes that improve groundedness/faithfulness
 - [ ] File: `app/src/lib/convergence/evaluation.ts` (new)
 
 **Deliverables:**
+
 - Self-learning loop improves answer quality scores by 15%+ over 3 months
 - Automated suggestion system with human curation
 - Evaluation framework ensures continuous improvement
@@ -1309,6 +1463,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 **Goal:** Organize physics corpus by progression and evidence type
 
 **Corpus Layer Classification:**
+
 - [ ] Add `corpus_layer` field to texts table:
   - Foundational physics (classical → relativity → QM → QFT → quantum information)
   - Science-of-science (philosophy of science, epistemology, Kuhn, demarcation)
@@ -1317,22 +1472,26 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Migration: `migrations/XXX_add_corpus_layers.sql`
 
 **Retrieval Rules:**
+
 - [ ] When mixing religion + physics, retrieve from both corpora
 - [ ] Label sources transparently
 - [ ] Avoid causal claims unless in cited physics literature
 - [ ] Update `hybrid-retrieval.ts` with corpus layer awareness
 
 **UI: Corpus Layer Display:**
+
 - [ ] Show corpus layer in document metadata
 - [ ] Filter by corpus layer in library
 - [ ] Visual indicator for popularizations vs primary sources
 
 **Deliverables:**
+
 - Structured corpus organization supports rigorous physics-spirituality integration
 - Clear separation between primary sources and popularizations
 - Enhanced retrieval with corpus layer awareness
 
 #### Ritual Inventory System (NEW)
+
 - [ ] Inventory database schema
 - [ ] Add/edit/delete items UI
 - [ ] Photo upload for items
@@ -1342,6 +1501,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Shopping list generator
 
 #### n8n Agent Workflows
+
 - [ ] n8n installation (self-hosted or cloud)
 - [ ] 16 AI agent workflows:
   - Document OCR processor
@@ -1362,6 +1522,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
   - **Email Monitoring Agent** - Automated bounce rate review and troubleshooting
 
 #### Advanced Graph Features
+
 - [ ] Global graph view (with anti-hairball filters)
 - [ ] 3D graph visualization (Three.js)
 - [ ] Temporal graph (show evolution over time)
@@ -1369,6 +1530,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 - [ ] Graph export (GraphML, GEXF)
 
 #### Premium Enhancements
+
 - [ ] Bi-directional Notion sync
 - [ ] Public API for developers
   - [ ] RESTful API documentation
@@ -1394,6 +1556,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 ### Visual Identity: "The Scholar's Study at Midnight"
 
 **Color Palette:**
+
 ```css
 /* Backgrounds */
 --bg-primary: #1A3A3A;        /* Deep green */
@@ -1412,6 +1575,7 @@ Validation: Zod schemas; auth: Supabase session; rate limits on write endpoints.
 ```
 
 **Typography:**
+
 ```css
 /* Headings */
 font-family: 'Garamond Premier Pro', 'Cormorant Garamond', serif;
@@ -1440,6 +1604,7 @@ font-family: 'Source Code Pro', monospace;
 ### Component Library
 
 **To Implement:**
+
 - Document Card (thumbnail, metadata, CTA)
 - Search Bar (autocomplete, filters)
 - Knowledge Graph (D3.js canvas)
@@ -1468,11 +1633,13 @@ font-family: 'Source Code Pro', monospace;
 ### Two Distinct Progression Systems
 
 **Payment Tiers** (What features you unlock):
+
 - 🏛️ **The Reader** (Free) - Library access, basic tools
 - 🏛️ **The Scholar** (Premium) - Research tools, AI, unlimited pages
 - 🏛️ **The Archivist** (Pro) - Full curation, API access
 
 **Community Ranks** (What you earn through contributions):
+
 - ⭐ **Neophyte** - New contributor
 - ⭐ **Adept** - Active contributor
 - ⭐ **Magus** - Master contributor
@@ -1482,6 +1649,7 @@ font-family: 'Source Code Pro', monospace;
 ### Freemium SaaS Pricing
 
 **Free Tier (The Reader):**
+
 - Full access to Public Library
 - Basic keyword search
 - Personal Grimoire (25 pages max)
@@ -1490,6 +1658,7 @@ font-family: 'Source Code Pro', monospace;
 - Community participation
 
 **Premium Tier (The Scholar) - $15/month or $150/year:**
+
 - Unlimited grimoire pages
 - Unlimited AI queries (Multi-Lens System)
 - Advanced semantic search
@@ -1500,6 +1669,7 @@ font-family: 'Source Code Pro', monospace;
 - Early access to new features
 
 **Pro Tier (The Archivist) - $50/month (Future):**
+
 - All Premium features
 - Bi-directional Notion sync
 - API access
@@ -1528,6 +1698,7 @@ Phase-Based Bootstrap Budget:
 **Phase 1 (Months 1-3): MVP on Free Tier - $0-15/month ✅ CURRENT**
 
 **Infrastructure Costs:**
+
 - Vercel Free (hosting) - $0
 - Supabase Free 500MB (database) - $0
 - Cloudflare R2 10GB (storage) - $0
@@ -1537,6 +1708,7 @@ Phase-Based Bootstrap Budget:
 - **Total: ~$2-3/month** (97% under budget!)
 
 **Why Cloudflare vs AWS:**
+
 - AWS would cost $29-100/month for support access (required for troubleshooting)
 - No egress fees with Cloudflare (vs $0.09/GB with AWS)
 - Free community support via Discord
@@ -1574,6 +1746,7 @@ Add: "48-week timeline assumes efficient AI pair programming and phased rollout 
 ### Content Marketing
 
 **SEO-Optimized Blog Posts:**
+
 - "What is Alchemy? A Complete Guide for Beginners"
 - "Understanding the Tree of Life in Qabalah"
 - "Planetary Correspondences in Western Esotericism"
@@ -1581,6 +1754,7 @@ Add: "48-week timeline assumes efficient AI pair programming and phased rollout 
 - "The Hermetic Order of the Golden Dawn: History and Influence"
 
 **Target Keywords:**
+
 - "esoteric library" (Low competition)
 - "occult texts online" (Medium competition)
 - "grimoire digital" (Low competition)
@@ -1590,6 +1764,7 @@ Add: "48-week timeline assumes efficient AI pair programming and phased rollout 
 ### Community Building
 
 **Target Platforms:**
+
 - r/occult (750K members)
 - r/Wicca (150K members)
 - r/alchemy (30K members)
@@ -1598,6 +1773,7 @@ Add: "48-week timeline assumes efficient AI pair programming and phased rollout 
 - Discord servers (Thelema, Esoteric studies)
 
 **Engagement Tactics:**
+
 - Weekly themed "Upload Events"
 - Monthly AMA with scholars
 - Featured Contributor spotlights
@@ -1607,17 +1783,20 @@ Add: "48-week timeline assumes efficient AI pair programming and phased rollout 
 ### Launch Sequence
 
 **Phase 1: Seeding (Months 1-2)**
+
 - Private beta with 50 invited users
 - Academic outreach (university libraries)
 - Partnerships with esoteric publishers
 
 **Phase 2: Public Launch (Month 3)**
+
 - Product Hunt launch
 - Reddit AMAs
 - Press release to occult/spiritual publications
 - Influencer partnerships (BookTube, WitchTok)
 
 **Phase 3: Growth (Months 4-12)**
+
 - Content marketing (2 blog posts/week)
 - YouTube channel (text reviews, tutorials)
 - Podcast (interviews with practitioners)
@@ -1630,30 +1809,35 @@ Add: "48-week timeline assumes efficient AI pair programming and phased rollout 
 Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 specialized AI agents:
 
 ### Core Leadership
+
 1. **Vision Agent (CEO)** - Strategic oversight and alignment
 2. **Coordinator Agent (COO)** - Workflow and resource management
 3. **Engineering Agent (CTO)** - Technical infrastructure
 
 ### Content & Community
-4. **Library Science Agent** - Text acquisition and metadata
-5. **Archivist Agent** - Digitization and copyright compliance
-6. **Community Manager Agent** - User engagement and moderation
-7. **Marketing Agent (Herald)** - SEO and campaigns
-8. **Social Media Agent (Storyteller)** - Content distribution
+
+1. **Library Science Agent** - Text acquisition and metadata
+2. **Archivist Agent** - Digitization and copyright compliance
+3. **Community Manager Agent** - User engagement and moderation
+4. **Marketing Agent (Herald)** - SEO and campaigns
+5. **Social Media Agent (Storyteller)** - Content distribution
 
 ### Product Development
-9. **Frontend Agent** - UI implementation
-10. **UX Design Agent** - Interface design and testing
-11. **AI Reasoning Agent (Multi-Lens Oracle)** - Answer synthesis
-12. **Knowledge Graph Agent** - Ontology and relationships
+
+1. **Frontend Agent** - UI implementation
+2. **UX Design Agent** - Interface design and testing
+3. **AI Reasoning Agent (Multi-Lens Oracle)** - Answer synthesis
+4. **Knowledge Graph Agent** - Ontology and relationships
 
 ### Operations
-13. **Blockchain Agent** - Token smart contracts
-14. **Legal Agent** - Compliance and ToS
-15. **Prompt Engineer Agent** - AI instruction optimization
-16. **Email Monitoring Agent** - Email deliverability monitoring, bounce rate analysis, and automated troubleshooting
+
+1. **Blockchain Agent** - Token smart contracts
+2. **Legal Agent** - Compliance and ToS
+3. **Prompt Engineer Agent** - AI instruction optimization
+4. **Email Monitoring Agent** - Email deliverability monitoring, bounce rate analysis, and automated troubleshooting
 
 **Implementation via n8n:**
+
 - Each agent = dedicated workflow
 - Inter-agent communication via webhooks
 - Shared knowledge base (Supabase)
@@ -1663,6 +1847,7 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 ### Email Monitoring Agent (Agent #16) - Detailed Responsibilities
 
 **Primary Functions:**
+
 1. **Automated Bounce Rate Review**
    - Daily analysis of email_events table for bounce patterns
    - Categorize bounces (hard vs soft, by reason code)
@@ -1670,19 +1855,19 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
    - Generate bounce rate reports with trend analysis
 
 2. **Automated Troubleshooting Workflows**
-   - **High Bounce Rate (>5%)**: 
+   - **High Bounce Rate (>5%)**:
      - Query email_events for bounce reasons
      - Check for invalid email patterns in database
      - Review email validation logic
      - Remove hard bounces from user list automatically
      - Generate remediation report for admin review
-   
+
    - **Spam Complaint Rate (>0.1%)**:
      - Analyze complaint patterns
      - Review email content and subject lines
      - Check sender reputation metrics
      - Flag emails for content review
-   
+
    - **Delivery Failure Rate (>10%)**:
      - Verify SMTP configuration status
      - Check DNS records (SPF, DKIM, DMARC) via API
@@ -1702,23 +1887,27 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
    - Alert notifications when thresholds exceeded
 
 **Workflow Triggers:**
+
 - **Scheduled:** Daily at 9 AM UTC (bounce review), Weekly on Mondays (trend analysis)
 - **Event-Driven:** SendGrid webhook events (bounce, spamreport, dropped)
 - **Threshold-Based:** Alert-triggered workflows when metrics exceed thresholds
 
 **Integration Points:**
+
 - **SendGrid API:** Fetch bounce details, suppression lists, domain reputation
 - **Supabase Database:** Query email_events, update user records, log actions
 - **Engineering Agent:** Escalate infrastructure issues
 - **Admin Dashboard:** Post reports and alerts
 
 **Human-in-the-Loop Checkpoints:**
+
 - Before removing >100 users from database
 - Before changing email validation rules
 - Before escalating to Engineering Agent
 - When bounce rate >10% (critical threshold)
 
 **Success Metrics:**
+
 - Bounce rate maintained <5%
 - 95%+ delivery rate
 - <0.1% spam complaint rate
@@ -1732,6 +1921,7 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 ### Infrastructure as Code (Terraform)
 
 **Resources to Provision:**
+
 ```hcl
 # Core AWS Resources
 - S3 bucket (digital-grimoire-library)
@@ -1757,6 +1947,7 @@ Based on `CORE AI TEAM — DIGITAL GRIMOIRE LIBRA.md`, we will implement 15 spec
 **Status:** 📋 Documented, ready for implementation
 
 A comprehensive Discord server setup guide has been created to support:
+
 - **Sentry Alerts** - Real-time error notifications from production
 - **Feature Updates** - Announcements and communication with end users  
 - **Community Engagement** - Feature requests, book requests, and user support
@@ -1764,6 +1955,7 @@ A comprehensive Discord server setup guide has been created to support:
 **Documentation:** `docs/Setup Docs/DISCORD_SERVER_SETUP.md`
 
 **Key Components:**
+
 - Channel structure (admin/technical, community, optional channels)
 - Sentry → Discord webhook integration
 - Discord bot setup (optional, for automation)
@@ -1784,6 +1976,7 @@ A comprehensive Discord server setup guide has been created to support:
 Supabase's default email service is limited to 3 emails/hour during development - this is **NOT suitable for production**.
 
 **Setup Requirements:**
+
 ```bash
 # Required before production deployment
 
@@ -1815,6 +2008,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 ```
 
 **Cost Structure:**
+
 - **Free Tier:** 100 emails/day (3,000/month) - Good for initial launch
 - **Essentials:** $19.95/month for 50,000 emails
 - **Pro:** $89.95/month for 100,000 emails
@@ -1828,6 +2022,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 ### CI/CD Pipeline (GitHub Actions)
 
 **Workflow:**
+
 ```yaml
 1. Test (on PR)
    - Lint (ESLint + Prettier)
@@ -1857,6 +2052,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 ### Hosting & Scaling
 
 **Current (MVP - Free Tier) ✅ ACTIVE:**
+
 - Frontend: Vercel Free (Hobby plan) - $0
 - Database: Supabase Free (500MB) - $0
 - Files: Cloudflare R2 (10GB free) - $0
@@ -1865,6 +2061,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 - **Total: ~$2-3/month**
 
 **Future (100K MAU):**
+
 - Frontend: Vercel Pro ($20/mo)
 - Database: Supabase Pro ($25/mo) → RDS ($100/mo)
 - Files: S3 Standard ($10-50/mo)
@@ -1947,6 +2144,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 ## X. IMMEDIATE ACTION ITEMS (Next 30 Days)
 
 ### ✅ COMPLETED (Weeks 1-4)
+
 - [x] Set up development environment (Node.js, Git, pnpm)
 - [x] Create GitHub repository
 - [x] Initialize Next.js 14 project
@@ -1964,6 +2162,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 - [x] Admin panel with upload interface
 
 ### 🔄 IN PROGRESS (Current Week)
+
 - [ ] Digitize first 10-20 public domain texts
 - [ ] Test end-to-end upload → OCR → metadata → display flow
 - [ ] Add full-text search (PostgreSQL FTS)
@@ -1971,6 +2170,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 - [ ] Write comprehensive API documentation
 
 ### ⏳ NEXT PRIORITIES (Weeks 5-6)
+
 - [ ] Advanced library filtering (domain, year, tags)
 - [ ] Pagination for document listings
 - [ ] Document detail pages with full metadata
@@ -1984,6 +2184,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 ## XI. LONG-TERM VISION (Years 2-5)
 
 ### Year 2: Community Growth
+
 - 10,000 MAU
 - 500 premium subscribers
 - 1,000+ texts in library
@@ -1991,6 +2192,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 - Partnerships with academic institutions
 
 ### Year 3: Platform Maturity
+
 - 50,000 MAU
 - 2,000 premium subscribers
 - Full API release
@@ -1998,6 +2200,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 - International expansion (multilingual)
 
 ### Year 4: Market Leadership
+
 - 200,000 MAU
 - 10,000 premium subscribers
 - White-label licensing
@@ -2005,6 +2208,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 - Documentary film about the project
 
 ### Year 5: Cultural Institution
+
 - 500,000 MAU
 - Recognized as definitive esoteric archive
 - Museum partnerships
@@ -2016,6 +2220,7 @@ Supabase's default email service is limited to 3 emails/hour during development 
 ## XII. CONCLUSION
 
 The Digital Grimoire Library represents a unique convergence of:
+
 - **Academic rigor** (scholarly standards)
 - **Modern UX** (Notion-like simplicity)
 - **Advanced AI** (multi-lens reasoning)
@@ -2028,6 +2233,7 @@ This master plan provides a clear, actionable roadmap from MVP to market leaders
 ## XIII. APPENDIX
 
 ### Document References
+
 1. [Complete Technical Implementation Plan](../source/Complete_Technical_Implementation_Plan.md)
 2. [UI/UX Strategy](../source/UI_UX_Strategy.md)
 3. [Business Plan](../source/Business_Plan.md)
@@ -2038,6 +2244,7 @@ This master plan provides a clear, actionable roadmap from MVP to market leaders
 8. [Core AI Team Structure](../source/CORE_AI_TEAM.md)
 
 ### External Resources
+
 - [Supabase Documentation](https://supabase.com/docs)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tiptap Documentation](https://tiptap.dev)
@@ -2047,6 +2254,7 @@ This master plan provides a clear, actionable roadmap from MVP to market leaders
 - [Claude API](https://www.anthropic.com/api)
 
 ### Contact & Team
+
 - **Project Lead:** [Your Name]
 - **Repository:** [GitHub URL]
 - **Project Board:** [Notion/Trello URL]
@@ -2065,37 +2273,44 @@ This master plan provides a clear, actionable roadmap from MVP to market leaders
 ### Infrastructure Migration: AWS → Cloudflare R2 (Oct 26, 2025)
 
 **Problem:**
+
 - AWS Textract had permission issues requiring support access
 - AWS support plans cost $29-100/month minimum (58-200% of bootstrap budget)
 - Unpredictable egress fees ($0.09/GB) could balloon costs
 - Can't troubleshoot account-specific issues without paid support
 
 **Solution:**
+
 - Migrated to Cloudflare R2 for object storage
 - Kept Azure Computer Vision for OCR (5K pages/month free)
 - S3-compatible API meant minimal code changes
 
 **Benefits:**
+
 - $0 egress fees (major cost savings)
 - Free community support (Discord, forums)
 - Better economics for bootstrap phase
 - Stays within $0-15/month target budget
 
 **Documentation:**
+
 - Full analysis: `docs/AWS_LESSONS_LEARNED.md`
 - Migration session: `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md`
 
 ### AI Provider: Claude → OpenAI GPT-4o (Oct 26, 2025)
 
 **Problem:**
+
 - Claude 3.5 Sonnet had availability issues (404 errors)
 - Model `claude-3-5-sonnet-20241022` not consistently available
 
 **Solution:**
+
 - Switched to OpenAI GPT-4o for metadata extraction
 - Used JSON mode for guaranteed structured responses
 
 **Benefits:**
+
 - More stable and widely accessible
 - Better documentation and examples
 - Guaranteed JSON output format
@@ -2106,6 +2321,7 @@ This master plan provides a clear, actionable roadmap from MVP to market leaders
 **Tool:** Cursor AI with Claude Sonnet 4.5
 
 **Results:**
+
 - 29x average velocity improvement
 - Sprint 1: 20x faster (1h 53m vs 40h planned)
 - Sprint 2: 32x faster (2.5h vs 80h planned)
@@ -2114,8 +2330,8 @@ This master plan provides a clear, actionable roadmap from MVP to market leaders
 - Zero technical debt accumulated
 
 **Key to Success:**
+
 - Clear documentation and planning
 - Incremental feature building
 - Real-time debugging and iteration
 - Comprehensive testing at each step
-

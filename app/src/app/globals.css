@@ -2,16 +2,17 @@
 
 @theme {
   /* Akashic Interface Color Palette */
-  
+
   /* Void Black / Abyssal Backgrounds */
   --color-void-black: #050505;
   --color-abyssal-blue: #08080b;
   --color-scanline-black: #0a0a0f;
-  
+
   /* Tech/Glass Borders */
-  --color-glass-border: rgba(245, 158, 11, 0.15); /* Faint Amber */
+  --color-glass-border: rgba(245, 158, 11, 0.15);
+  /* Faint Amber */
   --color-glass-border-hover: rgba(245, 158, 11, 0.4);
-  
+
   /* Neon Accents */
   --color-amber-500: #F59E0B;
   --color-amber-400: #fbbf24;
@@ -19,22 +20,24 @@
   --color-cyan-400: #22d3ee;
 
   /* Standard Tailwind Colors (Overridden specific shades for harmony if needed, but keeping defaults + customs) */
-  --color-zinc-800: #18181b; /* Keeping for compatibility but steering towards void */
+  --color-zinc-800: #18181b;
+  /* Keeping for compatibility but steering towards void */
   --color-zinc-900: #09090b;
 
   /* Font families */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  
+
   /* Animations */
   --animate-scanline: scanline 8s linear infinite;
   --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 :root {
-  --background: #050505; /* Void Black */
+  --background: #050505;
+  /* Void Black */
   --foreground: #ededed;
-  
+
   /* Glassmorphism Variables */
   --glass-bg: rgba(5, 5, 5, 0.7);
   --glass-backdrop: blur(12px);
@@ -49,7 +52,7 @@ body {
   padding: 0;
   /* subtle starfield/noise texture would be added here via background-image if we had the asset, 
      for now we use a css radial gradient fallback for depth */
-  background-image: 
+  background-image:
     radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.03) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.02) 0%, transparent 50%);
   min-height: 100vh;
@@ -60,19 +63,28 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #050505;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #27272a;
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #F59E0B; /* Amber hover */
+  background: #F59E0B;
+  /* Amber hover */
 }
 
 /* ===== Typography overrides for Data/Tech feel ===== */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   letter-spacing: -0.02em;
 }
 
@@ -87,6 +99,13 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+  .glass-panel {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
 }
 
 .glass-panel-hover:hover {
@@ -108,7 +127,8 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  color: #F59E0B; /* Amber */
+  color: #F59E0B;
+  /* Amber */
   letter-spacing: -0.03em;
 }
 
@@ -118,7 +138,8 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.3;
   margin-top: 1.75rem;
   margin-bottom: 0.75rem;
-  color: #fbbf24; /* Lighter Amber */
+  color: #fbbf24;
+  /* Lighter Amber */
 }
 
 .ProseMirror h3 {
@@ -136,7 +157,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .ProseMirror ul {
-  list-style-type: square; /* More techy than disc */
+  list-style-type: square;
+  /* More techy than disc */
 }
 
 .ProseMirror blockquote {
@@ -149,17 +171,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .ProseMirror code {
-  background-color: rgba(6, 182, 212, 0.1); /* Cyan tint */
+  background-color: rgba(6, 182, 212, 0.1);
+  /* Cyan tint */
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-family: var(--font-mono);
   font-size: 0.875rem;
-  color: #22d3ee; /* Cyan text */
+  color: #22d3ee;
+  /* Cyan text */
   border: 1px solid rgba(6, 182, 212, 0.2);
 }
 
 .ProseMirror pre {
-  background-color: #08080b; /* Abyssal */
+  background-color: #08080b;
+  /* Abyssal */
   padding: 1rem;
   border-radius: 0.5rem;
   border: 1px solid #27272a;
