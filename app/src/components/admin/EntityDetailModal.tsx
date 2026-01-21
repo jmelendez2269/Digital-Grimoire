@@ -26,9 +26,10 @@ interface EntityDetailModalProps {
   entity: any;
   graphType: GraphType;
   onClose: () => void;
+  readOnly?: boolean;
 }
 
-export default function EntityDetailModal({ entity, graphType, onClose }: EntityDetailModalProps) {
+export default function EntityDetailModal({ entity, graphType, onClose, readOnly }: EntityDetailModalProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"consensus" | "sources">("consensus");
   const [claims, setClaims] = useState<KnowledgeClaim[]>([]);
@@ -81,8 +82,8 @@ export default function EntityDetailModal({ entity, graphType, onClose }: Entity
           entityCategory: entity.category || entity.type?.slug,
           tradition: entity.tradition || entity.tradition_ref?.label,
           entityType: graphType,
-          existingDescription: graphType === "correspondences" 
-            ? entity.description 
+          existingDescription: graphType === "correspondences"
+            ? entity.description
             : entity.short_definition,
         }),
       });
@@ -152,14 +153,16 @@ export default function EntityDetailModal({ entity, graphType, onClose }: Entity
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleEdit}
-              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm flex items-center gap-1.5 transition-colors"
-              title="Edit entity"
-            >
-              <Edit className="w-4 h-4" />
-              Edit
-            </button>
+            {!readOnly && (
+              <button
+                onClick={handleEdit}
+                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm flex items-center gap-1.5 transition-colors"
+                title="Edit entity"
+              >
+                <Edit className="w-4 h-4" />
+                Edit
+              </button>
+            )}
             <button
               onClick={onClose}
               className="text-amber-100/60 hover:text-amber-100 transition-colors p-2 hover:bg-zinc-800 rounded"
@@ -173,17 +176,15 @@ export default function EntityDetailModal({ entity, graphType, onClose }: Entity
           <div className="flex gap-2 mb-4">
             <button
               onClick={() => setActiveTab("consensus")}
-              className={`px-3 py-2 rounded text-sm font-medium ${
-                activeTab === "consensus" ? "bg-amber-600 text-white" : "bg-zinc-800 text-amber-100/70"
-              }`}
+              className={`px-3 py-2 rounded text-sm font-medium ${activeTab === "consensus" ? "bg-amber-600 text-white" : "bg-zinc-800 text-amber-100/70"
+                }`}
             >
               Consensus
             </button>
             <button
               onClick={() => setActiveTab("sources")}
-              className={`px-3 py-2 rounded text-sm font-medium ${
-                activeTab === "sources" ? "bg-amber-600 text-white" : "bg-zinc-800 text-amber-100/70"
-              }`}
+              className={`px-3 py-2 rounded text-sm font-medium ${activeTab === "sources" ? "bg-amber-600 text-white" : "bg-zinc-800 text-amber-100/70"
+                }`}
             >
               Sources
             </button>
@@ -193,7 +194,7 @@ export default function EntityDetailModal({ entity, graphType, onClose }: Entity
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-amber-100/80">Consensus Description</h3>
-                {claims.length > 0 && (
+                {claims.length > 0 && !readOnly && (
                   <button
                     onClick={handleGenerateConsensus}
                     disabled={generatingConsensus}
@@ -205,7 +206,7 @@ export default function EntityDetailModal({ entity, graphType, onClose }: Entity
                   </button>
                 )}
               </div>
-              
+
               {error && (
                 <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-3 text-red-400 text-sm">
                   {error}
@@ -216,14 +217,16 @@ export default function EntityDetailModal({ entity, graphType, onClose }: Entity
                 <div className="bg-purple-900/20 border border-purple-700/50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-purple-200">Generated Consensus</span>
-                    <button
-                      onClick={handleEditWithConsensus}
-                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs flex items-center gap-1.5"
-                      title="Edit entity to save this consensus"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                      Edit to Save
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={handleEditWithConsensus}
+                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs flex items-center gap-1.5"
+                        title="Edit entity to save this consensus"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        Edit to Save
+                      </button>
+                    )}
                   </div>
                   <div className="text-amber-100/90 whitespace-pre-wrap text-sm leading-relaxed">
                     {generatedConsensus}

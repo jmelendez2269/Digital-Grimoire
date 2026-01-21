@@ -259,7 +259,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <div className="flex items-center gap-2">
               <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">Log In</Link>
               <Link href="/register" className="px-4 py-1.5 text-sm font-bold text-black bg-amber-500 hover:bg-amber-400 rounded transition-colors shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                Initialize &gt;
+                JOIN_CONVERGENCE &gt;
               </Link>
             </div>
           )}

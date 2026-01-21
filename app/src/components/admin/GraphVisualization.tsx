@@ -15,26 +15,26 @@ interface GraphVisualizationProps {
   entities: Entity[];
   relationships: any[];
   graphType: GraphType;
-  onSelectEntity: (entity: Entity) => void;
+  onSelectEntity: (entity: any) => void;
 }
 
 // Color schemes
 const CORRESPONDENCE_COLORS: Record<string, string> = {
-  planet: "#8B5CF6",
-  element: "#3B82F6",
-  deity: "#F59E0B",
-  tarot: "#10B981",
-  sephirah: "#EF4444",
-  path: "#6366F1",
-  metal: "#06B6D4",
-  herb: "#EC4899",
-  color: "#F97316",
-  sign: "#14B8A6",
-  house: "#A855F7",
-  angel: "#22C55E",
-  demon: "#DC2626",
-  stone: "#84CC16",
-  note: "#6B7280",
+  planet: "#8B5CF6", // Violet
+  element: "#3B82F6", // Blue
+  deity: "#F59E0B", // Amber
+  tarot: "#10B981", // Emerald
+  sephirah: "#EF4444", // Red
+  path: "#6366F1", // Indigo
+  metal: "#06B6D4", // Cyan
+  herb: "#EC4899", // Pink
+  color: "#F97316", // Orange
+  sign: "#14B8A6", // Teal
+  house: "#A855F7", // Purple
+  angel: "#22C55E", // Green
+  demon: "#DC2626", // Red
+  stone: "#84CC16", // Lime
+  note: "#6B7280", // Gray
   other: "#6B7280",
 };
 
@@ -60,48 +60,54 @@ export default function GraphVisualization({
   onSelectEntity,
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 900, height: 600 });
+  const simulationRef = useRef<d3.Simulation<d3.SimulationNodeDatum, undefined> | null>(null);
 
+  // Resize handler
   useEffect(() => {
-    if (!svgRef.current || entities.length === 0) return;
+    const handleResize = () => {
+      if (wrapperRef.current) {
+        const { width, height } = wrapperRef.current.getBoundingClientRect();
+        setDimensions({ width, height: Math.max(600, height) });
+      }
+    };
 
-    // Update dimensions
-    const container = svgRef.current.parentElement;
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      setDimensions({ width: rect.width - 32, height: Math.max(600, rect.height - 32) });
-    }
-  }, [entities]);
+    window.addEventListener("resize", handleResize);
+    handleResize();
 
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Update simulation when entities/dimensions change
   useEffect(() => {
     if (!svgRef.current || entities.length === 0) return;
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
+    svg.selectAll("*").remove(); // Clear previous render
 
-    const width = dimensions.width;
-    const height = dimensions.height;
+    const { width, height } = dimensions;
 
-    // Create nodes
+    // --- Prepare Data ---
     const nodes = entities.map((entity) => ({
       id: entity.id,
       entity,
-      x: Math.random() * width,
-      y: Math.random() * height,
+      // Random initial position but clustered towards center
+      x: width / 2 + (Math.random() - 0.5) * 50,
+      y: height / 2 + (Math.random() - 0.5) * 50,
+      r: graphType === "correspondences" ? 5 : (entity.primary_sources?.length || 1) * 2 + 4 // Size based on importance
     }));
 
-    // Create links
     const entityMap = new Map(entities.map((e) => [e.id, e]));
     const links = relationships
       .filter((rel) => entityMap.has(rel.source_id) && entityMap.has(rel.target_id))
       .map((rel) => ({
         source: rel.source_id,
         target: rel.target_id,
-        relationship: rel,
-        weight: graphType === "correspondences" ? rel.weight : rel.similarity,
+        weight: graphType === "correspondences" ? rel.weight : rel.similarity || 0.5,
       }));
 
-    // Create force simulation
+    // --- Force Simulation (Obsidian-style) ---
     const simulation = d3
       .forceSimulation(nodes as any)
       .force(
@@ -110,30 +116,49 @@ export default function GraphVisualization({
           .forceLink(links)
           .id((d: any) => d.id)
           .distance((d: any) => {
-            // Closer for higher weight/similarity
-            const weight = d.weight || 0.5;
-            return 200 - weight * 100;
+            // Variable distance based on weight/similarity
+            // High weight = closer
+            const w = d.weight || 0.5;
+            return 150 * (1 - w * 0.6); // Range: 60px to 150px
           })
-          .strength((d: any) => (d.weight || 0.5) * 0.5)
+          .strength((d: any) => Math.max(0.1, (d.weight || 0.5) * 0.7))
       )
-      .force("charge", d3.forceManyBody().strength(-300))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(30));
+      .force("charge", d3.forceManyBody().strength(-300).distanceMax(500)) // Repel nodes
+      .force("center", d3.forceCenter(width / 2, height / 2).strength(0.05)) // Gentle gravity
+      .force("collide", d3.forceCollide().radius((d: any) => d.r + 10).iterations(2)) // Prevent overlap
+      .velocityDecay(0.2); // Low friction for "floaty" feel
 
-    // Create SVG elements
+    simulationRef.current = simulation;
+
+    // --- Rendering ---
     const g = svg.append("g");
 
-    // Add zoom behavior
+    // Zoom Behavior
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 4])
+      .scaleExtent([0.1, 8])
       .on("zoom", (event) => {
         g.attr("transform", event.transform);
+
+        // Semantic Zoom: Hide labels when zoomed out
+        const k = event.transform.k;
+        g.selectAll(".node-label")
+          .style("opacity", (d: any) => {
+            if (k < 0.5) return 0; // Hide completely if too far
+            if (k < 1.0) return (k - 0.5) * 2; // Fade in
+            return 1;
+          })
+          .style("font-size", `${10 / k}px`); // Scale text to remain readable but not huge
+
+        g.selectAll(".node circle")
+          .attr("r", (d: any) => d.r / Math.sqrt(k)); // Scale nodes slightly down on zoom in
       });
 
-    svg.call(zoom as any);
+    svg.call(zoom as any)
+      .call(zoom.transform as any, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8));
 
-    // Draw links
+
+    // Links
     const link = g
       .append("g")
       .attr("class", "links")
@@ -141,11 +166,11 @@ export default function GraphVisualization({
       .data(links)
       .enter()
       .append("line")
-      .attr("stroke", "#6B7280")
-      .attr("stroke-opacity", (d) => 0.3 + (d.weight || 0.5) * 0.4)
-      .attr("stroke-width", (d) => 1 + (d.weight || 0.5) * 2);
+      .attr("stroke", "#4b5563") // zinc-600
+      .attr("stroke-opacity", (d) => 0.2 + (d.weight || 0.5) * 0.3)
+      .attr("stroke-width", (d) => (d.weight || 0.5) * 2);
 
-    // Draw nodes
+    // Nodes Group
     const node = g
       .append("g")
       .attr("class", "nodes")
@@ -154,6 +179,7 @@ export default function GraphVisualization({
       .enter()
       .append("g")
       .attr("class", "node")
+      .style("cursor", "pointer")
       .call(
         d3
           .drag<SVGGElement, any>()
@@ -177,11 +203,11 @@ export default function GraphVisualization({
         onSelectEntity(d.entity);
       });
 
-    // Add circles
+    // Node Circles
     node
       .append("circle")
-      .attr("r", 15)
-      .attr("fill", (d) => {
+      .attr("r", (d: any) => d.r)
+      .attr("fill", (d: any) => {
         if (graphType === "correspondences") {
           const typeColor = d.entity.type?.color || d.entity.type_ref?.color;
           return typeColor || CORRESPONDENCE_COLORS[d.entity.category] || DEFAULT_COLOR;
@@ -190,35 +216,28 @@ export default function GraphVisualization({
           return traditionColor || TRADITION_COLORS[d.entity.tradition] || DEFAULT_COLOR;
         }
       })
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 2)
-      .style("cursor", "pointer");
+      .attr("stroke", "#000")
+      .attr("stroke-width", 1.5)
+      .attr("stroke-opacity", 0.5);
 
-    // Add labels
+    // Node Labels
     node
       .append("text")
-      .attr("dx", 18)
+      .attr("class", "node-label")
+      .attr("dx", (d: any) => d.r + 5)
       .attr("dy", 4)
-      .text((d) => d.entity.name)
-      .attr("font-size", "12px")
-      .attr("fill", "#E5E7EB")
+      .text((d: any) => d.entity.name)
+      .style("font-family", "var(--font-geist-mono)")
+      .style("font-size", "10px")
+      .style("fill", "#e5e7eb")
+      .style("paint-order", "stroke")
+      .style("stroke", "#000")
+      .style("stroke-width", "3px")
       .style("pointer-events", "none")
-      .style("user-select", "none");
+      .style("text-shadow", "0 1px 2px rgba(0,0,0,0.8)")
+      .style("opacity", 1); // Controlled by zoom
 
-    // Hover effects
-    node
-      .on("mouseenter", function (event, d) {
-        d3.select(this).select("circle").attr("r", 18);
-        link.attr("stroke-opacity", (l: any) =>
-          l.source === d.id || l.target === d.id ? 0.8 : 0.1
-        );
-      })
-      .on("mouseleave", function (event, d) {
-        d3.select(this).select("circle").attr("r", 15);
-        link.attr("stroke-opacity", (l: any) => 0.3 + (l.weight || 0.5) * 0.4);
-      });
-
-    // Update positions on tick
+    // Simulation Tick
     simulation.on("tick", () => {
       link
         .attr("x1", (d: any) => d.source.x)
@@ -229,7 +248,6 @@ export default function GraphVisualization({
       node.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     });
 
-    // Cleanup
     return () => {
       simulation.stop();
     };
@@ -237,25 +255,28 @@ export default function GraphVisualization({
 
   if (entities.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[600px] text-amber-100/60">
-        <div className="text-center">
-          <p className="text-lg mb-2">No entities to display</p>
-          <p className="text-sm">Create some entities to see them in the graph</p>
-        </div>
+      <div className="flex items-center justify-center h-full min-h-[400px] text-amber-100/60 font-mono text-sm">
+        // NO_SIGNAL_CHAMBER_EMPTY
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full">
+    <div ref={wrapperRef} className="w-full h-full relative overflow-hidden bg-[#050505] rounded-xl border border-white/10 shadow-[inner_0_0_40px_rgba(0,0,0,0.8)]">
+      {/* Graph HUD Overlay */}
+      <div className="absolute top-4 right-4 pointer-events-none text-[10px] font-mono text-amber-500/30 flex flex-col items-end gap-1 select-none">
+        <span>PHYSICS_ENGINE: ACTIVE</span>
+        <span>NODES: {entities.length}</span>
+        <span>LINKS: {relationships.length}</span>
+        <span>SIMULATION_ALPHA: {simulationRef.current?.alpha().toFixed(3) || "0.000"}</span>
+      </div>
+
       <svg
         ref={svgRef}
         width="100%"
         height={dimensions.height}
-        className="bg-zinc-950/60 rounded-lg"
-        style={{ minHeight: "600px" }}
+        className="block cursor-grab active:cursor-grabbing"
       >
-        {/* SVG content rendered by D3 */}
       </svg>
     </div>
   );

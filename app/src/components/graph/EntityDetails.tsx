@@ -26,10 +26,12 @@ export default function EntityDetails({
   entity: {
     id: string;
     name: string;
-    category: string;
+    category?: string;       // Optional, for Correspondences
+    tradition?: string;      // Optional, for Convergence
     aliases?: string[];
     description?: string;
     lenses?: string[];
+    [key: string]: any;      // Allow other props
   } | null;
   onGraphRefresh?: () => void;
 }) {
@@ -78,34 +80,34 @@ export default function EntityDetails({
 
     setCheckingConnections(true);
     const statusMap = new Map();
-    
+
     // Count total values to check for progress tracking
     let totalChecks = 0;
     const valuesToCheck: Array<{ claimId: string; value: string }> = [];
-    
+
     for (const claim of claims) {
       if (!claim.field_value || !claim.field_value.trim()) continue;
-      
+
       // Parse comma-separated values
       const values = parsePropertyValue(claim.field_value);
-      
+
       for (const value of values) {
         valuesToCheck.push({ claimId: claim.id, value });
         totalChecks++;
       }
     }
-    
+
     setConnectionsProgress({ current: 0, total: totalChecks });
-    
+
     // Process all checks in parallel for better performance
     const checkPromises: Promise<void>[] = [];
     const completedChecksRef = { current: 0 };
-    
+
     const updateProgress = () => {
       completedChecksRef.current++;
       setConnectionsProgress({ current: completedChecksRef.current, total: totalChecks });
     };
-    
+
     for (const { claimId, value } of valuesToCheck) {
       const promise = (async () => {
         try {
@@ -135,10 +137,10 @@ export default function EntityDetails({
       })();
       checkPromises.push(promise);
     }
-    
+
     // Wait for all checks to complete
     await Promise.all(checkPromises);
-    
+
     setEntityConnectionStatus(statusMap);
     setCheckingConnections(false);
     setConnectionsProgress({ current: 0, total: 0 });
@@ -157,21 +159,21 @@ export default function EntityDetails({
   }
 
   // More robust checks - handle various data formats
-  const hasDescription = entity.description != null && 
+  const hasDescription = entity.description != null &&
     String(entity.description).trim().length > 0;
-  
-  const hasAliases = Array.isArray(entity.aliases) && 
-    entity.aliases.length > 0 && 
+
+  const hasAliases = Array.isArray(entity.aliases) &&
+    entity.aliases.length > 0 &&
     entity.aliases.some((a: any) => a != null && String(a).trim() !== '');
-  
-  const hasLenses = Array.isArray(entity.lenses) && 
-    entity.lenses.length > 0 && 
+
+  const hasLenses = Array.isArray(entity.lenses) &&
+    entity.lenses.length > 0 &&
     entity.lenses.some((l: any) => l != null && String(l).trim() !== '');
-  
+
   // Check if we have knowledge claims
-  const hasClaims = claims.length > 0 && 
+  const hasClaims = claims.length > 0 &&
     claims.some(c => c.field_value && String(c.field_value).trim() !== '');
-  
+
   const hasAdditionalInfo = hasDescription || hasAliases || hasLenses || hasClaims;
 
   const handleEdit = () => {
@@ -185,7 +187,7 @@ export default function EntityDetails({
           <div className="flex-1">
             <div className="inline-block px-2.5 py-1 bg-amber-900/30 border border-amber-700/40 rounded-md mb-2">
               <div className="text-xs uppercase tracking-wide text-amber-200 font-medium">
-                {entity.category}
+                {entity.category || entity.tradition || "ENTITY"}
               </div>
             </div>
             <div className="text-2xl font-bold text-amber-100 leading-tight">{entity.name}</div>
@@ -210,13 +212,13 @@ export default function EntityDetails({
           </div>
         </div>
       </div>
-      
+
       {hasDescription && (
         <div className="mb-4">
           <p className="text-sm text-amber-100/80 leading-relaxed">{entity.description}</p>
         </div>
       )}
-      
+
       {hasAliases && (
         <div className="mb-4">
           <div className="text-xs text-amber-100/50 mb-2 uppercase tracking-wide">Aliases</div>
@@ -229,7 +231,7 @@ export default function EntityDetails({
           </div>
         </div>
       )}
-      
+
       {hasLenses && (
         <div className="mb-4">
           <div className="text-xs text-amber-100/50 mb-2 uppercase tracking-wide">Lenses</div>
@@ -262,8 +264,8 @@ export default function EntityDetails({
               <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-amber-600 transition-all duration-300"
-                  style={{ 
-                    width: `${Math.min(100, (connectionsProgress.current / connectionsProgress.total) * 100)}%` 
+                  style={{
+                    width: `${Math.min(100, (connectionsProgress.current / connectionsProgress.total) * 100)}%`
                   }}
                 />
               </div>
@@ -300,16 +302,16 @@ export default function EntityDetails({
                             const isConnected = status?.connected === true;
                             const exists = status?.exists === true;
                             const relationships = status?.relationships || [];
-                            
+
                             return (
-                              <span 
-                                key={idx} 
+                              <span
+                                key={idx}
                                 className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800/50 border border-zinc-700/30"
                               >
                                 <span>{value}</span>
                                 {isConnected && (
-                                  <span 
-                                    className="text-xs text-green-400 flex items-center gap-1" 
+                                  <span
+                                    className="text-xs text-green-400 flex items-center gap-1"
                                     title={`Already connected via: ${relationships.map((r: any) => r.relationship_type?.label || r.type).join(', ')}`}
                                   >
                                     <CheckCircle2 className="w-3 h-3" />
@@ -317,8 +319,8 @@ export default function EntityDetails({
                                   </span>
                                 )}
                                 {exists && !isConnected && (
-                                  <span 
-                                    className="text-xs text-amber-400 flex items-center gap-1" 
+                                  <span
+                                    className="text-xs text-amber-400 flex items-center gap-1"
                                     title="Entity exists but not connected"
                                   >
                                     <Link2 className="w-3 h-3" />
@@ -361,7 +363,7 @@ export default function EntityDetails({
         <ConvertPropertyModal
           claim={convertModalClaim}
           originalEntityName={entity.name}
-          originalEntityCategory={entity.category}
+          originalEntityCategory={entity.category || 'Entity'}
           originalEntityId={entity.id}
           onClose={() => setConvertModalClaim(null)}
           onSuccess={() => {

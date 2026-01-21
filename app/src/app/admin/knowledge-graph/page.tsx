@@ -1,25 +1,39 @@
 "use client";
+// Force HMR update
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Plus, Search, Network, BookOpen, Link2, Edit, Trash2, Settings } from "lucide-react";
+import { Plus, Settings, AlertCircle } from "lucide-react";
 import EntityModal from "@/components/admin/EntityModal";
 import ConnectionModal from "@/components/admin/ConnectionModal";
 import TypeManagerModal from "@/components/admin/TypeManagerModal";
 import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import dynamic from "next/dynamic";
 
+// New Components
+import KnowledgeGraphHeader from "@/components/admin/knowledge/KnowledgeGraphHeader";
+import GraphControls from "@/components/admin/knowledge/GraphControls";
+import EntityNode from "@/components/admin/knowledge/EntityNode";
+
 // Dynamically import graph visualization
 const GraphVisualization = dynamic(
   () => import("@/components/admin/GraphVisualization"),
-  { ssr: false, loading: () => <div className="text-amber-100/60">Loading graph...</div> }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center text-amber-500/40 font-mono text-sm uppercase tracking-widest animate-pulse">
+        Initializing Neural Net...
+      </div>
+    )
+  }
 );
 
 type GraphType = "correspondences" | "convergence";
 
+// Reusing interfaces from previous version
 interface CorrespondenceEntity {
   id: string;
   slug: string;
@@ -80,7 +94,6 @@ function KnowledgeGraphContent() {
     const consensusText = searchParams.get("consensusText");
     const useStoredConsensus = searchParams.get("useStoredConsensus");
 
-    // Get consensus from URL or sessionStorage
     let consensus: string | null = null;
     if (useStoredConsensus === "true" && editId) {
       consensus = sessionStorage.getItem(`consensus_${editId}`);
@@ -98,20 +111,16 @@ function KnowledgeGraphContent() {
     if (editId && entities.length > 0) {
       const entityToEdit = entities.find((e) => e.id === editId);
       if (entityToEdit) {
-        // Set graph type if specified in URL
         if (urlGraphType && urlGraphType !== graphType) {
           setGraphType(urlGraphType);
-          // Wait for graph type change to complete before opening modal
           setTimeout(() => {
             setEditingEntity(entityToEdit);
             setShowCreateModal(true);
-            // Clean up URL
             router.replace("/admin/knowledge-graph", { scroll: false });
           }, 100);
         } else {
           setEditingEntity(entityToEdit);
           setShowCreateModal(true);
-          // Clean up URL
           router.replace("/admin/knowledge-graph", { scroll: false });
         }
       }
@@ -152,26 +161,17 @@ function KnowledgeGraphContent() {
     try {
       if (graphType === "correspondences") {
         const res = await fetch("/api/graph/entities?limit=500");
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ error: res.statusText }));
-          throw new Error(errorData.error || `Failed to load entities: ${res.status} ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error("Failed to load entities");
         const data = await res.json();
-        console.log(`[Admin] Loaded ${data.items?.length || 0} correspondence entities`);
         setEntities(data.items || []);
       } else {
         const res = await fetch("/api/concepts?limit=500");
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ error: res.statusText }));
-          throw new Error(errorData.error || `Failed to load concepts: ${res.status} ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error("Failed to load concepts");
         const data = await res.json();
-        console.log(`[Admin] Loaded ${data.items?.length || 0} convergence concepts`, data);
         setEntities(data.items || []);
       }
     } catch (err) {
       console.error("Error fetching entities:", err);
-      alert(`Failed to load ${graphType === "correspondences" ? "entities" : "concepts"}: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
   };
 
@@ -179,24 +179,17 @@ function KnowledgeGraphContent() {
     try {
       if (graphType === "correspondences") {
         const res = await fetch("/api/graph/edges?limit=1000");
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ error: res.statusText }));
-          throw new Error(errorData.error || `Failed to load relationships: ${res.status} ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error("Failed to load relationships");
         const data = await res.json();
         setRelationships(data.items || []);
       } else {
         const res = await fetch("/api/concepts/relationships?limit=1000");
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ error: res.statusText }));
-          throw new Error(errorData.error || `Failed to load concept relationships: ${res.status} ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error("Failed to load relationships");
         const data = await res.json();
         setRelationships(data.items || []);
       }
     } catch (err) {
       console.error("Error fetching relationships:", err);
-      // Show error to user if needed
     }
   };
 
@@ -246,33 +239,45 @@ function KnowledgeGraphContent() {
     }
   });
 
+  // LOADING STATE
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-amber-100/60">Loading...</p>
+      <div className="flex min-h-screen flex-col bg-[#050505] items-center justify-center relative overflow-hidden">
+        {/* Background Animation */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[100px] animate-pulse" />
+        </div>
+
+        <div className="relative z-10 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className="w-1.5 h-12 bg-amber-600 animate-[height_1s_ease-in-out_infinite]" />
+            <span className="w-1.5 h-16 bg-amber-500 animate-[height_1.2s_ease-in-out_infinite_0.1s]" />
+            <span className="w-1.5 h-10 bg-amber-600 animate-[height_0.8s_ease-in-out_infinite_0.2s]" />
+          </div>
+          <h2 className="text-xl font-mono font-bold text-amber-100 uppercase tracking-widest animate-pulse">
+            System Initialization
+          </h2>
+          <p className="text-amber-500/50 font-mono text-xs mt-2">Connecting to Neural Net...</p>
         </div>
       </div>
     );
   }
 
+  // ACCESS DENIED
   if (!isAdmin) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen items-center justify-center bg-[#050505]">
         <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-900/50">
-            <span className="text-2xl">!</span>
-          </div>
-          <h2 className="text-xl font-bold text-amber-100 mb-2">Access Denied</h2>
-          <p className="text-amber-100/60 mb-6">
-            You do not have permission to view this neural interface.
+          <AlertCircle className="w-16 h-16 text-red-500/80 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-red-100 mb-2">Access Denied</h2>
+          <p className="text-red-100/60 mb-6 font-mono text-sm">
+            Neural interface connection rejected. Admin clearance required.
           </p>
           <button
             onClick={() => router.push("/dashboard")}
-            className="px-6 py-2 bg-zinc-900 hover:bg-zinc-800 border border-amber-900/30 rounded text-amber-100 transition-colors"
+            className="px-6 py-2 bg-red-900/20 hover:bg-red-900/40 border border-red-500/30 rounded text-red-200 transition-colors uppercase font-mono text-xs tracking-wider"
           >
-            Return to Dashboard
+            Return to Safety
           </button>
         </div>
       </div>
@@ -280,134 +285,80 @@ function KnowledgeGraphContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+    <div className="flex min-h-screen flex-col bg-[#050505] text-white selection:bg-amber-500/30 selection:text-amber-100">
       <Header />
-      <main className="flex-1">
-        <div className="max-w-screen-2xl mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-amber-100 mb-2">
-              Knowledge Graph Manager
-            </h1>
-            <p className="text-amber-100/60">
-              Manage correspondences and convergence concepts with an Obsidian-style card interface
-            </p>
-          </div>
 
-          {/* Controls */}
-          <div className="mb-6 flex flex-wrap items-center gap-4">
-            {/* Graph Type Toggle */}
-            <div className="flex gap-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg p-1">
-              <button
-                onClick={() => {
-                  setGraphType("correspondences");
-                  setSearchQuery("");
-                }}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${graphType === "correspondences"
-                  ? "bg-amber-600 text-white"
-                  : "text-amber-100/60 hover:text-amber-100"
-                  }`}
-              >
-                Correspondences
-              </button>
-              <button
-                onClick={() => {
-                  setGraphType("convergence");
-                  setSearchQuery("");
-                }}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors ${graphType === "convergence"
-                  ? "bg-amber-600 text-white"
-                  : "text-amber-100/60 hover:text-amber-100"
-                  }`}
-              >
-                Convergence Concepts
-              </button>
-            </div>
+      {/* Background Gradients */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-amber-500/5 rounded-full blur-[150px] opacity-30 mix-blend-screen" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[120px] opacity-20 mix-blend-screen" />
+        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.02]" />
+      </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex gap-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode("cards")}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === "cards"
-                  ? "bg-amber-600 text-white"
-                  : "text-amber-100/60 hover:text-amber-100"
-                  }`}
-              >
-                <BookOpen className="w-4 h-4" />
-                Cards
-              </button>
-              <button
-                onClick={() => setViewMode("graph")}
-                className={`px-4 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2 ${viewMode === "graph"
-                  ? "bg-amber-600 text-white"
-                  : "text-amber-100/60 hover:text-amber-100"
-                  }`}
-              >
-                <Network className="w-4 h-4" />
-                Graph
-              </button>
-            </div>
+      <main className="flex-1 relative z-10 pt-32 pb-20 px-4 md:px-8 max-w-screen-2xl mx-auto w-full">
 
-            {/* Manage Types */}
+        {/* HUD Header */}
+        <KnowledgeGraphHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onCreateClick={() => {
+            setEditingEntity(null);
+            setShowCreateModal(true);
+          }}
+          entityCount={entities.length}
+          connectionCount={relationships.length}
+          loading={loading}
+        />
+
+        {/* Action Controls Bar */}
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <GraphControls
+            graphType={graphType}
+            onGraphTypeChange={(type) => {
+              setGraphType(type);
+              setSearchQuery("");
+            }}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+
+          {/* Type Managers */}
+          <div className="flex gap-2">
             {graphType === "correspondences" ? (
-              <div className="flex gap-2">
+              <>
                 <button
                   onClick={() => setShowTypeManager({ open: true, kind: "entity" })}
-                  className="px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100/70 text-sm hover:bg-zinc-800/50 hover:text-amber-100 transition-colors flex items-center gap-2"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/5 text-xs text-zinc-400 hover:text-amber-200 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
-                  Manage Entity Types
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Entity Types</span>
                 </button>
                 <button
                   onClick={() => setShowTypeManager({ open: true, kind: "relationship" })}
-                  className="px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100/70 text-sm hover:bg-zinc-800/50 hover:text-amber-100 transition-colors flex items-center gap-2"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/5 text-xs text-zinc-400 hover:text-amber-200 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
-                  Manage Relationship Types
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Rel Types</span>
                 </button>
-              </div>
+              </>
             ) : (
               <button
                 onClick={() => setShowTypeManager({ open: true, kind: "tradition" })}
-                className="px-3 py-2 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100/70 text-sm hover:bg-zinc-800/50 hover:text-amber-100 transition-colors flex items-center gap-2"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/5 text-xs text-zinc-400 hover:text-amber-200 transition-colors"
               >
-                <Settings className="w-4 h-4" />
-                Manage Traditions
+                <Settings className="w-3.5 h-3.5" />
+                <span>Traditions</span>
               </button>
             )}
-
-            {/* Search */}
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-amber-100/40" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search entities..."
-                  className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-amber-900/30 rounded-lg text-amber-100 placeholder-amber-100/30 focus:outline-none focus:ring-2 focus:ring-amber-600/50"
-                />
-              </div>
-            </div>
-
-            {/* Create Button */}
-            <button
-              onClick={() => {
-                setEditingEntity(null);
-                setShowCreateModal(true);
-              }}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create {graphType === "correspondences" ? "Entity" : "Concept"}
-            </button>
           </div>
+        </div>
 
-          {/* Content */}
+        {/* Content View */}
+        <div className="min-h-[600px] animate-in fade-in duration-700">
           {viewMode === "cards" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredEntities.map((entity) => (
-                <EntityCard
+                <EntityNode
                   key={entity.id}
                   entity={entity}
                   graphType={graphType}
@@ -428,18 +379,28 @@ function KnowledgeGraphContent() {
                 />
               ))}
               {filteredEntities.length === 0 && (
-                <div className="col-span-full text-center py-12 text-amber-100/60">
-                  <p className="text-lg mb-2">No entities found</p>
-                  <p className="text-sm">
+                <div className="col-span-full py-20 text-center">
+                  <div className="inline-block p-4 rounded-full bg-white/5 border border-white/10 mb-4">
+                    <AlertCircle className="w-8 h-8 text-amber-500/50" />
+                  </div>
+                  <h3 className="text-amber-100 font-bold mb-2">No Signal Found</h3>
+                  <p className="text-amber-100/40 text-sm max-w-sm mx-auto">
                     {searchQuery
-                      ? "Try adjusting your search"
-                      : "Create your first entity to get started"}
+                      ? "Neural scan produced no matches. Adjust search parameters."
+                      : "Knowledge base is empty. Inject new nodes to begin."}
                   </p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4 min-h-[600px]">
+            <div className="h-[700px] bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl">
+              {/* Decorative HUD Elements */}
+              <div className="absolute top-0 left-0 p-4 font-mono text-[10px] text-amber-500/40 z-10 pointer-events-none">
+                <div className="flex flex-col gap-1">
+                  <span>NET_VISUALIZATION_ACTIVE</span>
+                  <span>RENDER_ENGINE: WEBGL</span>
+                </div>
+              </div>
               <GraphVisualization
                 entities={filteredEntities}
                 relationships={relationships}
@@ -452,66 +413,65 @@ function KnowledgeGraphContent() {
               />
             </div>
           )}
-
-          {/* Create/Edit Modal */}
-          {showCreateModal && (
-            <EntityModal
-              entity={editingEntity}
-              graphType={graphType}
-              initialConsensus={pendingConsensus}
-              onClose={() => {
-                setShowCreateModal(false);
-                setEditingEntity(null);
-                setPendingConsensus(null);
-              }}
-              onSave={async () => {
-                await fetchEntities();
-                await fetchRelationships();
-                setShowCreateModal(false);
-                setEditingEntity(null);
-                setPendingConsensus(null);
-              }}
-            />
-          )}
-
-          {/* Connection Modal */}
-          {showConnectionModal && selectedEntity && (
-            <ConnectionModal
-              sourceEntity={selectedEntity}
-              graphType={graphType}
-              allEntities={entities}
-              existingRelationships={relationships}
-              onClose={() => {
-                setShowConnectionModal(false);
-                setSelectedEntity(null);
-              }}
-              onSave={async () => {
-                await fetchRelationships();
-                setShowConnectionModal(false);
-                setSelectedEntity(null);
-              }}
-            />
-          )}
-
-          {showTypeManager.open && (
-            <TypeManagerModal
-              kind={showTypeManager.kind}
-              onClose={() => setShowTypeManager({ ...showTypeManager, open: false })}
-              onUpdated={async () => {
-                await fetchEntities();
-                await fetchRelationships();
-              }}
-            />
-          )}
-
-          {showDetailModal && selectedEntity && (
-            <EntityDetailModal
-              entity={selectedEntity}
-              graphType={graphType}
-              onClose={() => setShowDetailModal(false)}
-            />
-          )}
         </div>
+
+        {/* Modals - Kept Logic, Wrapped if necessary (Default modals are usually portals) */}
+        {showCreateModal && (
+          <EntityModal
+            entity={editingEntity}
+            graphType={graphType}
+            initialConsensus={pendingConsensus}
+            onClose={() => {
+              setShowCreateModal(false);
+              setEditingEntity(null);
+              setPendingConsensus(null);
+            }}
+            onSave={async () => {
+              await fetchEntities();
+              await fetchRelationships();
+              setShowCreateModal(false);
+              setEditingEntity(null);
+              setPendingConsensus(null);
+            }}
+          />
+        )}
+
+        {showConnectionModal && selectedEntity && (
+          <ConnectionModal
+            sourceEntity={selectedEntity}
+            graphType={graphType}
+            allEntities={entities}
+            existingRelationships={relationships}
+            onClose={() => {
+              setShowConnectionModal(false);
+              setSelectedEntity(null);
+            }}
+            onSave={async () => {
+              await fetchRelationships();
+              setShowConnectionModal(false);
+              setSelectedEntity(null);
+            }}
+          />
+        )}
+
+        {showTypeManager.open && (
+          <TypeManagerModal
+            kind={showTypeManager.kind}
+            onClose={() => setShowTypeManager({ ...showTypeManager, open: false })}
+            onUpdated={async () => {
+              await fetchEntities();
+              await fetchRelationships();
+            }}
+          />
+        )}
+
+        {showDetailModal && selectedEntity && (
+          <EntityDetailModal
+            entity={selectedEntity}
+            graphType={graphType}
+            onClose={() => setShowDetailModal(false)}
+          />
+        )}
       </main>
       <Footer />
     </div>
@@ -520,113 +480,13 @@ function KnowledgeGraphContent() {
 
 export default function AdminKnowledgeGraphPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-zinc-950"><div className="text-amber-100/60">Loading Knowledge Graph...</div></div>}>
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-amber-500/50 font-mono tracking-widest uppercase">
+        Initializing...
+      </div>
+    }>
       <KnowledgeGraphContent />
     </Suspense>
   );
 }
 
-// Entity Card Component (Obsidian-style)
-function EntityCard({
-  entity,
-  graphType,
-  relationships,
-  onSelect,
-  onEdit,
-  onDelete,
-  onCreateConnection,
-}: {
-  entity: Entity;
-  graphType: GraphType;
-  relationships: any[];
-  onSelect: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onCreateConnection: () => void;
-}) {
-  const relatedCount = relationships.filter(
-    (r) => r.source_id === entity.id || r.target_id === entity.id
-  ).length;
-
-  return (
-    <div
-      className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4 hover:border-amber-700/50 transition-colors cursor-pointer group relative"
-      onClick={onSelect}
-    >
-      {/* Actions */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-          className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded text-amber-100/60 hover:text-amber-100"
-          title="Edit"
-        >
-          <Edit className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="p-1.5 bg-zinc-800 hover:bg-red-900/50 rounded text-amber-100/60 hover:text-red-400"
-          title="Delete"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="pr-16">
-        <h3 className="font-semibold text-amber-100 mb-2">{entity.name}</h3>
-
-        {graphType === "correspondences" ? (
-          <div className="space-y-2">
-            <span className="inline-block px-2 py-0.5 bg-amber-900/20 border border-amber-700/30 rounded text-xs text-amber-100/80">
-              {(entity as CorrespondenceEntity).type?.icon
-                ? `${(entity as CorrespondenceEntity).type?.icon} `
-                : ""}
-              {(entity as CorrespondenceEntity).type?.label || (entity as CorrespondenceEntity).category}
-            </span>
-            {(entity as CorrespondenceEntity).description && (
-              <p className="text-sm text-amber-100/60 line-clamp-2">
-                {(entity as CorrespondenceEntity).description}
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <span className="inline-block px-2 py-0.5 bg-amber-900/20 border border-amber-700/30 rounded text-xs text-amber-100/80">
-              {(entity as ConvergenceConcept).tradition_ref?.icon
-                ? `${(entity as ConvergenceConcept).tradition_ref?.icon} `
-                : ""}
-              {(entity as ConvergenceConcept).tradition_ref?.label || (entity as ConvergenceConcept).tradition}
-            </span>
-            {(entity as ConvergenceConcept).short_definition && (
-              <p className="text-sm text-amber-100/60 line-clamp-2">
-                {(entity as ConvergenceConcept).short_definition}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Connections */}
-        <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/50">
-          <Link2 className="w-3.5 h-3.5" />
-          <span>{relatedCount} connection{relatedCount !== 1 ? "s" : ""}</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCreateConnection();
-            }}
-            className="ml-auto text-amber-600 hover:text-amber-500 transition-colors"
-            title="Add connection"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

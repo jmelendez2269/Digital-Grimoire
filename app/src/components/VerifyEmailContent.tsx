@@ -18,7 +18,7 @@ export function VerifyEmailContent() {
     const checkVerification = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (user?.email_confirmed_at) {
         router.push("/dashboard");
       }
@@ -34,9 +34,9 @@ export function VerifyEmailContent() {
 
     try {
       const supabase = createClient();
-      
+
       if (!email) {
-        setError("Email address not found. Please try registering again.");
+        setError("DATA_NOT_FOUND: EMAIL_MISSING");
         setResending(false);
         return;
       }
@@ -49,80 +49,91 @@ export function VerifyEmailContent() {
       if (resendError) {
         setError(resendError.message);
       } else {
-        setMessage("Verification email sent! Check your inbox.");
+        setMessage("SIGNAL_SENT: CHECK_INBOX");
       }
     } catch (err) {
-      setError("Failed to resend email. Please try again.");
+      setError("TRANSMISSION_FAILED");
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 shadow-xl backdrop-blur">
+    <div className="glass-panel p-8 backdrop-blur-xl relative overflow-hidden rounded-2xl border-white/5">
+      {/* Top Border Gradient */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+
       {/* Email Icon */}
       <div className="mb-6 flex justify-center">
-        <div className="rounded-full bg-amber-500/10 p-4">
-          <svg
-            className="h-12 w-12 text-amber-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
+        <div className="relative">
+          <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
+          <div className="relative rounded-full bg-zinc-900 border border-amber-500/30 p-4 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+            <svg
+              className="h-10 w-10 text-amber-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
         </div>
       </div>
 
       <div className="space-y-4 text-center">
-        <p className="text-amber-100">
-          We've sent a verification email to:
+        <p className="text-amber-100 font-sans text-sm">
+          A verification link has been transmitted to:
         </p>
-        <p className="font-semibold text-amber-400">
-          {email || "your email address"}
-        </p>
-        <p className="text-sm text-zinc-400">
-          Please check your inbox and click the verification link to activate your account.
+        <div className="rounded border border-amber-500/20 bg-amber-500/5 py-2 px-3">
+          <p className="font-mono text-amber-400 text-sm break-all">
+            {email || "UNKNOWN_TARGET"}
+          </p>
+        </div>
+        <p className="text-xs text-zinc-500 font-mono uppercase tracking-wide">
+          ACTION_REQUIRED: VERIFY_IDENTITY
         </p>
       </div>
 
       {/* Success/Error Messages */}
       {message && (
-        <div className="mt-6 rounded-md bg-green-500/10 border border-green-500/50 p-3 text-center">
-          <p className="text-sm text-green-400">{message}</p>
+        <div className="mt-6 rounded border border-green-500/30 bg-green-500/10 px-4 py-3 text-xs font-mono text-green-400 flex items-center justify-center gap-2">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          {message}
         </div>
       )}
 
       {error && (
-        <div className="mt-6 rounded-md bg-red-500/10 border border-red-500/50 p-3 text-center">
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="mt-6 rounded border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-mono text-red-400 flex items-center justify-center gap-2">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          {error}
         </div>
       )}
 
       {/* Resend Button */}
-      <div className="mt-6">
+      <div className="mt-8">
         <button
           onClick={handleResendEmail}
           disabled={resending}
-          className="w-full rounded-md bg-amber-500/20 px-4 py-3 font-semibold text-amber-400 transition-colors hover:bg-amber-500/30 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+          className="relative w-full overflow-hidden rounded bg-zinc-900 border border-zinc-800 px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider hover:text-white hover:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 transition-all group"
         >
-          {resending ? "Sending..." : "Resend Verification Email"}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {resending ? "RE-TRANSMITTING..." : "RESEND_SIGNAL"}
+          </span>
         </button>
       </div>
 
       {/* Help Text */}
-      <div className="mt-6 space-y-2 rounded-md bg-zinc-800/50 p-4 text-sm text-zinc-400">
-        <p className="font-semibold text-zinc-300">Didn't receive the email?</p>
-        <ul className="list-inside list-disc space-y-1 text-xs">
-          <li>Check your spam or junk folder</li>
-          <li>Make sure the email address is correct</li>
-          <li>Wait a few minutes and try resending</li>
-          <li>Add noreply@mail.app.supabase.io to your contacts</li>
+      <div className="mt-6 border-t border-white/5 pt-6 text-center">
+        <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-2">Troubleshooting_Protocols</p>
+        <ul className="text-xs text-zinc-500 space-y-1">
+          <li>Check Spam/Junk folders</li>
+          <li>Verify email address spelling</li>
+          <li>Allow 5 minutes for transmission</li>
         </ul>
       </div>
     </div>
