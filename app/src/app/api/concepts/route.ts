@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugifyEntityName } from "@/lib/graph/entity-utils";
+import { validateConceptData } from "@/lib/convergence/validation";
+import {
+  scoreConceptsWithAI,
+  shouldUseAIScoring,
+  getCachedScores,
+  cacheScores,
+} from "@/lib/concepts/ai-relevance";
 
 async function isAdmin() {
   const supabase = await createSupabaseServerClient();
@@ -34,14 +41,14 @@ export async function GET(req: NextRequest) {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(limit * 2); // Get more results to sort by relevance
-    
+
     if (tradition) query = query.eq("tradition", tradition);
     if (traditionId) query = query.eq("tradition_id", traditionId);
     if (tag) query = query.contains("tags", [tag]);
     if (q) query = query.ilike("name", `%${q}%`);
 
     const { data, error } = await query;
-    
+
     console.log(`[API] GET /api/concepts - Found ${data?.length || 0} concepts`, {
       limit,
       tradition,
@@ -51,7 +58,7 @@ export async function GET(req: NextRequest) {
       hasData: !!data,
       dataLength: data?.length
     });
-    
+
     // Sort by relevance if we have a query
     let sortedData = data || [];
     if (q && sortedData.length > 0) {
@@ -59,23 +66,23 @@ export async function GET(req: NextRequest) {
       sortedData = sortedData.sort((a, b) => {
         const aName = (a.name || '').toLowerCase();
         const bName = (b.name || '').toLowerCase();
-        
+
         // Exact match gets highest priority
         if (aName === queryLower && bName !== queryLower) return -1;
         if (bName === queryLower && aName !== queryLower) return 1;
-        
+
         // Starts with query gets second priority
         const aStarts = aName.startsWith(queryLower);
         const bStarts = bName.startsWith(queryLower);
         if (aStarts && !bStarts) return -1;
         if (bStarts && !aStarts) return 1;
-        
+
         // Word boundary match (starts with word) gets third priority
         const aWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(aName);
         const bWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(bName);
         if (aWordStart && !bWordStart) return -1;
         if (bWordStart && !aWordStart) return 1;
-        
+
         // Then by position of match (earlier is better)
         const aIndex = aName.indexOf(queryLower);
         const bIndex = bName.indexOf(queryLower);
@@ -84,26 +91,28 @@ export async function GET(req: NextRequest) {
         }
         if (aIndex !== -1) return -1;
         if (bIndex !== -1) return 1;
-        
+
         // Finally by name length (shorter is better for exact matches)
         return aName.length - bName.length;
       }).slice(0, limit); // Limit after sorting
     } else if (sortedData.length > limit) {
       sortedData = sortedData.slice(0, limit);
     }
-    
+
     if (error) {
       console.error('Error fetching concepts:', error);
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
       console.error('Error details:', JSON.stringify(error, null, 2));
-      
+
+      // If table doesn't exist (PGRST205), return empty array instead of error
+      // This allows the UI to work even if migrations haven't been run yet
       // If table doesn't exist (PGRST205), return empty array instead of error
       // This allows the UI to work even if migrations haven't been run yet
       if (error.code === 'PGRST205' || error.message?.includes('Could not find the table')) {
         console.warn('convergence_concepts table does not exist. Migration 019 may not have been run.');
         console.warn('Returning empty results. Please run migration: migrations/019_add_convergence_concepts.sql');
-        
+
         const response = NextResponse.json({ items: [] });
         response.headers.set(
           'Cache-Control',
@@ -111,32 +120,32 @@ export async function GET(req: NextRequest) {
         );
         return response;
       }
-      
+
       return NextResponse.json(
-        { 
+        {
           error: error.message || "Failed to fetch concepts",
           details: process.env.NODE_ENV === 'development' ? error : undefined
         },
         { status: 500 }
       );
     }
-    
+
     console.log(`[API] GET /api/concepts - Returning ${sortedData.length} concepts after sorting/filtering`);
-    
+
     const response = NextResponse.json({ items: sortedData });
-    
+
     // Add cache headers for public, read-only data (1 hour)
     response.headers.set(
       'Cache-Control',
       'public, s-maxage=3600, stale-while-revalidate=7200'
     );
-    
+
     return response;
   } catch (err: any) {
     console.error('Unexpected error in GET /api/concepts:', err);
     console.error('Error stack:', err?.stack);
     return NextResponse.json(
-      { 
+      {
         error: err?.message || "Failed to fetch concepts",
         details: process.env.NODE_ENV === 'development' ? String(err) : undefined
       },
@@ -161,9 +170,31 @@ export async function POST(req: NextRequest) {
       primary_sources = [],
       tags = [],
     } = body || {};
-    if (!name || (!tradition && !traditionId)) {
+
+    // Validate input data structure
+    const dataValidation = validateConceptData({
+      name,
+      tradition,
+      traditionId,
+      slug,
+    });
+    if (!dataValidation.valid) {
       return NextResponse.json(
-        { error: "name and tradition/traditionId are required" },
+        { error: dataValidation.error || "Invalid concept data" },
+        { status: 400 }
+      );
+    }
+
+    // Additional validation for arrays
+    if (!Array.isArray(primary_sources)) {
+      return NextResponse.json(
+        { error: "primary_sources must be an array" },
+        { status: 400 }
+      );
+    }
+    if (!Array.isArray(tags)) {
+      return NextResponse.json(
+        { error: "tags must be an array" },
         { status: 400 }
       );
     }
@@ -205,7 +236,7 @@ export async function POST(req: NextRequest) {
         .select("id, name, slug, tradition")
         .ilike("name", name.trim())
         .maybeSingle();
-      
+
       // Only use if it's an exact match (case-insensitive)
       if (nameMatch && nameMatch.name.toLowerCase().trim() === name.toLowerCase().trim()) {
         existingConcept = nameMatch;
@@ -215,7 +246,7 @@ export async function POST(req: NextRequest) {
     // If concept already exists, return error with existing concept info
     if (existingConcept) {
       return NextResponse.json(
-        { 
+        {
           error: "Concept already exists",
           existingEntity: {
             id: existingConcept.id,

@@ -60,7 +60,7 @@ export default function ConvergenceGraphPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedConcept, setSelectedConcept] = useState<ConvergenceConcept | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("graph");
-  const [minSimilarity, setMinSimilarity] = useState(0.3);
+  const [minSimilarity, setMinSimilarity] = useState(0);
   const [selectedTradition, setSelectedTradition] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -140,21 +140,19 @@ export default function ConvergenceGraphPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setViewMode("graph")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      viewMode === "graph"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === "graph"
                         ? "bg-amber-600 text-white"
                         : "bg-zinc-800 text-amber-100/60 hover:bg-zinc-700"
-                    }`}
+                      }`}
                   >
                     Network Graph
                   </button>
                   <button
                     onClick={() => setViewMode("table")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      viewMode === "table"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === "table"
                         ? "bg-amber-600 text-white"
                         : "bg-zinc-800 text-amber-100/60 hover:bg-zinc-700"
-                    }`}
+                      }`}
                   >
                     Comparative Table
                   </button>

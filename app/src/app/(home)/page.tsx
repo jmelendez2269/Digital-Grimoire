@@ -90,7 +90,7 @@ export default function Home() {
 
               {/* Graph Card */}
               <Link
-                href="/convergence-graph"
+                href="/graph"
                 className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
               >
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 to-cyan-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -112,10 +112,10 @@ export default function Home() {
                 href="/courses"
                 onClick={async (e) => {
                   try {
-                    await fetch('/api/track/courses-click', { 
-                      method: 'POST', 
+                    await fetch('/api/track/courses-click', {
+                      method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ source: 'card' }) 
+                      body: JSON.stringify({ source: 'card' })
                     });
                   } catch (err) {
                     // Silently fail - tracking shouldn't block navigation

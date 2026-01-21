@@ -104,10 +104,33 @@ export default function ConnectionModal({
     setLoading(true);
     setError(null);
 
+    // Client-side validation
     if (!targetId) {
       setError("Please select a target entity");
       setLoading(false);
       return;
+    }
+
+    // Prevent self-referential relationships
+    if (targetId === sourceEntity.id) {
+      setError("Cannot create a relationship from an entity to itself");
+      setLoading(false);
+      return;
+    }
+
+    // Validate similarity/weight ranges
+    if (graphType === "convergence") {
+      if (similarity < 0 || similarity > 1) {
+        setError("Similarity must be between 0 and 1");
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (weight < 0 || weight > 1) {
+        setError("Weight must be between 0 and 1");
+        setLoading(false);
+        return;
+      }
     }
 
     try {

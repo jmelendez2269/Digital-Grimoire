@@ -106,7 +106,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             { name: 'Library', path: '/library' },
             { name: 'Courses', path: '/courses' },
             { name: 'Journal', path: '/journal' },
-            { name: 'Graph', path: '/convergence-graph', icon: <Network className="w-3.5 h-3.5" /> }
+            { name: 'Graph', path: '/graph', icon: <Network className="w-3.5 h-3.5" /> }
           ].map((item) => (
             <Link
               key={item.path}
@@ -139,14 +139,15 @@ function Header({ librarySearch }: HeaderProps = {}) {
             {moreMenuOpen && (
               <div className="absolute right-0 top-full mt-3 w-48 glass-panel rounded-lg py-2 z-50">
                 <div className="px-3 py-2 text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest border-b border-white/5 mb-1">
-                  Modules Unloaded
+                  Modules
                 </div>
-                <div className="px-3 py-1.5 text-sm text-zinc-500 font-mono">
-                  <div className="flex items-center gap-2 py-1 opacity-50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-700"></span>
-                    <span>Ritual Machine</span>
-                  </div>
-                </div>
+                <Link
+                  href="/ritual-machine"
+                  onClick={() => setMoreMenuOpen(false)}
+                  className="block px-3 py-2 text-sm text-zinc-300 hover:text-amber-400 hover:bg-white/5 transition-colors font-mono"
+                >
+                  Ritual Machine
+                </Link>
               </div>
             )}
           </div>

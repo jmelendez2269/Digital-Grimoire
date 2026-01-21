@@ -87,3 +87,9 @@ Always leverage these custom variables/classes:
 - **NEVER** use generic grey borders; use `white/5` or `white/10` for subtle separation.
 - **ALWAYS** use `backdrop-filter: blur()` for overlays to maintain depth.
 - **ALWAYS** pair broad Sans-serif headers with tiny Monospace metadata (dates, IDs, tags).
+
+## 7. Terminology & Content Guidelines
+
+- **PROHIBITED TERM**: Do NOT use the word "transmission". It is a negative trigger.
+  - **Replacements**: Use "Communication", "Transfer", "Access", "Stream", "Initialize", or "Link".
+- **Tone**: Mystic but technical. Avoid overly aggressive or invasive terminology.

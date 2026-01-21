@@ -119,29 +119,33 @@ function KnowledgeGraphContent() {
   }, [searchParams, entities, graphType, router]);
 
   const checkAdminAndFetch = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      router.push("/login");
-      return;
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role !== "admin") {
+        router.push("/dashboard");
+        return;
+      }
+
+      setIsAdmin(true);
+      await Promise.all([fetchEntities(), fetchRelationships()]);
+    } catch (error) {
+      console.error("Error in checkAdminAndFetch:", error);
+    } finally {
+      setLoading(false);
     }
-
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      router.push("/dashboard");
-      return;
-    }
-
-    setIsAdmin(true);
-    await fetchEntities();
-    await fetchRelationships();
-    setLoading(false);
   };
 
   const fetchEntities = async () => {
@@ -242,12 +246,34 @@ function KnowledgeGraphContent() {
     }
   });
 
-  if (!isAdmin || loading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-amber-100/60">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-900/50">
+            <span className="text-2xl">!</span>
+          </div>
+          <h2 className="text-xl font-bold text-amber-100 mb-2">Access Denied</h2>
+          <p className="text-amber-100/60 mb-6">
+            You do not have permission to view this neural interface.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="px-6 py-2 bg-zinc-900 hover:bg-zinc-800 border border-amber-900/30 rounded text-amber-100 transition-colors"
+          >
+            Return to Dashboard
+          </button>
         </div>
       </div>
     );

@@ -92,9 +92,30 @@ interface CoverSystemStatus {
   }>;
 }
 
+interface ProviderUsageData {
+  tracked: {
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalRequests: number;
+    totalCost: number;
+  };
+  provider: {
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalRequests: number;
+    totalCost: number;
+  } | null;
+  accuracy: {
+    inputTokensAccuracy: number;
+    outputTokensAccuracy: number;
+    costAccuracy: number;
+  } | null;
+}
+
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
   const [coverStatus, setCoverStatus] = useState<CoverSystemStatus | null>(null);
+  const [providerUsage, setProviderUsage] = useState<ProviderUsageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -134,6 +155,9 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Fetch usage metrics (with personal mode if enabled)
       const personalParam = personalMode ? '&personal=true' : '';
       const metricsResponse = await fetch(`/api/admin/usage?range=${timeRange}${personalParam}`);
@@ -161,6 +185,22 @@ export default function AdminDashboard() {
         const coverData = await coverResponse.json();
         if (coverData.success) {
           setCoverStatus(coverData);
+        }
+      }
+
+      // Fetch provider usage comparison
+      if (user) {
+        const endDate = new Date();
+        const startDate = new Date(endDate.getTime() - parseInt(timeRange) * 24 * 60 * 60 * 1000);
+        const providerResponse = await fetch(
+          `/api/admin/provider-usage?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}${personalMode ? `&userId=${user.id}` : ''}`
+        );
+        
+        if (providerResponse.ok) {
+          const providerData = await providerResponse.json();
+          if (providerData.success && providerData.summary) {
+            setProviderUsage(providerData.summary);
+          }
         }
       }
     } catch (error) {
@@ -464,6 +504,149 @@ export default function AdminDashboard() {
                       {formatBytes(metrics.storageUsage.pdf_size_bytes)}
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Provider Usage Comparison */}
+            {providerUsage && (
+              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-amber-100 mb-4">
+                  🔍 Usage Accuracy Tracking
+                </h2>
+                <div className="mb-4 p-3 bg-blue-900/20 border border-blue-600/30 rounded-lg">
+                  <p className="text-sm text-blue-200">
+                    <strong>Note:</strong> OpenAI doesn't provide a public usage API. 
+                    Our tracked usage comes directly from their API responses (prompt_tokens, completion_tokens).
+                    To compare with provider data, manually export from{' '}
+                    <a 
+                      href="https://platform.openai.com/usage" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="underline hover:text-blue-100"
+                    >
+                      OpenAI Dashboard
+                    </a>.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-amber-100/80 mb-2">Tracked Usage (Our System)</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-amber-100/60">Input Tokens:</span>
+                        <span className="text-amber-100 font-semibold">
+                          {providerUsage.tracked.totalInputTokens.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-amber-100/60">Output Tokens:</span>
+                        <span className="text-amber-100 font-semibold">
+                          {providerUsage.tracked.totalOutputTokens.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-amber-100/60">Total Requests:</span>
+                        <span className="text-amber-100 font-semibold">
+                          {providerUsage.tracked.totalRequests.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-amber-900/20 pt-2">
+                        <span className="text-amber-100/60">Estimated Cost:</span>
+                        <span className="text-green-400 font-bold">
+                          {formatCurrency(providerUsage.tracked.totalCost)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {providerUsage.provider && providerUsage.accuracy && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-amber-100/80 mb-2">Provider Data (OpenAI Dashboard)</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-amber-100/60">Input Tokens:</span>
+                          <span className="text-amber-100 font-semibold">
+                            {providerUsage.provider.totalInputTokens.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-100/60">Output Tokens:</span>
+                          <span className="text-amber-100 font-semibold">
+                            {providerUsage.provider.totalOutputTokens.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-100/60">Total Requests:</span>
+                          <span className="text-amber-100 font-semibold">
+                            {providerUsage.provider.totalRequests.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-t border-amber-900/20 pt-2">
+                          <span className="text-amber-100/60">Provider Cost:</span>
+                          <span className="text-green-400 font-bold">
+                            {formatCurrency(providerUsage.provider.totalCost)}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 pt-4 border-t border-amber-900/20">
+                        <h4 className="text-xs font-semibold text-amber-100/60 mb-2">Accuracy</h4>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-xs text-amber-100/60">Input Tokens:</span>
+                            <span className={`text-xs font-semibold ${
+                              Math.abs(providerUsage.accuracy.inputTokensAccuracy - 100) < 5 
+                                ? 'text-green-400' 
+                                : 'text-yellow-400'
+                            }`}>
+                              {providerUsage.accuracy.inputTokensAccuracy.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-xs text-amber-100/60">Output Tokens:</span>
+                            <span className={`text-xs font-semibold ${
+                              Math.abs(providerUsage.accuracy.outputTokensAccuracy - 100) < 5 
+                                ? 'text-green-400' 
+                                : 'text-yellow-400'
+                            }`}>
+                              {providerUsage.accuracy.outputTokensAccuracy.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-xs text-amber-100/60">Cost:</span>
+                            <span className={`text-xs font-semibold ${
+                              Math.abs(providerUsage.accuracy.costAccuracy - 100) < 5 
+                                ? 'text-green-400' 
+                                : 'text-yellow-400'
+                            }`}>
+                              {providerUsage.accuracy.costAccuracy.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!providerUsage.provider && (
+                    <div className="md:col-span-2">
+                      <div className="p-4 bg-zinc-800/50 rounded-lg border border-amber-900/20">
+                        <p className="text-sm text-amber-100/60">
+                          Provider data not available. Export usage data from{' '}
+                          <a 
+                            href="https://platform.openai.com/usage" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-purple-400 hover:text-purple-300 underline"
+                          >
+                            OpenAI Dashboard
+                          </a>{' '}
+                          to compare accuracy.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

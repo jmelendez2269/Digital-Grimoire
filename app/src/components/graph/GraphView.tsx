@@ -7,6 +7,7 @@ interface Entity {
   slug?: string;
   name: string;
   category: string;
+  type?: string;
   aliases?: string[];
   description?: string;
   lenses?: string[];
@@ -82,21 +83,26 @@ export default function GraphView({
           {placeholderLayout.nodes.map((n) => {
             // Find the full entity data from the original entities array
             const fullEntity = entities.find(e => e.id === n.id) || n;
+            const isConcept = fullEntity.type === 'concept';
+
             return (
               <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
                 <circle
-                  r={10}
-                  className="cursor-pointer"
-                  fill="#b48f4a"
+                  r={isConcept ? 12 : 10} // Make concepts slightly larger
+                  className="cursor-pointer transition-all duration-300"
+                  fill={isConcept ? "#8b5cf6" : "#b48f4a"} // Violet for concepts, Gold for correspondences
                   fillOpacity={0.8}
+                  stroke={isConcept ? "#7c3aed" : "#927037"}
+                  strokeWidth={1}
                   onClick={() => onSelectEntity(fullEntity)}
                 />
                 <text
-                  x={12}
+                  x={isConcept ? 14 : 12}
                   y={4}
                   fontSize={11}
                   fill="#e5e7eb"
-                  className="select-none"
+                  className="select-none pointer-events-none"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
                 >
                   {n.name}
                 </text>

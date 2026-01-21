@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { createClient } from '@/lib/supabase/server';
+import { logApiUsage } from '@/lib/usage-tracker';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -14,8 +16,21 @@ interface Chapter {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { chapters, documentTitle } = body;
+    
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
 
     if (!chapters || !Array.isArray(chapters)) {
       return NextResponse.json(
@@ -97,6 +112,10 @@ The array should have exactly ${volumeChapters.length} titles, one for each chap
         response_format: { type: 'json_object' },
       });
 
+      // Track token usage
+      totalInputTokens += completion.usage?.prompt_tokens || 0;
+      totalOutputTokens += completion.usage?.completion_tokens || 0;
+      
       const response = JSON.parse(
         completion.choices[0].message.content || '{}'
       );
@@ -131,6 +150,25 @@ The array should have exactly ${volumeChapters.length} titles, one for each chap
       }
       return chapter;
     });
+
+    // Log total usage for all chapter name generation
+    if (totalInputTokens > 0 || totalOutputTokens > 0) {
+      await logApiUsage({
+        service: 'openai_metadata',
+        operation: 'generate_chapter_names',
+        unitsUsed: totalInputTokens + totalOutputTokens,
+        unitType: 'tokens',
+        userId: user.id,
+        requestMetadata: {
+          inputTokens: totalInputTokens,
+          outputTokens: totalOutputTokens,
+          chapterCount: chapters.length,
+          documentTitle,
+          model: 'gpt-4o',
+        },
+        success: true,
+      });
+    }
 
     return NextResponse.json({ chapters: updatedChapters });
   } catch (error: any) {

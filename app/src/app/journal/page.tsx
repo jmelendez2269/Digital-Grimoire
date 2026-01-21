@@ -104,32 +104,27 @@ export default function JournalHomePage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-mono tracking-wider uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  PERSONAL_ARCHIVE_SYSTEM
-                </div>
                 <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                   {user?.user_metadata?.journal_name || 'My_Grimoire'}
                 </h1>
                 <p className="text-zinc-400 max-w-xl text-lg leading-relaxed">
-                  Record your journey through the void. Document discoveries, anomalies, and daily transmissions.
+                  Your personal collection of thoughts and records.
                 </p>
               </div>
 
               <div className="flex items-center gap-4">
                 <div className="hidden md:block text-right mr-4">
                   <div className="text-2xl font-bold font-mono text-zinc-100">{pages.length}</div>
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest">Total Entries</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest">Entries</div>
                 </div>
                 <button
                   onClick={createNewPage}
                   disabled={creatingPage}
-                  className="group relative px-6 py-3 bg-amber-500 text-black font-bold font-mono uppercase tracking-wider overflow-hidden hover:bg-amber-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative px-6 py-3 bg-amber-500 text-black font-bold font-mono uppercase tracking-wider overflow-hidden hover:bg-amber-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
                 >
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                   <span className="relative flex items-center gap-2">
                     <Plus className="w-4 h-4" />
-                    New_Entry
+                    New Entry
                   </span>
                 </button>
               </div>
@@ -141,7 +136,7 @@ export default function JournalHomePage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="Search archives..."
+                  placeholder="Search entries..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-black/40 border border-white/5 rounded text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 font-mono text-sm transition-colors"
@@ -152,12 +147,12 @@ export default function JournalHomePage() {
                 <button
                   onClick={() => setShowArchived(!showArchived)}
                   className={`flex items-center gap-2 px-4 py-2 rounded text-xs font-mono uppercase tracking-wider border transition-all ${showArchived
-                    ? 'bg-amber-900/20 border-amber-500/50 text-amber-500'
-                    : 'bg-black/20 border-white/5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+                      ? 'bg-amber-900/20 border-amber-500/50 text-amber-500'
+                      : 'bg-black/20 border-white/5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
                     }`}
                 >
                   <Archive className="w-3.5 h-3.5" />
-                  {showArchived ? 'Hide_Archived' : 'Show_Archived'}
+                  {showArchived ? 'Hide Archived' : 'Show Archived'}
                 </button>
               </div>
             </div>
@@ -174,14 +169,14 @@ export default function JournalHomePage() {
                 <FileText className="w-16 h-16 text-zinc-800 mx-auto mb-6" />
                 <h3 className="text-xl text-zinc-400 font-bold mb-2">No Entries Found</h3>
                 <p className="text-zinc-600 font-mono text-sm mb-6">
-                  {searchQuery ? 'ADJUST SEARCH PARAMETERS' : 'THE ARCHIVE IS EMPTY'}
+                  {searchQuery ? 'No results for your search' : 'Your journal is empty'}
                 </p>
                 {!searchQuery && !showArchived && (
                   <button
                     onClick={createNewPage}
                     className="text-amber-500 hover:text-amber-400 font-mono text-sm border-b border-amber-500/30 hover:border-amber-500 transition-colors"
                   >
-                    START_LOGGING_DATA &rarr;
+                    Start Writing &rarr;
                   </button>
                 )}
               </div>
@@ -192,7 +187,6 @@ export default function JournalHomePage() {
                 ))}
               </div>
             )}
-
           </div>
         </div>
       </main>
@@ -220,15 +214,13 @@ function PageCard({
 }) {
   const [deleting, setDeleting] = useState(false);
 
-  // Format date to tech timestamp
+  // Format date for display
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).toUpperCase();
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   async function handleDelete(e: React.MouseEvent) {
@@ -292,17 +284,18 @@ function PageCard({
         {/* Animated Background Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-        {/* Top Bar / Status */}
-        <div className="flex items-center justify-between p-3 border-b border-white/5 bg-black/20">
+        {/* Top Header Area (The "Fold") */}
+        <div className="flex items-center justify-between p-3 border-b border-white/5 bg-white/5">
           <div className="flex items-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${page.is_archived ? 'bg-zinc-500' : 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]'}`} />
-            <span className="text-[10px] font-mono text-zinc-500 tracking-wider">
-              {page.id.substring(0, 8).toUpperCase()}
+            <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+            <span className="text-xs font-medium text-zinc-400">
+              {formatDate(page.updated_at)}
             </span>
           </div>
-          <div className="text-[10px] font-mono text-zinc-500">
-            {page.is_archived ? 'ARCHIVED' : 'ACTIVE'}
-          </div>
+          {/* Fold/Color indicator place holder */}
+          {page.is_archived && (
+            <span className="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400 font-medium">Archived</span>
+          )}
         </div>
 
         {/* Main Content Area */}
@@ -319,20 +312,16 @@ function PageCard({
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-zinc-200 group-hover:text-amber-500 transition-colors leading-tight mb-2 line-clamp-2">
+            <h3 className="text-lg font-bold text-zinc-200 group-hover:text-amber-500 transition-colors leading-tight mb-2 line-clamp-2">
               {page.title || 'Untitled Entry'}
             </h3>
-            <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono uppercase tracking-wider">
-              <Clock className="w-3 h-3" />
-              <span>{formatDate(page.updated_at)}</span>
-            </div>
           </div>
         </div>
 
         {/* Action Bar (Slide up on hover) */}
         <div className="p-3 bg-black/40 border-t border-white/5 flex items-center justify-between translate-y-full group-hover:translate-y-0 transition-transform duration-300 absolute bottom-0 left-0 right-0 backdrop-blur-md">
-          <span className="text-[10px] text-amber-500 font-mono flex items-center gap-1">
-            ACCESS_LOG <ChevronRight className="w-3 h-3" />
+          <span className="text-xs text-amber-500 font-medium flex items-center gap-1">
+            Read Entry <ChevronRight className="w-3 h-3" />
           </span>
 
           <div className="flex items-center gap-1">
