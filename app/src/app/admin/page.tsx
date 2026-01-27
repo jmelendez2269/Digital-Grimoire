@@ -1,914 +1,164 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import {
+  BarChart3,
+  Upload,
+  Globe,
+  BookOpen,
+  Network,
+  Sparkles,
+  MessageSquare,
+  LogOut
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
-interface UsageMetrics {
-  overview: {
-    totalUsers: number;
-    totalDocuments: number;
-    recentUploads: number;
-    coursesClicks: number;
-    currentCosts: {
-      daily: number;
-      weekly: number;
-      monthly: number;
-    };
-  };
-  serviceStats: Array<{
-    service: string;
-    totalUnits: number;
-    totalCost: number;
-    requests: number;
-  }>;
-  dailySummary: Array<{
-    date: string;
-    service: string;
-    total_requests: number;
-    successful_requests: number;
-    failed_requests: number;
-    total_cost: number;
-  }>;
-  costAlerts: Array<{
-    alert_type: string;
-    threshold_amount: number;
-    current_amount: number;
-    threshold_exceeded: boolean;
-  }>;
-  topUsers: Array<{
-    email: string;
-    name: string;
-    total_uploads: number;
-    total_views: number;
-    total_activity: number;
-  }>;
-  storageUsage: {
-    total_files: number;
-    total_size_bytes: number;
-    pdf_count: number;
-    pdf_size_bytes: number;
-  } | null;
-  recentErrors: Array<{
-    service: string;
-    operation: string;
-    error_message: string;
-    created_at: string;
-  }>;
-}
-
-interface CoverSystemStatus {
-  nanoBanana: {
-    configured: boolean;
-    available: boolean;
-    credits?: number;
-    error?: string;
-  };
-  stats: {
-    totalJobs: number;
-    completed: number;
-    failed: number;
-    pending: number;
-    successRate: number;
-    totalCreditsUsed: number;
-    estimatedCost: number;
-  };
-  coverSources: Array<{
-    cover_source: string;
-    count: number;
-  }>;
-  recentJobs: Array<{
-    id: string;
-    text_id: string;
-    status: string;
-    source: string | null;
-    result_url: string | null;
-    error: string | null;
-    credits_used: number;
-    created_at: string;
-  }>;
-}
-
-interface ProviderUsageData {
-  tracked: {
-    totalInputTokens: number;
-    totalOutputTokens: number;
-    totalRequests: number;
-    totalCost: number;
-  };
-  provider: {
-    totalInputTokens: number;
-    totalOutputTokens: number;
-    totalRequests: number;
-    totalCost: number;
-  } | null;
-  accuracy: {
-    inputTokensAccuracy: number;
-    outputTokensAccuracy: number;
-    costAccuracy: number;
-  } | null;
-}
-
-export default function AdminDashboard() {
-  const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
-  const [coverStatus, setCoverStatus] = useState<CoverSystemStatus | null>(null);
-  const [providerUsage, setProviderUsage] = useState<ProviderUsageData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('30');
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [personalMode, setPersonalMode] = useState(false);
+export default function AdminDashboardHub() {
+  const { user, signOut, isAdmin, loading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    checkAdminAndFetchMetrics();
-  }, [timeRange, personalMode]);
-
-  const checkAdminAndFetchMetrics = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
-      router.push('/dashboard');
-      return;
-    }
-
-    setIsAdmin(true);
-    await fetchMetrics();
-  };
-
-  const fetchMetrics = async () => {
-    try {
-      setLoading(true);
-      
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Fetch usage metrics (with personal mode if enabled)
-      const personalParam = personalMode ? '&personal=true' : '';
-      const metricsResponse = await fetch(`/api/admin/usage?range=${timeRange}${personalParam}`);
-      
-      if (!metricsResponse.ok) {
-        console.error('Failed to fetch metrics:', metricsResponse.status, metricsResponse.statusText);
-        const errorData = await metricsResponse.json().catch(() => ({}));
-        console.error('Error details:', errorData);
-        return;
-      }
-      
-      const metricsData = await metricsResponse.json();
-      console.log('Metrics data received:', metricsData);
-
-      if (metricsData.success) {
-        setMetrics(metricsData);
-      } else {
-        console.error('Metrics API returned success: false', metricsData);
-      }
-
-      // Fetch cover system status
-      const coverResponse = await fetch('/api/admin/covers/status');
-      
-      if (coverResponse.ok) {
-        const coverData = await coverResponse.json();
-        if (coverData.success) {
-          setCoverStatus(coverData);
-        }
-      }
-
-      // Fetch provider usage comparison
-      if (user) {
-        const endDate = new Date();
-        const startDate = new Date(endDate.getTime() - parseInt(timeRange) * 24 * 60 * 60 * 1000);
-        const providerResponse = await fetch(
-          `/api/admin/provider-usage?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}${personalMode ? `&userId=${user.id}` : ''}`
-        );
-        
-        if (providerResponse.ok) {
-          const providerData = await providerResponse.json();
-          if (providerData.success && providerData.summary) {
-            setProviderUsage(providerData.summary);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch metrics:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const getServiceName = (service: string) => {
-    const names: Record<string, string> = {
-      azure_ocr: 'Azure OCR',
-      openai_metadata: 'OpenAI Metadata',
-      r2_storage: 'R2 Storage',
-      r2_bandwidth: 'R2 Bandwidth',
-      convergence_query: 'Convergence Machine',
-      notion: 'Notion API',
-      other: 'Other',
-    };
-    return names[service] || service;
-  };
-
-  const getServiceIcon = (service: string) => {
-    const icons: Record<string, string> = {
-      azure_ocr: '📄',
-      openai_metadata: '🤖',
-      r2_storage: '💾',
-      r2_bandwidth: '📡',
-      convergence_query: '🔮',
-      notion: '📝',
-      other: '📊',
-    };
-    return icons[service] || '📊';
-  };
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!isAdmin) {
-    return null;
+    // Optional: redirect safely or show unauthorized
+    return (
+      <div className="min-h-screen flex flex-col bg-black text-amber-100">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-red-500 mb-4">Access Denied</h1>
+            <p className="text-zinc-400">You do not have administrative privileges.</p>
+            <Link href="/dashboard" className="mt-6 inline-block px-6 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">
+              Return to Dashboard
+            </Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/");
+  };
+
+  const adminTools = [
+    {
+      title: "System Tracking & Monitoring",
+      description: "View API usage metrics, costs, and system health status.",
+      icon: <BarChart3 className="w-8 h-8 text-amber-400" />,
+      href: "/admin/monitoring",
+      color: "amber"
+    },
+    {
+      title: "Admin Upload",
+      description: "Upload and process new documents into the library.",
+      icon: <Upload className="w-8 h-8 text-blue-400" />,
+      href: "/admin/upload",
+      color: "blue"
+    },
+    {
+      title: "Import Sacred Text",
+      description: "Import texts from external sources or URLs.",
+      icon: <Globe className="w-8 h-8 text-green-400" />,
+      href: "/admin/import-sacred-text",
+      color: "green"
+    },
+    {
+      title: "Courses Management",
+      description: "Manage course content, modules, and lessons.",
+      icon: <BookOpen className="w-8 h-8 text-purple-400" />,
+      href: "/admin/courses",
+      color: "purple"
+    },
+    {
+      title: "Knowledge Graph",
+      description: "Visualize and manage the connections between concepts.",
+      icon: <Network className="w-8 h-8 text-cyan-400" />,
+      href: "/admin/knowledge-graph",
+      color: "cyan"
+    },
+    {
+      title: "Embeddings",
+      description: "Manage vector embeddings and search indexing.",
+      icon: <Sparkles className="w-8 h-8 text-pink-400" />,
+      href: "/admin/embeddings",
+      color: "pink"
+    },
+    {
+      title: "Feedback",
+      description: "Review user feedback and reported issues.",
+      icon: <MessageSquare className="w-8 h-8 text-yellow-400" />,
+      href: "/admin/feedback",
+      color: "yellow"
+    }
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
       <Header />
       <main className="flex-1">
-        <div className="min-h-screen bg-zinc-950 text-amber-50">
-          <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-amber-100 mb-2">
-                Admin Dashboard
-              </h1>
-              <p className="text-amber-100/60">
-                API usage tracking and cost monitoring
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Link
-                href="/admin/upload"
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
-              >
-                Upload Document
-              </Link>
-              <Link
-                href="/admin/diagnostics"
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-lg font-medium transition-colors"
-              >
-                Diagnostics
-              </Link>
-            </div>
-          </div>
+        <div className="min-h-screen bg-zinc-950 text-amber-50 px-6 py-12">
+          <div className="max-w-7xl mx-auto">
 
-          {/* Time Range Selector and Personal Mode Toggle */}
-          <div className="flex gap-2 items-center">
-            {['7', '30', '90'].map((days) => (
-              <button
-                key={days}
-                onClick={() => setTimeRange(days)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  timeRange === days
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-zinc-800 text-amber-100 hover:bg-zinc-700'
-                }`}
-              >
-                Last {days} days
-              </button>
-            ))}
-            <div className="ml-4 flex items-center gap-2">
-              <button
-                onClick={() => setPersonalMode(!personalMode)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  personalMode
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-zinc-800 text-amber-100 hover:bg-zinc-700'
-                }`}
-              >
-                {personalMode ? '👤 My Usage' : '🌐 All Usage'}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-amber-100/60">Loading metrics...</p>
-            </div>
-          </div>
-        ) : metrics ? (
-          <div className="space-y-6">
-            {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <div className="text-amber-100/60 text-sm mb-1">Total Users</div>
-                <div className="text-3xl font-bold text-amber-100">
-                  {metrics.overview.totalUsers}
-                </div>
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+              <div>
+                <h1 className="text-4xl font-bold text-amber-100 mb-2">Admin Command Center</h1>
+                <p className="text-zinc-400 text-lg">Central control hub for Digital Grimoire operations.</p>
               </div>
 
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <div className="text-amber-100/60 text-sm mb-1">Total Documents</div>
-                <div className="text-3xl font-bold text-amber-100">
-                  {metrics.overview.totalDocuments}
+              <div className="flex items-center gap-4">
+                <div className="px-4 py-2 bg-amber-900/20 border border-amber-500/20 rounded-full">
+                  <span className="text-amber-500 font-mono text-sm">● ADMIN_ACCESS_ACTIVE</span>
                 </div>
-              </div>
-
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <div className="text-amber-100/60 text-sm mb-1">Recent Uploads (7d)</div>
-                <div className="text-3xl font-bold text-amber-100">
-                  {metrics.overview.recentUploads}
-                </div>
-              </div>
-
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <div className="text-amber-100/60 text-sm mb-1">Courses Clicks</div>
-                <div className="text-3xl font-bold text-blue-400">
-                  {metrics.overview.coursesClicks || 0}
-                </div>
-                <div className="text-xs text-amber-100/60 mt-1">
-                  Total clicks on Courses
-                </div>
-              </div>
-
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <div className="text-amber-100/60 text-sm mb-1">Monthly Cost</div>
-                <div className="text-3xl font-bold text-green-400">
-                  {formatCurrency(metrics.overview.currentCosts.monthly)}
-                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-900/10 hover:bg-red-900/30 text-red-400 hover:text-red-300 border border-red-900/30 rounded-lg transition-all"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Disconnect</span>
+                </button>
               </div>
             </div>
 
-            {/* Personal Usage Info Banner */}
-            {personalMode && (
-              <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">👤</span>
-                  <h3 className="text-lg font-semibold text-purple-200">Your Personal Usage</h3>
-                </div>
-                <p className="text-sm text-purple-200/80">
-                  Showing your personal AI usage statistics. This includes all queries you've made, even on the free tier.
-                  Your usage is tracked regardless of subscription status.
-                </p>
-              </div>
-            )}
+            {/* Tools Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {adminTools.map((tool) => (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  className="group relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 transition-all hover:bg-zinc-900 hover:border-zinc-700 hover:shadow-xl hover:shadow-amber-900/5"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br from-${tool.color}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
 
-            {/* Cost Overview */}
-            <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-amber-100 mb-4">
-                💰 Cost Breakdown
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <div className="text-amber-100/60 text-sm mb-1">Daily Cost</div>
-                  <div className="text-2xl font-bold text-amber-100">
-                    {formatCurrency(metrics.overview.currentCosts.daily)}
-                  </div>
-                  {metrics.costAlerts.find(a => a.alert_type === 'daily') && (
-                    <div className="text-xs text-amber-100/60 mt-1">
-                      Threshold: {formatCurrency(metrics.costAlerts.find(a => a.alert_type === 'daily')!.threshold_amount)}
+                  <div className="relative z-10 flex items-start justify-between mb-4">
+                    <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                      {tool.icon}
                     </div>
-                  )}
-                </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity -mr-2 -mt-2">
+                      <span className="text-zinc-500 text-xs font-mono">↗</span>
+                    </div>
+                  </div>
 
-                <div>
-                  <div className="text-amber-100/60 text-sm mb-1">Weekly Cost</div>
-                  <div className="text-2xl font-bold text-amber-100">
-                    {formatCurrency(metrics.overview.currentCosts.weekly)}
+                  <div className="relative z-10">
+                    <h3 className="text-xl font-bold text-zinc-100 mb-2 group-hover:text-white">{tool.title}</h3>
+                    <p className="text-zinc-400 text-sm leading-relaxed group-hover:text-zinc-300">{tool.description}</p>
                   </div>
-                  {metrics.costAlerts.find(a => a.alert_type === 'weekly') && (
-                    <div className="text-xs text-amber-100/60 mt-1">
-                      Threshold: {formatCurrency(metrics.costAlerts.find(a => a.alert_type === 'weekly')!.threshold_amount)}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <div className="text-amber-100/60 text-sm mb-1">Monthly Cost</div>
-                  <div className="text-2xl font-bold text-amber-100">
-                    {formatCurrency(metrics.overview.currentCosts.monthly)}
-                  </div>
-                  {metrics.costAlerts.find(a => a.alert_type === 'monthly') && (
-                    <div className="text-xs text-amber-100/60 mt-1">
-                      Threshold: {formatCurrency(metrics.costAlerts.find(a => a.alert_type === 'monthly')!.threshold_amount)}
-                    </div>
-                  )}
-                </div>
-              </div>
+                </Link>
+              ))}
             </div>
 
-            {/* Service Stats */}
-            <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-amber-100 mb-4">
-                📊 API Usage by Service
-              </h2>
-              {metrics.serviceStats.length === 0 ? (
-                <div className="text-center py-8 text-amber-100/40">
-                  No API usage data found for the selected time range
-                </div>
-              ) : (
-              <div className="space-y-4">
-                {metrics.serviceStats.map((stat) => (
-                  <div key={stat.service} className="border border-amber-900/20 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{getServiceIcon(stat.service)}</span>
-                        <span className="font-semibold text-amber-100">
-                          {getServiceName(stat.service)}
-                        </span>
-                      </div>
-                      <span className="text-lg font-bold text-green-400">
-                        {formatCurrency(stat.totalCost)}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <div className="text-amber-100/60">Requests</div>
-                        <div className="font-semibold text-amber-100">{stat.requests.toLocaleString()}</div>
-                      </div>
-                      <div>
-                        <div className="text-amber-100/60">Units Used</div>
-                        <div className="font-semibold text-amber-100">
-                          {Math.round(stat.totalUnits).toLocaleString()}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-amber-100/60">Avg Cost/Request</div>
-                        <div className="font-semibold text-amber-100">
-                          {formatCurrency(stat.totalCost / stat.requests)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              )}
-            </div>
-
-            {/* Storage Usage */}
-            {metrics.storageUsage && (
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-amber-100 mb-4">
-                  💾 Storage Usage
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-amber-100/60 text-sm mb-1">Total Files</div>
-                    <div className="text-2xl font-bold text-amber-100">
-                      {metrics.storageUsage.total_files}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-amber-100/60 text-sm mb-1">Total Size</div>
-                    <div className="text-2xl font-bold text-amber-100">
-                      {formatBytes(metrics.storageUsage.total_size_bytes)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-amber-100/60 text-sm mb-1">PDF Files</div>
-                    <div className="text-2xl font-bold text-amber-100">
-                      {metrics.storageUsage.pdf_count}
-                    </div>
-                    <div className="text-xs text-amber-100/60 mt-1">
-                      {formatBytes(metrics.storageUsage.pdf_size_bytes)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Provider Usage Comparison */}
-            {providerUsage && (
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-amber-100 mb-4">
-                  🔍 Usage Accuracy Tracking
-                </h2>
-                <div className="mb-4 p-3 bg-blue-900/20 border border-blue-600/30 rounded-lg">
-                  <p className="text-sm text-blue-200">
-                    <strong>Note:</strong> OpenAI doesn't provide a public usage API. 
-                    Our tracked usage comes directly from their API responses (prompt_tokens, completion_tokens).
-                    To compare with provider data, manually export from{' '}
-                    <a 
-                      href="https://platform.openai.com/usage" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="underline hover:text-blue-100"
-                    >
-                      OpenAI Dashboard
-                    </a>.
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-amber-100/80 mb-2">Tracked Usage (Our System)</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-amber-100/60">Input Tokens:</span>
-                        <span className="text-amber-100 font-semibold">
-                          {providerUsage.tracked.totalInputTokens.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-amber-100/60">Output Tokens:</span>
-                        <span className="text-amber-100 font-semibold">
-                          {providerUsage.tracked.totalOutputTokens.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-amber-100/60">Total Requests:</span>
-                        <span className="text-amber-100 font-semibold">
-                          {providerUsage.tracked.totalRequests.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-t border-amber-900/20 pt-2">
-                        <span className="text-amber-100/60">Estimated Cost:</span>
-                        <span className="text-green-400 font-bold">
-                          {formatCurrency(providerUsage.tracked.totalCost)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {providerUsage.provider && providerUsage.accuracy && (
-                    <div>
-                      <h3 className="text-sm font-semibold text-amber-100/80 mb-2">Provider Data (OpenAI Dashboard)</h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-amber-100/60">Input Tokens:</span>
-                          <span className="text-amber-100 font-semibold">
-                            {providerUsage.provider.totalInputTokens.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-amber-100/60">Output Tokens:</span>
-                          <span className="text-amber-100 font-semibold">
-                            {providerUsage.provider.totalOutputTokens.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-amber-100/60">Total Requests:</span>
-                          <span className="text-amber-100 font-semibold">
-                            {providerUsage.provider.totalRequests.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between border-t border-amber-900/20 pt-2">
-                          <span className="text-amber-100/60">Provider Cost:</span>
-                          <span className="text-green-400 font-bold">
-                            {formatCurrency(providerUsage.provider.totalCost)}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 pt-4 border-t border-amber-900/20">
-                        <h4 className="text-xs font-semibold text-amber-100/60 mb-2">Accuracy</h4>
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-xs text-amber-100/60">Input Tokens:</span>
-                            <span className={`text-xs font-semibold ${
-                              Math.abs(providerUsage.accuracy.inputTokensAccuracy - 100) < 5 
-                                ? 'text-green-400' 
-                                : 'text-yellow-400'
-                            }`}>
-                              {providerUsage.accuracy.inputTokensAccuracy.toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-xs text-amber-100/60">Output Tokens:</span>
-                            <span className={`text-xs font-semibold ${
-                              Math.abs(providerUsage.accuracy.outputTokensAccuracy - 100) < 5 
-                                ? 'text-green-400' 
-                                : 'text-yellow-400'
-                            }`}>
-                              {providerUsage.accuracy.outputTokensAccuracy.toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-xs text-amber-100/60">Cost:</span>
-                            <span className={`text-xs font-semibold ${
-                              Math.abs(providerUsage.accuracy.costAccuracy - 100) < 5 
-                                ? 'text-green-400' 
-                                : 'text-yellow-400'
-                            }`}>
-                              {providerUsage.accuracy.costAccuracy.toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {!providerUsage.provider && (
-                    <div className="md:col-span-2">
-                      <div className="p-4 bg-zinc-800/50 rounded-lg border border-amber-900/20">
-                        <p className="text-sm text-amber-100/60">
-                          Provider data not available. Export usage data from{' '}
-                          <a 
-                            href="https://platform.openai.com/usage" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-purple-400 hover:text-purple-300 underline"
-                          >
-                            OpenAI Dashboard
-                          </a>{' '}
-                          to compare accuracy.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Book Cover System Status */}
-            {coverStatus && (
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-amber-100 mb-4">
-                  🎨 Book Cover System
-                </h2>
-
-                {/* API Status Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {/* Nano Banana Status */}
-                  <div className={`border rounded-lg p-4 ${
-                    coverStatus.nanoBanana.available
-                      ? 'bg-green-950/20 border-green-700/30'
-                      : 'bg-amber-950/20 border-amber-700/30'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-amber-100">Nano Banana AI</span>
-                      <span className={`px-2 py-1 text-xs rounded ${
-                        coverStatus.nanoBanana.available
-                          ? 'bg-green-600/20 text-green-400'
-                          : 'bg-amber-600/20 text-amber-400'
-                      }`}>
-                        {coverStatus.nanoBanana.available ? '✓ Active' : '○ Not Configured'}
-                      </span>
-                    </div>
-                    {coverStatus.nanoBanana.available && coverStatus.nanoBanana.credits !== undefined && (
-                      <div>
-                        <div className="text-2xl font-bold text-amber-100">{coverStatus.nanoBanana.credits}</div>
-                        <div className="text-xs text-amber-100/60">credits available</div>
-                        <div className="text-xs text-amber-100/60 mt-1">
-                          ≈ {Math.floor(coverStatus.nanoBanana.credits / 2)} covers
-                        </div>
-                      </div>
-                    )}
-                    {!coverStatus.nanoBanana.available && (
-                      <div className="text-xs text-amber-100/60 mt-1">
-                        Add NANO_BANANA_API_KEY to enable AI cover generation
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Generation Stats */}
-                  <div className="border border-amber-900/20 rounded-lg p-4">
-                    <div className="text-sm font-semibold text-amber-100 mb-2">Generation Stats</div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-amber-100/60">Success Rate:</span>
-                        <span className="font-semibold text-green-400">
-                          {coverStatus.stats.successRate}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-amber-100/60">Total Jobs:</span>
-                        <span className="font-semibold text-amber-100">
-                          {coverStatus.stats.totalJobs}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-amber-100/60">Credits Used:</span>
-                        <span className="font-semibold text-amber-100">
-                          {coverStatus.stats.totalCreditsUsed}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cost Tracking */}
-                  <div className="border border-amber-900/20 rounded-lg p-4">
-                    <div className="text-sm font-semibold text-amber-100 mb-2">AI Generation Cost</div>
-                    <div className="text-3xl font-bold text-green-400 mb-1">
-                      {formatCurrency(coverStatus.stats.estimatedCost)}
-                    </div>
-                    <div className="text-xs text-amber-100/60">
-                      {coverStatus.stats.completed} covers generated
-                    </div>
-                    {coverStatus.stats.failed > 0 && (
-                      <div className="text-xs text-red-400 mt-1">
-                        {coverStatus.stats.failed} failed attempts
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Cover Source Distribution */}
-                {coverStatus.coverSources.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-amber-100 mb-3">Cover Sources</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {coverStatus.coverSources.map((source) => (
-                        <div key={source.cover_source} className="bg-zinc-800/50 border border-amber-900/20 rounded-lg p-3">
-                          <div className="text-xs text-amber-100/60 mb-1">
-                            {source.cover_source === 'scraped' ? '🔍 Scraped' :
-                             source.cover_source === 'ai-generated' ? '🤖 AI Generated' :
-                             source.cover_source === 'manual' ? '📤 Manual' : source.cover_source}
-                          </div>
-                          <div className="text-xl font-bold text-amber-100">{source.count}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Recent Cover Jobs */}
-                {coverStatus.recentJobs.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-amber-100 mb-3">Recent Cover Generation Jobs</h3>
-                    <div className="space-y-2 max-h-80 overflow-y-auto">
-                      {coverStatus.recentJobs.slice(0, 10).map((job) => (
-                        <div key={job.id} className="bg-zinc-800/50 border border-amber-900/20 rounded p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 text-xs rounded ${
-                                job.status === 'completed' ? 'bg-green-600/20 text-green-400' :
-                                job.status === 'failed' ? 'bg-red-600/20 text-red-400' :
-                                job.status === 'processing' ? 'bg-blue-600/20 text-blue-400' :
-                                'bg-amber-600/20 text-amber-400'
-                              }`}>
-                                {job.status}
-                              </span>
-                              <span className="text-xs text-amber-100/60">
-                                {job.source || 'unknown source'}
-                              </span>
-                              {job.credits_used > 0 && (
-                                <span className="text-xs text-amber-100/60">
-                                  • {job.credits_used} credits
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-xs text-amber-100/40">
-                              {new Date(job.created_at).toLocaleString()}
-                            </span>
-                          </div>
-                          {job.error && (
-                            <div className="text-xs text-red-400 mt-1">{job.error}</div>
-                          )}
-                          {job.result_url && (
-                            <div className="text-xs text-amber-100/60 mt-1 truncate">
-                              ✓ {job.result_url}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {coverStatus.recentJobs.length === 0 && (
-                  <div className="text-center py-8 text-amber-100/40">
-                    No cover generation jobs yet
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Top Users */}
-            {metrics.topUsers && metrics.topUsers.length > 0 && (
-              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-amber-100 mb-4">
-                  👥 Most Active Users
-                </h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-amber-900/20">
-                        <th className="text-left py-2 px-3 text-amber-100/60 font-semibold">User</th>
-                        <th className="text-right py-2 px-3 text-amber-100/60 font-semibold">Uploads</th>
-                        <th className="text-right py-2 px-3 text-amber-100/60 font-semibold">Views</th>
-                        <th className="text-right py-2 px-3 text-amber-100/60 font-semibold">Total Activity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {metrics.topUsers.map((user, idx) => (
-                        <tr key={idx} className="border-b border-amber-900/10">
-                          <td className="py-3 px-3">
-                            <div className="font-semibold text-amber-100">{user.name || 'Anonymous'}</div>
-                            <div className="text-sm text-amber-100/60">{user.email}</div>
-                          </td>
-                          <td className="text-right py-3 px-3 text-amber-100">{user.total_uploads}</td>
-                          <td className="text-right py-3 px-3 text-amber-100">{user.total_views}</td>
-                          <td className="text-right py-3 px-3 font-semibold text-amber-100">{user.total_activity}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Recent Errors */}
-            {metrics.recentErrors && metrics.recentErrors.length > 0 && (
-              <div className="bg-zinc-900/50 border border-red-900/20 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-red-400 mb-4">
-                  ⚠️ Recent Errors ({metrics.recentErrors.length})
-                </h2>
-                <div className="space-y-2">
-                  {metrics.recentErrors.slice(0, 10).map((error, idx) => (
-                    <div key={idx} className="bg-red-950/20 border border-red-900/20 rounded p-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-red-400">
-                          {getServiceName(error.service)} - {error.operation}
-                        </span>
-                        <span className="text-xs text-red-400/60">
-                          {new Date(error.created_at).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="text-sm text-red-300/80">{error.error_message}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Pricing Recommendations */}
-            <div className="bg-gradient-to-br from-amber-900/20 to-amber-800/10 border border-amber-700/30 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-amber-100 mb-4">
-                💡 Pricing Insights
-              </h2>
-              <div className="space-y-3 text-amber-100/80">
-                <p>
-                  <strong>Current Monthly Cost:</strong> {formatCurrency(metrics.overview.currentCosts.monthly)}
-                </p>
-                <p>
-                  <strong>Average Cost per Upload:</strong>{' '}
-                  {metrics.overview.recentUploads > 0
-                    ? formatCurrency(metrics.overview.currentCosts.weekly / metrics.overview.recentUploads)
-                    : 'N/A'}
-                </p>
-                <p>
-                  <strong>Projected Monthly Cost:</strong>{' '}
-                  {formatCurrency((metrics.overview.currentCosts.daily * 30))}
-                </p>
-                
-                <div className="mt-4 p-4 bg-amber-950/30 rounded border border-amber-700/20">
-                  <h3 className="font-semibold text-amber-100 mb-2">Recommendations:</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    {metrics.overview.currentCosts.monthly < 100 && (
-                      <li>Current usage is very low - consider a freemium model</li>
-                    )}
-                    {metrics.overview.currentCosts.monthly >= 100 && metrics.overview.currentCosts.monthly < 500 && (
-                      <li>Moderate usage - consider tiered pricing starting at $9.99/month</li>
-                    )}
-                    {metrics.overview.currentCosts.monthly >= 500 && (
-                      <li>High usage detected - implement usage-based pricing or higher tiers</li>
-                    )}
-                    <li>Azure OCR is {metrics.overview.currentCosts.monthly > 0 
-                      ? ((metrics.serviceStats.find(s => s.service === 'azure_ocr')?.totalCost || 0) / metrics.overview.currentCosts.monthly * 100).toFixed(1)
-                      : '0'}% of total cost</li>
-                    <li>Consider bulk upload discounts if average documents/user is high</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-20 text-amber-100/60">
-            No metrics available
-          </div>
-        )}
           </div>
         </div>
       </main>
@@ -916,4 +166,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

@@ -7,6 +7,7 @@ import { scrapeCover } from '@/lib/cover-scraper';
 import { generateBookCover } from '@/lib/getimg-cover';
 import { logStorageUpload, logUserActivity, logOcrUsage } from '@/lib/usage-tracker';
 import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
+import { generateTextEmbeddings } from '@/lib/convergence/embeddings';
 
 // Initialize R2 client for cleanup on error
 const s3Client = getR2Client();
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch (error) {
     return NextResponse.json(
-      { 
+      {
         error: 'Invalid JSON in request body',
         details: 'The request body must be valid JSON'
       },
@@ -51,10 +52,10 @@ export async function POST(request: NextRequest) {
   }
 
   const { key, userId, skipOCR } = body;
-  
+
   if (!key) {
     return NextResponse.json(
-      { 
+      {
         error: 'Missing required parameter: key',
         details: 'The file key is required to process the document'
       },
@@ -65,53 +66,53 @@ export async function POST(request: NextRequest) {
   let newKey: string | null = null; // Track the renamed file for cleanup
   let metadataKey: string | null = null; // Track the metadata file for cleanup
   let rawAiOutput: string = ''; // Store raw AI response
-  
+
   try {
     const filename = key.split('/').pop() || 'document';
     const fileExtension = filename.split('.').pop()?.toLowerCase() || '';
-    
+
     // Get file from R2 to check actual MIME type (more reliable than extension)
     const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
     const getCommand = new GetObjectCommand({
       Bucket: bucketName,
       Key: key,
     });
-    
+
     const fileResponse = await s3Client.send(getCommand);
     const mimeType = fileResponse.ContentType || 'application/octet-stream';
-    
+
     // Determine if it's HTML based on MIME type AND extension (both must match)
     const isHtmlByExtension = fileExtension === 'html' || fileExtension === 'htm';
     const isHtmlByMimeType = mimeType === 'text/html' || mimeType === 'application/xhtml+xml';
     const isHtmlFile = isHtmlByExtension && isHtmlByMimeType;
-    
+
     console.log('Starting document processing for:', key);
     console.log('File extension:', fileExtension);
     console.log('MIME type:', mimeType);
     console.log('Detected type:', isHtmlFile ? 'HTML' : 'PDF/Image');
-    
+
     // If extension says HTML but MIME type says PDF, it's likely a misnamed file - use OCR
     if (isHtmlByExtension && !isHtmlByMimeType && mimeType === 'application/pdf') {
       console.warn('⚠️ File has .html extension but MIME type is PDF. Treating as PDF and using OCR.');
     }
-    
+
     let ocrResult;
     let extractedText = '';
 
     if (isHtmlFile) {
       // For HTML files: Extract text directly, skip OCR
       console.log('Step 1: Extracting text from HTML file...');
-      
+
       try {
         // Fetch HTML file from R2
         const getCommand = new GetObjectCommand({
           Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
           Key: key,
         });
-        
+
         const response = await s3Client.send(getCommand);
         const htmlContent = await response.Body?.transformToString() || '';
-        
+
         // Extract plain text from HTML (improved extraction)
         // Remove script and style content first
         let cleanedHtml = htmlContent
@@ -121,10 +122,10 @@ export async function POST(request: NextRequest) {
           .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
           .replace(/<object[^>]*>[\s\S]*?<\/object>/gi, '')
           .replace(/<embed[^>]*>[\s\S]*?<\/embed>/gi, '');
-        
+
         // Replace HTML tags with spaces (multiple passes to catch nested tags)
         cleanedHtml = cleanedHtml.replace(/<[^>]+>/g, ' ');
-        
+
         // Decode HTML entities (comprehensive list)
         extractedText = cleanedHtml
           .replace(/&nbsp;/g, ' ')
@@ -161,17 +162,17 @@ export async function POST(request: NextRequest) {
           .replace(/\s+/g, ' ')
           .replace(/\n{3,}/g, '\n\n')
           .trim();
-        
+
         // Estimate page and line count for HTML (rough estimate)
         const estimatedLineCount = extractedText.split('\n').length;
         const estimatedPageCount = Math.max(1, Math.ceil(extractedText.length / 3000)); // ~3000 chars per page
-        
+
         ocrResult = {
           text: extractedText,
           lineCount: estimatedLineCount,
           pageCount: estimatedPageCount,
         };
-        
+
         console.log(`HTML text extraction complete: ${ocrResult.lineCount} lines, estimated ${ocrResult.pageCount} pages`);
       } catch (htmlError) {
         console.error('HTML text extraction failed:', htmlError);
@@ -191,21 +192,21 @@ export async function POST(request: NextRequest) {
       } else {
         console.log('Step 1: Running Azure OCR...');
         const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
-        
+
         // Check file size - Document Intelligence supports up to 50MB for PDFs
         const fileSize = fileResponse.ContentLength || 0;
         const fileSizeMB = fileSize / (1024 * 1024);
         const isPDF = mimeType === 'application/pdf';
-        
+
         if (isPDF && fileSizeMB > 50) {
           throw new Error(
             `File size (${fileSizeMB.toFixed(2)}MB) exceeds Azure Document Intelligence limit of 50MB for PDFs. ` +
             `Please compress the file or split it into smaller parts, or use "Skip OCR" option.`
           );
         }
-        
+
         console.log(`File size: ${fileSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`);
-        
+
         try {
           ocrResult = await performOCR(fileUrl, userId);
           console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
@@ -277,7 +278,7 @@ export async function POST(request: NextRequest) {
         metadata.standardizedId,
         ocrResult.text
       );
-      
+
       if (similarDocuments.length > 0) {
         console.log(`⚠️ Found ${similarDocuments.length} similar document(s):`, similarDocuments.map(d => d.title));
       } else {
@@ -299,7 +300,7 @@ export async function POST(request: NextRequest) {
         coverSource = 'scraped';
       } else {
         console.log(`⚠️ Cover scraping failed: ${coverResult.error}`);
-        
+
         // Step 2.6: Fallback to AI generation if scraping failed (and API key is configured)
         if (!coverResult.success && process.env.GETIMG_API_KEY && metadata.domain) {
           console.log('Step 2.6: Attempting AI cover generation as fallback...');
@@ -310,7 +311,7 @@ export async function POST(request: NextRequest) {
               metadata.domain,
               metadata.tags
             );
-            
+
             if (aiResult.success) {
               console.log(`✅ AI cover generated successfully: ${aiResult.imageUrl}`);
               coverResult = {
@@ -345,11 +346,11 @@ export async function POST(request: NextRequest) {
       'astrology', 'ritual_guide', 'diagram', 'transcript', 'summary',
       'speculative', 'misc'
     ];
-    
-    const sanitizedType = validTypes.includes(metadata.type) 
-      ? metadata.type 
+
+    const sanitizedType = validTypes.includes(metadata.type)
+      ? metadata.type
       : 'misc';
-    
+
     if (sanitizedType !== metadata.type) {
       console.warn(`⚠️ Invalid document type "${metadata.type}" received from AI, defaulting to "misc"`);
     }
@@ -360,22 +361,22 @@ export async function POST(request: NextRequest) {
     const finalExtension = isHtmlFile ? (fileExtension || 'html') : (fileExtension || 'pdf');
     const desiredNewKey = `library/${metadata.standardizedId}.${finalExtension}`;
     console.log(`Renaming: ${key} -> ${desiredNewKey}`);
-    
+
     // Try to rename, but for HTML files we can continue with original key if rename fails
     let renameSucceeded = false;
 
     try {
       const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
-      
+
       console.log(`Getting file from R2: ${bucketName}/${key}`);
-      
+
       // For Cloudflare R2, use GetObject + PutObject instead of CopyObject to avoid signature issues
       // First, get the file content
       const getCommand = new GetObjectCommand({
         Bucket: bucketName,
         Key: key,
       });
-      
+
       let getResponse;
       try {
         getResponse = await s3Client.send(getCommand);
@@ -383,7 +384,7 @@ export async function POST(request: NextRequest) {
         console.error('GetObjectCommand failed:', getError);
         throw new Error(`Failed to retrieve file from R2: ${getError instanceof Error ? getError.message : 'Unknown error'}`);
       }
-      
+
       if (!getResponse.Body) {
         throw new Error('No file body returned from R2');
       }
@@ -392,7 +393,7 @@ export async function POST(request: NextRequest) {
       // Convert stream to buffer for R2 compatibility
       const chunks: Uint8Array[] = [];
       const body = getResponse.Body;
-      
+
       // Handle different body types (ReadableStream, Readable, etc.)
       try {
         if (body instanceof ReadableStream) {
@@ -420,7 +421,7 @@ export async function POST(request: NextRequest) {
         console.error('Error reading stream:', readError);
         throw new Error(`Failed to read file stream: ${readError instanceof Error ? readError.message : 'Unknown error'}`);
       }
-      
+
       const fileBuffer = Buffer.concat(chunks);
       console.log(`File buffer size: ${fileBuffer.length} bytes`);
 
@@ -469,7 +470,7 @@ export async function POST(request: NextRequest) {
 
       console.log(`Uploading to new location: ${bucketName}/${desiredNewKey}`);
       console.log(`Metadata being set:`, JSON.stringify(r2Metadata, null, 2));
-      
+
       // Upload to new location with custom metadata
       const putCommand = new PutObjectCommand({
         Bucket: bucketName,
@@ -478,7 +479,7 @@ export async function POST(request: NextRequest) {
         ContentType: getResponse.ContentType || (isHtmlFile ? 'text/html' : 'application/pdf'),
         Metadata: r2Metadata,
       });
-      
+
       try {
         await s3Client.send(putCommand);
         console.log('✅ File uploaded to new location');
@@ -487,7 +488,7 @@ export async function POST(request: NextRequest) {
       } catch (putError) {
         console.error('PutObjectCommand failed:', putError);
         console.error('Error details:', JSON.stringify(putError, null, 2));
-        
+
         // If error is related to metadata, try uploading without metadata
         const errorMessage = putError instanceof Error ? putError.message : String(putError);
         if (errorMessage.includes('header') || errorMessage.includes('metadata') || errorMessage.includes('Invalid character')) {
@@ -549,7 +550,7 @@ export async function POST(request: NextRequest) {
       console.error('R2 file operations failed:', r2Error);
       console.error('Error stack:', r2Error instanceof Error ? r2Error.stack : 'No stack trace');
       console.error('Error name:', r2Error instanceof Error ? r2Error.name : 'Unknown');
-      
+
       // For HTML files, skip rename and continue with original key
       if (isHtmlFile) {
         console.warn('⚠️ R2 rename failed for HTML file, continuing with original key');
@@ -631,6 +632,19 @@ export async function POST(request: NextRequest) {
 
     console.log('Document processing complete! ID:', textRecord.id);
 
+    // Step 6: Generate embeddings (non-blocking or handled with error catching)
+    let chunksCreated = 0;
+    try {
+      if (ocrResult.text) {
+        console.log('Step 6: Generating embeddings for the processed text...');
+        chunksCreated = await generateTextEmbeddings(textRecord.id, ocrResult.text);
+        console.log(`✅ Generated ${chunksCreated} chunks for ${textRecord.id}`);
+      }
+    } catch (embeddingError) {
+      console.error('Embedding generation failed (non-blocking):', embeddingError);
+      // We don't fail the whole request because the document is already saved
+    }
+
     // Log user activity
     if (userId) {
       await logUserActivity(userId, 'upload');
@@ -664,11 +678,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Document processing failed:', error);
-    
+
     // Log OCR failures to database even if they happen at the route level
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const isOcrError = errorMessage.includes('OCR') || errorMessage.includes('Azure');
-    
+
     if (isOcrError && userId) {
       try {
         await logOcrUsage({
@@ -687,7 +701,7 @@ export async function POST(request: NextRequest) {
     try {
       console.log('Cleaning up: Deleting files from R2...');
       const bucket = process.env.R2_BUCKET_NAME || 'convergence-library';
-      
+
       // Delete the renamed file if it exists
       if (newKey) {
         try {
@@ -698,7 +712,7 @@ export async function POST(request: NextRequest) {
           console.error('Failed to delete renamed file:', e);
         }
       }
-      
+
       // Delete the metadata file if it exists
       if (metadataKey) {
         try {
@@ -709,7 +723,7 @@ export async function POST(request: NextRequest) {
           console.error('Failed to delete metadata file:', e);
         }
       }
-      
+
       // Delete the original file if it still exists (in case rename failed)
       try {
         const deleteCommand = new DeleteObjectCommand({ Bucket: bucket, Key: key });
@@ -723,7 +737,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { 
+      {
         error: error instanceof Error ? error.message : 'Failed to process document',
         details: 'The uploaded file has been removed. Please try again.'
       },

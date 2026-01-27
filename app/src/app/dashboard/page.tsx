@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardSearchHub from "@/components/DashboardSearchHub";
 import ConvergenceMachineInfo from "@/components/ConvergenceMachineInfo";
-import { BookOpen, Book, Network, GraduationCap } from "lucide-react";
+import { BookOpen, Book, Network, GraduationCap, ScrollText, Sparkles } from "lucide-react";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -128,6 +128,44 @@ export default function DashboardPage() {
               </div>
               <p className="text-sm text-zinc-400">
                 Structured learning paths through esoteric wisdom traditions.
+              </p>
+            </Link>
+
+            {/* Rituals Card */}
+            <Link
+              href="/practitioner/rituals"
+              className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 to-red-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
+                  <ScrollText className="w-6 h-6 text-amber-400" />
+                </div>
+                <h3 className="text-xl font-bold text-amber-100 group-hover:text-amber-400">
+                  Rituals
+                </h3>
+              </div>
+              <p className="text-sm text-zinc-400">
+                Design, catalog, and perform personal rituals. A workbench for your magical practice.
+              </p>
+            </Link>
+
+            {/* Tarot Card */}
+            <Link
+              href="/practitioner/tarot"
+              className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-purple-500/50 hover:bg-zinc-900 overflow-visible"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/30 to-pink-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/20">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                </div>
+                <h3 className="text-xl font-bold text-purple-100 group-hover:text-purple-400">
+                  Tarot
+                </h3>
+              </div>
+              <p className="text-sm text-zinc-400">
+                Consult the Oracle. Daily draws and digital readings with a 78-card deck.
               </p>
             </Link>
 

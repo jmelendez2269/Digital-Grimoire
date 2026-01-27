@@ -30,14 +30,15 @@ export default function DeepSearchPanel() {
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<{ relatedTerms: string[], books: BookResult[] } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [warning, setWarning] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
-    
+
     // Autocomplete suggestions state
     const [suggestions, setSuggestions] = useState<ConceptSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-    
+
     const inputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -49,29 +50,29 @@ export default function DeepSearchPanel() {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
-        
+
         // Create new abort controller
         abortControllerRef.current = new AbortController();
-        
+
         setLoadingSuggestions(true);
-        
+
         try {
             const res = await fetch(`/api/concepts?q=${encodeURIComponent(searchQuery)}&limit=8`, {
                 credentials: 'include',
                 signal: abortControllerRef.current.signal,
             });
-            
+
             if (!res.ok) {
                 throw new Error('Failed to fetch suggestions');
             }
-            
+
             const data = await res.json();
             const concepts = (data.items || []).map((item: any) => ({
                 id: item.id,
                 name: item.name,
                 slug: item.slug,
             }));
-            
+
             setSuggestions(concepts);
             setShowSuggestions(concepts.length > 0);
             setSelectedIndex(-1);
@@ -93,12 +94,12 @@ export default function DeepSearchPanel() {
         if (debounceTimerRef.current) {
             clearTimeout(debounceTimerRef.current);
         }
-        
+
         // Cancel previous request
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
-        
+
         if (query.length >= 3) {
             // Debounce API call
             debounceTimerRef.current = setTimeout(() => {
@@ -110,7 +111,7 @@ export default function DeepSearchPanel() {
             setShowSuggestions(false);
             setSelectedIndex(-1);
         }
-        
+
         // Cleanup
         return () => {
             if (debounceTimerRef.current) {
@@ -133,6 +134,7 @@ export default function DeepSearchPanel() {
 
         setLoading(true);
         setError(null);
+        setWarning(null); // Reset warning
         setResults(null);
         setSearched(true);
 
@@ -144,21 +146,18 @@ export default function DeepSearchPanel() {
                 body: JSON.stringify({ query }),
             });
 
+            const resultData = await res.json(); // Always try to parse JSON for error/warning messages
+
             if (!res.ok) {
                 // Try to extract error message from response
-                let errorMessage = 'Search failed';
-                try {
-                    const errorData = await res.json();
-                    errorMessage = errorData.error || errorMessage;
-                } catch {
-                    // If response isn't JSON, use status text
-                    errorMessage = res.statusText || `Error ${res.status}`;
-                }
+                const errorMessage = resultData.error || res.statusText || `Error ${res.status}`;
                 throw new Error(errorMessage);
             }
 
-            const data = await res.json();
-            setResults(data);
+            setResults(resultData);
+            if (resultData.warning) {
+                setWarning(resultData.warning);
+            }
         } catch (err) {
             console.error('Deep search error:', err);
             const errorMessage = err instanceof Error ? err.message : 'An error occurred while searching. Please try again.';
@@ -177,11 +176,11 @@ export default function DeepSearchPanel() {
             }
             return;
         }
-        
+
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                setSelectedIndex((prev) => 
+                setSelectedIndex((prev) =>
                     prev < suggestions.length - 1 ? prev + 1 : prev
                 );
                 break;
@@ -269,7 +268,7 @@ export default function DeepSearchPanel() {
                             )}
                         </button>
                     </div>
-                    
+
                     {/* Suggestions Dropdown */}
                     {showSuggestions && (
                         <div
@@ -291,17 +290,17 @@ export default function DeepSearchPanel() {
                                         // Highlight the search query in the suggestion name
                                         const highlightName = (name: string, searchQuery: string) => {
                                             if (!searchQuery || searchQuery.length < 3) return name;
-                                            
+
                                             const queryLower = searchQuery.toLowerCase();
                                             const nameLower = name.toLowerCase();
                                             const queryIndex = nameLower.indexOf(queryLower);
-                                            
+
                                             if (queryIndex === -1) return name;
-                                            
+
                                             const before = name.substring(0, queryIndex);
                                             const match = name.substring(queryIndex, queryIndex + searchQuery.length);
                                             const after = name.substring(queryIndex + searchQuery.length);
-                                            
+
                                             return (
                                                 <>
                                                     {before}
@@ -312,17 +311,16 @@ export default function DeepSearchPanel() {
                                                 </>
                                             );
                                         };
-                                        
+
                                         return (
                                             <button
                                                 key={suggestion.id}
                                                 type="button"
                                                 onClick={() => handleSuggestionClick(suggestion)}
-                                                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                                                    index === selectedIndex
-                                                        ? 'bg-amber-900/30 text-amber-200'
-                                                        : 'text-amber-100/80 hover:bg-amber-900/20 hover:text-amber-100'
-                                                }`}
+                                                className={`w-full text-left px-4 py-2 text-sm transition-colors ${index === selectedIndex
+                                                    ? 'bg-amber-900/30 text-amber-200'
+                                                    : 'text-amber-100/80 hover:bg-amber-900/20 hover:text-amber-100'
+                                                    }`}
                                                 onMouseEnter={() => setSelectedIndex(index)}
                                             >
                                                 {highlightName(suggestion.name, query)}
@@ -343,7 +341,15 @@ export default function DeepSearchPanel() {
                     <p>{error}</p>
                 </div>
             )}
-
+            {warning && (
+                <div className="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl flex items-start gap-4 text-amber-200 mb-6 shadow-lg shadow-amber-950/20">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-400" />
+                    <div className="flex flex-col gap-1">
+                        <p className="font-semibold text-amber-100">Indexing Notice</p>
+                        <p className="text-sm opacity-90">{warning}</p>
+                    </div>
+                </div>
+            )}
             {results && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                     {/* Related Terms */}

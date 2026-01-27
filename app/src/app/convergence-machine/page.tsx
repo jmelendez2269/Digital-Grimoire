@@ -67,7 +67,7 @@ function ConvergenceMachineContent() {
   // Load user's saved defaults
   async function loadUserDefaults() {
     if (!user) return;
-    
+
     try {
       const res = await fetch('/api/user/convergence-preferences');
       if (res.ok) {
@@ -152,7 +152,7 @@ function ConvergenceMachineContent() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (!query.trim()) {
       setError('Please enter a query');
       return;
@@ -211,7 +211,7 @@ function ConvergenceMachineContent() {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
-              
+
               if (data.type === 'done' && data.response) {
                 finalResponse = data.response;
                 setResponse(finalResponse);
@@ -304,7 +304,7 @@ function ConvergenceMachineContent() {
             sources: response.sources || [],
           }),
         });
-        
+
         // Trigger history refresh
         setHistoryRefreshTrigger(prev => prev + 1);
       } catch (error) {
@@ -323,13 +323,13 @@ function ConvergenceMachineContent() {
   function handleSelectConversation(conversation: any) {
     setQuery(conversation.query);
     setLensWeights(conversation.lensWeights);
-    
+
     // Load the full response if available
     if (conversation.response) {
       try {
         // Ensure response has the correct structure
         let responseData = conversation.response;
-        
+
         // Parse if it's a string
         if (typeof responseData === 'string') {
           try {
@@ -339,18 +339,18 @@ function ConvergenceMachineContent() {
             responseData = null;
           }
         }
-        
+
         if (responseData) {
           // Ensure it has all required fields matching ResponseStream interface
           const formattedResponse = {
             query: conversation.query,
             synthesis: responseData.synthesis || conversation.synthesis || '',
             responses: Array.isArray(responseData.responses) ? responseData.responses : [],
-            sources: Array.isArray(responseData.sources) 
-              ? responseData.sources 
+            sources: Array.isArray(responseData.sources)
+              ? responseData.sources
               : (conversation.sources || []),
           };
-          
+
           console.log('Loading conversation from history:', {
             id: conversation.id,
             query: conversation.query,
@@ -358,7 +358,7 @@ function ConvergenceMachineContent() {
             responsesCount: formattedResponse.responses.length,
             sourcesCount: formattedResponse.sources.length,
           });
-          
+
           setResponse(formattedResponse);
           setCurrentResponseId(conversation.id);
         } else {
@@ -383,7 +383,7 @@ function ConvergenceMachineContent() {
       setResponse(null);
       setCurrentResponseId(null);
     }
-    
+
     // Scroll to response area after a short delay
     setTimeout(() => {
       const responseElement = document.querySelector('[data-response-area]');
@@ -395,7 +395,7 @@ function ConvergenceMachineContent() {
 
   // Memoize lenses array - getAllLenses() returns a new array on every call
   const lenses = useMemo(() => getAllLenses(), []);
-  
+
   // Memoize totalWeight calculation - recalculated on every render otherwise
   const totalWeight = useMemo(
     () => Object.values(lensWeights).reduce((sum, w) => sum + w, 0),
@@ -405,11 +405,11 @@ function ConvergenceMachineContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-purple-400" />
+            <Sparkles className="w-8 h-8 text-cyan-400" />
             <h1 className="text-4xl font-bold text-amber-100">
               Convergence Machine
             </h1>
@@ -429,7 +429,7 @@ function ConvergenceMachineContent() {
           </p>
           <div className="mt-4 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg">
             <p className="text-sm text-amber-200/80">
-              <strong className="text-amber-200">Important:</strong> AI is a tool, not a source of absolute truth. 
+              <strong className="text-amber-200">Important:</strong> AI is a tool, not a source of absolute truth.
               Please use discernment and verify important information.{' '}
               <Link href="/ai-disclaimer" className="text-amber-400 hover:text-amber-300 underline">
                 Learn more about AI safety and discernment
@@ -476,7 +476,7 @@ function ConvergenceMachineContent() {
                     type="button"
                     onClick={saveAsDefault}
                     disabled={savingDefault || isStreaming || !user}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-zinc-800/50 hover:bg-zinc-800 text-amber-100/70 hover:text-amber-100 border border-zinc-700 hover:border-purple-600/50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-zinc-800/50 hover:bg-zinc-800 text-amber-100/70 hover:text-amber-100 border border-zinc-700 hover:border-cyan-500/50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     title={user ? 'Save current settings as default' : 'Sign in to save defaults'}
                   >
                     {defaultSaved ? (
@@ -538,7 +538,7 @@ function ConvergenceMachineContent() {
                     onChange={(e) => setQuery(e.target.value)}
                     disabled={isStreaming}
                     rows={4}
-                    className="w-full px-4 py-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-purple-600/50 focus:ring-1 focus:ring-purple-600/50 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+                    className="w-full px-4 py-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
                     placeholder="Ask a question about any topic... The Convergence Machine will analyze it through multiple perspectives."
                   />
                 </div>
@@ -552,7 +552,7 @@ function ConvergenceMachineContent() {
                 <button
                   type="submit"
                   disabled={isStreaming || !query.trim()}
-                  className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   {isStreaming ? (
                     <>
@@ -570,8 +570,8 @@ function ConvergenceMachineContent() {
 
               {/* Response */}
               <div data-response-area>
-                <ResponseStream 
-                  response={response} 
+                <ResponseStream
+                  response={response}
                   isStreaming={isStreaming}
                   query={query}
                   lensWeights={lensWeights}

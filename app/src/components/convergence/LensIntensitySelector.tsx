@@ -61,7 +61,7 @@ export default function LensIntensitySelector({
           {lensName}
         </label>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <div className="flex-1 flex gap-1">
           {INTENSITY_LEVELS.map((intensity) => {
@@ -72,11 +72,10 @@ export default function LensIntensitySelector({
                 type="button"
                 onClick={() => !disabled && onChange(intensity.value)}
                 disabled={disabled}
-                className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-all ${
-                  isActive
-                    ? 'bg-purple-600 text-white border-2 border-purple-400'
+                className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-all ${isActive
+                    ? 'bg-cyan-600 text-white border-2 border-cyan-400'
                     : 'bg-zinc-800/50 text-amber-100/60 border-2 border-zinc-700 hover:border-zinc-600'
-                } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title={`${intensity.label}: ${intensity.description} (${intensity.value}%)`}
               >
                 {intensity.label}
@@ -88,13 +87,13 @@ export default function LensIntensitySelector({
           type="button"
           onClick={() => onChange(value > 0 ? 0 : getIntensityValue('standard'))}
           disabled={disabled}
-          className="p-1.5 text-zinc-400 hover:text-purple-400 transition-colors disabled:opacity-50"
+          className="p-1.5 text-zinc-400 hover:text-cyan-400 transition-colors disabled:opacity-50"
           title={value > 0 ? 'Disable lens' : 'Enable lens (Standard)'}
         >
           <Sliders className="w-4 h-4" />
         </button>
       </div>
-      
+
       <p className="text-xs text-amber-100/50">
         {INTENSITY_LEVELS.find(l => l.level === currentLevel)?.description}
       </p>

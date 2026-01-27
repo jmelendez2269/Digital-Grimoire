@@ -105,6 +105,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
         <div className="hidden items-center gap-1 md:flex ml-8">
           {[
             { name: 'Library', path: '/library' },
+            { name: 'Search', path: '/search', icon: <Search className="w-3.5 h-3.5" /> },
             { name: 'Courses', path: '/courses' },
             { name: 'Journal', path: '/journal' },
             { name: 'Graph', path: '/graph', icon: <Network className="w-3.5 h-3.5" /> }
@@ -148,6 +149,13 @@ function Header({ librarySearch }: HeaderProps = {}) {
                   className="block px-3 py-2 text-sm text-zinc-300 hover:text-amber-400 hover:bg-white/5 transition-colors font-mono"
                 >
                   Ritual Machine
+                </Link>
+                <Link
+                  href="/practitioner/rituals"
+                  onClick={() => setMoreMenuOpen(false)}
+                  className="block px-3 py-2 text-sm text-zinc-300 hover:text-amber-400 hover:bg-white/5 transition-colors font-mono"
+                >
+                  Workbench (Practitioner)
                 </Link>
               </div>
             )}

@@ -50,13 +50,13 @@ export default function ConversationHistory({
 
   async function loadConversations() {
     setLoading(true);
-    
+
     // Load from localStorage first (quick access)
     const localKey = user ? `convergence_history_${user.id}` : 'convergence_history_guest';
-    const localHistory = typeof window !== 'undefined' 
+    const localHistory = typeof window !== 'undefined'
       ? localStorage.getItem(localKey)
       : null;
-    
+
     let localConversations: ConversationEntry[] = [];
     if (localHistory) {
       try {
@@ -80,14 +80,14 @@ export default function ConversationHistory({
             let parsedResponse: any = null;
             let synthesis = '';
             let responsePreview = '';
-            
+
             try {
               if (typeof resp.response_text === 'string') {
                 // Try to parse as JSON first
                 try {
                   parsedResponse = JSON.parse(resp.response_text);
                   synthesis = parsedResponse.synthesis || resp.response_text;
-                  responsePreview = parsedResponse.synthesis 
+                  responsePreview = parsedResponse.synthesis
                     ? parsedResponse.synthesis.substring(0, 150)
                     : resp.response_text.substring(0, 150);
                 } catch {
@@ -121,7 +121,7 @@ export default function ConversationHistory({
           // Merge and deduplicate (prefer API data)
           const merged = [...apiConversations];
           const apiIds = new Set(apiConversations.map(c => c.id));
-          
+
           localConversations.forEach((local: ConversationEntry) => {
             if (!apiIds.has(local.id)) {
               merged.push(local);
@@ -136,7 +136,7 @@ export default function ConversationHistory({
           });
 
           setConversations(merged.slice(0, 50));
-          
+
           // Update localStorage
           if (typeof window !== 'undefined') {
             localStorage.setItem(localKey, JSON.stringify(merged.slice(0, 50)));
@@ -167,14 +167,14 @@ export default function ConversationHistory({
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
+
     return date.toLocaleDateString();
   }
 
   function formatLensWeights(lensWeights: LensWeights): string {
     const activeLenses = getActiveLenses(lensWeights);
     if (activeLenses.length === 0) return 'No lenses';
-    
+
     const lensAbbrev: Record<string, string> = {
       'Scientific': 'Sci',
       'Psychological': 'Psy',
@@ -196,17 +196,17 @@ export default function ConversationHistory({
   }
 
   return (
-    <div className="bg-zinc-900/50 border border-purple-600/20 rounded-xl overflow-hidden">
+    <div className="bg-zinc-900/50 border border-cyan-500/20 rounded-xl overflow-hidden">
       {/* Header - Collapsible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between p-4 hover:bg-zinc-900/50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <History className="w-5 h-5 text-purple-400" />
+          <History className="w-5 h-5 text-cyan-400" />
           <h2 className="text-lg font-semibold text-amber-100">Conversation History</h2>
           {conversations.length > 0 && (
-            <span className="px-2 py-0.5 bg-purple-600/20 text-purple-400 text-xs font-medium rounded-full">
+            <span className="px-2 py-0.5 bg-cyan-600/20 text-cyan-400 text-xs font-medium rounded-full">
               {conversations.length}
             </span>
           )}
@@ -220,62 +220,61 @@ export default function ConversationHistory({
 
       {/* Content - Collapsible */}
       {isExpanded && (
-        <div className="border-t border-purple-600/20 max-h-96 overflow-y-auto p-4">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-amber-100/60">Loading...</div>
-          </div>
-        ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <History className="w-12 h-12 text-zinc-600 mb-3" />
-            <p className="text-amber-100/60">No conversations yet</p>
-            <p className="text-sm text-amber-100/40 mt-1">
-              Your query history will appear here
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {conversations.map((conversation) => {
-              const isActive = currentResponseId === conversation.id || 
-                (currentQuery && currentQuery === conversation.query && !currentResponseId);
-              
-              return (
-                <button
-                  key={conversation.id}
-                  onClick={() => onSelectConversation(conversation)}
-                  className={`w-full text-left p-3 rounded-lg border transition-all ${
-                    isActive
-                      ? 'bg-purple-600/20 border-purple-600/50 shadow-md'
-                      : 'bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-800 hover:border-purple-600/30'
-                  }`}
-                >
-              {/* Query */}
-              <div className="font-medium text-amber-100 mb-2 line-clamp-2">
-                {conversation.query}
-              </div>
+        <div className="border-t border-cyan-500/20 max-h-96 overflow-y-auto p-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-amber-100/60">Loading...</div>
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <History className="w-12 h-12 text-zinc-600 mb-3" />
+              <p className="text-amber-100/60">No conversations yet</p>
+              <p className="text-sm text-amber-100/40 mt-1">
+                Your query history will appear here
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {conversations.map((conversation) => {
+                const isActive = currentResponseId === conversation.id ||
+                  (currentQuery && currentQuery === conversation.query && !currentResponseId);
 
-              {/* Metadata */}
-              <div className="flex items-center gap-3 text-xs text-amber-100/60 mb-2">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {formatTimestamp(conversation.timestamp)}
-                </div>
-                <div className="truncate">
-                  {formatLensWeights(conversation.lensWeights)}
-                </div>
-              </div>
+                return (
+                  <button
+                    key={conversation.id}
+                    onClick={() => onSelectConversation(conversation)}
+                    className={`w-full text-left p-3 rounded-lg border transition-all ${isActive
+                        ? 'bg-cyan-600/20 border-cyan-500/50 shadow-md'
+                        : 'bg-zinc-800/50 border-zinc-700/50 hover:bg-zinc-800 hover:border-cyan-500/30'
+                      }`}
+                  >
+                    {/* Query */}
+                    <div className="font-medium text-amber-100 mb-2 line-clamp-2">
+                      {conversation.query}
+                    </div>
 
-              {/* Preview */}
-              <div className="text-sm text-amber-100/70 line-clamp-2">
-                {conversation.responsePreview}...
-              </div>
+                    {/* Metadata */}
+                    <div className="flex items-center gap-3 text-xs text-amber-100/60 mb-2">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatTimestamp(conversation.timestamp)}
+                      </div>
+                      <div className="truncate">
+                        {formatLensWeights(conversation.lensWeights)}
+                      </div>
+                    </div>
 
-                  <ChevronRight className="w-4 h-4 text-purple-400/60 mt-2 ml-auto" />
-                </button>
-              );
-            })}
-          </div>
-        )}
+                    {/* Preview */}
+                    <div className="text-sm text-amber-100/70 line-clamp-2">
+                      {conversation.responsePreview}...
+                    </div>
+
+                    <ChevronRight className="w-4 h-4 text-cyan-400/60 mt-2 ml-auto" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

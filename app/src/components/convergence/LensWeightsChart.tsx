@@ -62,9 +62,9 @@ export default function LensWeightsChart({
 
   // Color gradient based on weight
   const getBarColor = (weight: number) => {
-    if (weight >= 60) return '#a855f7'; // Purple (high)
-    if (weight >= 30) return '#c084fc'; // Light purple (medium)
-    return '#d8b4fe'; // Lighter purple (low)
+    if (weight >= 60) return '#06b6d4'; // Cyan (high)
+    if (weight >= 30) return '#22d3ee'; // Light cyan (medium)
+    return '#67e8f9'; // Lighter cyan (low)
   };
 
   return (

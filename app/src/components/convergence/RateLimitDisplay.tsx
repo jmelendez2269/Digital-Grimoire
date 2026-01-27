@@ -18,8 +18,8 @@ export default function RateLimitDisplay({
 }: RateLimitDisplayProps) {
   if (isPremium) {
     return (
-      <div className="flex items-center gap-2 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
-        <Zap className="w-4 h-4 text-purple-400" />
+      <div className="flex items-center gap-2 p-3 bg-amber-900/20 border border-amber-600/30 rounded-lg">
+        <Zap className="w-4 h-4 text-amber-400" />
         <span className="text-sm text-amber-100/80">Premium: Unlimited queries</span>
       </div>
     );
@@ -29,11 +29,10 @@ export default function RateLimitDisplay({
   const isLow = remaining <= 2;
 
   return (
-    <div className={`p-3 rounded-lg border ${
-      isLow 
-        ? 'bg-red-900/20 border-red-600/30' 
+    <div className={`p-3 rounded-lg border ${isLow
+        ? 'bg-red-900/20 border-red-600/30'
         : 'bg-zinc-900/50 border-amber-900/20'
-    }`}>
+      }`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           {isLow ? (
@@ -41,33 +40,31 @@ export default function RateLimitDisplay({
           ) : (
             <AlertCircle className="w-4 h-4 text-amber-400" />
           )}
-          <span className={`text-sm font-medium ${
-            isLow ? 'text-red-400' : 'text-amber-100/80'
-          }`}>
+          <span className={`text-sm font-medium ${isLow ? 'text-red-400' : 'text-amber-100/80'
+            }`}>
             Free Tier: {remaining} / {limit} queries remaining
           </span>
         </div>
         <Link
           href="/profile?tab=subscription"
-          className="text-xs text-purple-400 hover:text-purple-300 underline"
+          className="text-xs text-amber-400 hover:text-amber-300 underline"
         >
           Upgrade
         </Link>
       </div>
-      
+
       <div className="w-full bg-zinc-800 rounded-full h-2">
         <div
-          className={`h-2 rounded-full transition-all ${
-            isLow ? 'bg-red-600' : 'bg-purple-600'
-          }`}
+          className={`h-2 rounded-full transition-all ${isLow ? 'bg-red-600' : 'bg-cyan-600'
+            }`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-      
+
       <p className="text-xs text-amber-100/60 mt-2">
-        Resets on {new Date(resetDate).toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric' 
+        Resets on {new Date(resetDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
         })}
       </p>
     </div>

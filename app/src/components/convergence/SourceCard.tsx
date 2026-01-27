@@ -25,19 +25,19 @@ export default function SourceCard({ source, lensName }: SourceCardProps) {
   const contentPreview = source.content_preview;
 
   return (
-    <div className="bg-zinc-800/50 border border-amber-900/20 rounded-lg p-4 hover:bg-zinc-800/70 transition-colors">
+    <div className="bg-zinc-800/50 border border-cyan-500/20 rounded-lg p-4 hover:bg-zinc-800/70 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <BookOpen className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <BookOpen className="w-4 h-4 text-cyan-400 flex-shrink-0" />
             <Link
               href={`/library/${source.text_id}`}
-              className="text-sm font-medium text-amber-100 hover:text-amber-400 transition-colors truncate"
+              className="text-sm font-medium text-amber-100 hover:text-cyan-400 transition-colors truncate"
             >
               {title}
             </Link>
           </div>
-          
+
           {author && (
             <p className="text-xs text-amber-100/60 ml-6 mb-1">
               by {author}
@@ -61,7 +61,7 @@ export default function SourceCard({ source, lensName }: SourceCardProps) {
 
         <Link
           href={`/library/${source.text_id}`}
-          className="flex-shrink-0 text-amber-100/60 hover:text-amber-400 transition-colors"
+          className="flex-shrink-0 text-amber-100/60 hover:text-cyan-400 transition-colors"
           title="View document"
         >
           <Link2 className="w-4 h-4" />

@@ -226,7 +226,7 @@ function CoursesPageContent() {
               </div>
             </div>
 
-            {/* Filters Panel */}
+  /* Filters Panel */
             {showFilters && (
               <div className="mt-6 p-6 bg-black/40 border border-white/10 rounded-lg backdrop-blur-sm animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center gap-8 flex-wrap">
@@ -277,6 +277,31 @@ function CoursesPageContent() {
 
         {/* Main Content */}
         <div className="relative z-10 max-w-screen-2xl mx-auto px-4 py-8">
+
+          {/* My Courses / Jump Back In Section */}
+          <MyCoursesSection />
+
+          {/* MVP Info Banner */}
+          <div className="mb-8 p-6 bg-gradient-to-br from-amber-500/5 to-cyan-500/5 border border-amber-500/20 rounded-lg backdrop-blur-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <GraduationCap className="w-24 h-24 text-amber-500" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 text-[10px] uppercase font-mono tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded">First Edition</span>
+                <span className="px-2 py-0.5 text-[10px] uppercase font-mono tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded">2026</span>
+              </div>
+              <h3 className="text-lg font-bold text-amber-100 mb-2">Welcome to the Academy</h3>
+              <p className="text-sm text-zinc-400 max-w-2xl mb-4">
+                This is our inaugural course module. We will be releasing more specialized courses throughout the year as the curriculum expands.
+              </p>
+              <div className="flex items-center gap-2 text-xs text-amber-500/80 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                YOUR FEEDBACK IS IMPORTANT AND WELCOME
+              </div>
+            </div>
+          </div>
+
           {/* Error State */}
           {error && !authLoading && (
             <div className="mb-6 p-4 bg-red-900/10 border border-red-500/20 rounded-lg backdrop-blur-sm">
@@ -343,14 +368,7 @@ function CoursesPageContent() {
                   {/* Card specific gradients */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-amber-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  {/* Node Header */}
-                  <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-black/20 text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-                    <div className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
-                      <span>NODE_{course.id.substring(0, 6)}</span>
-                    </div>
-                    <span>{course.updated_at ? new Date(course.updated_at).toLocaleDateString() : 'N/A'}</span>
-                  </div>
+
 
                   <div className="p-6 flex-1 flex flex-col relative z-10">
                     {/* Course Header */}
@@ -414,6 +432,87 @@ function CoursesPageContent() {
   );
 }
 
+
+
+function MyCoursesSection() {
+  const { user } = useAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchMyCourses = async () => {
+      try {
+        const response = await fetch('/api/courses/my-courses');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setCourses(data.courses || []);
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching my courses', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyCourses();
+  }, [user]);
+
+  if (loading || courses.length === 0) return null;
+
+  return (
+    <div className="mb-12">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <h2 className="text-xl font-bold text-white tracking-tight">Accepting Transmissions</h2>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {courses.map((course) => (
+          <Link
+            key={course.id}
+            href={`/courses/${course.slug || course.id}`}
+            className="group relative flex flex-col bg-zinc-900/60 backdrop-blur-md border border-emerald-500/30 rounded-lg overflow-hidden hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/10 via-transparent to-transparent opacity-50" />
+
+            <div className="p-6 flex-1 flex flex-col relative z-10">
+              <div className="mb-4">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border rounded border-emerald-500/30 text-emerald-400 bg-emerald-500/10 mb-3">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                  </span>
+                  In Progress
+                </span>
+
+                <h3 className="text-xl font-bold text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-2">
+                  {course.title}
+                </h3>
+              </div>
+
+              <div className="mt-auto">
+                <span className="text-sm font-medium text-emerald-400 group-hover:underline decoration-emerald-500/50 underline-offset-4 flex items-center gap-2">
+                  Jump Back In
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function CoursesPage() {
   return (
     <Suspense
@@ -431,3 +530,4 @@ export default function CoursesPage() {
     </Suspense>
   );
 }
+

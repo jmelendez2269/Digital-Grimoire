@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
 
       // Database functions
       hasMatchTextChunksRPC: false,
+      hasMatchTextFtsRPC: false,
 
       // Extensions
       hasPgVector: false,
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
 
       // Indexes
       hasChunkEmbeddingIndex: false,
+      hasChunkFtsIndex: false,
     };
 
     // Check if text_chunks table exists
@@ -64,20 +66,16 @@ export async function GET(request: NextRequest) {
       checks.hasConvergenceQueries = false;
     }
 
-    // Check if RPC function exists
+    // Check if match_text_chunks RPC function exists
     try {
-      // Try calling the function with a dummy embedding (will fail but confirms function exists)
       const dummyEmbedding = new Array(1536).fill(0);
       const { error } = await supabase.rpc('match_text_chunks', {
         query_embedding: dummyEmbedding,
         match_threshold: 0.9,
         match_count: 1,
       });
-      // If error is about function not existing, it's missing
-      // If error is about data/parameters, function exists
       if (error) {
-        checks.hasMatchTextChunksRPC = !error.message?.includes('does not exist') &&
-          !error.message?.includes('function match_text_chunks');
+        checks.hasMatchTextChunksRPC = !error.message?.includes('does not exist');
       } else {
         checks.hasMatchTextChunksRPC = true;
       }
@@ -85,13 +83,23 @@ export async function GET(request: NextRequest) {
       checks.hasMatchTextChunksRPC = false;
     }
 
-    // Check pgvector extension (via SQL query)
+    // Check if match_text_fts RPC function exists
     try {
-      const { data, error } = await supabase.rpc('exec_sql', {
-        query: "SELECT EXISTS(SELECT FROM pg_extension WHERE extname = 'vector') as has_vector;"
+      const { error } = await supabase.rpc('match_text_fts', {
+        search_query: 'test',
+        match_count: 1,
       });
+      if (error) {
+        checks.hasMatchTextFtsRPC = !error.message?.includes('does not exist');
+      } else {
+        checks.hasMatchTextFtsRPC = true;
+      }
+    } catch (error: any) {
+      checks.hasMatchTextFtsRPC = false;
+    }
 
-      // Alternative check: try to query vector column
+    // Check pgvector extension
+    try {
       const { error: vectorError } = await supabase
         .from('text_chunks')
         .select('embedding')
@@ -130,18 +138,19 @@ export async function GET(request: NextRequest) {
     // Determine status
     const isFullySetup =
       checks.hasTextChunks &&
-      checks.hasConvergenceConcepts &&
       checks.hasPgVector &&
       checks.hasOpenAIKey &&
+      checks.hasMatchTextChunksRPC &&
+      checks.hasMatchTextFtsRPC &&
       checks.chunksWithEmbeddings > 0;
 
     const missingItems: string[] = [];
-    if (!checks.hasTextChunks) missingItems.push('text_chunks table (Migration 021)');
-    if (!checks.hasConvergenceConcepts) missingItems.push('convergence_concepts table (Migration 019)');
+    if (!checks.hasTextChunks) missingItems.push('text_chunks table');
     if (!checks.hasPgVector) missingItems.push('pgvector extension');
     if (!checks.hasOpenAIKey) missingItems.push('OPENAI_API_KEY environment variable');
-    if (checks.chunksWithEmbeddings === 0) missingItems.push('Text embeddings (generate via /api/convergence/generate-embeddings)');
-    if (!checks.hasMatchTextChunksRPC) missingItems.push('match_text_chunks RPC function (Migration 030) - optional but recommended');
+    if (checks.chunksWithEmbeddings === 0) missingItems.push('Text embeddings');
+    if (!checks.hasMatchTextChunksRPC) missingItems.push('match_text_chunks RPC (Migration 034)');
+    if (!checks.hasMatchTextFtsRPC) missingItems.push('match_text_fts RPC (Migration 034)');
 
     return NextResponse.json({
       status: isFullySetup ? 'ready' : 'incomplete',
@@ -151,17 +160,16 @@ export async function GET(request: NextRequest) {
         migrations: {
           required: [
             checks.hasTextChunks ? null : '021_add_convergence_machine_schema.sql',
-            checks.hasConvergenceConcepts ? null : '019_add_convergence_concepts.sql',
           ].filter(Boolean),
           recommended: [
-            checks.hasMatchTextChunksRPC ? null : '030_add_match_text_chunks_rpc.sql',
+            checks.hasMatchTextChunksRPC && checks.hasMatchTextFtsRPC ? null : '034_search_optimizations.sql',
           ].filter(Boolean),
         },
         nextSteps: missingItems.length > 0 ? [
           'Run missing migrations in Supabase SQL Editor',
           checks.hasOpenAIKey ? null : 'Set OPENAI_API_KEY in .env.local',
-          checks.chunksWithEmbeddings === 0 ? 'Generate embeddings for texts via /api/convergence/generate-embeddings-by-title' : null,
-        ].filter(Boolean) : ['✅ Deep search is ready to use!'],
+          checks.chunksWithEmbeddings === 0 ? 'Generate embeddings for texts via /api/convergence/generate-embeddings' : null,
+        ].filter(Boolean) : ['✅ Search is optimized and ready!'],
       },
     });
   } catch (error) {

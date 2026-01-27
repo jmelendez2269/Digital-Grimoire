@@ -47,8 +47,8 @@ interface JournalPage {
   updated_at: string;
 }
 
-export default function ResponseStream({ 
-  response, 
+export default function ResponseStream({
+  response,
   isStreaming,
   query = '',
   lensWeights,
@@ -141,7 +141,7 @@ export default function ResponseStream({
       '',
       `## Synthesis\n\n${response.synthesis}`,
       '',
-        ...(response.responses || []).map(r => `## ${r.lensName}\n\n${r.content}`),
+      ...(response.responses || []).map(r => `## ${r.lensName}\n\n${r.content}`),
       '',
       '## Sources',
       ...response.sources.map((s, idx) => `${idx + 1}. ${s.text_title || 'Unknown'}${s.text_author ? ` by ${s.text_author}` : ''}`),
@@ -212,7 +212,7 @@ export default function ResponseStream({
         if (!node.content || node.content.length === 0) {
           return false;
         }
-        const hasText = node.content.some((child: any) => 
+        const hasText = node.content.some((child: any) =>
           child.type === 'text' && child.text && child.text.trim().length > 0
         );
         return hasText;
@@ -236,10 +236,10 @@ export default function ResponseStream({
 
   const handleSaveToNote = async () => {
     if (!response) return;
-    
+
     // Show modal to let user choose
     setShowSaveModal(true);
-    
+
     // Fetch existing pages
     setLoadingPages(true);
     try {
@@ -292,13 +292,13 @@ export default function ResponseStream({
 
       // Convert to Tiptap format
       const newContent = convertTextToTiptap(fullText);
-      
+
       // Validate content structure
       if (!newContent || !newContent.type || newContent.type !== 'doc' || !Array.isArray(newContent.content)) {
         console.error('Invalid Tiptap content structure:', newContent);
         throw new Error('Failed to convert content to valid format');
       }
-      
+
       // Debug: Log content structure to help diagnose issues
       console.log('Saving content structure:', {
         type: newContent.type,
@@ -306,7 +306,7 @@ export default function ResponseStream({
         firstNode: newContent.content[0],
         fullStructure: JSON.stringify(newContent, null, 2).substring(0, 500)
       });
-      
+
       // Ensure content has at least one non-empty node
       const hasValidContent = newContent.content.some((node: any) => {
         if (node.type === 'paragraph' && node.content) {
@@ -317,7 +317,7 @@ export default function ResponseStream({
         }
         return false;
       });
-      
+
       if (!hasValidContent) {
         console.warn('Warning: Content structure has no visible text nodes');
       }
@@ -340,7 +340,7 @@ export default function ResponseStream({
 
         if (!response_api.ok) {
           let errorMessage = `Failed to save note (${response_api.status})`;
-          
+
           if (isJson) {
             try {
               const errorData = await response_api.json();
@@ -352,7 +352,7 @@ export default function ResponseStream({
             // If response is HTML (error page), provide a helpful message
             errorMessage = 'Server returned an error page. Please check your authentication and try again.';
           }
-          
+
           throw new Error(errorMessage);
         }
 
@@ -364,7 +364,7 @@ export default function ResponseStream({
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
         setShowSaveModal(false);
-        
+
         // Store page ID and show navigation modal if preference allows
         setSavedPageId(data.page.id);
         if (!dontAskAgain) {
@@ -383,35 +383,35 @@ export default function ResponseStream({
         }
 
         const { page: existingPage } = await getResponse.json();
-        
+
         // Helper function to validate and clean Tiptap nodes
         const isValidNode = (node: any): boolean => {
           if (!node || typeof node !== 'object') return false;
-          
+
           // Headings are valid if they have text content
           if (node.type === 'heading') {
             if (!node.content || !Array.isArray(node.content)) return false;
-            return node.content.some((child: any) => 
+            return node.content.some((child: any) =>
               child.type === 'text' && child.text && child.text.trim().length > 0
             );
           }
-          
+
           // Paragraphs are valid if they have text content
           if (node.type === 'paragraph') {
             if (!node.content || !Array.isArray(node.content)) return false;
-            return node.content.some((child: any) => 
+            return node.content.some((child: any) =>
               child.type === 'text' && child.text && child.text.trim().length > 0
             );
           }
-          
+
           // Horizontal rules are always valid
           if (node.type === 'horizontalRule') return true;
-          
+
           // Other node types - check if they have content
           if (node.content && Array.isArray(node.content)) {
             return node.content.length > 0;
           }
-          
+
           return true; // Allow other node types
         };
 
@@ -419,7 +419,7 @@ export default function ResponseStream({
           if (!Array.isArray(nodes)) return [];
           return nodes.filter(isValidNode);
         };
-        
+
         // Parse existing content
         let existingContent = existingPage.content;
         if (existingContent === null || existingContent === undefined) {
@@ -443,7 +443,7 @@ export default function ResponseStream({
           existingContent.content = [];
         }
         const validExistingContent = filterValidNodes(existingContent.content);
-        
+
         // Filter new content as well
         const validNewContent = filterValidNodes(newContent.content);
 
@@ -454,17 +454,17 @@ export default function ResponseStream({
 
         // Build merged content array
         const mergedContentArray: any[] = [];
-        
+
         // Add existing valid content
         if (validExistingContent.length > 0) {
           mergedContentArray.push(...validExistingContent);
         }
-        
+
         // Add separator (horizontal rule) if we have both existing and new content
         if (validExistingContent.length > 0 && validNewContent.length > 0) {
           mergedContentArray.push(horizontalRule);
         }
-        
+
         // Add new content
         if (validNewContent.length > 0) {
           mergedContentArray.push(...validNewContent);
@@ -512,7 +512,7 @@ export default function ResponseStream({
 
         if (!updateResponse.ok) {
           let errorMessage = `Failed to update page (${updateResponse.status})`;
-          
+
           if (isJson) {
             try {
               const errorData = await updateResponse.json();
@@ -523,7 +523,7 @@ export default function ResponseStream({
           } else {
             errorMessage = 'Server returned an error page. Please check your authentication and try again.';
           }
-          
+
           throw new Error(errorMessage);
         }
 
@@ -534,7 +534,7 @@ export default function ResponseStream({
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
         setShowSaveModal(false);
-        
+
         // Store page ID and show navigation modal if preference allows
         setSavedPageId(selectedPageId);
         if (!dontAskAgain) {
@@ -555,8 +555,8 @@ export default function ResponseStream({
   const activeLensIds = new Set(
     lensWeights && Object.keys(lensWeights).length > 0
       ? Object.entries(lensWeights)
-          .filter(([_, weight]) => (weight as number) > 0)
-          .map(([lens]) => lens)
+        .filter(([_, weight]) => (weight as number) > 0)
+        .map(([lens]) => lens)
       : response?.responses?.map(r => r.lens) || []
   );
 
@@ -571,6 +571,7 @@ export default function ResponseStream({
               <button
                 onClick={() => setShowSaveModal(false)}
                 className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -606,7 +607,7 @@ export default function ResponseStream({
               {/* Page Selection (only show if existing mode) */}
               {saveMode === 'existing' && (
                 <div>
-                  <label className="block text-sm font-medium text-amber-100/80 mb-2">
+                  <label htmlFor="page-select" className="block text-sm font-medium text-amber-100/80 mb-2">
                     Select Page
                   </label>
                   {loadingPages ? (
@@ -618,6 +619,7 @@ export default function ResponseStream({
                     <p className="text-zinc-400 text-sm">No pages available. Create a new page instead.</p>
                   ) : (
                     <select
+                      id="page-select"
                       value={selectedPageId}
                       onChange={(e) => setSelectedPageId(e.target.value)}
                       className="w-full bg-zinc-800 border border-amber-900/20 rounded-lg px-4 py-2 text-amber-100 focus:outline-none focus:border-amber-500/50"
@@ -670,6 +672,7 @@ export default function ResponseStream({
               <button
                 onClick={() => setShowNavigateModal(false)}
                 className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -756,13 +759,13 @@ export default function ResponseStream({
 
       {/* Lens Weights Dropdown */}
       {response && lensWeights && (
-        <div className="bg-zinc-900/30 border border-purple-600/20 rounded-xl overflow-hidden">
+        <div className="bg-zinc-900/30 border border-cyan-500/20 rounded-xl overflow-hidden">
           <button
             onClick={() => setShowLensWeights(!showLensWeights)}
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-900/50 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4 text-cyan-400" />
               <span className="font-medium text-amber-100">Lens Weights</span>
             </div>
             {showLensWeights ? (
@@ -772,12 +775,12 @@ export default function ResponseStream({
             )}
           </button>
           {showLensWeights && (
-            <div className="px-4 py-4 border-t border-purple-600/20 space-y-2.5">
+            <div className="px-4 py-4 border-t border-cyan-500/20 space-y-2.5">
               {getLensWeightBars(lensWeights).map((lens, idx) => (
                 <div key={idx} className="flex items-center gap-3 text-sm">
                   <span className="text-amber-100/90 w-12 text-left font-medium">{lens.abbrev}</span>
                   <div className="flex-1 flex items-center min-w-0">
-                    <span className="text-purple-400 font-mono">{'█'.repeat(lens.barSize)}</span>
+                    <span className="text-cyan-400 font-mono">{'█'.repeat(lens.barSize)}</span>
                     <span className="text-amber-100/30 font-mono">{'░'.repeat(20 - lens.barSize)}</span>
                   </div>
                   <span className="text-amber-100/80 w-10 text-right font-medium">{lens.weight}</span>
@@ -790,9 +793,9 @@ export default function ResponseStream({
 
       {/* Synthesis FIRST - Main Answer */}
       {response?.synthesis && (
-        <div className="bg-gradient-to-br from-purple-900/20 to-amber-900/10 border-2 border-purple-600/30 rounded-xl p-6">
+        <div className="bg-gradient-to-br from-amber-900/20 to-amber-900/10 border-2 border-amber-500/30 rounded-xl p-6">
           <h3 className="text-2xl font-bold text-amber-100 mb-4 flex items-center gap-2">
-            <span className="text-purple-400">⚡</span>
+            <span className="text-amber-400">⚡</span>
             Synthesis
           </h3>
           <div className="prose prose-invert max-w-none">
@@ -803,17 +806,17 @@ export default function ResponseStream({
 
           {/* Combined Sources for Synthesis */}
           {response.sources && response.sources.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-purple-600/20">
+            <div className="mt-6 pt-4 border-t border-amber-500/20">
               <div className="flex items-center gap-2 mb-3">
-                <BookOpen className="w-4 h-4 text-purple-400" />
+                <BookOpen className="w-4 h-4 text-cyan-400" />
                 <p className="text-sm font-medium text-amber-100/80">
                   All Sources ({response.sources.length})
                 </p>
               </div>
               <div className="space-y-2">
                 {response.sources.map((source, sIdx) => (
-                  <SourceCard 
-                    key={sIdx} 
+                  <SourceCard
+                    key={sIdx}
                     source={source}
                   />
                 ))}
@@ -832,39 +835,39 @@ export default function ResponseStream({
           {response.responses && response.responses.length > 0 ? (
             // Show full responses if already loaded
             response.responses.map((lensResponse, idx) => (
-        <div
-          key={idx}
-          className="bg-zinc-900/30 border border-purple-600/20 rounded-xl p-6"
-        >
-          <h3 className="text-xl font-bold text-purple-400 mb-4">
-            {lensResponse.lensName} Perspective
-          </h3>
-          <div className="prose prose-invert max-w-none">
-            <div className="text-amber-100/90 whitespace-pre-wrap leading-relaxed">
-              {lensResponse.content}
-            </div>
-          </div>
-          
-          {lensResponse.sources.length > 0 && (
+              <div
+                key={idx}
+                className="bg-zinc-900/30 border border-cyan-500/20 rounded-xl p-6"
+              >
+                <h3 className="text-xl font-bold text-cyan-400 mb-4">
+                  {lensResponse.lensName} Perspective
+                </h3>
+                <div className="prose prose-invert max-w-none">
+                  <div className="text-amber-100/90 whitespace-pre-wrap leading-relaxed">
+                    {lensResponse.content}
+                  </div>
+                </div>
+
+                {lensResponse.sources.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-amber-900/20">
                     <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
                       <p className="text-sm font-medium text-amber-100/80">
                         Sources ({lensResponse.sources.length})
                       </p>
                     </div>
                     <div className="space-y-2">
                       {lensResponse.sources.map((source, sIdx) => (
-                        <SourceCard 
-                    key={sIdx}
-                          source={source} 
+                        <SourceCard
+                          key={sIdx}
+                          source={source}
                           lensName={lensResponse.lensName}
                         />
-                ))}
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-        </div>
             ))
           ) : (
             // Show expandable placeholders if not loaded yet
@@ -892,7 +895,7 @@ export default function ResponseStream({
       {isStreaming && !response && (
         <div className="flex items-center justify-center p-12">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-amber-100/70">Analyzing from multiple perspectives...</p>
           </div>
         </div>

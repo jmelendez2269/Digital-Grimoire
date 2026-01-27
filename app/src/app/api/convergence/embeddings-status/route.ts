@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const {
       data: { user },
@@ -30,7 +30,10 @@ export async function GET(request: NextRequest) {
     const titleFilter = searchParams.get('title');
     const limit = Math.min(Number(searchParams.get('limit') || 50), 200);
 
-    // Get all texts (or filtered by title)
+    // 1. Get global summary via RPC
+    const { data: globalSummary, error: summaryError } = await supabase.rpc('get_library_indexing_summary').single();
+
+    // 2. Get batch of texts
     let textsQuery = supabase
       .from('texts')
       .select('id, title, author, type, content')
@@ -52,39 +55,44 @@ export async function GET(request: NextRequest) {
     if (!texts || texts.length === 0) {
       return NextResponse.json({
         texts: [],
-        summary: {
+        summary: globalSummary || {
           total: 0,
           withEmbeddings: 0,
           withoutEmbeddings: 0,
           withContent: 0,
           withoutContent: 0,
         },
-        message: titleFilter 
+        message: titleFilter
           ? `No texts found matching "${titleFilter}"`
           : 'No texts found',
       });
     }
 
-    // Get text IDs
+    // 3. Get chunk counts for this batch via RPC
     const textIds = texts.map(t => t.id);
+    const { data: chunkCounts, error: countsError } = await supabase.rpc('get_text_chunk_counts', { text_ids: textIds });
 
-    // Check which texts have chunks (embeddings)
-    const { data: chunks, error: chunksError } = await supabase
-      .from('text_chunks')
-      .select('text_id')
-      .in('text_id', textIds);
+    // Map chunk counts
+    const chunksByText = new Map<string, number>();
+    if (!countsError && chunkCounts) {
+      chunkCounts.forEach((row: { text_id: string; chunk_count: number }) => {
+        chunksByText.set(row.text_id, Number(row.chunk_count));
+      });
+    } else {
+      // Fallback if RPC fails/not migrated
+      console.warn('Fallback: get_text_chunk_counts failed, using basic check');
+      const { data: fallbackChunks } = await supabase
+        .from('text_chunks')
+        .select('text_id')
+        .in('text_id', textIds)
+        .limit(1000);
 
-    if (chunksError) {
-      console.error('Error fetching chunks:', chunksError);
+      fallbackChunks?.forEach(c => {
+        chunksByText.set(c.text_id, (chunksByText.get(c.text_id) || 0) + 1);
+      });
     }
 
-    // Count chunks per text
-    const chunksByText = new Map<string, number>();
-    (chunks || []).forEach(chunk => {
-      chunksByText.set(chunk.text_id, (chunksByText.get(chunk.text_id) || 0) + 1);
-    });
-
-    // Build response with status for each text
+    // Build response
     const textsWithStatus = texts.map(text => ({
       id: text.id,
       title: text.title,
@@ -95,13 +103,14 @@ export async function GET(request: NextRequest) {
       chunkCount: chunksByText.get(text.id) || 0,
     }));
 
-    // Calculate summary
+    // Normalize summary keys (handle both snake_case and camelCase)
+    const rawSummary: any = globalSummary || {};
     const summary = {
-      total: texts.length,
-      withEmbeddings: textsWithStatus.filter(t => t.hasEmbeddings).length,
-      withoutEmbeddings: textsWithStatus.filter(t => !t.hasEmbeddings).length,
-      withContent: textsWithStatus.filter(t => t.hasContent).length,
-      withoutContent: textsWithStatus.filter(t => !t.hasContent).length,
+      total: rawSummary.total ?? rawSummary.total_texts ?? texts.length,
+      withEmbeddings: rawSummary.withEmbeddings ?? rawSummary.with_embeddings ?? textsWithStatus.filter(t => t.hasEmbeddings).length,
+      withoutEmbeddings: rawSummary.withoutEmbeddings ?? rawSummary.without_embeddings ?? textsWithStatus.filter(t => !t.hasEmbeddings).length,
+      withContent: rawSummary.withContent ?? rawSummary.with_content ?? textsWithStatus.filter(t => t.hasContent).length,
+      withoutContent: rawSummary.withoutContent ?? rawSummary.without_content ?? textsWithStatus.filter(t => !t.hasContent).length,
     };
 
     return NextResponse.json({

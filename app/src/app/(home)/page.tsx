@@ -46,10 +46,12 @@ export default function Home() {
 
           {/* Explore Your Tools Section */}
           <div className="mb-12">
-            <h2 className="mb-6 text-2xl font-bold text-amber-100 text-center">
+            <h2 className="mb-8 text-2xl font-bold text-amber-100 text-center">
               Explore Your Tools
             </h2>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+
+            {/* Primary Tools Grid */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-12">
               {/* Library Card */}
               <Link
                 href="/library"
@@ -139,6 +141,56 @@ export default function Home() {
 
               {/* Convergence Machine Card */}
               <ConvergenceMachineInfo />
+            </div>
+
+            {/* Extras Separator */}
+            <div className="flex items-center gap-4 mb-8 max-w-4xl mx-auto">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+              <span className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-[0.3em] whitespace-nowrap">
+                Extras
+              </span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+            </div>
+
+            {/* Extras Tools Grid - Centered */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+              {/* Ritual Machine Card */}
+              <Link
+                href="/ritual-machine"
+                className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 to-amber-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
+                    <span className="text-2xl">⚡</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-amber-100 group-hover:text-amber-400">
+                    Ritual Machine
+                  </h3>
+                </div>
+                <p className="text-sm text-zinc-400">
+                  Synthesize structured practice from esoteric principles. Define your intent and receive a personalized ritual protocol.
+                </p>
+              </Link>
+
+              {/* Workbench Card */}
+              <Link
+                href="/practitioner/rituals"
+                className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 to-amber-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
+                    <span className="text-2xl">🛠️</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-amber-100 group-hover:text-amber-400">
+                    Workbench
+                  </h3>
+                </div>
+                <p className="text-sm text-zinc-400">
+                  The practitioner's workspace. Manage your rituals, track progress, and refine your craft in a dedicated environment.
+                </p>
+              </Link>
             </div>
           </div>
 

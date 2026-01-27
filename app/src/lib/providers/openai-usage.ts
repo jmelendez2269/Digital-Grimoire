@@ -30,7 +30,7 @@ export async function fetchTrackedUsage(
   userId?: string
 ): Promise<ProviderUsageData[]> {
   const supabase = await createClient();
-  
+
   let query = supabase
     .from('api_usage')
     .select('created_at, units_used, unit_type, estimated_cost, request_metadata')
@@ -56,7 +56,7 @@ export async function fetchTrackedUsage(
   (data || []).forEach((record) => {
     const date = new Date(record.created_at).toISOString().split('T')[0];
     const metadata = (record.request_metadata || {}) as Record<string, any>;
-    
+
     // Extract token counts from metadata if available
     const inputTokens = metadata.inputTokens || 0;
     const outputTokens = metadata.outputTokens || 0;
@@ -79,7 +79,7 @@ export async function fetchTrackedUsage(
     dayUsage.cost += cost;
   });
 
-  return Array.from(usageByDate.values()).sort((a, b) => 
+  return Array.from(usageByDate.values()).sort((a, b) =>
     a.date.localeCompare(b.date)
   );
 }
@@ -97,16 +97,55 @@ export async function fetchOpenAIProviderUsage(
   startDate: Date,
   endDate: Date
 ): Promise<ProviderUsageData[] | null> {
-  // OpenAI doesn't provide a public usage API
-  // This would require:
-  // 1. Enterprise API access
-  // 2. Manual export from OpenAI dashboard
-  // 3. Webhook integration (if available)
-  
-  console.warn('[OpenAI Usage] Provider API not available. OpenAI does not provide a public usage API.');
-  console.warn('[OpenAI Usage] To compare usage, manually export data from https://platform.openai.com/usage');
-  
-  return null;
+  // Fetch imported usage data from the database
+  try {
+    const supabase = await createClient();
+
+    // Fetch from provider_daily_usage table
+    const { data, error } = await supabase
+      .from('provider_daily_usage')
+      .select('*')
+      .eq('provider', 'openai')
+      .gte('date', startDate.toISOString().split('T')[0])
+      .lte('date', endDate.toISOString().split('T')[0]);
+
+    if (error) {
+      console.error('Error fetching provider usage:', error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      // Only return null if we really have no data
+      return null;
+    }
+
+    // Group by date (merging models)
+    const usageByDate = new Map<string, ProviderUsageData>();
+
+    data.forEach(row => {
+      const date = row.date;
+      if (!usageByDate.has(date)) {
+        usageByDate.set(date, {
+          date,
+          inputTokens: 0,
+          outputTokens: 0,
+          requests: 0,
+          cost: 0
+        });
+      }
+      const entry = usageByDate.get(date)!;
+      entry.inputTokens += (row.input_tokens || 0);
+      entry.outputTokens += (row.output_tokens || 0);
+      entry.requests += (row.requests || 0);
+      entry.cost += (parseFloat(row.cost) || 0);
+    });
+
+    return Array.from(usageByDate.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+  } catch (err) {
+    console.error('Exception fetching provider usage:', err);
+    return null;
+  }
 }
 
 /**
@@ -138,7 +177,7 @@ export async function compareUsage(
   // Compare and find discrepancies
   return tracked.map((t) => {
     const p = providerMap.get(t.date);
-    
+
     if (!p) {
       return {
         date: t.date,
@@ -153,8 +192,8 @@ export async function compareUsage(
     const costDiff = Math.abs(t.cost - p.cost);
     const totalTracked = t.inputTokens + t.outputTokens;
     const totalProvider = p.inputTokens + p.outputTokens;
-    const percentage = totalProvider > 0 
-      ? ((totalTracked - totalProvider) / totalProvider) * 100 
+    const percentage = totalProvider > 0
+      ? ((totalTracked - totalProvider) / totalProvider) * 100
       : 0;
 
     return {

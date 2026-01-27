@@ -38,6 +38,7 @@ function LibraryPageContent() {
   const queryClient = useQueryClient();
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Read search query from URL params on mount
   useEffect(() => {
@@ -75,20 +76,116 @@ function LibraryPageContent() {
     allLenses: [],
   };
 
+  // FETCH ALL DATA for client-side filtering (max 1000 items)
   const textsQuery = useLibraryTexts({
-    page: currentPage,
-    limit: itemsPerPage,
-    searchQuery,
-    filterValues,
-    sortBy,
-    sortOrder,
+    page: 1,
+    limit: 1000,
+    searchQuery: '', // Fetch everything without search filter
+    filterValues: {
+      domain: 'all',
+      type: 'all',
+      yearMin: null,
+      yearMax: null,
+      tags: [],
+      lenses: [],
+    },
+    sortBy: 'created_at',
+    sortOrder: 'desc',
     enabled: !authLoading && !!user,
   });
 
-  const texts = textsQuery.data?.texts || [];
-  const totalCount = textsQuery.data?.total || 0;
+  const allTexts = textsQuery.data?.texts || [];
   const loading = textsQuery.isLoading || filterOptionsQuery.isLoading;
   const error = textsQuery.error?.message || filterOptionsQuery.error?.message || null;
+
+  // CLIENT-SIDE FILTERING & SORTING LOGIC
+  const { filteredTexts, suggestions } = (useCallback(() => {
+    if (!allTexts) return { filteredTexts: [], suggestions: [] };
+
+    // 1. Filter
+    let filtered = allTexts.filter(text => {
+      // Search query filter (title or author)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          text.title.toLowerCase().includes(query) ||
+          (text.author && text.author.toLowerCase().includes(query));
+        if (!matchesSearch) return false;
+      }
+
+      // Domain filter
+      if (filterValues.domain !== 'all' && text.domain !== filterValues.domain) return false;
+
+      // Type filter
+      if (filterValues.type !== 'all' && text.type !== filterValues.type) return false;
+
+      // Year filters
+      if (filterValues.yearMin !== null && (text.year === null || text.year < filterValues.yearMin)) return false;
+      if (filterValues.yearMax !== null && (text.year === null || text.year > filterValues.yearMax)) return false;
+
+      // Tags filter (overlaps)
+      if (filterValues.tags.length > 0) {
+        if (!text.tags || !text.tags.some(tag => filterValues.tags.includes(tag))) return false;
+      }
+
+      // Lenses filter (overlaps)
+      if (filterValues.lenses.length > 0) {
+        if (!text.lenses || !text.lenses.some(lens => filterValues.lenses.includes(lens))) return false;
+      }
+
+      return true;
+    });
+
+    // 2. Sort
+    const stripArticles = (title: string | null): string => {
+      if (!title) return '';
+      return title.toLowerCase().trim().replace(/^(a|an|the)\s+/i, '');
+    };
+
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'title':
+          comparison = stripArticles(a.title).localeCompare(stripArticles(b.title));
+          break;
+        case 'author':
+          comparison = (a.author || '').localeCompare(b.author || '');
+          break;
+        case 'year':
+          comparison = (a.year || 0) - (b.year || 0);
+          break;
+        case 'domain':
+          comparison = (a.domain || '').localeCompare(b.domain || '');
+          break;
+        case 'type':
+          comparison = (a.type || '').localeCompare(b.type || '');
+          break;
+        case 'created_at':
+        default:
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    // 3. Generate suggestions (top 8 matches for the search drawer)
+    let searchSuggestions: typeof allTexts = [];
+    if (searchQuery.length >= 2) {
+      searchSuggestions = allTexts
+        .filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+        .slice(0, 8);
+    }
+
+    return { filteredTexts: filtered, suggestions: searchSuggestions };
+  }, [allTexts, searchQuery, filterValues, sortBy, sortOrder]))();
+
+  // PAGINATION LOGIC
+  const totalCount = filteredTexts.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const paginatedTexts = filteredTexts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleFilterChange = (newValues: FilterValues) => {
     setFilterValues(newValues);
@@ -98,6 +195,13 @@ function LibraryPageContent() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1); // Reset to first page when search changes
+    setShowSuggestions(true);
+  };
+
+  const handleSuggestionClick = (title: string) => {
+    setSearchQuery(title);
+    setShowSuggestions(false);
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -112,7 +216,7 @@ function LibraryPageContent() {
     setShowSortDropdown(false);
   };
 
-  // Memoize getSortLabel function to avoid recreating on every render
+  // Memoize getSortLabel function
   const getSortLabel = useCallback(() => {
     const labels: Record<typeof sortBy, string> = {
       title: 'Title',
@@ -126,8 +230,6 @@ function LibraryPageContent() {
     return `${labels[sortBy]} (${orderLabel})`;
   }, [sortBy, sortOrder]);
 
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
-
   const deleteText = async (textId: string, title: string) => {
     if (!confirm(`Are you sure you want to permanently delete "${title}"?\n\nThis will remove the document and all associated data (bookmarks, annotations, etc.). This action cannot be undone.`)) {
       return;
@@ -139,7 +241,6 @@ function LibraryPageContent() {
       });
 
       if (response.ok) {
-        // Invalidate and refetch library queries using utility function
         invalidateTextCaches(queryClient, textId);
         alert('Document deleted successfully');
       } else {
@@ -156,7 +257,7 @@ function LibraryPageContent() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        {/* Page Header - Compact with Search, Filters, and Sort */}
+        {/* Page Header */}
         <div className="border-b border-amber-900/20 bg-zinc-900/50">
           <div className="max-w-screen-2xl mx-auto px-4 py-2">
             <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -165,19 +266,48 @@ function LibraryPageContent() {
               </h1>
 
               <div className="flex items-center gap-2 flex-1 justify-end">
-                {/* Compact Search Bar - Longer */}
-                <div className="relative">
+                {/* Compact Search Bar with Suggestions */}
+                <div className="relative group">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-100/60 pointer-events-none" />
                   <input
                     type="text"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    className="w-40 pl-9 pr-3 py-1.5 text-sm bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 focus:w-56 transition-all duration-200"
+                    onFocus={() => setShowSuggestions(true)}
+                    className="w-40 pl-9 pr-3 py-1.5 text-sm bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-600/50 focus:w-64 transition-all duration-200"
                   />
+
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowSuggestions(false)}
+                      />
+                      <div className="absolute top-full left-0 mt-1 w-full bg-zinc-900 border border-amber-900/30 rounded-lg shadow-2xl z-20 overflow-hidden backdrop-blur-md">
+                        <div className="py-1 max-h-64 overflow-y-auto">
+                          {suggestions.map((suggestion) => (
+                            <button
+                              key={suggestion.id}
+                              onClick={() => handleSuggestionClick(suggestion.title)}
+                              className="w-full px-4 py-2 text-left text-sm text-amber-100/80 hover:bg-amber-600/20 hover:text-amber-100 transition-colors flex items-center justify-between"
+                            >
+                              <span className="truncate">{suggestion.title}</span>
+                              {suggestion.author && (
+                                <span className="text-[10px] text-amber-100/40 ml-2 italic">
+                                  by {suggestion.author}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {/* Compact Advanced Filters - Match Sort Button Size */}
+                {/* Compact Advanced Filters */}
                 <div className="flex-shrink-0">
                   <AdvancedFilters
                     options={filterOptions}
@@ -199,20 +329,16 @@ function LibraryPageContent() {
 
                   {showSortDropdown && (
                     <>
-                      {/* Backdrop */}
                       <div
                         className="fixed inset-0 z-10"
                         onClick={() => setShowSortDropdown(false)}
                       />
-
-                      {/* Dropdown Menu */}
                       <div className="absolute right-0 z-20 mt-2 w-64 bg-zinc-900 border border-amber-900/20 rounded-lg shadow-xl shadow-black/50 overflow-hidden">
                         <div className="p-2">
                           <div className="px-3 py-2 text-xs font-medium text-amber-100/60 uppercase tracking-wide">
                             Sort By
                           </div>
 
-                          {/* Sort Options */}
                           {(['title', 'author', 'year', 'created_at', 'domain', 'type'] as const).map((field) => {
                             const labels: Record<typeof field, string> = {
                               title: 'Title',
@@ -227,7 +353,6 @@ function LibraryPageContent() {
                               <div key={field} className="py-1">
                                 <button
                                   onClick={() => {
-                                    // If clicking the same field, toggle order; otherwise set to desc
                                     if (sortBy === field) {
                                       handleSortChange(field, sortOrder === 'asc' ? 'desc' : 'asc');
                                     } else {
@@ -262,7 +387,6 @@ function LibraryPageContent() {
 
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 py-2 flex flex-col flex-1 min-h-0">
-          {/* Error Alert */}
           {error && !authLoading && (
             <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
               <div className="flex items-start gap-3">
@@ -294,12 +418,11 @@ function LibraryPageContent() {
                   key={i}
                   className="bg-zinc-900/30 border border-amber-900/20 rounded-lg overflow-hidden animate-pulse h-full"
                 >
-                  {/* Cover placeholder */}
                   <div className="aspect-[2/3] bg-zinc-800/50 w-full" />
                 </div>
               ))}
             </div>
-          ) : error ? null : texts.length === 0 ? (
+          ) : error ? null : paginatedTexts.length === 0 ? (
             /* Empty State */
             <div className="text-center py-16">
               <FileText className="w-16 h-16 mx-auto mb-4 text-amber-100/20" />
@@ -327,7 +450,7 @@ function LibraryPageContent() {
               {/* Document Grid - Virtualized */}
               <div className="flex-1 min-h-0">
                 <LibraryGrid
-                  texts={texts}
+                  texts={paginatedTexts}
                   isAdmin={isAdmin}
                   onDelete={deleteText}
                 />
@@ -350,7 +473,6 @@ function LibraryPageContent() {
         </div>
       </main>
 
-      {/* Floating AI Search */}
       <FloatingAISearch defaultCollapsed={true} />
 
       <Footer />

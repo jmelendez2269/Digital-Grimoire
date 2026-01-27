@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { vectorSearch, VectorSearchResult } from '@/lib/convergence/vector-search';
 import { ftsSearchChunks, FTSSearchResult } from '@/lib/convergence/fts-search';
 import OpenAI from 'openai';
+import { logApiUsage } from '@/lib/usage-tracker';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -45,109 +46,98 @@ function calculateRelevanceScore(
   const contentLower = (result.content || '').toLowerCase();
   const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
 
-  // Start with base semantic similarity (vector score)
-  let score = vectorScore || 0;
-
-  // Boost for FTS matches (keyword matches) - more weight on exact keyword matches
-  if (ftsScore) {
-    // If we have both, favor the higher one but blend them
-    const maxScore = Math.max(score, ftsScore);
-    const minScore = Math.min(score, ftsScore);
-    score = maxScore * 0.8 + minScore * 0.2;
+  // 1. Base Score: Blend Vector (Semantic) and FTS (Keyword)
+  let score = 0;
+  if (vectorScore !== undefined && ftsScore !== undefined) {
+    // Hybrid: Semantic context (50%) + Keyword precision (50%)
+    // Vector scores usually range from 0.7 to 1.0 for matches
+    // FTS scores can be > 1.0 if keywords appear multiple times
+    const normVector = Math.max(0, (vectorScore - 0.5) / 0.5); // Normalize 0.5-1.0 to 0-1.0
+    const normFts = Math.min(1.0, ftsScore); // Cap FTS at 1.0 for blending
+    score = (normVector * 0.5) + (normFts * 0.5);
+  } else if (vectorScore !== undefined) {
+    score = Math.max(0, (vectorScore - 0.5) / 0.5);
+  } else if (ftsScore !== undefined) {
+    score = Math.min(1.0, ftsScore);
   }
 
-  // Calculate keyword frequency in content
+  // 2. Keyword Density Boost
   const keywordFreq = calculateKeywordFrequency(contentLower, query);
-  const keywordBoost = Math.min(0.15, keywordFreq / 100); // Max 0.15 boost for high frequency
+  const keywordBoost = Math.min(0.2, keywordFreq / 50); // Cap boost at 0.2
   score += keywordBoost;
 
-  // STRONG boost if query appears in title (primary texts should rank much higher)
-  if (title.includes(queryLower)) {
-    score += 0.4; // Very strong boost for exact title match
+  // 3. Title Match Boost (Primary texts should rank much higher)
+  if (title === queryLower) {
+    score += 0.5; // Perfect title match
+  } else if (title.includes(queryLower)) {
+    score += 0.3; // Contains full query
   } else {
-    // Partial title match boost
+    // Partial word match boost
     const titleMatchCount = queryWords.filter(word => title.includes(word)).length;
-    if (titleMatchCount > 0) {
+    if (titleMatchCount > 0 && queryWords.length > 0) {
       score += 0.2 * (titleMatchCount / queryWords.length);
     }
   }
 
-  // Boost for exact keyword matches in content (word boundaries)
-  const exactMatches = queryWords.filter(word => {
-    const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    return regex.test(contentLower);
-  }).length;
-
-  if (exactMatches > 0) {
-    // More boost for more exact matches
-    score += 0.15 * (exactMatches / Math.max(1, queryWords.length));
+  // 4. Exact Phrase Boost
+  if (contentLower.includes(queryLower)) {
+    score += 0.15;
   }
 
-  // Boost for related terms (e.g., "alchemical" when searching "alchemy")
+  // 5. Common Traditional Terms Boost (e.g., "alchemy" matching "alchemic")
   const relatedTerms: { [key: string]: string[] } = {
-    'alchemy': ['alchemical', 'alchemist', 'alchemists', 'alchemically', 'alchemie', 'alchimie'],
-    'hermetic': ['hermeticism', 'hermetical', 'hermetically', 'hermeticus'],
-    'kabbalah': ['kabbalistic', 'cabala', 'qabalah', 'cabbalistic', 'kabbalah'],
-    'gnostic': ['gnosticism', 'gnosis', 'gnosticism'],
-    'mystic': ['mystical', 'mysticism', 'mystics', 'mysticality'],
-    'esoteric': ['esotericism', 'esoterically', 'esoterica'],
-    'occult': ['occultism', 'occultist', 'occultists', 'occultly'],
-    'magic': ['magical', 'magician', 'magicians', 'magick'],
-    'divine': ['divinity', 'divinely', 'divinization'],
-    'sacred': ['sacredness', 'sacrality', 'sacralization'],
+    'alchemy': ['alchemical', 'alchemist', 'magnum opus', 'transmutation'],
+    'hermetic': ['hermeticism', 'as above so below', 'kybalion'],
+    'kabbalah': ['qabalah', 'sephiroth', 'tree of life'],
+    'magic': ['magick', 'ritual', 'invocation', 'ceremony'],
   };
 
-  let relatedTermBoost = 0;
   for (const [key, variants] of Object.entries(relatedTerms)) {
-    if (queryLower.includes(key) || queryWords.some(w => w.includes(key))) {
-      const variantMatches = variants.filter(variant => {
-        const regex = new RegExp(`\\b${variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-        return regex.test(contentLower);
-      }).length;
-      if (variantMatches > 0) {
-        relatedTermBoost += 0.1 * variantMatches; // More variants = more boost
+    if (queryLower.includes(key)) {
+      if (variants.some(v => contentLower.includes(v))) {
+        score += 0.1;
+        break;
       }
     }
   }
-  score += Math.min(0.2, relatedTermBoost); // Cap related term boost at 0.2
 
-  // Boost if query appears at the beginning of content (often more relevant)
-  if (contentLower.substring(0, 200).includes(queryLower)) {
-    score += 0.1;
-  }
-
-  return Math.min(1.0, score); // Cap at 1.0
+  return Math.min(1.0, score); // Cap at 1.0 (100% relevance)
 }
 
 /**
- * Extract the sentence containing the search query from a chunk
+ * Extract the best sentence containing the search query
  */
 function extractSentenceWithQuery(chunkContent: string, query: string): string {
-  // Split into sentences (basic sentence detection)
+  // Split into sentences using a more robust regex
   const sentences = chunkContent.split(/(?<=[.!?])\s+/);
 
-  // Find the sentence that contains the query (case-insensitive)
   const queryLower = query.toLowerCase();
-  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2); // Filter out short words
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
 
-  // Try to find a sentence containing the query or its key words
-  for (const sentence of sentences) {
-    const sentenceLower = sentence.toLowerCase();
-    // Check if sentence contains the full query or significant words
-    if (sentenceLower.includes(queryLower) ||
-      queryWords.some(word => sentenceLower.includes(word))) {
-      return sentence.trim();
-    }
+  // Rank sentences by how well they match the query
+  const rankedSentences = sentences.map(sentence => {
+    const sLower = sentence.toLowerCase();
+    let score = 0;
+    if (sLower.includes(queryLower)) score += 10;
+    queryWords.forEach(word => {
+      if (sLower.includes(word)) score += 1;
+    });
+    return { sentence, score };
+  }).sort((a, b) => b.score - a.score);
+
+  const bestMatch = rankedSentences[0];
+  if (bestMatch && bestMatch.score > 0) {
+    return bestMatch.sentence.trim();
   }
 
-  // If no exact match, return the first sentence
-  return sentences[0]?.trim() || chunkContent.substring(0, 200) + '...';
+  // Fallback to first 200 chars
+  return sentences[0]?.trim() || chunkContent.substring(0, 200).trim() + '...';
 }
 
 /**
  * Generate a summary of the excerpt using AI
  */
-async function generateExcerptSummary(chunkContent: string, query: string): Promise<string> {
+async function generateExcerptSummary(chunkContent: string, query: string, userId: string): Promise<{ summary: string, usage: { prompt_tokens: number, completion_tokens: number } }> {
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini', // Use cheaper model for summaries
@@ -166,10 +156,37 @@ async function generateExcerptSummary(chunkContent: string, query: string): Prom
     });
 
     const summary = completion.choices[0]?.message?.content?.trim() || '';
-    return summary || 'Discusses the concept in context.';
+    const usage = completion.usage;
+
+    // Log usage for each summary
+    if (usage) {
+      await logApiUsage({
+        service: 'other',
+        operation: 'deep_search_summary',
+        unitsUsed: usage.total_tokens,
+        unitType: 'tokens',
+        userId: userId,
+        requestMetadata: {
+          model: 'gpt-4o-mini',
+          promptTokens: usage.prompt_tokens,
+          completionTokens: usage.completion_tokens,
+        }
+      });
+    }
+
+    return {
+      summary: summary || 'Discusses the concept in context.',
+      usage: {
+        prompt_tokens: usage?.prompt_tokens || 0,
+        completion_tokens: usage?.completion_tokens || 0
+      }
+    };
   } catch (e) {
     console.error('Error generating summary:', e);
-    return 'Discusses the concept in context.';
+    return {
+      summary: 'Discusses the concept in context.',
+      usage: { prompt_tokens: 0, completion_tokens: 0 }
+    };
   }
 }
 
@@ -240,6 +257,24 @@ export async function POST(request: NextRequest) {
           ],
           temperature: 0.7,
         });
+
+        // Log usage for related terms
+        const usage = completion.usage;
+        if (usage) {
+          await logApiUsage({
+            service: 'other',
+            operation: 'deep_search_terms',
+            unitsUsed: usage.total_tokens,
+            unitType: 'tokens',
+            userId: user.id,
+            requestMetadata: {
+              model: 'gpt-4o',
+              promptTokens: usage.prompt_tokens,
+              completionTokens: usage.completion_tokens,
+            }
+          });
+        }
+
         const content = completion.choices[0]?.message?.content || '[]';
         // Clean up potential markdown code fence if present
         const cleanContent = content.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
@@ -316,17 +351,33 @@ export async function POST(request: NextRequest) {
 
     console.log(`Deep search for "${query}": Found ${results.length} chunks from hybrid search`);
 
+    // Check for "unindexed" books that might be relevant
+    const unindexedBooks: string[] = [];
+    if (query.toLowerCase().includes('doctrine') || query.toLowerCase().includes('parabrahman')) {
+      // Check specifically for Secret Doctrine status if it didn't appear in results
+      const sdExists = results.some(r => r.text_title?.includes('Secret Doctrine'));
+      if (!sdExists) {
+        const { data: sd } = await supabase.from('texts').select('id, title').ilike('title', '%Secret Doctrine%').single();
+        if (sd) {
+          const { count } = await supabase.from('text_chunks').select('*', { count: 'exact', head: true }).eq('text_id', sd.id);
+          if (!count || count === 0) {
+            unindexedBooks.push(sd.title);
+          }
+        }
+      }
+    }
+
     // Log top 5 results for debugging
     if (results.length > 0) {
       const topResults = results.slice(0, 5);
       console.log('Top 5 chunk relevance scores:', topResults.map(r => ({
         title: r.text_title,
-        score: (r as any).relevanceScore || r.similarity,
-        similarity: r.similarity
       })));
     }
 
-    // 3. Group by Book (text_id) and collect all chunks
+    // 3. Group by Book (text_id)
+    // The `results` array already contains the merged and sorted chunks from both vector and FTS searches.
+    // We now group these `results` by book.
     const booksMap = new Map<string, {
       text_id: string;
       title: string;
@@ -454,8 +505,8 @@ export async function POST(request: NextRequest) {
     for (const book of books) {
       for (const chunk of book.chunks) {
         summaryPromises.push(
-          generateExcerptSummary(chunk.content, query).then(summary => {
-            chunk.summary = summary;
+          generateExcerptSummary(chunk.content, query, user.id).then(res => {
+            chunk.summary = res.summary;
           })
         );
       }
@@ -467,7 +518,10 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({
         relatedTerms,
-        books
+        books,
+        warning: unindexedBooks.length > 0
+          ? `Some relevant books (like "${unindexedBooks.join(', ')}") are not yet fully indexed for deep search.`
+          : results.length === 0 ? "No matches found in your library." : undefined
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

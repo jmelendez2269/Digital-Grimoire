@@ -1,9 +1,9 @@
 # CONVERGENCE - MASTER DEVELOPMENT PLAN
 
-**Version:** 3.4  
-**Last Updated:** January 2026  
-**Status:** Phase 1 - 95% Complete | Phase 3B UI Complete | Multi-Source Claims System Complete  
-**Latest:** Multi-Source Knowledge Claims System + CSV Auto-Import Complete  
+**Version:** 3.5  
+**Last Updated:** January 22, 2026  
+**Status:** Phase 1 - 98% Complete | Deep Search & Indexing Automation Complete  
+**Latest:** Fully Automated Document Indexing + Search Relevance Tuning Complete  
 
 ---
 
@@ -36,7 +36,16 @@
 
 ### What's Been Built (4 weeks of work compressed into ~8 hours!)
 
-**🚀 LATEST UPDATE: Performance & Mobile Optimization Complete! (Sprint 9)**
+**🚀 LATEST UPDATE: Indexing Automation & Search Relevance! (Sprint 10)**
+
+- ✅ **Fully Automated Indexing** - Update `process-document` API to automatically trigger embeddings on upload.
+- ✅ **Admin Embeddings Tool** - Added "Process All Missing" batch tool to handle existing unindexed books.
+- ✅ **Search Relevance Tuning** - Optimized SQL similarity scoring and hybrid rank merging (Vector + FTS).
+- ✅ **Robust Indexing Metrics** - Implemented RPC-based global library summary to track indexing status across 100+ books.
+- ✅ **Data Integrity Audit** - Identified 18 "empty" books (e.g., Kybalion) that need re-uploading to become searchable.
+- **Status:** Search system is now "Self-Healing" and ready for the 100-book library expansion.
+
+**🚀 PREVIOUS UPDATE: Performance & Mobile Optimization Complete! (Sprint 9)**
 
 - ✅ **Image Optimization** - Replaced heavy `<img>` tags with `next/image` for Rituals, Profiles, and layouts
 - ✅ **Code Splitting** - Implemented dynamic imports for heavy components (JournalEditor, GraphVisualization)

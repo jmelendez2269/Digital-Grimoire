@@ -57,7 +57,7 @@ export default function LoginPage() {
         </Suspense>
 
         {/* Back to Home */}
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center space-y-4">
           <Link
             href="/"
             className="text-xs font-mono text-zinc-500 hover:text-amber-500 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 group"
@@ -65,6 +65,23 @@ export default function LoginPage() {
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
             Return to Nexus
           </Link>
+
+          {/* Legal Links for Verification */}
+          <div className="flex items-center justify-center gap-4 pt-4 border-t border-white/5">
+            <Link
+              href="/privacy"
+              className="text-[10px] font-mono text-zinc-600 hover:text-amber-500/70 transition-colors uppercase tracking-widest"
+            >
+              Privacy Policy
+            </Link>
+            <div className="w-1 h-1 rounded-full bg-zinc-800" />
+            <Link
+              href="/terms"
+              className="text-[10px] font-mono text-zinc-600 hover:text-amber-500/70 transition-colors uppercase tracking-widest"
+            >
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </div>
     </div>

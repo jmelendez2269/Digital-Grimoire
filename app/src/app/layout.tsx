@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactQueryProvider } from "@/lib/react-query";
 import CookieConsent from "@/components/CookieConsent";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -87,6 +88,12 @@ export default function RootLayout({
         <SpeedInsights />
         <Analytics />
         <CookieConsent />
+        {/* Cloudflare Web Analytics */}
+        <Script
+          defer
+          src='https://static.cloudflareinsights.com/beacon.min.js'
+          data-cf-beacon='{"token": "86053cf09b4a4aea94dfc87aa44ff19c"}'
+        />
       </body>
     </html>
   );

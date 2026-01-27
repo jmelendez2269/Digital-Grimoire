@@ -4,18 +4,18 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function updateSession(request: NextRequest) {
   // MAINTENANCE MODE CHECK - Check at the beginning
   const maintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
-  
+
   // Always allow access to maintenance page - return early to prevent redirect loops
   if (request.nextUrl.pathname === '/maintenance') {
     return NextResponse.next();
   }
-  
+
   // Allow Sentry monitoring tunnel route - return early to prevent authentication
   // Check both exact match and startsWith to handle query parameters
   if (request.nextUrl.pathname === '/monitoring' || request.nextUrl.pathname.startsWith('/monitoring')) {
     return NextResponse.next();
   }
-  
+
   // Allow access to maintenance page itself and static assets
   if (maintenanceMode) {
     // Create a minimal Supabase client to check if user is admin
@@ -57,7 +57,7 @@ export async function updateSession(request: NextRequest) {
         .select('role')
         .eq('id', user.id)
         .single();
-      
+
       // Allow admins to bypass maintenance mode
       if (profile?.role === 'admin') {
         // Continue with normal flow below
@@ -113,7 +113,7 @@ export async function updateSession(request: NextRequest) {
       data: { user: fetchedUser },
       error: authError,
     } = await supabase.auth.getUser();
-    
+
     // If there's an auth error (like invalid refresh token), clear the session
     if (authError) {
       // Check if it's a refresh token error

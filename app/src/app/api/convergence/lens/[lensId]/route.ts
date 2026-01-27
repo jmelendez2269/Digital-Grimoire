@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { generateLensResponse, getResponseLengthConfig, ResponseLength } from '@/lib/convergence/lens-orchestrator';
 import { hybridSearch } from '@/lib/convergence/hybrid-retrieval';
 import { getLens } from '@/lib/convergence/lenses';
+import { logApiUsage } from '@/lib/usage-tracker';
 
 /**
  * POST /api/convergence/lens/[lensId]
@@ -77,6 +78,24 @@ export async function POST(
       context,
       lengthConfig.lensMaxTokens
     );
+
+    // AI Usage tracking
+    if (lensResponse.tokenUsage) {
+      await logApiUsage({
+        service: 'convergence_query',
+        operation: `lens_detail_${lensId}`,
+        unitsUsed: lensResponse.tokenUsage.inputTokens + lensResponse.tokenUsage.outputTokens,
+        unitType: 'tokens',
+        userId: user.id,
+        requestMetadata: {
+          lensId,
+          model: 'gpt-4o',
+          inputTokens: lensResponse.tokenUsage.inputTokens,
+          outputTokens: lensResponse.tokenUsage.outputTokens,
+          query: query.substring(0, 100)
+        }
+      });
+    }
 
     return new Response(
       JSON.stringify({ lensResponse }),

@@ -82,10 +82,10 @@ export default function LensPresets({ onSelect, disabled = false }: LensPresetsP
           key={preset.name}
           onClick={() => onSelect(preset.weights)}
           disabled={disabled}
-          className="p-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg hover:border-purple-600/50 hover:bg-zinc-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left"
+          className="p-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg hover:border-cyan-500/50 hover:bg-zinc-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left"
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-purple-400">{preset.icon}</span>
+            <span className="text-cyan-400">{preset.icon}</span>
             <span className="text-sm font-semibold text-amber-100">{preset.name}</span>
           </div>
           <p className="text-xs text-amber-100/60">{preset.description}</p>

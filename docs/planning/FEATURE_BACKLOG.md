@@ -1,7 +1,7 @@
 # CONVERGENCE - FEATURE BACKLOG & PRIORITIES
 
-**Last Updated:** January 2026  
-**Version:** 1.9  
+**Last Updated:** January 22, 2026  
+**Version:** 2.0  
 
 ## 🔄 INFRASTRUCTURE MIGRATION (Oct 26, 2025)
 
@@ -18,16 +18,20 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 
 ## 🎉 RECENT ACHIEVEMENTS
 
-**Sprint 1 Complete (1h 53m):** Infrastructure, AWS→Cloudflare R2, Supabase, Next.js setup  
-**Sprint 2 Complete (2.5h):** Authentication, Core UI, Avatar System, Dashboard, Toast Notifications  
-**Sprint 3 Complete (4h):** Document Processing Pipeline (Cloudflare R2 + Azure OCR + AI Metadata)  
-**Sprint 4 Complete (6h):** Public Library, PDF Viewer, Advanced Filtering, Pagination  
-**Sprint 5 Complete (6h):** Study Journal MVP, PostgreSQL FTS, Annotation Export
-
-**Sprint 6 Complete:** Akashic Design System Overhaul (Auth, Header, Library, Courses, Journal, Graph)
+**Sprint 10 Complete:** Indexing Automation & Search Relevance (Self-Healing Embeddings Pipeline)
 **Sprint 9 Complete:** Performance & Mobile Optimization (Image, Code Splitting, Glassmorphism Tuning)
+**Sprint 6 Complete:** Akashic Design System Overhaul (Auth, Header, Library, Courses, Journal, Graph)
+**Sprint 5 Complete:** Study Journal MVP, PostgreSQL FTS, Annotation Export
 
-**Latest Session Updates (January 2026 - Performance & Mobile Optimization):**
+**Latest Session Updates (January 2026 - Indexing Automation & Search):**
+
+- ✅ **Automated Indexing Pipeline** - Document upload now triggers background embedding generation automatically.
+- ✅ **Admin Embeddings Dashboard** - New UI to track library indexing status with "Process All Missing" batch action.
+- ✅ **Search Relevance Tuning** - Fixed similarity calculation issues and improved hybrid retrieval ranking.
+- ✅ **RPC-based Metrics** - High-performance database functions for library-wide status monitoring.
+- ✅ **Empty Book Detection** - Audited library and identified 18 books requiring re-uploading due to missing content.
+
+**Previous Session Updates (January 2026 - Performance & Mobile Optimization):**
 
 - ✅ **Image Optimization** - Replaced `<img>` with `next/image` in Rituals, Profiles, and Headers
 - ✅ **Code Splitting** - Implemented `next/dynamic` for heavy components (`JournalEditor`)

@@ -39,20 +39,21 @@ function getRelatedWords(query: string): string[] {
         'mystic': ['mystical', 'mysticism', 'mystics'],
         'esoteric': ['esotericism', 'esoterically'],
         'occult': ['occultism', 'occultist', 'occultists'],
+        'brahman': ['parabrahman', 'brahmanical', 'brahmana', 'brahmic'],
     };
-    
+
     // Check for exact matches
     if (relatedTerms[queryLower]) {
         return [queryLower, ...relatedTerms[queryLower]];
     }
-    
+
     // Check for partial matches (e.g., "alchem" matches "alchemy")
     for (const [key, variants] of Object.entries(relatedTerms)) {
         if (queryLower.includes(key) || key.includes(queryLower)) {
             return [queryLower, key, ...variants];
         }
     }
-    
+
     return [queryLower];
 }
 
@@ -61,37 +62,37 @@ function getRelatedWords(query: string): string[] {
  */
 function highlightQuery(sentence: string, query: string): React.ReactNode {
     if (!sentence || !query) return sentence;
-    
+
     const queryLower = query.toLowerCase();
     const sentenceLower = sentence.toLowerCase();
-    
+
     // Get all words to highlight (query + related terms)
     const queryWords = query.split(/\s+/).filter(w => w.length > 2);
     const allWordsToHighlight = new Set<string>();
-    
+
     // Add query words
     queryWords.forEach(word => {
         allWordsToHighlight.add(word.toLowerCase());
         // Add related variations
         getRelatedWords(word).forEach(related => allWordsToHighlight.add(related));
     });
-    
+
     // Also add the full query
     allWordsToHighlight.add(queryLower);
     getRelatedWords(queryLower).forEach(related => allWordsToHighlight.add(related));
-    
+
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let keyCounter = 0;
-    
+
     // Find all matches (exact and related terms)
     const matches: Array<{ word: string; index: number; length: number }> = [];
-    
+
     for (const wordToMatch of allWordsToHighlight) {
         // Use word boundary regex for better matching
         const regex = new RegExp(`\\b${wordToMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*`, 'gi');
         let match;
-        
+
         while ((match = regex.exec(sentence)) !== null) {
             matches.push({
                 word: match[0],
@@ -100,11 +101,11 @@ function highlightQuery(sentence: string, query: string): React.ReactNode {
             });
         }
     }
-    
+
     // Sort matches by index and remove overlaps
     matches.sort((a, b) => a.index - b.index);
     const nonOverlappingMatches: Array<{ word: string; index: number; length: number }> = [];
-    
+
     for (const match of matches) {
         if (nonOverlappingMatches.length === 0) {
             nonOverlappingMatches.push(match);
@@ -121,7 +122,7 @@ function highlightQuery(sentence: string, query: string): React.ReactNode {
             }
         }
     }
-    
+
     // Build highlighted parts
     for (const match of nonOverlappingMatches) {
         if (match.index > lastIndex) {
@@ -134,17 +135,17 @@ function highlightQuery(sentence: string, query: string): React.ReactNode {
         );
         lastIndex = match.index + match.length;
     }
-    
+
     if (lastIndex < sentence.length) {
         parts.push(sentence.substring(lastIndex));
     }
-    
+
     return parts.length > 1 ? parts : sentence;
 }
 
 export default function BookResultCard({ book, searchQuery }: BookResultCardProps) {
     const [expanded, setExpanded] = useState(false);
-    
+
     // Sort chunks by similarity (relevance) to ensure best matches appear first
     const sortedChunks = [...book.chunks].sort((a, b) => b.similarity - a.similarity);
     const bestScore = sortedChunks.length > 0 ? sortedChunks[0].similarity : 0;
@@ -155,22 +156,22 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
     // Helper to extract a sentence from content
     const extractSentence = (content: string, query: string): string => {
         if (!content) return '';
-        
+
         // Split into sentences
         const sentences = content.split(/(?<=[.!?])\s+/);
         const queryLower = query.toLowerCase();
         const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
-        
+
         // Try to find sentence with query
         for (const sentence of sentences) {
             const sentenceLower = sentence.toLowerCase();
-            if (sentenceLower.includes(queryLower) || 
+            if (sentenceLower.includes(queryLower) ||
                 queryWords.some(word => sentenceLower.includes(word))) {
                 const trimmed = sentence.trim();
                 return trimmed.length > 250 ? trimmed.substring(0, 250) + '...' : trimmed;
             }
         }
-        
+
         // Fallback to first sentence
         const firstSentence = sentences[0]?.trim() || '';
         return firstSentence.length > 250 ? firstSentence.substring(0, 250) + '...' : firstSentence;
@@ -193,10 +194,10 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
 
                         <div className="flex items-center gap-2">
                             <span className={`text-xs px-2 py-1 rounded-full border ${bestScore > 0.8
-                                    ? 'bg-green-900/20 border-green-700/30 text-green-400'
-                                    : bestScore > 0.75
-                                        ? 'bg-amber-900/20 border-amber-700/30 text-amber-400'
-                                        : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                                ? 'bg-green-900/20 border-green-700/30 text-green-400'
+                                : bestScore > 0.75
+                                    ? 'bg-amber-900/20 border-amber-700/30 text-amber-400'
+                                    : 'bg-zinc-800 border-zinc-700 text-zinc-400'
                                 }`}>
                                 {Math.round(bestScore * 100)}% Match
                             </span>
@@ -227,9 +228,9 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
                     if (sentence && sentence.length > 300) {
                         sentence = sentence.substring(0, 300) + '...';
                     }
-                    
+
                     const summary = chunk.summary || 'Discusses the concept in context.';
-                    
+
                     return (
                         <div key={chunk.chunk_id} className="relative group">
                             <div className="pl-4 border-l-2 border-amber-900/30 group-hover:border-amber-500/50 transition-colors space-y-2">
@@ -237,12 +238,12 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
                                 <div className="text-amber-100/90 text-sm leading-relaxed italic">
                                     "{sentence ? highlightQuery(sentence, searchQuery) : 'Loading...'}"
                                 </div>
-                                
+
                                 {/* Summary */}
                                 <p className="text-amber-100/60 text-xs leading-relaxed">
                                     {highlightQuery(summary, searchQuery)}
                                 </p>
-                                
+
                                 {/* Link and Similarity */}
                                 <div className="mt-2 flex items-center justify-between opacity-60 group-hover:opacity-100 transition-opacity">
                                     <span className="text-xs text-amber-400/70">

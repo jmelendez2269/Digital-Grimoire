@@ -27,8 +27,8 @@ export default function Footer() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-[10px] font-mono text-zinc-600 hover:text-cyan-400 uppercase transition-colors">Privacy</Link>
-            <Link href="/terms" className="text-[10px] font-mono text-zinc-600 hover:text-cyan-400 uppercase transition-colors">Terms</Link>
+            <Link href="/privacy" className="text-[10px] font-mono text-zinc-400 hover:text-cyan-400 uppercase transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="text-[10px] font-mono text-zinc-400 hover:text-cyan-400 uppercase transition-colors">Terms of Service</Link>
           </div>
         </div>
 

@@ -38,6 +38,7 @@ export default function AdminEmbeddingsPage() {
   const [generating, setGenerating] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Map<string, string>>(new Map());
   const [progress, setProgress] = useState<Map<string, { current: number; total: number }>>(new Map());
+  const [processingAll, setProcessingAll] = useState(false);
 
   useEffect(() => {
     checkAdminAndFetch();
@@ -86,6 +87,46 @@ export default function AdminEmbeddingsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateAllMissing = async () => {
+    if (!confirm("This will generate embeddings for all texts that are missing them. This may take a while and incur API costs. Continue?")) {
+      return;
+    }
+
+    try {
+      setProcessingAll(true);
+      setErrors(prev => {
+        const newMap = new Map(prev);
+        newMap.delete("processAll");
+        return newMap;
+      });
+
+      const response = await fetch("/api/convergence/generate-embeddings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || "Failed to process all texts");
+      }
+
+      const result = await response.json();
+      alert(`Successfully processed ${result.textsProcessed} texts. Total chunks created: ${result.totalChunks}`);
+
+      await fetchStatus();
+    } catch (error) {
+      console.error("Error processing all texts:", error);
+      setErrors(prev => {
+        const newMap = new Map(prev);
+        newMap.set("processAll", error instanceof Error ? error.message : "Failed to process all texts");
+        return newMap;
+      });
+    } finally {
+      setProcessingAll(false);
     }
   };
 
@@ -144,7 +185,7 @@ export default function AdminEmbeddingsPage() {
       }
 
       const result = await response.json();
-      
+
       // Clear polling after a delay to allow final status check
       setTimeout(() => {
         clearInterval(pollInterval);
@@ -202,7 +243,7 @@ export default function AdminEmbeddingsPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -215,13 +256,35 @@ export default function AdminEmbeddingsPage() {
                 Generate and manage text embeddings for deep search
               </p>
             </div>
-            <button
-              onClick={fetchStatus}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-lg font-medium transition-colors flex items-center gap-2"
-            >
-              <Loader2 className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={generateAllMissing}
+                disabled={processingAll || loading || !status?.summary.withoutEmbeddings}
+                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 shadow-lg ${processingAll || loading || !status?.summary.withoutEmbeddings
+                    ? "bg-zinc-800 text-amber-100/40 cursor-not-allowed"
+                    : "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20"
+                  }`}
+              >
+                {processingAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Process All Missing
+                  </>
+                )}
+              </button>
+              <button
+                onClick={fetchStatus}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <Loader2 className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
 
@@ -235,7 +298,7 @@ export default function AdminEmbeddingsPage() {
               </div>
               <div className="text-3xl font-bold text-amber-100">{status.summary.total}</div>
             </div>
-            
+
             <div className="bg-zinc-900/40 border border-green-900/20 rounded-xl p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-amber-100/60 text-sm">With Embeddings</span>
@@ -243,7 +306,7 @@ export default function AdminEmbeddingsPage() {
               </div>
               <div className="text-3xl font-bold text-green-400">{status.summary.withEmbeddings}</div>
             </div>
-            
+
             <div className="bg-zinc-900/40 border border-red-900/20 rounded-xl p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-amber-100/60 text-sm">Without Embeddings</span>
@@ -251,7 +314,7 @@ export default function AdminEmbeddingsPage() {
               </div>
               <div className="text-3xl font-bold text-red-400">{status.summary.withoutEmbeddings}</div>
             </div>
-            
+
             <div className="bg-zinc-900/40 border border-amber-900/20 rounded-xl p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-amber-100/60 text-sm">With Content</span>
@@ -374,11 +437,10 @@ export default function AdminEmbeddingsPage() {
                               <button
                                 onClick={() => generateEmbeddings(text.id, text.title)}
                                 disabled={text.hasEmbeddings || !text.hasContent}
-                                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                                  text.hasEmbeddings || !text.hasContent
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${text.hasEmbeddings || !text.hasContent
                                     ? "bg-zinc-800 text-amber-100/40 cursor-not-allowed"
                                     : "bg-amber-600 hover:bg-amber-700 text-white"
-                                }`}
+                                  }`}
                               >
                                 <Sparkles className="w-4 h-4" />
                                 {text.hasEmbeddings ? "Already Generated" : "Generate"}

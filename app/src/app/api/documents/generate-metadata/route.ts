@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import OpenAI from 'openai';
+import { logMetadataExtractionUsage } from '@/lib/usage-tracker';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,10 +10,10 @@ const openai = new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession();
-    
+
     if (authError || !session) {
       return NextResponse.json(
         { error: 'Not authenticated' },
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     // Get content for analysis
     let contentToAnalyze = '';
-    
+
     // For structured text, use chapter content
     if (document.metadata?.isStructuredText && document.metadata?.chapters) {
       const chapters = document.metadata.chapters;
@@ -135,6 +136,16 @@ Respond with ONLY the curator's note text, no additional explanation or formatti
       });
 
       generatedText = completion.choices[0].message.content?.trim() || '';
+
+      // Log usage for curatorNote
+      await logMetadataExtractionUsage({
+        inputTokens: completion.usage?.prompt_tokens || 0,
+        outputTokens: completion.usage?.completion_tokens || 0,
+        userId: session.user.id,
+        documentId: textId,
+        success: true,
+        model: 'gpt-4o',
+      });
     } else if (field === 'shortSummary') {
       const prompt = `Write a brief summary (2-3 sentences) of "${title}"${author}.
 
@@ -165,6 +176,16 @@ Respond with ONLY the summary text, no additional explanation or formatting.`;
       });
 
       generatedText = completion.choices[0].message.content?.trim() || '';
+
+      // Log usage for shortSummary
+      await logMetadataExtractionUsage({
+        inputTokens: completion.usage?.prompt_tokens || 0,
+        outputTokens: completion.usage?.completion_tokens || 0,
+        userId: session.user.id,
+        documentId: textId,
+        success: true,
+        model: 'gpt-4o',
+      });
     } else if (field === 'domain') {
       const prompt = `Analyze "${title}"${author} and determine its primary subject domain.
 
@@ -201,6 +222,16 @@ Do not include any explanation, just the domain name.`;
       });
 
       generatedText = completion.choices[0].message.content?.trim() || '';
+
+      // Log usage for domain
+      await logMetadataExtractionUsage({
+        inputTokens: completion.usage?.prompt_tokens || 0,
+        outputTokens: completion.usage?.completion_tokens || 0,
+        userId: session.user.id,
+        documentId: textId,
+        success: true,
+        model: 'gpt-4o',
+      });
     }
 
     if (!generatedText) {
@@ -218,7 +249,7 @@ Do not include any explanation, just the domain name.`;
   } catch (error) {
     console.error('[Generate Metadata] Error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to generate metadata',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

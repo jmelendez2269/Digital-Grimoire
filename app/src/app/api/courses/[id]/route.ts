@@ -6,12 +6,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log('[API] Course Fetch Start');
     const supabase = await createClient();
-    
+    console.log('[API] Supabase Client Created');
+
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession();
-    
+
     if (authError) {
+      console.error('[API] Auth Error:', authError);
       return NextResponse.json(
         { error: 'Authentication error', details: authError.message },
         { status: 401 }
@@ -19,6 +22,7 @@ export async function GET(
     }
 
     if (!session) {
+      console.log('[API] No Session');
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
@@ -27,6 +31,7 @@ export async function GET(
 
     const { id } = await params;
     const courseId = id;
+    console.log('[API] Check Course ID:', courseId);
 
     // Try to fetch by ID first, then by slug
     let query = supabase
@@ -39,6 +44,7 @@ export async function GET(
 
     // If not found by ID, try by slug
     if (queryError || !course) {
+      console.log('[API] ID lookup failed, trying slug:', queryError?.message);
       query = supabase
         .from('courses')
         .select('*')
@@ -46,21 +52,75 @@ export async function GET(
         .single();
 
       const { data: courseBySlug, error: slugError } = await query;
-      
+
       if (slugError || !courseBySlug) {
+        console.log('[API] Slug lookup failed:', slugError?.message);
         return NextResponse.json(
-          { 
+          {
             success: false,
             error: 'Course not found',
-            details: queryError?.message || slugError?.message 
+            details: queryError?.message || slugError?.message
           },
           { status: 404 }
         );
       }
-      
+
       course = courseBySlug;
     }
 
+    console.log('[API] Course found, starting enrichment');
+
+    // ENRICHMENT: Fetch fresh text details for readings
+    if (course.content && course.content.weeks && Array.isArray(course.content.weeks)) {
+      try {
+        const textIds = new Set<string>();
+        course.content.weeks.forEach((week: any) => {
+          if (week.readings && Array.isArray(week.readings)) {
+            week.readings.forEach((reading: any) => {
+              if (reading.text_id) {
+                textIds.add(reading.text_id);
+              }
+            });
+          }
+        });
+
+        if (textIds.size > 0) {
+          console.log(`[API] Enriching ${textIds.size} texts`);
+          const { data: texts, error: textsError } = await supabase
+            .from('texts')
+            .select('id, title, author')
+            .in('id', Array.from(textIds));
+
+          if (!textsError && texts) {
+            const textMap = new Map(texts.map(t => [t.id, t]));
+
+            // Update course content with fresh data
+            course.content.weeks = course.content.weeks.map((week: any) => ({
+              ...week,
+              readings: (week.readings || []).map((reading: any) => {
+                if (reading.text_id && textMap.has(reading.text_id)) {
+                  const textInfo = textMap.get(reading.text_id);
+                  return {
+                    ...reading,
+                    title: textInfo?.title || reading.title,
+                    author: textInfo?.author || reading.author, // Add author if needed by UI
+                    // Keep other fields like notes
+                  };
+                }
+                return reading;
+              })
+            }));
+          } else if (textsError) {
+            console.error('Error fetching texts for enrichment:', textsError);
+          }
+        }
+      } catch (enrichError) {
+        console.error('Error enriching course content:', enrichError);
+        // Continue without enrichment if it fails
+      }
+    }
+
+    console.log('[API] Course fetch success');
     return NextResponse.json({
       success: true,
       course,
@@ -68,10 +128,10 @@ export async function GET(
   } catch (error) {
     console.error('Unexpected error in course API:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

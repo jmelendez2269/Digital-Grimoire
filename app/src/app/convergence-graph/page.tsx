@@ -122,6 +122,21 @@ export default function ConvergenceGraphPage() {
               </p>
             </div>
 
+            {/* MVP Status Banner */}
+            <div className="mb-8 p-4 bg-amber-900/10 border border-amber-500/20 rounded-lg backdrop-blur-sm flex items-start gap-3">
+              <div className="p-1 bg-amber-500/10 rounded-full mt-0.5">
+                <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-amber-200 mb-1">Work in Progress</h3>
+                <p className="text-sm text-amber-200/70">
+                  This map is currently under active construction. New nodes and cross-tradition connections are being added slowly.
+                </p>
+              </div>
+            </div>
+
             {/* Controls */}
             <div className="mb-6 space-y-4">
               <SimilarityControls
@@ -141,8 +156,8 @@ export default function ConvergenceGraphPage() {
                   <button
                     onClick={() => setViewMode("graph")}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === "graph"
-                        ? "bg-amber-600 text-white"
-                        : "bg-zinc-800 text-amber-100/60 hover:bg-zinc-700"
+                      ? "bg-amber-600 text-white"
+                      : "bg-zinc-800 text-amber-100/60 hover:bg-zinc-700"
                       }`}
                   >
                     Network Graph
@@ -150,8 +165,8 @@ export default function ConvergenceGraphPage() {
                   <button
                     onClick={() => setViewMode("table")}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === "table"
-                        ? "bg-amber-600 text-white"
-                        : "bg-zinc-800 text-amber-100/60 hover:bg-zinc-700"
+                      ? "bg-amber-600 text-white"
+                      : "bg-zinc-800 text-amber-100/60 hover:bg-zinc-700"
                       }`}
                   >
                     Comparative Table

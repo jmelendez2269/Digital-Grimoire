@@ -172,30 +172,17 @@ function CourseLearnContent() {
 
     return (
         <div className="flex h-screen flex-col bg-zinc-950 text-zinc-200 font-sans selection:bg-amber-500/30 overflow-hidden">
-            {/* Navigation Bar (Compact) */}
-            <header className="h-14 border-b border-white/5 bg-zinc-900/50 backdrop-blur-md flex items-center justify-between px-4 shrink-0 z-30">
-                <div className="flex items-center gap-4">
-                    <Link
-                        href={`/courses/${slug}`}
-                        className="p-2 hover:bg-white/5 rounded-lg text-zinc-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </Link>
-                    <div className="h-4 w-px bg-white/10" />
-                    <h1 className="font-semibold text-sm md:text-base text-zinc-100 truncate max-w-[200px] md:max-w-md">
-                        {course?.title || 'Loading...'}
-                    </h1>
-                </div>
+            {/* Navigation Bar */}
+            <Header />
 
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Mobile Menu Button - Positioned over content/sidebar when needed or part of sub-nav */}
                 <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="md:hidden p-2 text-zinc-400 hover:text-white"
+                    className="absolute top-4 left-4 z-50 md:hidden p-2 bg-zinc-900/80 border border-white/10 rounded-lg text-zinc-400 hover:text-white"
                 >
                     {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
-            </header>
-
-            <div className="flex flex-1 overflow-hidden relative">
                 {/* Sidebar Navigation */}
                 <aside className={`
                 absolute md:relative inset-y-0 left-0 z-20 w-80 bg-black/60 backdrop-blur-xl border-r border-white/5 transition-transform duration-300 transform
@@ -290,8 +277,8 @@ function CourseLearnContent() {
                                                 <div
                                                     key={idx}
                                                     className={`group relative border rounded-lg p-6 transition-all ${isCompleted
-                                                            ? 'bg-emerald-950/10 border-emerald-500/20 hover:bg-emerald-950/20'
-                                                            : 'bg-zinc-900/30 border-white/5 hover:border-amber-500/30 hover:bg-zinc-900/50'
+                                                        ? 'bg-emerald-950/10 border-emerald-500/20 hover:bg-emerald-950/20'
+                                                        : 'bg-zinc-900/30 border-white/5 hover:border-amber-500/30 hover:bg-zinc-900/50'
                                                         }`}
                                                 >
                                                     <div className="flex items-start gap-4">
@@ -321,8 +308,8 @@ function CourseLearnContent() {
                                                         <button
                                                             onClick={() => toggleReadingComplete(reading.text_id)}
                                                             className={`transition-all duration-300 ${isCompleted
-                                                                    ? 'text-emerald-500 hover:text-emerald-400 scale-110'
-                                                                    : 'text-zinc-600 hover:text-emerald-500'
+                                                                ? 'text-emerald-500 hover:text-emerald-400 scale-110'
+                                                                : 'text-zinc-600 hover:text-emerald-500'
                                                                 }`}
                                                             title={isCompleted ? "Mark as Incomplete" : "Mark as Complete"}
                                                         >
