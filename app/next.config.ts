@@ -1,4 +1,4 @@
-import { withSentryConfig } from '@sentry/nextjs';
+
 import type { NextConfig } from "next";
 
 // Bundle analyzer for performance monitoring
@@ -51,6 +51,11 @@ const nextConfig: NextConfig = {
         // Allow Amazon SSL image domains (Goodreads, etc.)
         hostname: '*.ssl-images-amazon.com',
       },
+      {
+        protocol: 'https',
+        // Allow Project Gutenberg images
+        hostname: 'www.gutenberg.org',
+      },
     ],
   },
   // Compress output
@@ -70,17 +75,17 @@ const nextConfig: NextConfig = {
 
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com https://accounts.google.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://archive.org https://*.googleusercontent.com https://*.media-amazon.com https://*.ssl-images-amazon.com",
+      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://archive.org https://*.googleusercontent.com https://*.media-amazon.com https://*.ssl-images-amazon.com https://www.gutenberg.org",
       "font-src 'self' data:",
-      `connect-src ${connectSrc}`,
+      `connect-src ${connectSrc} https://accounts.google.com`,
       "worker-src 'self' blob:",
-      "frame-src 'none'",
+      "frame-src 'self' https://*.supabase.co https://*.supabase.in https://accounts.google.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "frame-ancestors 'none'",
+      "frame-ancestors 'self'",
       ...(isProduction ? ["upgrade-insecure-requests"] : []),
     ].join('; ');
 
@@ -194,35 +199,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(withBundleAnalyzer(nextConfig), {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "convergence-qa",
-
-  project: "javascript-nextjs",
-
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
-
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
-
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  tunnelRoute: "/monitoring",
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-
-  // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true,
-});
+export default withBundleAnalyzer(nextConfig);

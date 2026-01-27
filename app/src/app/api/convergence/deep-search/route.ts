@@ -4,6 +4,7 @@ import { vectorSearch, VectorSearchResult } from '@/lib/convergence/vector-searc
 import { ftsSearchChunks, FTSSearchResult } from '@/lib/convergence/fts-search';
 import OpenAI from 'openai';
 import { logApiUsage } from '@/lib/usage-tracker';
+import { getSearchVariants, ESOTERIC_DICTIONARY } from '@/lib/convergence/search-dictionary';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -84,20 +85,12 @@ function calculateRelevanceScore(
     score += 0.15;
   }
 
-  // 5. Common Traditional Terms Boost (e.g., "alchemy" matching "alchemic")
-  const relatedTerms: { [key: string]: string[] } = {
-    'alchemy': ['alchemical', 'alchemist', 'magnum opus', 'transmutation'],
-    'hermetic': ['hermeticism', 'as above so below', 'kybalion'],
-    'kabbalah': ['qabalah', 'sephiroth', 'tree of life'],
-    'magic': ['magick', 'ritual', 'invocation', 'ceremony'],
-  };
-
-  for (const [key, variants] of Object.entries(relatedTerms)) {
-    if (queryLower.includes(key)) {
-      if (variants.some(v => contentLower.includes(v))) {
-        score += 0.1;
-        break;
-      }
+  // 5. Esoteric Dictionary Boost (Variants from search-dictionary.ts)
+  const variants = getSearchVariants(query);
+  if (variants.length > 1) {
+    // If the content contains any variants of the search term
+    if (variants.some(v => v.toLowerCase() !== queryLower && contentLower.includes(v.toLowerCase()))) {
+      score += 0.15; // Significant boost for recognizing the concept via variant
     }
   }
 
@@ -515,10 +508,23 @@ export async function POST(request: NextRequest) {
     // Wait for all summaries to complete (with timeout)
     await Promise.allSettled(summaryPromises);
 
+    // 5. Identify Variant Suggestions
+    // If we have few results, suggest variants that might have more
+    const suggestions: string[] = [];
+    if (books.length < 3) {
+      const allVariants = getSearchVariants(query);
+      const otherVariants = allVariants.filter(v => v.toLowerCase() !== query.toLowerCase());
+
+      // We only suggest variants that are actually present in the dictionary entry
+      // (The dictionary already filters for the relevant mapping)
+      suggestions.push(...otherVariants);
+    }
+
     return new Response(
       JSON.stringify({
         relatedTerms,
         books,
+        suggestions, // Add suggestions to response
         warning: unindexedBooks.length > 0
           ? `Some relevant books (like "${unindexedBooks.join(', ')}") are not yet fully indexed for deep search.`
           : results.length === 0 ? "No matches found in your library." : undefined

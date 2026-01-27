@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, Book, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Book, AlertCircle, Lightbulb } from 'lucide-react';
 import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
 import BookResultCard from '@/components/DeepSearch/BookResultCard';
 
@@ -25,10 +25,15 @@ interface BookResult {
     }>;
 }
 
-export default function DeepSearchPanel() {
-    const [query, setQuery] = useState('');
+interface DeepSearchPanelProps {
+    initialQuery?: string;
+    onSearch?: (query: string) => void;
+}
+
+export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSearchPanelProps) {
+    const [query, setQuery] = useState(initialQuery);
     const [loading, setLoading] = useState(false);
-    const [results, setResults] = useState<{ relatedTerms: string[], books: BookResult[] } | null>(null);
+    const [results, setResults] = useState<{ relatedTerms: string[], books: BookResult[], suggestions?: string[] } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [warning, setWarning] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
@@ -137,6 +142,10 @@ export default function DeepSearchPanel() {
         setWarning(null); // Reset warning
         setResults(null);
         setSearched(true);
+
+        if (onSearch) {
+            onSearch(query);
+        }
 
         try {
             const res = await fetch('/api/convergence/deep-search', {
@@ -352,6 +361,38 @@ export default function DeepSearchPanel() {
             )}
             {results && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* Variant Suggestions */}
+                    {results.suggestions && results.suggestions.length > 0 && (
+                        <div className="mb-6 p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                            <div className="flex items-center gap-2 mb-2 text-amber-100/60 text-xs font-semibold uppercase tracking-wider">
+                                <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                                <span>Try these related variants:</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {results.suggestions.map((term) => (
+                                    <button
+                                        key={term}
+                                        onClick={() => {
+                                            setQuery(term);
+                                            // Handle the search for the new term
+                                            const fakeEvent = { preventDefault: () => { } } as React.FormEvent;
+                                            // Since handleSearch depends on the query state, and setQuery is async,
+                                            // we might need to be careful. However, handleSearch is a callback that uses 'query'.
+                                            // Let's use a small timeout to ensure state update or just call it directly with the term if we refactor.
+                                            // But standard React pattern is to let the effect handle it or use a separate search function.
+                                            // Actually, the simplest is to just trigger the search in a useEffect or similar.
+                                            // For now, let's just update query and let the user click search, OR:
+                                            setTimeout(() => handleSearch(fakeEvent), 0);
+                                        }}
+                                        className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-sm rounded-full border border-amber-500/30 transition-colors"
+                                    >
+                                        {term}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Related Terms */}
                     <div className="mb-8">
                         <RelatedTerms

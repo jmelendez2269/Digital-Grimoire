@@ -8,7 +8,7 @@ function escapeHtml(s: string): string {
 
 function serializeNodeToHtml(node: any): string {
   if (!node) return '';
-  
+
   switch (node.type) {
     case 'doc':
       return (node.content || []).map(serializeNodeToHtml).join('');
@@ -51,6 +51,10 @@ function serializeNodeToHtml(node: any): string {
       return '<hr />';
     case 'image':
       const src = node.attrs?.src || '';
+      // Filter out invalid placeholder IDs commonly found in Tiptap/ProseMirror fragments
+      if (!src || src.startsWith('image:') || src.startsWith('urn:')) {
+        return '';
+      }
       const alt = escapeHtml(node.attrs?.alt || '');
       const title = node.attrs?.title ? ` title="${escapeHtml(node.attrs.title)}"` : '';
       return `<img src="${src}" alt="${alt}"${title} />`;
@@ -72,20 +76,20 @@ function serializeNodeToHtml(node: any): string {
  */
 export function tiptapToHtml(content: string | object | null | undefined): string {
   if (!content) return '';
-  
+
   try {
     const json = typeof content === 'string' ? JSON.parse(content) : content;
-    
+
     // Validate it's a TipTap doc structure
     if (json && json.type === 'doc' && Array.isArray(json.content)) {
       return serializeNodeToHtml(json);
     }
-    
+
     // If it's not a doc, try to wrap it
     if (json && typeof json === 'object') {
       return serializeNodeToHtml({ type: 'doc', content: [json] });
     }
-    
+
     return '';
   } catch (error) {
     console.warn('Failed to parse TipTap content:', error);
@@ -100,28 +104,28 @@ export function tiptapToHtml(content: string | object | null | undefined): strin
  */
 export function tiptapToText(content: string | object | null | undefined): string {
   if (!content) return '';
-  
+
   try {
     const json = typeof content === 'string' ? JSON.parse(content) : content;
-    
+
     function extractText(node: any): string {
       if (!node) return '';
-      
+
       if (node.type === 'text') {
         return node.text || '';
       }
-      
+
       if (node.content && Array.isArray(node.content)) {
         return node.content.map(extractText).join('');
       }
-      
+
       return '';
     }
-    
+
     if (json && json.type === 'doc' && Array.isArray(json.content)) {
       return json.content.map(extractText).join(' ').trim();
     }
-    
+
     return '';
   } catch (error) {
     console.warn('Failed to extract text from TipTap content:', error);

@@ -293,6 +293,7 @@ function ConvergenceMachineContent() {
     // Save to database if user is authenticated
     if (user) {
       try {
+        // 1. Save to Convergence specific history
         await fetch('/api/convergence/history', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -302,6 +303,17 @@ function ConvergenceMachineContent() {
             response: JSON.stringify(response),
             synthesis: response.synthesis,
             sources: response.sources || [],
+          }),
+        });
+
+        // 2. Save to Unified Search history
+        await fetch('/api/search/history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query,
+            source: 'convergence',
+            metadata: { lensWeights, responseId: response.id }
           }),
         });
 

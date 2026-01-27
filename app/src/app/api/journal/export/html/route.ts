@@ -39,8 +39,11 @@ function serializeNodeToHtml(node: any): string {
       return `<pre><code>${(node.content || []).map(serializeNodeToHtml).join('')}</code></pre>`;
     case 'horizontalRule':
       return '<hr />';
-    case 'image':
-      return `<img src="${node.attrs?.src || ''}" alt="${escapeHtml(node.attrs?.alt || '')}" />`;
+    case 'image': {
+      const src = node.attrs?.src || '';
+      if (!src || src.startsWith('image:') || src.startsWith('urn:')) return '';
+      return `<img src="${src}" alt="${escapeHtml(node.attrs?.alt || '')}" />`;
+    }
     default:
       return '';
   }

@@ -139,6 +139,22 @@ export function LoginForm() {
       {/* Top Border Gradient */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
 
+      {/* Iframe Warning */}
+      {typeof window !== 'undefined' && window.self !== window.top && (
+        <div className="mb-6 p-4 rounded bg-amber-900/40 border border-amber-500/50 text-amber-200 text-xs font-mono">
+          <p className="mb-3">⚠️ DETECTED_SANDBOX_ENVIRONMENT</p>
+          <p className="mb-3 opacity-80">
+            Authentication cannot be completed in this sidebar/frame. Please open the full application.
+          </p>
+          <button
+            onClick={() => window.open(window.location.href, '_blank')}
+            className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider rounded transition-colors"
+          >
+            [ OPEN_IN_FULL_WINDOW ]
+          </button>
+        </div>
+      )}
+
       <form onSubmit={handleLogin} className="space-y-6 relative z-10">
         {/* Email Field */}
         <div className="group">
