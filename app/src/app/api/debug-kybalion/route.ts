@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
         // List books needing indexing
         const { data: allBooks } = await supabase.from('texts').select('id, title, content');
-        const results = [];
+        const results: Array<{ id: string; title: string; status: string }> = [];
 
         for (const b of (allBooks || [])) {
             if (!b.content) continue;

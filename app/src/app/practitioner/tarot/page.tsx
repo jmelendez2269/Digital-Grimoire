@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import TarotDeck from '@/components/practitioner/TarotDeck';
+import TarotWorkbench from '@/components/practitioner/TarotWorkbench';
 
 export default async function TarotPage() {
     const supabase = await createClient();

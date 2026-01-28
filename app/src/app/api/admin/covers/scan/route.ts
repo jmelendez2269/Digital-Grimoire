@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
         let scannedCount = 0;
         let brokenCount = 0;
-        const results = [];
+        const results: Array<{ id: string; title: string; url: string; status: string }> = [];
 
         // Process in parallel with concurrency limit
         const verifyUrl = async (text: any) => {

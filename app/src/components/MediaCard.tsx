@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import SafeImage from './SafeImage';
 import { Music, Video, Image as ImageIcon, Clock, User, Calendar } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
 
@@ -51,7 +51,7 @@ export default function MediaCard({ media, onDelete, isAdmin }: MediaCardProps) 
       {/* Thumbnail */}
       <Link href={`/library/media/${media.id}`} className="relative w-full h-48 bg-zinc-800/50 overflow-hidden flex-shrink-0">
         {thumbnailUrl ? (
-          <Image
+          <SafeImage
             src={thumbnailUrl}
             alt={media.title}
             fill
@@ -64,7 +64,7 @@ export default function MediaCard({ media, onDelete, isAdmin }: MediaCardProps) 
             {getMediaIcon()}
           </div>
         )}
-        
+
         {/* Action buttons overlay */}
         <div className="absolute top-2 right-2 z-10 flex gap-2 opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity duration-200">
           <BookmarkButton textId={media.id} size="sm" />

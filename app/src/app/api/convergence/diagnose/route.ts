@@ -71,17 +71,21 @@ export async function GET(req: NextRequest) {
 
     // Check if Migration 034 safeguards are in place (if tables exist)
     if (conceptsTableExists && relationshipsTableExists) {
-      const { data: checkConstraint } = await supabase.rpc("check_constraint_exists", {
-        constraint_name: "check_no_self_reference",
-      }).catch(async () => {
+      let checkConstraint;
+      try {
+        const result = await supabase.rpc("check_constraint_exists", {
+          constraint_name: "check_no_self_reference",
+        });
+        checkConstraint = result.data;
+      } catch {
         // Manual check if RPC doesn't exist
         const { data: constraints } = await supabase
           .from("information_schema.check_constraints")
           .select("constraint_name")
           .eq("constraint_name", "check_no_self_reference")
           .limit(1);
-        return { data: constraints && constraints.length > 0 };
-      });
+        checkConstraint = constraints && constraints.length > 0;
+      }
 
       // Try direct query instead
       const { data: directCheck } = await supabase
@@ -127,7 +131,7 @@ export async function GET(req: NextRequest) {
       diagnostics.recommendations.push("Seed initial concepts - see docs/SEED_CONVERGENCE_GUIDE.md");
     }
 
-    if (relationshipCount === 0 && conceptCount > 0) {
+    if (relationshipCount === 0 && (conceptCount ?? 0) > 0) {
       diagnostics.issues.push({
         severity: "info",
         type: "no_relationships",
@@ -137,43 +141,50 @@ export async function GET(req: NextRequest) {
     }
 
     // 3. Check for orphaned relationships
-    const { data: orphanedRelationships, error: orphanedError } = await supabase
-      .rpc("check_orphaned_relationships")
-      .catch(() => {
-        // If RPC doesn't exist, use manual query
-        return supabase
-          .from("convergence_relationships")
-          .select("id, source_id, target_id")
-          .then(async ({ data, error }) => {
-            if (error || !data) return { data: [], error };
-            
-            // Check each relationship
-            const orphaned: any[] = [];
-            for (const rel of data) {
-              const { data: sourceExists } = await supabase
-                .from("convergence_concepts")
-                .select("id")
-                .eq("id", rel.source_id)
-                .single();
-              
-              const { data: targetExists } = await supabase
-                .from("convergence_concepts")
-                .select("id")
-                .eq("id", rel.target_id)
-                .single();
-              
-              if (!sourceExists || !targetExists) {
-                orphaned.push({
-                  id: rel.id,
-                  source_id: rel.source_id,
-                  target_id: rel.target_id,
-                  issue: !sourceExists ? "source_id missing" : "target_id missing",
-                });
-              }
-            }
-            return { data: orphaned, error: null };
-          });
-      });
+    let orphanedRelationships: any[] = [];
+    let orphanedError = null;
+
+    try {
+      const result = await supabase.rpc("check_orphaned_relationships");
+      orphanedRelationships = result.data || [];
+      orphanedError = result.error;
+    } catch {
+      // If RPC doesn't exist, use manual query
+      const { data, error } = await supabase
+        .from("convergence_relationships")
+        .select("id, source_id, target_id");
+
+      if (error || !data) {
+        orphanedRelationships = [];
+        orphanedError = error;
+      } else {
+        // Check each relationship
+        const orphaned: any[] = [];
+        for (const rel of data) {
+          const { data: sourceExists } = await supabase
+            .from("convergence_concepts")
+            .select("id")
+            .eq("id", rel.source_id)
+            .single();
+
+          const { data: targetExists } = await supabase
+            .from("convergence_concepts")
+            .select("id")
+            .eq("id", rel.target_id)
+            .single();
+
+          if (!sourceExists || !targetExists) {
+            orphaned.push({
+              id: rel.id,
+              source_id: rel.source_id,
+              target_id: rel.target_id,
+              issue: !sourceExists ? "source_id missing" : "target_id missing",
+            });
+          }
+        }
+        orphanedRelationships = orphaned;
+      }
+    }
 
     if (orphanedRelationships && orphanedRelationships.length > 0) {
       diagnostics.checks.orphanedRelationships = {
@@ -198,7 +209,7 @@ export async function GET(req: NextRequest) {
     const { data: allRels } = await supabase
       .from("convergence_relationships")
       .select("id, source_id, target_id, similarity");
-    
+
     const selfReferential = allRels?.filter((r: any) => r.source_id === r.target_id) || [];
 
     if (selfReferential && selfReferential.length > 0) {
@@ -257,10 +268,10 @@ export async function GET(req: NextRequest) {
     diagnostics.status = criticalIssues > 0
       ? "critical"
       : errorIssues > 0
-      ? "error"
-      : warningIssues > 0
-      ? "warning"
-      : "healthy";
+        ? "error"
+        : warningIssues > 0
+          ? "warning"
+          : "healthy";
 
     diagnostics.summary = {
       totalIssues: diagnostics.issues.length,

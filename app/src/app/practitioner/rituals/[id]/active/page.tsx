@@ -3,12 +3,13 @@ import { notFound, redirect } from 'next/navigation';
 import ActiveRitualPlayer from '@/components/practitioner/ActiveRitualPlayer';
 
 interface ActiveRitualPageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 export default async function ActiveRitualPage({ params }: ActiveRitualPageProps) {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -20,7 +21,7 @@ export default async function ActiveRitualPage({ params }: ActiveRitualPageProps
     const { data: ritual, error } = await supabase
         .from('rituals')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
 
     if (error || !ritual) {
@@ -31,7 +32,7 @@ export default async function ActiveRitualPage({ params }: ActiveRitualPageProps
     const { data: steps } = await supabase
         .from('ritual_steps')
         .select('*')
-        .eq('ritual_id', params.id)
+        .eq('ritual_id', id)
         .order('step_order', { ascending: true });
 
     const ritualData = {

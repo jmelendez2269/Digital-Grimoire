@@ -323,7 +323,7 @@ function ProfileContent() {
                   <div className="mb-6 flex flex-col items-center">
                     <div className="relative mb-4">
                       {avatarUrl ? (
-                        <Image
+                        <NextImage
                           src={avatarUrl}
                           alt="Avatar"
                           width={128}
