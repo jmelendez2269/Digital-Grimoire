@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Book, ChevronDown, ChevronUp, User, ExternalLink } from 'lucide-react';
+
 interface Chunk {
     chunk_id: string;
     content: string;
@@ -10,6 +11,69 @@ interface Chunk {
     chunk_index: number;
     sentence?: string;
     summary?: string;
+}
+
+interface BookResult {
+    text_id: string;
+    title: string;
+    author: string;
+    chunks: Chunk[];
+}
+
+interface BookResultCardProps {
+    book: BookResult;
+    searchQuery: string;
+}
+
+export default function BookResultCard({ book, searchQuery }: BookResultCardProps) {
+    const [expanded, setExpanded] = useState(false);
+
+    // Calculate best score for badge
+    const bestScore = book.chunks.length > 0 ? Math.max(...book.chunks.map(c => c.similarity)) : 0;
+
+    // Determine displayed chunks
+    const displayedChunks = expanded ? book.chunks : book.chunks.slice(0, 1);
+
+    // Helper to highlight query terms
+    const highlightQuery = (text: string, query: string) => {
+        if (!text || !query) return text;
+
+        try {
+            const parts = text.split(new RegExp(`(${query})`, 'gi'));
+            return parts.map((part, i) =>
+                part.toLowerCase() === query.toLowerCase() ? (
+                    <span key={i} className="bg-amber-500/30 text-amber-200 rounded px-0.5">{part}</span>
+                ) : (
+                    part
+                )
+            );
+        } catch (e) {
+            return text;
+        }
+    };
+
+    // Helper to extract sentence if missing
+    const extractSentence = (content: string, query: string) => {
+        if (!content) return '';
+        if (!query) return content.slice(0, 150) + '...';
+
+        try {
+            const index = content.toLowerCase().indexOf(query.toLowerCase());
+            if (index === -1) return content.slice(0, 150) + '...';
+
+            const start = Math.max(0, index - 60);
+            const end = Math.min(content.length, index + query.length + 100);
+
+            let text = content.slice(start, end);
+            if (start > 0) text = '...' + text;
+            if (end < content.length) text = text + '...';
+
+            return text;
+        } catch (e) {
+            return content.slice(0, 150) + '...';
+        }
+    };
+
     return (
         <div className="bg-zinc-900/40 border border-amber-900/20 rounded-xl overflow-hidden hover:border-amber-600/30 transition-all duration-300">
             <div className="p-5">
@@ -30,7 +94,8 @@ interface Chunk {
                                 ? 'bg-green-900/20 border-green-700/30 text-green-400'
                                 : bestScore > 0.75
                                     ? 'bg-amber-900/20 border-amber-700/30 text-amber-400'
-                                    : 'bg-zinc-800 border-zinc-700 text-zinc-400'                                }`}>
+                                    : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                                }`}>
                                 {Math.round(bestScore * 100)}% Match
                             </span>
                             <span className="text-xs text-zinc-500">
@@ -64,7 +129,7 @@ interface Chunk {
                     const summary = chunk.summary || 'Discusses the concept in context.';
 
                     return (
-                        <div key={chunk.chunk_id} className="relative group">
+                        <div key={chunk.chunk_id || idx} className="relative group">
                             <div className="pl-4 border-l-2 border-amber-900/30 group-hover:border-amber-500/50 transition-colors space-y-2">
                                 {/* Highlighted Sentence */}
                                 <div className="text-amber-100/90 text-sm leading-relaxed italic">
@@ -92,7 +157,8 @@ interface Chunk {
                             </div>
                         </div>
                     );
-                })}            </div>
+                })}
+            </div>
 
             {/* Expand/Collapse Trigger */}
             {book.chunks.length > 1 && (

@@ -164,7 +164,8 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             setResults(resultData);
             if (resultData.warning) {
                 setWarning(resultData.warning);
-            }        } catch (err) {
+            }
+        } catch (err) {
             console.error('Deep search error:', err);
             const errorMessage = err instanceof Error ? err.message : 'An error occurred while searching. Please try again.';
             setError(errorMessage);
@@ -257,7 +258,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={handleKeyDown}
                             onFocus={handleInputFocus}
-                            onBlur={handleInputBlur}                            placeholder="Enter a complex concept like 'Parabrahman' or 'Alchemy'..."
+                            onBlur={handleInputBlur} placeholder="Enter a complex concept like 'Parabrahman' or 'Alchemy'..."
                             className="w-full px-6 py-4 bg-transparent text-amber-100 placeholder-amber-100/30 outline-none text-lg"
                         />
                         <button
@@ -334,7 +335,13 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                                 </div>
                             )}
                         </div>
-                    )}                    {/* Related Terms */}
+                    )}
+                </form>
+            </div>
+
+            {results && (
+                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* Related Terms */}
                     <div className="mb-8">
                         <RelatedTerms
                             terms={results.relatedTerms}
@@ -357,7 +364,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                     <div className="space-y-4">
                         {results.books.length > 0 ? (
                             results.books.map((book) => (
-                                <BookResultCard key={book.text_id} book={book} searchQuery={query} />                            ))
+                                <BookResultCard key={book.text_id} book={book} searchQuery={query} />))
                         ) : (
                             <div className="text-center py-12 text-amber-100/40">
                                 <Book className="w-12 h-12 mx-auto mb-3 opacity-20" />

@@ -45,7 +45,8 @@ export async function vectorSearch(
     // or there are no matching chunks. Try manual search as fallback.
     if (rpcResults.length === 0) {
       console.warn('RPC search returned 0 results, trying manual search...');
-      return await vectorSearchManual(queryEmbedding.embedding, limit, filters);    }
+      return await vectorSearchManual(queryEmbedding.embedding, limit, filters);
+    }
     return rpcResults;
   } catch (error) {
     console.warn('RPC search failed, using manual calculation:', error);
@@ -66,7 +67,8 @@ async function vectorSearchManual(
   const supabase = await createClient();
   const MIN_SIMILARITY = 0.2;
 
-  // Build filter query for texts  let textQuery = supabase.from('texts').select('id, title, author, type, lenses');
+  // Build filter query for texts
+  let textQuery = supabase.from('texts').select('id, title, author, type, lenses');
   const hasFilters = filters && (filters.lenses?.length || filters.documentTypes?.length || filters.domains?.length);
 
   if (filters?.lenses && filters.lenses.length > 0) {
@@ -123,13 +125,7 @@ async function vectorSearchManual(
     .slice(0, limit);
 
   // Log diagnostic info
-  if (similarities.length > 0) {
-    const maxSim = Math.max(...similarities);
-    const minSim = Math.min(...similarities);
-    const avgSim = similarities.reduce((a, b) => a + b, 0) / similarities.length;
-    const aboveThreshold = similarities.filter(s => s >= MIN_SIMILARITY).length;
-    console.log(`[Vector Search] Similarity stats: max=${maxSim.toFixed(3)}, min=${minSim.toFixed(3)}, avg=${avgSim.toFixed(3)}, above threshold (${MIN_SIMILARITY})=${aboveThreshold}/${similarities.length}`);
-  }
+
 
   console.log(`[Vector Search] Returning ${resultsWithSimilarity.length} results after filtering`);
 
