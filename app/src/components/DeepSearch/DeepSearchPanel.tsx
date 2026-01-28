@@ -1,5 +1,6 @@
 'use client';
 
+<<<<<<< HEAD
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2, Book, AlertCircle, Lightbulb } from 'lucide-react';
 import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
@@ -11,6 +12,13 @@ interface ConceptSuggestion {
     slug: string;
 }
 
+=======
+import { useState } from 'react';
+import { Search, Loader2, Book, AlertCircle } from 'lucide-react';
+import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
+import BookResultCard from '@/components/DeepSearch/BookResultCard';
+
+>>>>>>> origin/main
 interface BookResult {
     text_id: string;
     title: string;
@@ -20,6 +28,7 @@ interface BookResult {
         content: string;
         similarity: number;
         chunk_index: number;
+<<<<<<< HEAD
         sentence?: string;
         summary?: string;
     }>;
@@ -147,6 +156,27 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             onSearch(query);
         }
 
+=======
+    }>;
+}
+
+export default function DeepSearchPanel() {
+    const [query, setQuery] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState<{ relatedTerms: string[], books: BookResult[] } | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [searched, setSearched] = useState(false);
+
+    async function handleSearch(e?: React.FormEvent) {
+        if (e) e.preventDefault();
+        if (!query.trim()) return;
+
+        setLoading(true);
+        setError(null);
+        setResults(null);
+        setSearched(true);
+
+>>>>>>> origin/main
         try {
             const res = await fetch('/api/convergence/deep-search', {
                 method: 'POST',
@@ -155,6 +185,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                 body: JSON.stringify({ query }),
             });
 
+<<<<<<< HEAD
             const resultData = await res.json(); // Always try to parse JSON for error/warning messages
 
             if (!res.ok) {
@@ -167,6 +198,23 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             if (resultData.warning) {
                 setWarning(resultData.warning);
             }
+=======
+            if (!res.ok) {
+                // Try to extract error message from response
+                let errorMessage = 'Search failed';
+                try {
+                    const errorData = await res.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    // If response isn't JSON, use status text
+                    errorMessage = res.statusText || `Error ${res.status}`;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await res.json();
+            setResults(data);
+>>>>>>> origin/main
         } catch (err) {
             console.error('Deep search error:', err);
             const errorMessage = err instanceof Error ? err.message : 'An error occurred while searching. Please try again.';
@@ -174,6 +222,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
         } finally {
             setLoading(false);
         }
+<<<<<<< HEAD
     }, [query]);
 
     // Handle keyboard navigation
@@ -246,6 +295,9 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             }
         }, 200);
     }, []);
+=======
+    }
+>>>>>>> origin/main
 
     return (
         <div className="w-full">
@@ -253,6 +305,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             <div className="mb-8">
                 <form onSubmit={handleSearch} className="relative group">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-amber-600/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+<<<<<<< HEAD
                     <div className="relative flex items-center bg-zinc-900/80 border border-amber-900/30 rounded-xl overflow-visible focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/50 shadow-2xl transition-all">
                         <input
                             ref={inputRef}
@@ -262,6 +315,13 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             onKeyDown={handleKeyDown}
                             onFocus={handleInputFocus}
                             onBlur={handleInputBlur}
+=======
+                    <div className="relative flex items-center bg-zinc-900/80 border border-amber-900/30 rounded-xl overflow-hidden focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/50 shadow-2xl transition-all">
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+>>>>>>> origin/main
                             placeholder="Enter a complex concept like 'Parabrahman' or 'Alchemy'..."
                             className="w-full px-6 py-4 bg-transparent text-amber-100 placeholder-amber-100/30 outline-none text-lg"
                         />
@@ -277,6 +337,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             )}
                         </button>
                     </div>
+<<<<<<< HEAD
 
                     {/* Suggestions Dropdown */}
                     {showSuggestions && (
@@ -340,6 +401,8 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             )}
                         </div>
                     )}
+=======
+>>>>>>> origin/main
                 </form>
             </div>
 
@@ -350,6 +413,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                     <p>{error}</p>
                 </div>
             )}
+<<<<<<< HEAD
             {warning && (
                 <div className="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl flex items-start gap-4 text-amber-200 mb-6 shadow-lg shadow-amber-950/20">
                     <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-400" />
@@ -393,6 +457,11 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                         </div>
                     )}
 
+=======
+
+            {results && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+>>>>>>> origin/main
                     {/* Related Terms */}
                     <div className="mb-8">
                         <RelatedTerms
@@ -416,7 +485,11 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                     <div className="space-y-4">
                         {results.books.length > 0 ? (
                             results.books.map((book) => (
+<<<<<<< HEAD
                                 <BookResultCard key={book.text_id} book={book} searchQuery={query} />
+=======
+                                <BookResultCard key={book.text_id} book={book} />
+>>>>>>> origin/main
                             ))
                         ) : (
                             <div className="text-center py-12 text-amber-100/40">

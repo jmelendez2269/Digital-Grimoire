@@ -41,12 +41,20 @@ export async function vectorSearch(
 
   // Try RPC first (more efficient), fallback to manual if needed
   try {
+<<<<<<< HEAD
     const rpcResults = await vectorSearchRPC(queryEmbedding.embedding, limit, filters);
+=======
+    const rpcResults = await vectorSearchRPC(queryEmbedding, limit, filters);
+>>>>>>> origin/main
     // If RPC returns empty results, it might mean the function doesn't exist
     // or there are no matching chunks. Try manual search as fallback.
     if (rpcResults.length === 0) {
       console.warn('RPC search returned 0 results, trying manual search...');
+<<<<<<< HEAD
       return await vectorSearchManual(queryEmbedding.embedding, limit, filters);
+=======
+      return await vectorSearchManual(queryEmbedding, limit, filters);
+>>>>>>> origin/main
     }
     return rpcResults;
   } catch (error) {
@@ -66,9 +74,16 @@ async function vectorSearchManual(
   filters?: LensFilters
 ): Promise<VectorSearchResult[]> {
   const supabase = await createClient();
+<<<<<<< HEAD
   const MIN_SIMILARITY = 0.2;
 
   // Build filter query for texts
+=======
+  const MIN_SIMILARITY = 0.2; // Lower threshold to catch more results (was 0.3)
+
+  // Build filter query for texts (to get metadata)
+  // If no filters, we'll fetch all texts for metadata mapping
+>>>>>>> origin/main
   let textQuery = supabase.from('texts').select('id, title, author, type, lenses');
   const hasFilters = filters && (filters.lenses?.length || filters.documentTypes?.length || filters.domains?.length);
 
@@ -79,6 +94,7 @@ async function vectorSearchManual(
     textQuery = textQuery.in('type', filters.documentTypes);
   }
 
+<<<<<<< HEAD
   const { data: allTexts } = hasFilters
     ? await textQuery
     : await textQuery.limit(1000);
@@ -103,15 +119,80 @@ async function vectorSearchManual(
 
   if (chunksError || !chunks || chunks.length === 0) return [];
 
+=======
+  // Get texts (for metadata mapping)
+  // If no filters, fetch all texts (with a reasonable limit for metadata)
+  const { data: allTexts } = hasFilters 
+    ? await textQuery 
+    : await textQuery.limit(10000); // Large limit to get all texts for metadata
+  
+  const textMap = new Map(
+    (allTexts || []).map(t => [t.id, { title: t.title, author: t.author, type: t.type }])
+  );
+
+  // If filters are provided, only search chunks from those texts
+  // Otherwise, search ALL chunks (to find any relevant content)
+  let chunksQuery = supabase
+    .from('text_chunks')
+    .select('id, text_id, chunk_index, content, embedding')
+    .not('embedding', 'is', null);
+
+  // Apply text filter only if we have specific text filters
+  if (hasFilters) {
+    const textIds = allTexts?.map(t => t.id) || [];
+    if (textIds.length === 0) {
+      return [];
+    }
+    chunksQuery = chunksQuery.in('text_id', textIds);
+  }
+
+  // Fetch more chunks than needed to account for similarity filtering
+  // For deep search with limit=500, we want to check many chunks
+  const chunkFetchLimit = Math.max(limit * 20, 2000); // Fetch at least 2000 chunks for better coverage
+  const { data: chunks, error: chunksError } = await chunksQuery.limit(chunkFetchLimit);
+  
+  console.log(`[Vector Search] Fetched ${chunks?.length || 0} chunks from database`);
+
+  if (chunksError) {
+    console.error('Error fetching chunks:', chunksError);
+    return [];
+  }
+
+  if (!chunks || chunks.length === 0) {
+    console.warn('No chunks found in database. Texts may need embeddings generated.');
+    return [];
+  }
+
+  // Calculate similarity scores manually (cosine similarity)
+  const similarities: number[] = [];
+>>>>>>> origin/main
   const resultsWithSimilarity = chunks
     .map(chunk => {
       if (!chunk.embedding || !Array.isArray(chunk.embedding)) return null;
       const similarity = cosineSimilarity(queryEmbedding, chunk.embedding);
+<<<<<<< HEAD
       if (similarity < MIN_SIMILARITY) return null;
 
       const textMeta = textMap.get(chunk.text_id);
       if (!textMeta) return null;
 
+=======
+      similarities.push(similarity); // Track all similarities for debugging
+      
+      // Filter by minimum similarity
+      if (similarity < MIN_SIMILARITY) {
+        return null;
+      }
+
+      // Get text metadata
+      let textMeta = textMap.get(chunk.text_id);
+      if (!textMeta) {
+        // If text not in our map, try to fetch it (shouldn't happen often)
+        // For now, skip it to avoid extra queries
+        return null;
+      }
+      
+>>>>>>> origin/main
       return {
         text_id: chunk.text_id,
         chunk_id: chunk.id,
@@ -126,6 +207,17 @@ async function vectorSearchManual(
     .filter((r): r is VectorSearchResult => r !== null)
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, limit);
+
+  // Log diagnostic info
+  if (similarities.length > 0) {
+    const maxSim = Math.max(...similarities);
+    const minSim = Math.min(...similarities);
+    const avgSim = similarities.reduce((a, b) => a + b, 0) / similarities.length;
+    const aboveThreshold = similarities.filter(s => s >= MIN_SIMILARITY).length;
+    console.log(`[Vector Search] Similarity stats: max=${maxSim.toFixed(3)}, min=${minSim.toFixed(3)}, avg=${avgSim.toFixed(3)}, above threshold (${MIN_SIMILARITY})=${aboveThreshold}/${similarities.length}`);
+  }
+
+  console.log(`[Vector Search] Returning ${resultsWithSimilarity.length} results after filtering`);
 
   return resultsWithSimilarity;
 }

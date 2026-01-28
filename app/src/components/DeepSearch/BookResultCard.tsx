@@ -2,15 +2,22 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+<<<<<<< HEAD
 import { Book, ChevronDown, ChevronUp, User, ExternalLink } from 'lucide-react';
+=======
+import { Book, ChevronDown, ChevronUp, User } from 'lucide-react';
+>>>>>>> origin/main
 
 interface Chunk {
     chunk_id: string;
     content: string;
     similarity: number;
     chunk_index: number;
+<<<<<<< HEAD
     sentence?: string;
     summary?: string;
+=======
+>>>>>>> origin/main
 }
 
 interface BookResult {
@@ -22,6 +29,7 @@ interface BookResult {
 
 interface BookResultCardProps {
     book: BookResult;
+<<<<<<< HEAD
     searchQuery: string;
 }
 
@@ -176,6 +184,16 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
         const firstSentence = sentences[0]?.trim() || '';
         return firstSentence.length > 250 ? firstSentence.substring(0, 250) + '...' : firstSentence;
     };
+=======
+}
+
+export default function BookResultCard({ book }: BookResultCardProps) {
+    const [expanded, setExpanded] = useState(false);
+    const bestScore = Math.max(...book.chunks.map(c => c.similarity));
+
+    // Show first chunk preview if not expanded, or all 3 if expanded
+    const displayedChunks = expanded ? book.chunks : book.chunks.slice(0, 1);
+>>>>>>> origin/main
 
     return (
         <div className="bg-zinc-900/40 border border-amber-900/20 rounded-xl overflow-hidden hover:border-amber-600/30 transition-all duration-300">
@@ -194,10 +212,17 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
 
                         <div className="flex items-center gap-2">
                             <span className={`text-xs px-2 py-1 rounded-full border ${bestScore > 0.8
+<<<<<<< HEAD
                                 ? 'bg-green-900/20 border-green-700/30 text-green-400'
                                 : bestScore > 0.75
                                     ? 'bg-amber-900/20 border-amber-700/30 text-amber-400'
                                     : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+=======
+                                    ? 'bg-green-900/20 border-green-700/30 text-green-400'
+                                    : bestScore > 0.75
+                                        ? 'bg-amber-900/20 border-amber-700/30 text-amber-400'
+                                        : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+>>>>>>> origin/main
                                 }`}>
                                 {Math.round(bestScore * 100)}% Match
                             </span>
@@ -218,6 +243,7 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
 
             {/* Excerpts Section */}
             <div className="bg-zinc-950/30 border-t border-amber-900/10 p-4 space-y-4">
+<<<<<<< HEAD
                 {displayedChunks.map((chunk, idx) => {
                     // Extract sentence from content if not provided by API
                     let sentence = chunk.sentence;
@@ -261,6 +287,28 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
                         </div>
                     );
                 })}
+=======
+                {displayedChunks.map((chunk, idx) => (
+                    <div key={chunk.chunk_id} className="relative group">
+                        <div className="pl-4 border-l-2 border-amber-900/30 group-hover:border-amber-500/50 transition-colors">
+                            <p className="text-amber-100/80 text-sm leading-relaxed line-clamp-4 group-hover:line-clamp-none transition-all duration-300">
+                                "...{chunk.content}..."
+                            </p>
+                            <div className="mt-2 flex items-center justify-between opacity-60 group-hover:opacity-100 transition-opacity">
+                                <span className="text-xs text-amber-400/70">
+                                    Similarity: {(chunk.similarity * 100).toFixed(1)}%
+                                </span>
+                                <Link
+                                    href={`/library/${book.text_id}?chunk=${chunk.chunk_id}`}
+                                    className="text-xs text-amber-400 hover:text-amber-300 hover:underline flex items-center gap-1"
+                                >
+                                    Read in context →
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+>>>>>>> origin/main
             </div>
 
             {/* Expand/Collapse Trigger */}
