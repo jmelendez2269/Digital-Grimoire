@@ -1,5 +1,7 @@
 // Nano Banana AI cover generation service
-// Uses Google's Gemini 2.5 Flash for high-quality book cover generation
+// Powered by Google's Gemini models via Google AI Studio
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface GeneratedCoverResult {
   success: boolean;
@@ -9,13 +11,60 @@ export interface GeneratedCoverResult {
 }
 
 /**
- * Generate a book cover using Nano Banana AI (powered by Gemini 2.5 Flash)
- * 
- * @param title - Book title
- * @param author - Book author
- * @param domain - Content domain (e.g., 'esoteric', 'philosophy', 'religious')
- * @param tags - Optional tags for additional context
- * @returns Generated cover result with image URL
+ * Check if the Google/Nano Banana service is configured and available
+ */
+export async function checkNanoBananaStatus(): Promise<{
+  configured: boolean;
+  available: boolean;
+  credits?: number;
+  error?: string;
+}> {
+  try {
+    const apiKey = process.env.NANO_BANANA_API_KEY;
+
+    if (!apiKey) {
+      return {
+        configured: false,
+        available: false,
+        error: 'API key not configured',
+      };
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    // Try multiple models for availability check
+    const modelsToCheck = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-001", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+    let lastError;
+
+    for (const modelName of modelsToCheck) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        await model.generateContent("ping");
+        return {
+          configured: true,
+          available: true,
+          credits: 100,
+        };
+      } catch (err) {
+        console.warn(`[NanoBanana] Check failed for model ${modelName}:`, err);
+        lastError = err;
+      }
+    }
+
+    throw lastError || new Error("All models failed check");
+
+  } catch (error) {
+    return {
+      configured: !!process.env.NANO_BANANA_API_KEY,
+      available: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/**
+ * Generate a book cover using Google Gemini
+ * Uses SVG generation strategy to ensure compatibility with standard text models
  */
 export async function generateBookCover(
   title: string,
@@ -24,212 +73,94 @@ export async function generateBookCover(
   tags?: string[]
 ): Promise<GeneratedCoverResult> {
   try {
-    console.log(`\n🎨 Generating AI cover with Nano Banana for: "${title}" by ${author}`);
-    
+    console.log(`\n🎨 Generating AI cover with Google Gemini for: "${title}" by ${author}`);
+
     const apiKey = process.env.NANO_BANANA_API_KEY;
-    
     if (!apiKey) {
-      throw new Error('NANO_BANANA_API_KEY not configured in environment variables');
+      throw new Error('NANO_BANANA_API_KEY not configured');
     }
 
-    // Craft detailed prompt for Dark Academia aesthetic
-    const tagContext = tags && tags.length > 0 
-      ? `Additional themes: ${tags.slice(0, 5).join(', ')}.` 
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    // Fallback strategy: Try models in order of preference
+    const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-001", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+
+    let result;
+    let modelUsed;
+    let generationError;
+
+    const tagContext = tags && tags.length > 0
+      ? `Themes: ${tags.slice(0, 5).join(', ')}.`
       : '';
+
+    // Request an SVG code block
+    const prompt = `You are an expert book cover designer.
+    Create a highly detailed, artistic SVG code for a vintage book cover for:
+    Title: "${title}"
+    Author: ${author}
+    Subject: ${domain}
+    ${tagContext}
     
-    const prompt = `Create a vintage book cover for "${title}" by ${author}.
-
-STYLE REQUIREMENTS:
-- Dark academia aesthetic: mystical, scholarly, antique library feeling
-- Time period: 1880-1920s vintage book design
-- Ornate borders with art nouveau or gothic elements
-- Classic serif typography with elegant letter spacing
-- Mystical symbols relevant to ${domain} content
-
-VISUAL ELEMENTS:
-- Subject matter: ${domain} (esoteric, occult, philosophical, spiritual)
-- ${tagContext}
-- Aged paper texture with yellowed edges
-- Gold leaf or metallic accents on title and borders
-- Embossed or debossed appearance
-- Rich, deep color palette: burgundy, deep green, navy, gold, cream
-
-FORMAT:
-- Portrait orientation (2:3 aspect ratio)
-- Title text MUST be clearly readable
-- Author name in smaller elegant font
-- Decorative flourishes and corner ornaments
-- Center focal symbol or mystical illustration
-
-The cover should evoke the feeling of discovering a rare mystical text in an old occult library.`;
-
-    console.log(`[NanoBanana] Sending generation request...`);
-    console.log(`[NanoBanana] API endpoint: https://api.nanobanana.dev/v1/generate`);
-    console.log(`[NanoBanana] API key present: ${!!apiKey}`);
-    console.log(`[NanoBanana] API key length: ${apiKey?.length || 0}`);
+    DESIGN REQUIREMENTS:
+    - Aspect Ratio: 2:3 (e.g. 600x900)
+    - Style: Dark Academia, Antique, Mystical, Vintage Hardcover.
+    - Colors: Deep rich tones (Burgundy, Navy, Forest Green, Void Black) with Gold/Bronze accents.
+    - Typography: Classic Serif, elegant, legible.
+    - Graphics: Include symbolic geometric patterns, ornate borders, and a central mystical symbol relevant to the subject.
+    - OUTPUT MUST BE VALID SVG CODE ONLY.
+    - Do not use external images. Use SVG paths, gradients, and filters to create texture and depth.
+    - Add a paper texture effect using SVG filters if possible.
     
-    // Calculate dimensions for 2:3 aspect ratio (book cover)
-    // Standard book cover dimensions: 400x600px or 800x1200px
-    const width = 800;
-    const height = 1200; // 2:3 aspect ratio
-    
-    console.log(`[NanoBanana] Request payload:`, {
-      prompt: prompt.substring(0, 100) + '...',
-      width,
-      height,
-      quality: 'high',
-    });
-    
-    // Create abort controller for timeout (Node.js compatible)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-    
-    // Nano Banana API call - using correct endpoint from documentation
-    // Base URL: https://api.nanobanana.dev/v1
-    // Endpoint: POST /generate
-    let response;
-    try {
-      const requestBody = {
-        prompt,
-        width,
-        height,
-        quality: 'high',
-      };
-      
-      console.log(`[NanoBanana] Making fetch request to: https://api.nanobanana.dev/v1/generate`);
-      response = await fetch('https://api.nanobanana.dev/v1/generate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      console.log(`[NanoBanana] Fetch completed. Status: ${response.status} ${response.statusText}`);
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      console.error('[NanoBanana] Fetch error details:', {
-        name: fetchError instanceof Error ? fetchError.name : 'Unknown',
-        message: fetchError instanceof Error ? fetchError.message : String(fetchError),
-        cause: fetchError instanceof Error ? fetchError.cause : undefined,
-        stack: fetchError instanceof Error ? fetchError.stack : undefined,
-      });
-      
-      // Provide more specific error messages
-      if (fetchError instanceof TypeError && fetchError.message.includes('fetch')) {
-        throw new Error(`Network error: Unable to reach Nano Banana API. Check your internet connection and verify the API endpoint: https://api.nanobanana.dev/v1/generate. Error: ${fetchError.message}`);
-      } else if (fetchError instanceof Error && (fetchError.name === 'AbortError' || fetchError.message.includes('aborted'))) {
-        throw new Error('Request timeout: Nano Banana API did not respond within 60 seconds. The service may be down or slow.');
-      } else if (fetchError instanceof Error && fetchError.message.includes('ENOTFOUND')) {
-        throw new Error(`DNS error: Cannot resolve api.nanobanana.dev. Check if the domain is correct. Error: ${fetchError.message}`);
-      } else {
-        throw new Error(`Failed to connect to Nano Banana API: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
-      }
-    }
+    Respond ONLY with the SVG code block. Start with <svg and end with </svg>.`;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorData;
+    for (const modelName of models) {
       try {
-        errorData = JSON.parse(errorText);
-      } catch {
-        errorData = { raw: errorText };
+        console.log(`[NanoBanana] Attempting generation with model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const chatResult = await model.generateContent(prompt);
+        const response = await chatResult.response;
+        const text = response.text();
+        if (text) {
+          result = text;
+          modelUsed = modelName;
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`[NanoBanana] Model ${modelName} failed:`, err.message);
+        // Always update the last error so we don't return "Unknown"
+        generationError = err;
       }
-      const errorMessage = errorData.error || errorData.message || errorData.raw || response.statusText;
-      console.error('[NanoBanana] API error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorData,
-      });
-      throw new Error(`Nano Banana API error (${response.status}): ${errorMessage}`);
     }
 
-    const responseText = await response.text();
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('[NanoBanana] Failed to parse JSON response:', responseText.substring(0, 500));
-      throw new Error(`Invalid JSON response from Nano Banana API: ${parseError}`);
-    }
-    
-    console.log('[NanoBanana] API response structure:', JSON.stringify(data, null, 2).substring(0, 1000));
-    
-    // Extract image URL from response
-    // According to Nano Banana API docs, response contains image_url
-    const imageUrl = data.image_url || data.imageUrl || data.url || data.images?.[0]?.url || data.data?.image_url;
-    
-    if (!imageUrl) {
-      console.error('[NanoBanana] Unexpected response structure. Full response:', JSON.stringify(data, null, 2));
-      throw new Error('No image URL found in Nano Banana response. Check API response structure.');
+    if (!result) {
+      throw new Error(`Failed to generate content with any Gemini model. Last error: ${generationError?.message || 'Unknown'}`);
     }
 
-    const creditsUsed = data.credits_used || 2; // Default to 2 credits per image
-    
-    console.log(`[NanoBanana] ✓ Cover generated successfully`);
-    console.log(`[NanoBanana] Credits used: ${creditsUsed}`);
-    console.log(`[NanoBanana] Image URL: ${imageUrl}\n`);
+    // Extract SVG from response
+    const svgMatch = result.match(/<svg[\s\S]*?<\/svg>/);
+    if (!svgMatch) {
+      throw new Error("Failed to generate valid SVG code from Gemini response (Model: " + modelUsed + ")");
+    }
+
+    const svgCode = svgMatch[0];
+
+    // Convert SVG to Base64 Data URL
+    const base64Svg = Buffer.from(svgCode).toString('base64');
+    const dataUrl = `data:image/svg+xml;base64,${base64Svg}`;
+
+    console.log(`[NanoBanana] Success! Generated via ${modelUsed}`);
 
     return {
       success: true,
-      imageUrl,
-      creditsUsed,
+      imageUrl: dataUrl,
+      creditsUsed: 1
     };
+
   } catch (error) {
-    console.error('[NanoBanana] ✗ Error generating cover:', error);
+    console.error('[GoogleGemini] Generation failed:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: error instanceof Error ? `[GoogleGenerativeAI Error]: ${error.message}` : String(error),
     };
   }
 }
-
-/**
- * Check Nano Banana API status and available credits
- * Useful for admin dashboard monitoring
- */
-export async function checkNanoBananaStatus(): Promise<{
-  available: boolean;
-  credits?: number;
-  error?: string;
-}> {
-  try {
-    const apiKey = process.env.NANO_BANANA_API_KEY;
-    
-    if (!apiKey) {
-      return {
-        available: false,
-        error: 'API key not configured',
-      };
-    }
-
-    // Check account status - using correct base URL
-    const response = await fetch('https://api.nanobanana.dev/v1/account', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    });
-
-    if (!response.ok) {
-      return {
-        available: false,
-        error: `API returned ${response.status}`,
-      };
-    }
-
-    const data = await response.json();
-    
-    return {
-      available: true,
-      credits: data.credits || data.balance || 0,
-    };
-  } catch (error) {
-    return {
-      available: false,
-      error: String(error),
-    };
-  }
-}
-

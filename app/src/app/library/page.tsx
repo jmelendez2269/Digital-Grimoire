@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useQueryClient } from '@tanstack/react-query';
-import { FileText, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2, ArrowUpDown, ChevronDown, Search } from 'lucide-react';
+import { FileText, Calendar, User, BookOpen, Tag, Eye, Edit, Trash2, ArrowUpDown, ChevronDown, Search, Shuffle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Pagination from '@/components/Pagination';
 import BookmarkButton from '@/components/BookmarkButton';
@@ -57,6 +57,18 @@ function LibraryPageContent() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
+  // Shuffle state
+  const [isShuffled, setIsShuffled] = useState(true);
+  const [shuffleMap, setShuffleMap] = useState<Map<string, number>>(new Map());
+
+  // Initialize shuffle preference from localStorage
+  useEffect(() => {
+    const storedShuffle = localStorage.getItem('library_shuffle_preference');
+    if (storedShuffle !== null) {
+      setIsShuffled(storedShuffle === 'true');
+    }
+  }, []);
+
   // Advanced filter state
   const [filterValues, setFilterValues] = useState<FilterValues>({
     domain: 'all',
@@ -98,6 +110,24 @@ function LibraryPageContent() {
   const loading = textsQuery.isLoading || filterOptionsQuery.isLoading;
   const error = textsQuery.error?.message || filterOptionsQuery.error?.message || null;
 
+  // Generate stable shuffle map when texts change
+  useEffect(() => {
+    if (allTexts.length > 0) {
+      const newMap = new Map<string, number>();
+      allTexts.forEach(text => {
+        newMap.set(text.id, Math.random());
+      });
+      setShuffleMap(newMap);
+    }
+  }, [allTexts]); // Only regenerate when the underlying data changes
+
+  const toggleShuffle = () => {
+    const newState = !isShuffled;
+    setIsShuffled(newState);
+    localStorage.setItem('library_shuffle_preference', String(newState));
+    setCurrentPage(1);
+  };
+
   // CLIENT-SIDE FILTERING & SORTING LOGIC
   const { filteredTexts, suggestions } = (useCallback(() => {
     if (!allTexts) return { filteredTexts: [], suggestions: [] };
@@ -137,36 +167,44 @@ function LibraryPageContent() {
     });
 
     // 2. Sort
-    const stripArticles = (title: string | null): string => {
-      if (!title) return '';
-      return title.toLowerCase().trim().replace(/^(a|an|the)\s+/i, '');
-    };
+    if (isShuffled) {
+      filtered.sort((a, b) => {
+        const rankA = shuffleMap.get(a.id) ?? 0;
+        const rankB = shuffleMap.get(b.id) ?? 0;
+        return rankA - rankB;
+      });
+    } else {
+      const stripArticles = (title: string | null): string => {
+        if (!title) return '';
+        return title.toLowerCase().trim().replace(/^(a|an|the)\s+/i, '');
+      };
 
-    filtered.sort((a, b) => {
-      let comparison = 0;
-      switch (sortBy) {
-        case 'title':
-          comparison = stripArticles(a.title).localeCompare(stripArticles(b.title));
-          break;
-        case 'author':
-          comparison = (a.author || '').localeCompare(b.author || '');
-          break;
-        case 'year':
-          comparison = (a.year || 0) - (b.year || 0);
-          break;
-        case 'domain':
-          comparison = (a.domain || '').localeCompare(b.domain || '');
-          break;
-        case 'type':
-          comparison = (a.type || '').localeCompare(b.type || '');
-          break;
-        case 'created_at':
-        default:
-          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-          break;
-      }
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
+      filtered.sort((a, b) => {
+        let comparison = 0;
+        switch (sortBy) {
+          case 'title':
+            comparison = stripArticles(a.title).localeCompare(stripArticles(b.title));
+            break;
+          case 'author':
+            comparison = (a.author || '').localeCompare(b.author || '');
+            break;
+          case 'year':
+            comparison = (a.year || 0) - (b.year || 0);
+            break;
+          case 'domain':
+            comparison = (a.domain || '').localeCompare(b.domain || '');
+            break;
+          case 'type':
+            comparison = (a.type || '').localeCompare(b.type || '');
+            break;
+          case 'created_at':
+          default:
+            comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            break;
+        }
+        return sortOrder === 'asc' ? comparison : -comparison;
+      });
+    }
 
     // 3. Generate suggestions (top 8 matches for the search drawer)
     let searchSuggestions: typeof allTexts = [];
@@ -177,7 +215,7 @@ function LibraryPageContent() {
     }
 
     return { filteredTexts: filtered, suggestions: searchSuggestions };
-  }, [allTexts, searchQuery, filterValues, sortBy, sortOrder]))();
+  }, [allTexts, searchQuery, filterValues, sortBy, sortOrder, isShuffled, shuffleMap]))();
 
   // PAGINATION LOGIC
   const totalCount = filteredTexts.length;
@@ -212,12 +250,16 @@ function LibraryPageContent() {
   const handleSortChange = (newSortBy: typeof sortBy, newSortOrder: typeof sortOrder) => {
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
+    setIsShuffled(false); // Disable shuffle when user explicitly sorts
+    localStorage.setItem('library_shuffle_preference', 'false');
     setCurrentPage(1); // Reset to first page when sort changes
     setShowSortDropdown(false);
   };
 
   // Memoize getSortLabel function
   const getSortLabel = useCallback(() => {
+    if (isShuffled) return 'Shuffle';
+
     const labels: Record<typeof sortBy, string> = {
       title: 'Title',
       author: 'Author',
@@ -228,7 +270,7 @@ function LibraryPageContent() {
     };
     const orderLabel = sortOrder === 'asc' ? 'Ascending' : 'Descending';
     return `${labels[sortBy]} (${orderLabel})`;
-  }, [sortBy, sortOrder]);
+  }, [sortBy, sortOrder, isShuffled]);
 
   const deleteText = async (textId: string, title: string) => {
     if (!confirm(`Are you sure you want to permanently delete "${title}"?\n\nThis will remove the document and all associated data (bookmarks, annotations, etc.). This action cannot be undone.`)) {
@@ -316,11 +358,26 @@ function LibraryPageContent() {
                   />
                 </div>
 
+                {/* Shuffle Button */}
+                <button
+                  onClick={toggleShuffle}
+                  title={isShuffled ? "Shuffle On (Click to disable in Sort)" : "Shuffle Off"}
+                  className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm transition-colors ${isShuffled
+                      ? 'bg-amber-600/20 border-amber-600/50 text-amber-300'
+                      : 'bg-zinc-900/50 border-amber-900/20 text-amber-100/60 hover:bg-zinc-800/50 hover:text-amber-100'
+                    }`}
+                >
+                  <Shuffle className="w-4 h-4" />
+                </button>
+
                 {/* Sort Button */}
                 <div className="relative">
                   <button
                     onClick={() => setShowSortDropdown(!showSortDropdown)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 text-sm hover:bg-zinc-800/50 hover:border-amber-600/50 transition-colors"
+                    className={`flex items-center gap-2 px-3 py-1.5 bg-zinc-900/50 border rounded-lg text-sm transition-colors ${isShuffled
+                        ? 'border-amber-900/20 text-amber-100/60'
+                        : 'border-amber-600/30 text-amber-100'
+                      }`}
                   >
                     <ArrowUpDown className="w-4 h-4" />
                     <span>Sort: {getSortLabel()}</span>
@@ -353,20 +410,20 @@ function LibraryPageContent() {
                               <div key={field} className="py-1">
                                 <button
                                   onClick={() => {
-                                    if (sortBy === field) {
+                                    if (sortBy === field && !isShuffled) {
                                       handleSortChange(field, sortOrder === 'asc' ? 'desc' : 'asc');
                                     } else {
                                       handleSortChange(field, 'desc');
                                     }
                                     setShowSortDropdown(false);
                                   }}
-                                  className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${sortBy === field
-                                    ? 'bg-amber-600/20 text-amber-400'
-                                    : 'text-amber-100/80 hover:bg-zinc-800/50'
+                                  className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${sortBy === field && !isShuffled
+                                      ? 'bg-amber-600/20 text-amber-400'
+                                      : 'text-amber-100/80 hover:bg-zinc-800/50'
                                     }`}
                                 >
                                   <span>{labels[field]}</span>
-                                  {sortBy === field && (
+                                  {sortBy === field && !isShuffled && (
                                     <span className="text-xs text-amber-400/60">
                                       {sortOrder === 'asc' ? '↑' : '↓'}
                                     </span>

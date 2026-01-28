@@ -56,6 +56,31 @@ const nextConfig: NextConfig = {
         // Allow Project Gutenberg images
         hostname: 'www.gutenberg.org',
       },
+      {
+        protocol: 'https',
+        // Allow ThriftBooks images
+        hostname: 'i.thriftbooks.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'books.google.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.getimg.ai',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.mjppublishers.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'enlightenmentmedianews.com',
+      },
     ],
   },
   // Compress output
@@ -70,14 +95,14 @@ const nextConfig: NextConfig = {
     // Allow necessary services: Supabase, Cloudflare R2, Azure, OpenAI, Vercel Analytics, Sentry
     // In development, allow localhost connections for Sentry tunnel
     const connectSrc = isProduction
-      ? "'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com"
-      : "'self' http://localhost:* http://127.0.0.1:* https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com";
+      ? "'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com https://cloudflareinsights.com https://static.cloudflareinsights.com"
+      : "'self' http://localhost:* http://127.0.0.1:* https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com https://cloudflareinsights.com https://static.cloudflareinsights.com";
 
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com https://accounts.google.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.vercel-insights.com https://*.sentry.io https://va.vercel-scripts.com https://accounts.google.com https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://archive.org https://*.googleusercontent.com https://*.media-amazon.com https://*.ssl-images-amazon.com https://www.gutenberg.org",
+      "img-src 'self' data: blob: https://*.cloudflare.com https://*.r2.dev https://*.supabase.co https://*.supabase.in https://covers.openlibrary.org https://th.bing.com https://archive.org https://*.googleusercontent.com https://*.media-amazon.com https://*.ssl-images-amazon.com https://www.gutenberg.org https://i.thriftbooks.com https://books.google.com https://*.googleapis.com https://*.getimg.ai https://www.mjppublishers.com",
       "font-src 'self' data:",
       `connect-src ${connectSrc} https://accounts.google.com`,
       "worker-src 'self' blob:",

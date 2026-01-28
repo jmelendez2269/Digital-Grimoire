@@ -25,7 +25,7 @@ export default async function TarotPage() {
                 <p className="text-zinc-400">Consult the cards for guidance.</p>
             </div>
 
-            <TarotDeck />
+            <TarotWorkbench />
 
             {/* History Section - MVP: Just a list */}
             {recentReadings && recentReadings.length > 0 && (

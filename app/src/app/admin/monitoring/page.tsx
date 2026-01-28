@@ -67,6 +67,12 @@ interface CoverSystemStatus {
         credits?: number;
         error?: string;
     };
+    replicate?: {
+        configured: boolean;
+        available: boolean;
+        error?: string;
+        model?: string;
+    };
     stats: {
         totalJobs: number;
         completed: number;
@@ -718,18 +724,53 @@ export default function AdminMonitoringPage() {
 
                                         {/* API Status Cards */}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                            {/* Replicate Status */}
+                                            <div className={`border rounded-lg p-4 ${coverStatus.replicate?.available
+                                                ? 'bg-green-950/20 border-green-700/30'
+                                                : 'bg-amber-950/20 border-amber-700/30'
+                                                }`}>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-sm font-semibold text-amber-100">Replicate AI</span>
+                                                    <span className={`px-2 py-1 text-xs rounded ${coverStatus.replicate?.available
+                                                        ? 'bg-green-600/20 text-green-400'
+                                                        : 'bg-amber-600/20 text-amber-400'
+                                                        }`}>
+                                                        {coverStatus.replicate?.available ? '✓ Active' : '○ Not Configured'}
+                                                    </span>
+                                                </div>
+                                                {coverStatus.replicate?.available && (
+                                                    <div>
+                                                        <div className="text-xs text-amber-100/60 font-mono">Model: {coverStatus.replicate.model || 'FLUX.1'}</div>
+                                                        <div className="text-xs text-green-400 mt-1">Operational</div>
+                                                    </div>
+                                                )}
+                                                {!coverStatus.replicate?.available && (
+                                                    <div className="text-xs text-amber-100/60 mt-1">
+                                                        {coverStatus.replicate?.error || 'Add REPLICATE_API_TOKEN'}
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             {/* Nano Banana Status */}
                                             <div className={`border rounded-lg p-4 ${coverStatus.nanoBanana.available
                                                 ? 'bg-green-950/20 border-green-700/30'
-                                                : 'bg-amber-950/20 border-amber-700/30'
+                                                : coverStatus.nanoBanana.configured
+                                                    ? 'bg-red-950/20 border-red-700/30' // Configured but broken
+                                                    : 'bg-amber-950/20 border-amber-700/30' // Not configured
                                                 }`}>
                                                 <div className="flex items-center justify-between mb-2">
                                                     <span className="text-sm font-semibold text-amber-100">Nano Banana AI</span>
                                                     <span className={`px-2 py-1 text-xs rounded ${coverStatus.nanoBanana.available
                                                         ? 'bg-green-600/20 text-green-400'
-                                                        : 'bg-amber-600/20 text-amber-400'
+                                                        : coverStatus.nanoBanana.configured
+                                                            ? 'bg-red-600/20 text-red-400'
+                                                            : 'bg-amber-600/20 text-amber-400'
                                                         }`}>
-                                                        {coverStatus.nanoBanana.available ? '✓ Active' : '○ Not Configured'}
+                                                        {coverStatus.nanoBanana.available
+                                                            ? '✓ Active'
+                                                            : coverStatus.nanoBanana.configured
+                                                                ? '⚠ Offline'
+                                                                : '○ Not Configured'}
                                                     </span>
                                                 </div>
                                                 {coverStatus.nanoBanana.available && coverStatus.nanoBanana.credits !== undefined && (
@@ -743,7 +784,7 @@ export default function AdminMonitoringPage() {
                                                 )}
                                                 {!coverStatus.nanoBanana.available && (
                                                     <div className="text-xs text-amber-100/60 mt-1">
-                                                        Add NANO_BANANA_API_KEY to enable AI cover generation
+                                                        {coverStatus.nanoBanana.error || 'Add NANO_BANANA_API_KEY to enable'}
                                                     </div>
                                                 )}
                                             </div>
@@ -810,12 +851,141 @@ export default function AdminMonitoringPage() {
                                         )}
                                     </div>
                                 )}
+
+                                {/* Cover Link Health */}
+                                <CoverHealthSection />
+
                             </div>
                         ) : null}
                     </div>
                 </div>
             </main>
             <Footer />
+        </div>
+    );
+}
+
+function CoverHealthSection() {
+    const [health, setHealth] = useState<{ total: number; broken: number; unchecked: number; brokenList: any[] } | null>(null);
+    const [scanning, setScanning] = useState(false);
+    const [lastScanResult, setLastScanResult] = useState<any>(null);
+
+    const fetchHealth = async () => {
+        try {
+            const res = await fetch('/api/admin/covers/health');
+            if (res.ok) {
+                const data = await res.json();
+                setHealth(data);
+            }
+        } catch (e) {
+            console.error('Failed to fetch cover health', e);
+        }
+    };
+
+    useEffect(() => {
+        fetchHealth();
+    }, []);
+
+    const runScan = async () => {
+        setScanning(true);
+        setLastScanResult(null);
+        try {
+            const res = await fetch('/api/admin/covers/scan', { method: 'POST' });
+            const data = await res.json();
+            setLastScanResult(data);
+            fetchHealth();
+        } catch (e) {
+            console.error('Scan failed', e);
+        } finally {
+            setScanning(false);
+        }
+    };
+
+    if (!health) return <div className="p-6 bg-zinc-900/50 rounded-lg animate-pulse">Loading Health Stats...</div>;
+
+    return (
+        <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h2 className="text-xl font-bold text-amber-100">
+                        🔗 Cover Link Health
+                    </h2>
+                    <p className="text-sm text-amber-100/60">
+                        Scan for broken or missing cover images across the library.
+                    </p>
+                </div>
+                <button
+                    onClick={runScan}
+                    disabled={scanning}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${scanning
+                        ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                        : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
+                >
+                    {scanning ? 'Scanning...' : 'Run Scan Now'}
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-zinc-800/50 border border-amber-900/20 rounded-lg p-4">
+                    <div className="text-sm text-amber-100/60 mb-1">Total Covers</div>
+                    <div className="text-2xl font-bold text-amber-100">{health.total}</div>
+                </div>
+                <div className="bg-zinc-800/50 border border-amber-900/20 rounded-lg p-4">
+                    <div className="text-sm text-amber-100/60 mb-1">Broken Links</div>
+                    <div className={`text-2xl font-bold ${health.broken > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                        {health.broken}
+                    </div>
+                </div>
+                <div className="bg-zinc-800/50 border border-amber-900/20 rounded-lg p-4">
+                    <div className="text-sm text-amber-100/60 mb-1">Unchecked</div>
+                    <div className="text-2xl font-bold text-amber-100">{health.unchecked}</div>
+                </div>
+            </div>
+
+            {lastScanResult && (
+                <div className="mb-6 p-4 bg-zinc-800/80 rounded-lg border border-zinc-700">
+                    <h3 className="font-semibold text-amber-100 mb-2">Last Scan Result</h3>
+                    <p className="text-sm text-amber-100/80">
+                        Scanned: {lastScanResult.scanned} | Broken Found: {lastScanResult.broken}
+                    </p>
+                    {lastScanResult.message && <p className="text-xs text-zinc-400 mt-1">{lastScanResult.message}</p>}
+                </div>
+            )}
+
+            {health.brokenList && health.brokenList.length > 0 && (
+                <div className="border border-red-900/30 bg-red-950/10 rounded-lg overflow-hidden">
+                    <div className="px-4 py-2 bg-red-900/20 border-b border-red-900/30 flex justify-between items-center">
+                        <span className="font-bold text-red-200 text-sm">Broken Links Detected</span>
+                        <span className="text-xs text-red-300/60">Showing first 100</span>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="text-xs text-red-200 uppercase bg-red-900/10">
+                                <tr>
+                                    <th className="px-4 py-2">Title</th>
+                                    <th className="px-4 py-2">Last Checked</th>
+                                    <th className="px-4 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-red-900/10">
+                                {health.brokenList.map((item: any) => (
+                                    <tr key={item.id} className="hover:bg-red-900/5">
+                                        <td className="px-4 py-2 font-medium text-amber-100">{item.title}</td>
+                                        <td className="px-4 py-2 text-zinc-400">
+                                            {item.cover_last_checked ? new Date(item.cover_last_checked).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td className="px-4 py-2">
+                                            <Link href={`/admin/edit/${item.id}`} className="text-amber-400 hover:underline">
+                                                Edit
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

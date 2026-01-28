@@ -2,18 +2,19 @@
 // POST /api/covers/generate
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateBookCover } from '@/lib/replicate-cover';
+import { generateBookCover as generateWithReplicate } from '@/lib/replicate-cover';
+import { generateBookCover as generateWithNanoBanana } from '@/lib/nano-banana-cover';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { textId, title, author, domain, tags } = body;
+    const { textId, title, author, domain, tags, provider = 'replicate' } = body;
 
     // Validate required fields
     if (!textId || !title || !author || !domain) {
       return NextResponse.json(
-        { 
+        {
           error: 'Missing required fields',
           required: ['textId', 'title', 'author', 'domain'],
         },
@@ -21,28 +22,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`\n📡 API: Generate AI cover request for text ${textId}`);
+    console.log(`\n📡 API: Generate AI cover request for text ${textId} using provider: ${provider}`);
 
-    // Check if Replicate API token is configured
-    if (!process.env.REPLICATE_API_TOKEN) {
-      return NextResponse.json(
-        { 
-          error: 'Replicate API token not configured. Please add REPLICATE_API_TOKEN to environment variables. You can get an API token from https://replicate.com/account/api-tokens',
-          success: false,
-        },
-        { status: 503 }
-      );
+    let result;
+
+    if (provider === 'nano-banana') {
+      const apiKey = process.env.NANO_BANANA_API_KEY;
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: 'Nano Banana (Google AI) API key not configured.' },
+          { status: 503 }
+        );
+      }
+      result = await generateWithNanoBanana(title, author, domain, tags);
+    } else {
+      // Default to Replicate
+      if (!process.env.REPLICATE_API_TOKEN) {
+        return NextResponse.json(
+          {
+            error: 'Replicate API token not configured. Please add REPLICATE_API_TOKEN to environment variables.',
+            success: false,
+          },
+          { status: 503 }
+        );
+      }
+      result = await generateWithReplicate(title, author, domain, tags);
     }
 
-    // Generate cover with Replicate FLUX.1 [schnell] model
-    console.log(`[API] Calling generateBookCover with:`, { title, author, domain, tags });
-    const result = await generateBookCover(title, author, domain, tags);
-    console.log(`[API] generateBookCover result:`, { success: result.success, hasImageUrl: !!result.imageUrl, error: result.error });
+    console.log(`[API] Cover generation result:`, { success: result.success, hasImageUrl: !!result.imageUrl, error: result.error });
 
     if (!result.success) {
       console.error(`[API] Cover generation failed:`, result.error);
       return NextResponse.json(
-        { 
+        {
           error: result.error || 'Failed to generate cover',
           success: false,
         },
@@ -53,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!result.imageUrl) {
       console.error(`[API] Cover generation succeeded but no imageUrl returned`);
       return NextResponse.json(
-        { 
+        {
           error: 'Cover generated but no image URL returned',
           success: false,
         },
@@ -99,7 +111,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in generate cover API:', error);
     return NextResponse.json(
-      { 
+      {
         error: error instanceof Error ? error.message : 'Internal server error',
         success: false,
       },
