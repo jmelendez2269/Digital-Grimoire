@@ -4,22 +4,30 @@ import { createClient } from '@/lib/supabase/server';
 export const PRICING = {
   // Azure Document Intelligence (per page)
   AZURE_OCR_PER_PAGE: 0.01,
-  
+
   // OpenAI (per 1K tokens)
   OPENAI_INPUT_PER_1K: 0.0025,  // GPT-4o pricing
   OPENAI_OUTPUT_PER_1K: 0.01,   // GPT-4o pricing
 
   // Notion API (per 1K requests) - Notion API is generally free; track at $0 for visibility
   NOTION_REQUEST_PER_1K: 0,
-  
+
   // Cloudflare R2
   R2_STORAGE_PER_GB_MONTH: 0.015, // $0.015 per GB/month
   R2_CLASS_A_PER_1K: 0.0036,      // Write operations per 1000
   R2_CLASS_B_PER_1K: 0.00036,     // Read operations per 1000
-  
+
   // Supabase (included in plan, but track for future)
   SUPABASE_DATABASE_READS: 0,
   SUPABASE_DATABASE_WRITES: 0,
+
+  // Anthropic (per 1K tokens) - Claude 3.5 Sonnet
+  ANTHROPIC_INPUT_PER_1K: 0.003,
+  ANTHROPIC_OUTPUT_PER_1K: 0.015,
+
+  // Google (per 1K tokens) - Gemini 1.5 Pro
+  GOOGLE_INPUT_PER_1K: 0.0035,
+  GOOGLE_OUTPUT_PER_1K: 0.0105,
 };
 
 export interface UsageLogParams {
@@ -42,10 +50,10 @@ export interface UsageLogParams {
 export async function logApiUsage(params: UsageLogParams): Promise<void> {
   try {
     const supabase = await createClient();
-    
+
     // Calculate cost if not provided
     const cost = params.estimatedCost ?? calculateCost(params.service, params.unitsUsed, params.unitType);
-    
+
     const { data, error } = await supabase.from('api_usage').insert({
       service: params.service,
       endpoint: params.endpoint,
@@ -59,7 +67,7 @@ export async function logApiUsage(params: UsageLogParams): Promise<void> {
       success: params.success !== false,
       error_message: params.errorMessage || null,
     }).select();
-    
+
     if (error) {
       console.error(`[Usage Tracker] Failed to insert usage record for ${params.service}:`, error);
       console.error(`[Usage Tracker] Error details:`, {
@@ -96,16 +104,16 @@ function calculateCost(
   switch (service) {
     case 'azure_ocr':
       return units * PRICING.AZURE_OCR_PER_PAGE;
-    
+
     case 'openai_metadata':
       // Assuming mixed input/output, use average
       const avgCostPer1K = (PRICING.OPENAI_INPUT_PER_1K + PRICING.OPENAI_OUTPUT_PER_1K) / 2;
       return (units / 1000) * avgCostPer1K;
-    
+
     case 'notion':
       // Track requests for visibility (free or enterprise-dependent). This is set to $0 by default.
       return (units / 1000) * PRICING.NOTION_REQUEST_PER_1K;
-    
+
     case 'r2_storage':
       if (unitType === 'bytes') {
         // Convert bytes to GB and calculate monthly cost (prorated)
@@ -113,11 +121,11 @@ function calculateCost(
         return gb * PRICING.R2_STORAGE_PER_GB_MONTH;
       }
       return 0;
-    
+
     case 'r2_bandwidth':
       // R2 egress is free up to certain limits
       return 0;
-    
+
     default:
       return 0;
   }
@@ -162,12 +170,12 @@ export async function logMetadataExtractionUsage(params: {
   model?: string;
 }) {
   const totalTokens = params.inputTokens + params.outputTokens;
-  
+
   // Calculate more accurate cost based on input/output ratio
   const inputCost = (params.inputTokens / 1000) * PRICING.OPENAI_INPUT_PER_1K;
   const outputCost = (params.outputTokens / 1000) * PRICING.OPENAI_OUTPUT_PER_1K;
   const totalCost = inputCost + outputCost;
-  
+
   await logApiUsage({
     service: 'openai_metadata',
     operation: 'extract_metadata',
@@ -275,14 +283,27 @@ export async function logConvergenceQueryUsage(params: {
   responseLength?: string;
   success?: boolean;
   errorMessage?: string;
+  model?: string;
 }) {
+  const modelUsed = params.model || 'gpt-4o';
+  let inputPrice = PRICING.OPENAI_INPUT_PER_1K;
+  let outputPrice = PRICING.OPENAI_OUTPUT_PER_1K;
+
+  if (modelUsed.includes('claude')) {
+    inputPrice = PRICING.ANTHROPIC_INPUT_PER_1K;
+    outputPrice = PRICING.ANTHROPIC_OUTPUT_PER_1K;
+  } else if (modelUsed.includes('gemini')) {
+    inputPrice = PRICING.GOOGLE_INPUT_PER_1K;
+    outputPrice = PRICING.GOOGLE_OUTPUT_PER_1K;
+  }
+
   const totalTokens = params.inputTokens + params.outputTokens;
-  
-  // Calculate cost based on GPT-4o pricing
-  const inputCost = (params.inputTokens / 1000) * PRICING.OPENAI_INPUT_PER_1K;
-  const outputCost = (params.outputTokens / 1000) * PRICING.OPENAI_OUTPUT_PER_1K;
+
+  // Calculate cost based on model pricing
+  const inputCost = (params.inputTokens / 1000) * inputPrice;
+  const outputCost = (params.outputTokens / 1000) * outputPrice;
   const totalCost = inputCost + outputCost;
-  
+
   await logApiUsage({
     service: 'convergence_query',
     operation: 'convergence_machine_query',
@@ -300,7 +321,7 @@ export async function logConvergenceQueryUsage(params: {
       queryText: params.queryText?.substring(0, 200), // First 200 chars for reference
       lensWeights: params.lensWeights,
       responseLength: params.responseLength,
-      model: 'gpt-4o',
+      model: modelUsed,
     },
   });
 }
@@ -315,7 +336,7 @@ export async function logUserActivity(
 ) {
   try {
     const supabase = await createClient();
-    
+
     // Call the database function to update user activity
     await supabase.rpc('update_user_activity', {
       p_user_id: userId,
@@ -333,18 +354,18 @@ export async function logUserActivity(
 export async function getCurrentMonthCost(): Promise<number> {
   try {
     const supabase = await createClient();
-    
+
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
-    
+
     const { data, error } = await supabase
       .from('api_usage')
       .select('estimated_cost')
       .gte('created_at', startOfMonth.toISOString());
-    
+
     if (error) throw error;
-    
+
     return data?.reduce((sum, row) => sum + (parseFloat(row.estimated_cost) || 0), 0) || 0;
   } catch (error) {
     console.error('Failed to get current month cost:', error);
@@ -362,43 +383,43 @@ export async function checkCostThresholds(): Promise<{
 }> {
   try {
     const supabase = await createClient();
-    
+
     // Get thresholds
     const { data: alerts } = await supabase
       .from('cost_alerts')
       .select('*');
-    
+
     const thresholds = {
       daily: alerts?.find(a => a.alert_type === 'daily')?.threshold_amount || 50,
       weekly: alerts?.find(a => a.alert_type === 'weekly')?.threshold_amount || 300,
       monthly: alerts?.find(a => a.alert_type === 'monthly')?.threshold_amount || 1000,
     };
-    
+
     // Get current costs
     const now = new Date();
     const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     const { data: dailyData } = await supabase
       .from('api_usage')
       .select('estimated_cost')
       .gte('created_at', dayAgo.toISOString());
-    
+
     const { data: weeklyData } = await supabase
       .from('api_usage')
       .select('estimated_cost')
       .gte('created_at', weekAgo.toISOString());
-    
+
     const { data: monthlyData } = await supabase
       .from('api_usage')
       .select('estimated_cost')
       .gte('created_at', monthStart.toISOString());
-    
+
     const dailyCost = dailyData?.reduce((sum, row) => sum + (parseFloat(row.estimated_cost) || 0), 0) || 0;
     const weeklyCost = weeklyData?.reduce((sum, row) => sum + (parseFloat(row.estimated_cost) || 0), 0) || 0;
     const monthlyCost = monthlyData?.reduce((sum, row) => sum + (parseFloat(row.estimated_cost) || 0), 0) || 0;
-    
+
     return {
       daily: { exceeded: dailyCost > thresholds.daily, current: dailyCost, threshold: thresholds.daily },
       weekly: { exceeded: weeklyCost > thresholds.weekly, current: weeklyCost, threshold: thresholds.weekly },

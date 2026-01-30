@@ -1,10 +1,6 @@
-import OpenAI from 'openai';
 import { Lens, LensType, getLens, getActiveLenses, getAllLenses } from './lenses';
 import { hybridSearch, HybridSearchResult } from './hybrid-retrieval';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { aiOrchestrator, ChatMessage, AIModel } from '../ai/ai-orchestrator';
 
 export interface LensWeights {
   scientific: number;
@@ -178,7 +174,7 @@ function buildIntensityAwareInstructions(
   normalizedWeights: Record<string, { normalized: number; intensity: string }>,
   dominance: { type: string; primary?: string[]; secondary?: string[] }
 ): { dominanceInstructions: string; openingInstructions: string } {
-  
+
   // Group lenses by intensity level
   const intensityGroups: Record<string, { lenses: string[]; totalNormalized: number }> = {
     MAX: { lenses: [], totalNormalized: 0 },
@@ -212,10 +208,10 @@ function buildIntensityAwareInstructions(
   let openingInstructions = '';
 
   // Case 1: One Max, all others off
-  if (intensityGroups.MAX.lenses.length === 1 && 
-      intensityGroups.HIGH.lenses.length === 0 && 
-      intensityGroups.MID.lenses.length === 0 && 
-      intensityGroups.LOW.lenses.length === 0) {
+  if (intensityGroups.MAX.lenses.length === 1 &&
+    intensityGroups.HIGH.lenses.length === 0 &&
+    intensityGroups.MID.lenses.length === 0 &&
+    intensityGroups.LOW.lenses.length === 0) {
     dominanceInstructions = `\n\nPRIMARY FOCUS: The ${intensityGroups.MAX.lenses[0]} perspective is set to MAXIMUM intensity (100% weight). Your synthesis should focus PRIMARILY and HEAVILY on this perspective.`;
   }
   // Case 2: One Max + High (Boosted) - e.g., Max + Boosted + Low mix
@@ -360,27 +356,27 @@ ${contextText}
 Provide a brief summary from the ${lens.name} perspective.`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ];
+
+    const model = lens.defaultModel || 'gpt-4o';
+    const completion = await aiOrchestrator.chatComplete(messages, {
+      model,
       temperature: 0.7,
-      max_tokens: maxTokens,
+      maxTokens,
     });
 
-    // Return token usage
-    const usage = completion.usage;
     const tokenUsage: TokenUsage = {
-      inputTokens: usage?.prompt_tokens || 0,
-      outputTokens: usage?.completion_tokens || 0,
+      inputTokens: completion.usage.promptTokens,
+      outputTokens: completion.usage.completionTokens,
     };
 
-    console.log(`[Token Tracking] ${lens.name} summary: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens`);
+    console.log(`[Token Tracking] ${lens.name} summary (${model}): ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens`);
 
     return {
-      summary: completion.choices[0]?.message?.content || '',
+      summary: completion.content,
       tokenUsage,
     };
   } catch (error) {
@@ -423,26 +419,26 @@ ${contextText}
 Please answer the question from the ${lens.name} perspective.`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ];
+
+    const model = lens.defaultModel || 'gpt-4o';
+    const completion = await aiOrchestrator.chatComplete(messages, {
+      model,
       temperature: 0.7,
-      max_tokens: maxTokens,
+      maxTokens,
     });
 
-    // Return token usage
-    const usage = completion.usage;
     const tokenUsage: TokenUsage = {
-      inputTokens: usage?.prompt_tokens || 0,
-      outputTokens: usage?.completion_tokens || 0,
+      inputTokens: completion.usage.promptTokens,
+      outputTokens: completion.usage.completionTokens,
     };
 
-    console.log(`[Token Tracking] ${lens.name} response: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens`);
+    console.log(`[Token Tracking] ${lens.name} response (${model}): ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens`);
 
-    const content = completion.choices[0]?.message?.content || 'No response generated.';
+    const content = completion.content || 'No response generated.';
 
     // Extract sources from context with preview
     const sources = context.slice(0, 5).map(result => ({
@@ -494,7 +490,7 @@ export async function generateSynthesisFromSummaries(
 
   // Generate brief summaries for each active lens (in parallel)
   const lensSummaryResults = await Promise.all(
-    activeLenses.map(lens => 
+    activeLenses.map(lens =>
       generateLensSummary(query, lens, context, lengthConfig.lensSummaryMaxTokens)
     )
   );
@@ -533,7 +529,7 @@ export async function generateSynthesisFromSummaries(
   );
 
   const lengthInstructions = getLengthInstructions(lengthConfig.synthesisMaxTokens);
-  
+
   // Vary prompt structure based on dominance pattern
   let promptStructure = '';
   if (hasExclusiveDominant) {
@@ -573,23 +569,23 @@ ${lengthInstructions}
 IMPORTANT: Your response must not exceed ${lengthConfig.synthesisMaxTokens} tokens. Stay strictly within this limit.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const messages: ChatMessage[] = [
+      {
+        role: 'system',
+        content: 'You are an expert at synthesizing multiple perspectives into unified insights.',
+      },
+      { role: 'user', content: synthesisPrompt },
+    ];
+
+    const completion = await aiOrchestrator.chatComplete(messages, {
       model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert at synthesizing multiple perspectives into unified insights.',
-        },
-        { role: 'user', content: synthesisPrompt },
-      ],
       temperature: 0.7,
-      max_tokens: lengthConfig.synthesisMaxTokens,
+      maxTokens: lengthConfig.synthesisMaxTokens,
     });
 
     // Accumulate token usage from synthesis call
-    const usage = completion.usage;
-    totalInputTokens += usage?.prompt_tokens || 0;
-    totalOutputTokens += usage?.completion_tokens || 0;
+    totalInputTokens += completion.usage.promptTokens;
+    totalOutputTokens += completion.usage.completionTokens;
 
     const tokenUsage: TokenUsage = {
       inputTokens: totalInputTokens,
@@ -599,7 +595,7 @@ IMPORTANT: Your response must not exceed ${lengthConfig.synthesisMaxTokens} toke
     console.log(`[Token Tracking] Synthesis: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens (total)`);
 
     return {
-      synthesis: completion.choices[0]?.message?.content || 'Synthesis generation failed.',
+      synthesis: completion.content || 'Synthesis generation failed.',
       tokenUsage,
     };
   } catch (error) {
@@ -640,16 +636,16 @@ export async function generateMultiLensResponse(
 
   // Merge responses based on weights
   const synthesisResult = await mergeLensResponses(lensResponses, lensWeights, query, config.synthesisMaxTokens);
-  
+
   // Extract lens responses without tokenUsage for the response object
   const lensResponsesWithoutTokens: LensResponse[] = lensResponses.map(({ tokenUsage, ...rest }) => rest);
 
   // Collect unique sources (prefer highest relevance)
-  const sourceMap = new Map<string, { 
-    text_id: string; 
-    text_title?: string; 
+  const sourceMap = new Map<string, {
+    text_id: string;
+    text_title?: string;
     text_author?: string;
-    chunk_id?: string; 
+    chunk_id?: string;
     chunk_index?: number;
     relevance?: number;
   }>();
@@ -772,7 +768,7 @@ Synthesize these perspectives into a coherent, unified answer.`;
   }
 
   const lengthInstructions = getLengthInstructions(maxTokens);
-  
+
   const synthesisPrompt = `${promptStructure}
 ${dominanceInstructions}${openingInstructions}
 
@@ -781,34 +777,27 @@ ${lengthInstructions}
 IMPORTANT: Your response must not exceed ${maxTokens} tokens. Stay strictly within this limit.`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    const messages: ChatMessage[] = [
+      {
+        role: 'system',
+        content: 'You are an expert at synthesizing multiple perspectives into unified insights.',
+      },
+      { role: 'user', content: synthesisPrompt },
+    ];
+
+    const completion = await aiOrchestrator.chatComplete(messages, {
       model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert at synthesizing multiple perspectives into unified insights.',
-        },
-        { role: 'user', content: synthesisPrompt },
-      ],
       temperature: 0.7,
-      max_tokens: maxTokens,
+      maxTokens,
     });
 
     // Accumulate token usage from synthesis call
-    const usage = completion.usage;
-    totalInputTokens += usage?.prompt_tokens || 0;
-    totalOutputTokens += usage?.completion_tokens || 0;
-
-    const tokenUsage: TokenUsage = {
-      inputTokens: totalInputTokens,
-      outputTokens: totalOutputTokens,
-    };
-
-    console.log(`[Token Tracking] Merge synthesis: ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens (total)`);
+    totalInputTokens += completion.usage.promptTokens;
+    totalOutputTokens += completion.usage.completionTokens;
 
     return {
-      synthesis: completion.choices[0]?.message?.content || 'Synthesis generation failed.',
-      tokenUsage,
+      synthesis: completion.content || 'Synthesis generation failed.',
+      tokenUsage: { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
     };
   } catch (error) {
     console.error('Error generating synthesis:', error);

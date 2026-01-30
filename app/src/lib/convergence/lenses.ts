@@ -3,6 +3,8 @@
  * Each lens represents a distinct perspective for analyzing queries
  */
 
+import { AIModel } from '../ai/ai-orchestrator';
+
 export type LensType =
   | 'scientific'
   | 'psychological'
@@ -21,6 +23,7 @@ export interface Lens {
   retrievalStrategy: RetrievalStrategy;
   systemPrompt: string;
   keywords: string[];
+  defaultModel: AIModel;
 }
 
 /**
@@ -32,6 +35,7 @@ export const LENSES: Record<LensType, Lens> = {
     name: 'Scientific',
     description: 'Physics, biology, cosmology, empirical evidence, natural sciences',
     retrievalStrategy: 'hybrid',
+    defaultModel: 'gpt-4o',
     systemPrompt: `You are analyzing this question through a scientific lens. Focus on:
 - Empirical evidence and observable phenomena
 - Natural laws and physical principles
@@ -62,6 +66,7 @@ Provide a scientifically rigorous perspective while remaining open to how scient
     name: 'Psychological',
     description: 'Jungian archetypes, cognitive science, shadow work, depth psychology',
     retrievalStrategy: 'hybrid',
+    defaultModel: 'claude-3-5-sonnet-20240620',
     systemPrompt: `You are analyzing this question through a psychological lens. Focus on:
 - Jungian psychology, archetypes, and the collective unconscious
 - Cognitive science and mental processes
@@ -92,6 +97,7 @@ Explore how psychological frameworks illuminate aspects of human experience and 
     name: 'Philosophical',
     description: 'Metaphysics, ethics, epistemology, ontology, philosophical inquiry',
     retrievalStrategy: 'hybrid',
+    defaultModel: 'claude-3-5-sonnet-20240620',
     systemPrompt: `You are analyzing this question through a philosophical lens. Focus on:
 - Metaphysical questions about being, reality, and existence
 - Epistemology: how we know what we know
@@ -122,6 +128,7 @@ Examine the fundamental questions and logical implications underlying the topic.
     name: 'Religious/Spiritual',
     description: 'Comparative theology, mysticism, sacred texts, spiritual practices',
     retrievalStrategy: 'hybrid',
+    defaultModel: 'gemini-1-5-pro',
     systemPrompt: `You are analyzing this question through a religious and spiritual lens. Focus on:
 - Comparative theology across traditions
 - Mystical experiences and direct spiritual insight
@@ -152,6 +159,7 @@ Honor the depth and diversity of religious and spiritual perspectives while find
     name: 'Historical/Anthropological',
     description: 'Cultural evolution, mythology, ritual context, human history',
     retrievalStrategy: 'hybrid',
+    defaultModel: 'gemini-1-5-pro',
     systemPrompt: `You are analyzing this question through a historical and anthropological lens. Focus on:
 - Cultural evolution and human history
 - Mythology and traditional narratives
@@ -182,6 +190,7 @@ Understand how the topic has been understood and practiced across different cult
     name: 'Symbolic/Occult',
     description: 'Correspondences, alchemy, astrology, esoteric symbolism',
     retrievalStrategy: 'hybrid',
+    defaultModel: 'claude-3-5-sonnet-20240620',
     systemPrompt: `You are analyzing this question through a symbolic and occult lens. Focus on:
 - Esoteric correspondences and symbolic relationships
 - Alchemical principles and transformation
@@ -212,6 +221,7 @@ Explore how symbols, correspondences, and esoteric frameworks illuminate the top
     name: 'Mathematical',
     description: 'Sacred geometry, numerology, patterns, universal ratios',
     retrievalStrategy: 'hybrid',
+    defaultModel: 'gpt-4o',
     systemPrompt: `You are analyzing this question through a mathematical lens. Focus on:
 - Sacred geometry and geometric principles
 - Numerology and numerical patterns

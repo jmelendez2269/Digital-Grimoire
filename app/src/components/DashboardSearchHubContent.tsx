@@ -9,7 +9,7 @@ import DeepSearchPanel from './DeepSearch/DeepSearchPanel';
 
 export default function DashboardSearchHubContent() {
     const searchParams = useSearchParams();
-    const [activeTab, setActiveTab] = useState<'ai' | 'library' | 'concept'>('ai');
+    const [activeTab, setActiveTab] = useState<'ai' | 'library' | 'concept'>('concept');
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -37,14 +37,14 @@ export default function DashboardSearchHubContent() {
             {/* Tabs */}
             <div className="flex gap-2 mb-6 border-b border-zinc-800 overflow-x-auto">
                 <button
-                    onClick={() => setActiveTab('ai')}
-                    className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'ai'
+                    onClick={() => setActiveTab('concept')}
+                    className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'concept'
                         ? 'border-amber-500 text-amber-400'
                         : 'border-transparent text-zinc-400 hover:text-zinc-300'
                         }`}
                 >
-                    <Sparkles className="w-5 h-5" />
-                    AI Search
+                    <Lightbulb className="w-5 h-5" />
+                    Concept Search
                 </button>
                 <button
                     onClick={() => setActiveTab('library')}
@@ -57,14 +57,14 @@ export default function DashboardSearchHubContent() {
                     Library Search
                 </button>
                 <button
-                    onClick={() => setActiveTab('concept')}
-                    className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'concept'
+                    onClick={() => setActiveTab('ai')}
+                    className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === 'ai'
                         ? 'border-amber-500 text-amber-400'
                         : 'border-transparent text-zinc-400 hover:text-zinc-300'
                         }`}
                 >
-                    <Lightbulb className="w-5 h-5" />
-                    Concept Search
+                    <Sparkles className="w-5 h-5" />
+                    AI Search
                 </button>
             </div>
 

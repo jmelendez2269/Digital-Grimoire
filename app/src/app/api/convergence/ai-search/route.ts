@@ -1,9 +1,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
 import { ftsSearchChunks } from '@/lib/convergence/fts-search';
 import { vectorSearch } from '@/lib/convergence/vector-search';
+import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 
 // Types
 type ScoredChunk = {
@@ -16,11 +16,6 @@ type ScoredChunk = {
     similarity: number;
 };
 
-// Initialize OpenAI
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
 // Initialize Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Use service role for backend
@@ -28,7 +23,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: NextRequest) {
     try {
-        const { query } = await req.json();
+        const { query, model } = await req.json();
 
         if (!query) {
             return NextResponse.json({ error: 'Query is required' }, { status: 400 });
@@ -143,17 +138,18 @@ Return your response in this EXACT JSON structure:
 }
     `;
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                { role: "system", content: "You are a helpful research assistant. Output valid JSON only." },
-                { role: "user", content: prompt }
-            ],
-            response_format: { type: "json_object" },
+        const messages: ChatMessage[] = [
+            { role: "system", content: "You are a helpful research assistant. Output valid JSON only." },
+            { role: "user", content: prompt }
+        ];
+
+        const completion = await aiOrchestrator.chatComplete(messages, {
+            model: (model as any) || "gpt-4o",
             temperature: 0.3,
+            jsonMode: true,
         });
 
-        const aiResponse = JSON.parse(completion.choices[0].message.content || '{}');
+        const aiResponse = JSON.parse(completion.content || '{}');
 
         // 4. Merge "Other Results" into the response
         // Books that were NOT in the top 5 sent to LLM, but are in the search results

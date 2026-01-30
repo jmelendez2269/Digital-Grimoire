@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logApiUsage } from '@/lib/usage-tracker';
+import { aiOrchestrator } from '@/lib/ai/ai-orchestrator';
 
 /**
  * POST /api/ai/gemini
@@ -33,31 +34,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get the last user message
-    const lastMessage = messages[messages.length - 1];
-    const userMessage = lastMessage.content;
-
-    // TODO: Implement actual Gemini API integration
-    // For now, return a placeholder response
-    const response = `This is a placeholder response from Gemini. Your message: "${userMessage}"\n\nGemini API integration coming soon!`;
+    const aiResponse = await aiOrchestrator.chatComplete(messages, {
+      model: 'gemini-1-5-pro',
+    });
 
     // Log API usage
     await logApiUsage({
       service: 'other',
       operation: 'gemini_chat',
-      unitsUsed: 1,
-      unitType: 'requests',
+      unitsUsed: aiResponse.usage.totalTokens,
+      unitType: 'tokens',
       userId: user.id,
       requestMetadata: {
-        model: 'gemini',
+        model: aiResponse.model,
+        provider: aiResponse.provider,
         messageCount: messages.length,
       },
       success: true,
     });
 
     return NextResponse.json({
-      response,
-      model: 'gemini',
+      response: aiResponse.content,
+      model: aiResponse.model,
     });
   } catch (error) {
     console.error('Error in Gemini chat endpoint:', error);

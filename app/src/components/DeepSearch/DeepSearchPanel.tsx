@@ -40,6 +40,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
     const [query, setQuery] = useState(initialQuery);
     const [loading, setLoading] = useState(false);
     const [aiResults, setAiResults] = useState<AiSearchResult | null>(null);
+    const [selectedModel, setSelectedModel] = useState<'gpt-4o' | 'claude-3-5-sonnet-20240620' | 'gemini-1-5-pro'>('gpt-4o');
     const [error, setError] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
 
@@ -159,7 +160,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ query }),
+                body: JSON.stringify({ query, model: selectedModel }),
             });
 
             const resultData = await res.json();
@@ -267,6 +268,23 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             onBlur={handleInputBlur} placeholder="Enter a complex concept like 'Parabrahman' or 'Alchemy'..."
                             className="w-full px-6 py-4 bg-transparent text-amber-100 placeholder-amber-100/30 outline-none text-lg"
                         />
+                        <div className="relative border-l border-amber-900/30">
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value as any)}
+                                className="px-4 py-4 bg-amber-600/10 hover:bg-amber-600/20 text-amber-100 focus:outline-none transition-colors appearance-none cursor-pointer pr-10 text-sm h-full"
+                                style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23fef3c7' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                                    backgroundPosition: 'right 0.5rem center',
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundSize: '1.5em 1.5em',
+                                }}
+                            >
+                                <option value="gpt-4o">GPT-4o</option>
+                                <option value="claude-3-5-sonnet-20240620">Claude 3.5</option>
+                                <option value="gemini-1-5-pro">Gemini 1.5</option>
+                            </select>
+                        </div>
                         <button
                             type="submit"
                             disabled={loading || !query.trim()}

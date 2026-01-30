@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 // Lazy load AIChatModal - load it only when needed to avoid webpack resolution issues
 // We'll create it inside the component when showChatModal becomes true
 
-type Model = 'auto' | 'claude' | 'gpt' | 'gemini' | 'convergence';
+type Model = 'auto' | 'claude' | 'gpt' | 'gemini' | 'convergence' | 'consensus';
 
 interface UsageStats {
   claude: number;
@@ -33,10 +33,10 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
   const [chatModel, setChatModel] = useState<'claude' | 'gpt' | 'gemini'>('claude');
   const [chatQuery, setChatQuery] = useState('');
   const hasFetchedUsage = useRef(false);
-  
+
   // Dynamically load AIChatModal only when needed
-  const [AIChatModalComponent, setAIChatModalComponent] = useState<React.ComponentType<{ model: 'claude' | 'gpt' | 'gemini'; initialQuery?: string; onClose: () => void }> | null>(null);
-  
+  const [AIChatModalComponent, setAIChatModalComponent] = useState<React.ComponentType<{ model: 'claude' | 'gpt' | 'gemini' | 'consensus'; initialQuery?: string; onClose: () => void }> | null>(null);
+
   useEffect(() => {
     if (showChatModal && !AIChatModalComponent) {
       // Load the component only when modal is shown
@@ -68,7 +68,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
 
   async function fetchUsageStats() {
     if (loadingUsage || hasFetchedUsage.current || !user) return;
-    
+
     setLoadingUsage(true);
     try {
       const res = await fetch('/api/ai/usage');
@@ -76,7 +76,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
         const stats = await res.json();
         setUsageStats(stats);
         hasFetchedUsage.current = true;
-        
+
         if (selectedModel === 'auto') {
           selectLeastUsedModel(stats);
         }
@@ -96,13 +96,13 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
   function selectLeastUsedModel(stats: UsageStats) {
     const { claude, gpt, gemini } = stats;
     const minCount = Math.min(claude, gpt, gemini);
-    
+
     // If all equal or zero, default to Claude
     if (claude === gpt && gpt === gemini) {
       setAutoSelectedModel('claude');
       return;
     }
-    
+
     // Select the one with least usage
     if (minCount === claude) {
       setAutoSelectedModel('claude');
@@ -126,10 +126,10 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (!query.trim()) return;
 
-    const effectiveModel = selectedModel === 'auto' 
+    const effectiveModel = selectedModel === 'auto'
       ? (autoSelectedModel || 'claude')
       : selectedModel;
 
@@ -137,9 +137,9 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
       // Navigate to convergence machine with query
       const encodedQuery = encodeURIComponent(query.trim());
       router.push(`/convergence-machine?query=${encodedQuery}`);
-    } else if (effectiveModel === 'claude' || effectiveModel === 'gpt' || effectiveModel === 'gemini') {
+    } else if (effectiveModel === 'claude' || effectiveModel === 'gpt' || effectiveModel === 'gemini' || effectiveModel === 'consensus') {
       // Open chat modal
-      setChatModel(effectiveModel);
+      setChatModel(effectiveModel as any);
       setChatQuery(query.trim());
       setShowChatModal(true);
       setQuery(''); // Clear input after opening modal
@@ -164,13 +164,13 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
 
   return (
     <>
-      <form 
+      <form
         onSubmit={handleSubmit}
         className={`relative group ${className}`}
       >
         {/* Glow Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-amber-600/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
+
         {/* Search Container */}
         <div className="relative flex flex-col sm:flex-row gap-3 items-center bg-zinc-900/80 border border-amber-900/30 rounded-xl overflow-visible focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/50 shadow-2xl transition-all p-1">
           {/* Search Input */}
@@ -203,6 +203,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
               <option value="claude">Claude</option>
               <option value="gpt">GPT</option>
               <option value="gemini">Gemini</option>
+              <option value="consensus">🤝 Consensus</option>
               <option value="convergence">⚡ Convergence</option>
             </select>
             {selectedModel === 'auto' && loadingUsage && (
@@ -234,7 +235,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
       {/* Show selected model info when Auto is selected */}
       {selectedModel === 'auto' && autoSelectedModel && !loadingUsage && (
         <p className="text-xs text-amber-100/60 mt-1">
-          Smart selection: {autoSelectedModel.charAt(0).toUpperCase() + autoSelectedModel.slice(1)} 
+          Smart selection: {autoSelectedModel.charAt(0).toUpperCase() + autoSelectedModel.slice(1)}
           {usageStats && ` (${usageStats[autoSelectedModel]} calls this month)`}
         </p>
       )}

@@ -1545,19 +1545,6 @@ export default function DocumentDetailPage() {
                         )}
                       </dl>
 
-                      {/* Buy on Amazon Link */}
-                      <div className="pt-4 border-t border-amber-900/10 mt-6">
-                        <a
-                          href={generateTrackedLink(document.title, document.author || undefined, 'Library_Detail')}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-lg shadow-amber-900/20"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Buy on Amazon
-                          <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
-                        </a>
-                      </div>
                     </div>
 
                     <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
@@ -1650,6 +1637,28 @@ export default function DocumentDetailPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Table of Contents */}
+                {/* Buy on Amazon Section */}
+                <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                  <h3 className="text-sm font-medium text-amber-100/60 mb-4 flex items-center gap-2">
+                    <ShoppingCart className="w-4 h-4 text-amber-600" />
+                    Support the Project
+                  </h3>
+                  <a
+                    href={generateTrackedLink(document.title, document.author || undefined, 'Library_Sidebar')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-lg shadow-amber-900/20"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Buy on Amazon
+                    <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
+                  </a>
+                  <p className="text-[10px] text-amber-100/40 mt-3 text-center leading-tight">
+                    As an Amazon Associate I earn from qualifying purchases.
+                  </p>
+                </div>
 
                 {/* Table of Contents */}
                 <TableOfContents

@@ -10,7 +10,7 @@ interface Message {
 }
 
 interface AIChatModalProps {
-  model: 'claude' | 'gpt' | 'gemini';
+  model: 'claude' | 'gpt' | 'gemini' | 'consensus';
   initialQuery?: string;
   onClose: () => void;
 }
@@ -79,7 +79,7 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
       }
 
       const data = await response.json();
-      
+
       // Add assistant response
       const assistantMessage: Message = {
         role: 'assistant',
@@ -118,6 +118,8 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
         return 'text-green-400';
       case 'gemini':
         return 'text-blue-400';
+      case 'consensus':
+        return 'text-purple-400';
       default:
         return 'text-amber-400';
     }
@@ -158,7 +160,7 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div 
+      <div
         className="bg-zinc-900 border-2 border-amber-900/20 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -206,11 +208,10 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.role === 'user'
+                  className={`max-w-[80%] rounded-lg px-4 py-2 ${message.role === 'user'
                       ? 'bg-amber-600 text-white'
                       : 'bg-zinc-800 text-amber-100'
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap">{message.content}</p>
                   <p className="text-xs opacity-60 mt-1">

@@ -91,7 +91,7 @@ function SearchPageContent() {
 
                         {/* Search Tabs */}
                         <div className="flex p-1 bg-zinc-900/50 rounded-lg border border-white/5 backdrop-blur-sm">
-                            {(['convergence', 'library', 'concept'] as SearchSource[]).map((tab) => (
+                            {(['concept', 'library', 'convergence'] as SearchSource[]).map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
