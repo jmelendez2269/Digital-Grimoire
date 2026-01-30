@@ -4,7 +4,7 @@ import { vectorSearch, VectorSearchResult } from '@/lib/convergence/vector-searc
 import { ftsSearchChunks, FTSSearchResult } from '@/lib/convergence/fts-search';
 import OpenAI from 'openai';
 import { logApiUsage } from '@/lib/usage-tracker';
-import { getSearchVariants, ESOTERIC_DICTIONARY } from '@/lib/convergence/search-dictionary';
+import { getSearchVariants, ESOTERIC_DICTIONARY, STOP_WORDS } from '@/lib/convergence/search-dictionary';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,7 +16,7 @@ const openai = new OpenAI({
 function calculateKeywordFrequency(content: string, query: string): number {
   const queryLower = query.toLowerCase();
   const contentLower = content.toLowerCase();
-  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
 
   if (queryWords.length === 0) return 0;
 
@@ -33,6 +33,16 @@ function calculateKeywordFrequency(content: string, query: string): number {
 }
 
 /**
+ * Helper to clean query for scoring
+ * Removes stop words to focus on meaningful concepts
+ */
+function cleanQueryForScoring(query: string): string {
+  return query.toLowerCase().split(/\s+/)
+    .filter(w => !STOP_WORDS.has(w))
+    .join(' ');
+}
+
+/**
  * Calculate relevance score with keyword and title boosting
  * This produces more differentiated scores for better ranking
  */
@@ -45,14 +55,16 @@ function calculateRelevanceScore(
   const queryLower = query.toLowerCase();
   const title = (result.text_title || '').toLowerCase();
   const contentLower = (result.content || '').toLowerCase();
-  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+
+  // Clean query for exact/phrase matching
+  const cleanQuery = cleanQueryForScoring(query);
+  const cleanTitle = cleanQueryForScoring(title);
 
   // 1. Base Score: Blend Vector (Semantic) and FTS (Keyword)
   let score = 0;
   if (vectorScore !== undefined && ftsScore !== undefined) {
     // Hybrid: Semantic context (50%) + Keyword precision (50%)
-    // Vector scores usually range from 0.7 to 1.0 for matches
-    // FTS scores can be > 1.0 if keywords appear multiple times
     const normVector = Math.max(0, (vectorScore - 0.5) / 0.5); // Normalize 0.5-1.0 to 0-1.0
     const normFts = Math.min(1.0, ftsScore); // Cap FTS at 1.0 for blending
     score = (normVector * 0.5) + (normFts * 0.5);
@@ -68,9 +80,9 @@ function calculateRelevanceScore(
   score += keywordBoost;
 
   // 3. Title Match Boost (Primary texts should rank much higher)
-  if (title === queryLower) {
-    score += 0.5; // Perfect title match
-  } else if (title.includes(queryLower)) {
+  if (cleanTitle === cleanQuery) {
+    score += 0.5; // Perfect title match (ignoring stop words)
+  } else if (cleanTitle.includes(cleanQuery)) {
     score += 0.3; // Contains full query
   } else {
     // Partial word match boost
@@ -80,9 +92,9 @@ function calculateRelevanceScore(
     }
   }
 
-  // 4. Exact Phrase Boost
-  if (contentLower.includes(queryLower)) {
-    score += 0.15;
+  // 4. Exact Phrase Boost (using clean query)
+  if (contentLower.includes(cleanQuery)) {
+    score += 0.25; // Increased boost for phrase match
   }
 
   // 5. Esoteric Dictionary Boost (Variants from search-dictionary.ts)
@@ -105,7 +117,7 @@ function extractSentenceWithQuery(chunkContent: string, query: string): string {
   const sentences = chunkContent.split(/(?<=[.!?])\s+/);
 
   const queryLower = query.toLowerCase();
-  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
 
   // Rank sentences by how well they match the query
   const rankedSentences = sentences.map(sentence => {
@@ -439,7 +451,7 @@ export async function POST(request: NextRequest) {
       // Calculate additional book-level signals
       const title = (book.title || '').toLowerCase();
       const queryLower = query.toLowerCase();
-      const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
+      const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
 
       // Title boost (already calculated in chunk scores, but add extra for book-level)
       let titleBoost = 0;

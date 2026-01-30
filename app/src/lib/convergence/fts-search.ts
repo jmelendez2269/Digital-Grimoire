@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { LensFilters } from './vector-search';
+import { STOP_WORDS } from './search-dictionary';
 
 export interface FTSSearchResult {
   text_id: string;
@@ -42,7 +43,7 @@ export async function ftsSearch(
   // PostgreSQL FTS uses to_tsquery format: 'word1 & word2'
   const searchQuery = cleanQuery
     .split(/\s+/)
-    .filter(word => word.length > 2) // Ignore very short words
+    .filter(word => word.length > 2 && !STOP_WORDS.has(word.toLowerCase())) // Ignore short words and stop words
     .join(' & '); // AND operator for all terms
 
   if (!searchQuery) {
@@ -85,7 +86,7 @@ export async function ftsSearch(
   // Calculate relevance scores using ts_rank
   // Since Supabase doesn't expose ts_rank directly, we'll use a simple heuristic:
   // Count occurrences of query terms in content
-  const queryTerms = cleanQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  const queryTerms = cleanQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2 && !STOP_WORDS.has(t));
 
   const results: FTSSearchResult[] = texts.map(text => {
     const content = (text.content || '').toLowerCase();
@@ -181,7 +182,7 @@ export async function ftsSearchChunks(
 
   // Get chunks and manually rank (last resort)
   // We search for query terms using ILIKE for a basic fallback
-  const queryWords = cleanQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  const queryWords = cleanQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2 && !STOP_WORDS.has(t));
   if (queryWords.length === 0) return [];
 
   // Build a query that looks for any of the words

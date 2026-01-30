@@ -10,17 +10,23 @@ interface ConceptSuggestion {
     name: string;
     slug: string;
 }
-interface BookResult {
-    text_id: string;
-    title: string;
-    author: string;
-    chunks: Array<{
-        chunk_id: string;
-        content: string;
-        similarity: number;
-        chunk_index: number;
-        sentence?: string;
-        summary?: string;
+interface AiSearchResult {
+    summary: string;
+    libraryResults: Array<{
+        book_id: string;
+        title: string;
+        author: string;
+        relevanceSentence: string;
+        relevanceLabel?: string;
+        excerpts: Array<{
+            text: string;
+            page_number: number;
+        }>;
+    }>;
+    externalRecommendations: Array<{
+        title: string;
+        author: string;
+        reason: string;
     }>;
 }
 
@@ -32,10 +38,13 @@ interface DeepSearchPanelProps {
 export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSearchPanelProps) {
     const [query, setQuery] = useState(initialQuery);
     const [loading, setLoading] = useState(false);
-    const [results, setResults] = useState<{ relatedTerms: string[], books: BookResult[], suggestions?: string[] } | null>(null);
+    const [aiResults, setAiResults] = useState<AiSearchResult | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [warning, setWarning] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
+
+    // Collapsible states
+    const [isLibraryOpen, setIsLibraryOpen] = useState(true);
+    const [isExternalOpen, setIsExternalOpen] = useState(true);
 
     // Autocomplete suggestions state
     const [suggestions, setSuggestions] = useState<ConceptSuggestion[]>([]);
@@ -138,33 +147,28 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
 
         setLoading(true);
         setError(null);
-        setWarning(null); // Reset warning
-        setResults(null);
+        setAiResults(null);
         setSearched(true);
 
         if (onSearch) {
             onSearch(query);
         }
         try {
-            const res = await fetch('/api/convergence/deep-search', {
+            const res = await fetch('/api/convergence/ai-search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include', // Important: include cookies for authentication
+                credentials: 'include',
                 body: JSON.stringify({ query }),
             });
 
-            const resultData = await res.json(); // Always try to parse JSON for error/warning messages
+            const resultData = await res.json();
 
             if (!res.ok) {
-                // Try to extract error message from response
                 const errorMessage = resultData.error || res.statusText || `Error ${res.status}`;
                 throw new Error(errorMessage);
             }
 
-            setResults(resultData);
-            if (resultData.warning) {
-                setWarning(resultData.warning);
-            }
+            setAiResults(resultData);
         } catch (err) {
             console.error('Deep search error:', err);
             const errorMessage = err instanceof Error ? err.message : 'An error occurred while searching. Please try again.';
@@ -172,7 +176,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
         } finally {
             setLoading(false);
         }
-    }, [query]);
+    }, [query, onSearch]);
 
     // Handle keyboard navigation
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -244,6 +248,11 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             }
         }, 200);
     }, []);
+    const generateAffiliateLink = (title: string, author: string) => {
+        const searchTerm = encodeURIComponent(`${title} ${author}`);
+        return `https://www.amazon.com/s?k=${searchTerm}`;
+    };
+
     return (
         <div className="w-full">
             {/* Search Input */}
@@ -292,31 +301,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             ) : (
                                 <div className="py-1">
                                     {suggestions.map((suggestion, index) => {
-                                        // Highlight the search query in the suggestion name
-                                        const highlightName = (name: string, searchQuery: string) => {
-                                            if (!searchQuery || searchQuery.length < 3) return name;
-
-                                            const queryLower = searchQuery.toLowerCase();
-                                            const nameLower = name.toLowerCase();
-                                            const queryIndex = nameLower.indexOf(queryLower);
-
-                                            if (queryIndex === -1) return name;
-
-                                            const before = name.substring(0, queryIndex);
-                                            const match = name.substring(queryIndex, queryIndex + searchQuery.length);
-                                            const after = name.substring(queryIndex + searchQuery.length);
-
-                                            return (
-                                                <>
-                                                    {before}
-                                                    <mark className="bg-amber-500/30 text-amber-200 px-0.5 rounded font-medium">
-                                                        {match}
-                                                    </mark>
-                                                    {after}
-                                                </>
-                                            );
-                                        };
-
+                                        // Highlight logic (inline for simplicity or extracted)
                                         return (
                                             <button
                                                 key={suggestion.id}
@@ -328,7 +313,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                                                     }`}
                                                 onMouseEnter={() => setSelectedIndex(index)}
                                             >
-                                                {highlightName(suggestion.name, query)}
+                                                {suggestion.name}
                                             </button>
                                         );
                                     })}
@@ -339,36 +324,195 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                 </form>
             </div>
 
-            {results && (
-                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    {/* Related Terms */}
-                    <div className="mb-8">
-                        <RelatedTerms
-                            terms={results.relatedTerms}
-                            onTermClick={(term) => {
-                                setQuery(term);
-                                // Optional: auto-trigger search for the clicked term?
-                                // For better UX, we could auto-trigger, but let's stick to simple input update for now.
-                            }}
-                        />
-                    </div>
+            {error && (
+                <div className="mb-6 p-4 bg-red-900/20 border border-red-900/50 rounded-lg text-red-200 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <p>{error}</p>
+                </div>
+            )}
 
-                    {/* Results Count */}
-                    <div className="mb-4 flex items-center justify-between border-b border-amber-900/10 pb-2">
-                        <h2 className="text-lg font-semibold text-amber-100">
-                            Found {results.books.length} Books
+            {aiResults && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* 1. CONCEPT SUMMARY */}
+                    <div className="bg-zinc-900/40 border border-amber-900/20 rounded-xl p-6 shadow-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Lightbulb className="w-24 h-24 text-amber-500" />
+                        </div>
+                        <h2 className="text-xl font-serif text-amber-100 mb-4 flex items-center gap-2">
+                            <Lightbulb className="w-5 h-5 text-amber-400" />
+                            Concept Summary
                         </h2>
+                        <div className="prose prose-invert prose-amber max-w-none text-amber-100/90 leading-relaxed">
+                            <p>{aiResults.summary}</p>
+                        </div>
                     </div>
 
-                    {/* Book Cards Grid */}
-                    <div className="space-y-4">
-                        {results.books.length > 0 ? (
-                            results.books.map((book) => (
-                                <BookResultCard key={book.text_id} book={book} searchQuery={query} />))
-                        ) : (
-                            <div className="text-center py-12 text-amber-100/40">
-                                <Book className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                <p>No matching books found for this concept.</p>
+                    {/* 2. LIBRARY RESULTS (Collapsible) */}
+                    <div className="border border-amber-900/20 rounded-xl overflow-hidden bg-zinc-900/20">
+                        <button
+                            onClick={() => setIsLibraryOpen(!isLibraryOpen)}
+                            className="w-full flex items-center justify-between p-4 bg-zinc-900/60 hover:bg-zinc-900/80 transition-colors"
+                        >
+                            <h2 className="text-xl font-serif text-amber-100 flex items-center gap-2">
+                                <Book className="w-5 h-5 text-amber-400" />
+                                From the Convergence Library
+                                <span className="ml-2 text-sm text-amber-100/50 font-sans px-2 py-0.5 bg-amber-900/30 rounded-full">
+                                    {aiResults.libraryResults.length} Books
+                                </span>
+                            </h2>
+                            <span className="text-amber-100/50 text-sm">
+                                {isLibraryOpen ? 'Collapse' : 'Expand'}
+                            </span>
+                        </button>
+
+                        {isLibraryOpen && (
+                            <div className="p-4 space-y-8">
+                                {/* TOP 3 RESULTS */}
+                                <div className="space-y-6">
+                                    {aiResults.libraryResults.slice(0, 3).map((book, idx) => (
+                                        <div key={book.book_id} className="bg-black/20 border border-amber-900/20 rounded-lg p-5 hover:border-amber-500/40 transition-all relative overflow-hidden group">
+                                            {/* Rank Indicator */}
+                                            <div className="absolute top-0 left-0 bg-amber-500/10 text-amber-500 text-xs font-bold px-2 py-1 rounded-br-lg border-b border-r border-amber-500/20">
+                                                #{idx + 1} Top Match
+                                            </div>
+
+                                            <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 mt-2">
+                                                <div>
+                                                    <div className="flex items-center gap-3 mb-1">
+                                                        <h3 className="text-xl font-medium text-amber-100">{book.title}</h3>
+                                                        {book.relevanceLabel && (
+                                                            <span className={`text-xs px-2 py-0.5 rounded border ${book.relevanceLabel.includes('High') || book.relevanceLabel.includes('Foundational')
+                                                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                                                : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                                                                }`}>
+                                                                {book.relevanceLabel}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-amber-100/60">by {book.author}</p>
+                                                </div>
+                                                <div className="flex gap-2 shrink-0">
+                                                    <a
+                                                        href={`/library/reader/${book.book_id}`}
+                                                        className="px-3 py-1.5 bg-amber-600/20 text-amber-200 text-xs rounded-md hover:bg-amber-600/30 border border-amber-600/20 transition-colors"
+                                                    >
+                                                        Read Book
+                                                    </a>
+                                                    <a
+                                                        href={generateAffiliateLink(book.title, book.author)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="px-3 py-1.5 bg-zinc-800 text-zinc-300 text-xs rounded-md hover:bg-zinc-700 border border-zinc-700 transition-colors"
+                                                    >
+                                                        Buy Copy
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-4 p-3 bg-amber-900/10 rounded-md border-l-2 border-amber-500/50">
+                                                <p className="text-sm text-amber-100/90 italic">
+                                                    <span className="font-semibold text-amber-400 not-italic mr-2">Analysis:</span>
+                                                    {book.relevanceSentence}
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-3 pl-2 border-l border-white/5">
+                                                {book.excerpts.slice(0, 3).map((excerpt, idx) => (
+                                                    <a
+                                                        key={idx}
+                                                        href={`/library/reader/${book.book_id}?page=${excerpt.page_number}`}
+                                                        className="block group/excerpt cursor-pointer"
+                                                    >
+                                                        <div className="text-sm text-amber-100/60 group-hover/excerpt:text-amber-100 transition-colors line-clamp-2 pl-3 relative">
+                                                            <span className="absolute left-0 top-1.5 w-1 h-1 rounded-full bg-zinc-700 group-hover/excerpt:bg-amber-500 transition-colors" />
+                                                            "{excerpt.text}"
+                                                            <span className="ml-2 text-xs text-amber-500/50 group-hover/excerpt:text-amber-500 transition-colors">
+                                                                (p. {excerpt.page_number})
+                                                            </span>
+                                                        </div>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* OTHER RESULTS */}
+                                {aiResults.libraryResults.length > 3 && (
+                                    <div className="pt-6 border-t border-white/5">
+                                        <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-4 px-1">Other Relevant Texts</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {aiResults.libraryResults.slice(3).map((book) => (
+                                                <div key={book.book_id} className="bg-zinc-900/40 border border-white/5 rounded-lg p-3 hover:bg-zinc-900/60 hover:border-amber-500/20 transition-all group">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <h4 className="text-sm font-medium text-zinc-300 truncate group-hover:text-white transition-colors">{book.title}</h4>
+                                                                {book.relevanceLabel && (
+                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-zinc-500 border border-white/5 whitespace-nowrap">
+                                                                        {book.relevanceLabel}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-xs text-zinc-500 truncate">{book.author}</p>
+                                                        </div>
+                                                        <a
+                                                            href={`/library/reader/${book.book_id}`}
+                                                            className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-white/5 text-zinc-300 text-[10px] rounded hover:bg-white/10 transition-all"
+                                                        >
+                                                            Open
+                                                        </a>
+                                                    </div>
+
+                                                    {/* Preview Snippet */}
+                                                    {book.excerpts.length > 0 && (
+                                                        <p className="text-xs text-zinc-600 line-clamp-2 italic group-hover:text-zinc-500 transition-colors">
+                                                            "{book.excerpts[0].text}"
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. EXTERNAL RECOMMENDATIONS (Collapsible) */}
+                    <div className="border border-amber-900/20 rounded-xl overflow-hidden bg-zinc-900/20">
+                        <button
+                            onClick={() => setIsExternalOpen(!isExternalOpen)}
+                            className="w-full flex items-center justify-between p-4 bg-zinc-900/60 hover:bg-zinc-900/80 transition-colors"
+                        >
+                            <h2 className="text-xl font-serif text-amber-100 flex items-center gap-2">
+                                <Search className="w-5 h-5 text-amber-400" />
+                                Further Reading (External)
+                            </h2>
+                            <span className="text-amber-100/50 text-sm">
+                                {isExternalOpen ? 'Collapse' : 'Expand'}
+                            </span>
+                        </button>
+
+                        {isExternalOpen && (
+                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {aiResults.externalRecommendations.map((rec, idx) => (
+                                    <div key={idx} className="bg-black/20 border border-amber-900/10 rounded-lg p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                        <div>
+                                            <h3 className="font-medium text-amber-100 mb-1">{rec.title}</h3>
+                                            <p className="text-sm text-amber-100/60 mb-3">{rec.author}</p>
+                                            <p className="text-xs text-amber-100/50 mb-4 line-clamp-3">{rec.reason}</p>
+                                        </div>
+                                        <a
+                                            href={generateAffiliateLink(rec.title, rec.author)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full text-center py-2 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700 border border-zinc-700 transition-colors mt-auto"
+                                        >
+                                            Buy on Amazon
+                                        </a>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -377,7 +521,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
 
             {!searched && !loading && (
                 <p className="mt-4 text-sm text-zinc-400 text-center">
-                    Deep Search finds every book discussing your concept and highlights the exact passages.
+                    Deep Search uses AI to summarize concepts and find relevant texts in our library and beyond.
                 </p>
             )}
         </div>

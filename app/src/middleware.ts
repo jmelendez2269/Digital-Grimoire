@@ -18,4 +18,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-

@@ -1,0 +1,26 @@
+--- Debugging Search Data ---
+
+1. Searching for "Secret Doctrine" in texts table...
+Found 1 books:
+- [fc9e6743-5b4e-4958-b59f-f028da499104] The Secret Doctrine: The Synthesis of Science, Religion, and Philosophy (H. P. Blavatsky)
+
+2. Searching for "Seven sons" in chunks of these books (fc9e6743-5b4e-4958-b59f-f028da499104)...
+Found 5 chunks containing "Seven sons":
+
+--- Chunk 62 ---
+The triad forms within the circle the Tetraktis or Sacred Four, the Square within the Circle being the most potent of all the magical figures .  ( c ) The "One Rejected" is the Sun of our system .  Th...
+
+--- Chunk 45 ---
+Herein lies the origin of the double mystery of the Trinity and the immaculate Conception .  The first and Fundamental dogma of Occultism is Universal Unity (or Homogeneity) under three aspects .  Thi...
+
+--- Chunk 31 ---
+The Secret Doctrine by H .  P .  Blavatsky -- Vol .  1 [[Vol .  1, Page 25]] PART I  .  COSMIC EVOLUTION .  --------------------- SEVEN STANZAS TRANSLATED WITH COMMENTARIES FROM THE SECRET BOOK OF DZY...
+
+--- Chunk 79 ---
+The Secret Doctrine by H .  P .  Blavatsky -- Vol .  1 [[Vol .  1, Page]] 136 THE SECRET DOCTRINE .  STANZA VI .  1 .  B Y THE POWER OF THE M OTHER OF M ERCY AND K NOWLEDGE ( a ), K WAN- Y IN,* THE " ...
+
+--- Chunk 82 ---
+' "Millions and billions of worlds are produced at every Manvantara" -- it is said .  Therefore there must be many Fohats, whom we consider as conscious and intelligent Forces .  This, no doubt, to th...
+
+3. Checking noise: "sons" in chunks...
+"sons" appears in 262 chunks.
