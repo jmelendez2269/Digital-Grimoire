@@ -2,9 +2,10 @@
 
 import { useState, lazy, Suspense } from 'react';
 import { Sparkles, X, ChevronDown } from 'lucide-react';
+import ArcaneLoader from '@/components/ui/ArcaneLoader';
 
 // Lazy load AISearchBar to preserve code splitting without webpack issues
-const AISearchBar = lazy(() => 
+const AISearchBar = lazy(() =>
   import('@/components/AISearchBar').then(
     (module) => ({ default: module.default }),
     (err) => {
@@ -66,11 +67,11 @@ export default function FloatingAISearch({ defaultCollapsed = true }: FloatingAI
             <X className="w-5 h-5 text-amber-100/60" />
           </button>
         </div>
-        
+
         {/* AI Search Bar with Suspense for lazy loading */}
         <Suspense fallback={
           <div className="flex items-center justify-center py-4">
-            <div className="text-amber-100/60">Loading search...</div>
+            <ArcaneLoader size="sm" />
           </div>
         }>
           <AISearchBar />

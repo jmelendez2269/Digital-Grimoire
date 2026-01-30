@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const aiResponse = await aiOrchestrator.chatComplete(messages, {
-      model: 'claude-3-5-sonnet-20240620',
+      model: 'claude-3-5-sonnet-latest',
     });
 
     // Log API usage

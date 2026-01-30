@@ -12,6 +12,7 @@ import BookmarkButton from '@/components/BookmarkButton';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { formatFileSize, formatDate, getStatusColor } from '@/lib/utils/formatting';
+import AppLoader from '@/components/ui/AppLoader';
 import { useLibraryTexts, useLibraryFilterOptions, type FilterValues } from '@/hooks/useLibrary';
 import { invalidateTextCaches } from '@/lib/cache-invalidation';
 import LibraryGrid from '@/components/LibraryGrid';
@@ -363,8 +364,8 @@ function LibraryPageContent() {
                   onClick={toggleShuffle}
                   title={isShuffled ? "Shuffle On (Click to disable in Sort)" : "Shuffle Off"}
                   className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm transition-colors ${isShuffled
-                      ? 'bg-amber-600/20 border-amber-600/50 text-amber-300'
-                      : 'bg-zinc-900/50 border-amber-900/20 text-amber-100/60 hover:bg-zinc-800/50 hover:text-amber-100'
+                    ? 'bg-amber-600/20 border-amber-600/50 text-amber-300'
+                    : 'bg-zinc-900/50 border-amber-900/20 text-amber-100/60 hover:bg-zinc-800/50 hover:text-amber-100'
                     }`}
                 >
                   <Shuffle className="w-4 h-4" />
@@ -375,8 +376,8 @@ function LibraryPageContent() {
                   <button
                     onClick={() => setShowSortDropdown(!showSortDropdown)}
                     className={`flex items-center gap-2 px-3 py-1.5 bg-zinc-900/50 border rounded-lg text-sm transition-colors ${isShuffled
-                        ? 'border-amber-900/20 text-amber-100/60'
-                        : 'border-amber-600/30 text-amber-100'
+                      ? 'border-amber-900/20 text-amber-100/60'
+                      : 'border-amber-600/30 text-amber-100'
                       }`}
                   >
                     <ArrowUpDown className="w-4 h-4" />
@@ -418,8 +419,8 @@ function LibraryPageContent() {
                                     setShowSortDropdown(false);
                                   }}
                                   className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${sortBy === field && !isShuffled
-                                      ? 'bg-amber-600/20 text-amber-400'
-                                      : 'text-amber-100/80 hover:bg-zinc-800/50'
+                                    ? 'bg-amber-600/20 text-amber-400'
+                                    : 'text-amber-100/80 hover:bg-zinc-800/50'
                                     }`}
                                 >
                                   <span>{labels[field]}</span>
@@ -543,9 +544,9 @@ export default function LibraryPage() {
       fallback={
         <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
           <Header />
-          <div className="flex flex-1 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-          </div>
+          <main className="flex-1 flex items-center justify-center">
+            <AppLoader />
+          </main>
           <Footer />
         </div>
       }

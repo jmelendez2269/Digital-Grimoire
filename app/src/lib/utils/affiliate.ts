@@ -23,11 +23,11 @@ export const generateAffiliateLink = (title: string, author?: string): string =>
  * @param source The source page/component.
  * @returns A tracked affiliate URL.
  */
-export const generateTrackedLink = (title: string, author?: string, source?: string): string => {
-    const params = new URLSearchParams({
-        title,
-        ...(author && { author }),
-        ...(source && { source }),
-    });
+export const generateTrackedLink = (title: string, author?: string | null, source?: string): string => {
+    const params = new URLSearchParams();
+    if (title) params.append('title', title.trim());
+    if (author) params.append('author', author.trim());
+    if (source) params.append('source', source.trim());
+
     return `/api/affiliate/track?${params.toString()}`;
 };

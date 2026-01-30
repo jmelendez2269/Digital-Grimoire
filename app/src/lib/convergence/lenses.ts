@@ -66,7 +66,7 @@ Provide a scientifically rigorous perspective while remaining open to how scient
     name: 'Psychological',
     description: 'Jungian archetypes, cognitive science, shadow work, depth psychology',
     retrievalStrategy: 'hybrid',
-    defaultModel: 'claude-3-5-sonnet-20240620',
+    defaultModel: 'claude-3-5-sonnet-latest',
     systemPrompt: `You are analyzing this question through a psychological lens. Focus on:
 - Jungian psychology, archetypes, and the collective unconscious
 - Cognitive science and mental processes
@@ -97,7 +97,7 @@ Explore how psychological frameworks illuminate aspects of human experience and 
     name: 'Philosophical',
     description: 'Metaphysics, ethics, epistemology, ontology, philosophical inquiry',
     retrievalStrategy: 'hybrid',
-    defaultModel: 'claude-3-5-sonnet-20240620',
+    defaultModel: 'claude-3-5-sonnet-latest',
     systemPrompt: `You are analyzing this question through a philosophical lens. Focus on:
 - Metaphysical questions about being, reality, and existence
 - Epistemology: how we know what we know
@@ -190,7 +190,7 @@ Understand how the topic has been understood and practiced across different cult
     name: 'Symbolic/Occult',
     description: 'Correspondences, alchemy, astrology, esoteric symbolism',
     retrievalStrategy: 'hybrid',
-    defaultModel: 'claude-3-5-sonnet-20240620',
+    defaultModel: 'claude-3-5-sonnet-latest',
     systemPrompt: `You are analyzing this question through a symbolic and occult lens. Focus on:
 - Esoteric correspondences and symbolic relationships
 - Alchemical principles and transformation

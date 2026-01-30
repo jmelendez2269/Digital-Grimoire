@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, Book, AlertCircle, Lightbulb } from 'lucide-react';
+import { Search, Loader2, Book, AlertCircle, Lightbulb, ShoppingCart } from 'lucide-react';
 import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
 import BookResultCard from '@/components/DeepSearch/BookResultCard';
 import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
@@ -40,7 +40,6 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
     const [query, setQuery] = useState(initialQuery);
     const [loading, setLoading] = useState(false);
     const [aiResults, setAiResults] = useState<AiSearchResult | null>(null);
-    const [selectedModel, setSelectedModel] = useState<'gpt-4o' | 'claude-3-5-sonnet-20240620' | 'gemini-1-5-pro'>('gpt-4o');
     const [error, setError] = useState<string | null>(null);
     const [searched, setSearched] = useState(false);
 
@@ -160,7 +159,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ query, model: selectedModel }),
+                body: JSON.stringify({ query }),
             });
 
             const resultData = await res.json();
@@ -268,23 +267,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             onBlur={handleInputBlur} placeholder="Enter a complex concept like 'Parabrahman' or 'Alchemy'..."
                             className="w-full px-6 py-4 bg-transparent text-amber-100 placeholder-amber-100/30 outline-none text-lg"
                         />
-                        <div className="relative border-l border-amber-900/30">
-                            <select
-                                value={selectedModel}
-                                onChange={(e) => setSelectedModel(e.target.value as any)}
-                                className="px-4 py-4 bg-amber-600/10 hover:bg-amber-600/20 text-amber-100 focus:outline-none transition-colors appearance-none cursor-pointer pr-10 text-sm h-full"
-                                style={{
-                                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23fef3c7' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                                    backgroundPosition: 'right 0.5rem center',
-                                    backgroundRepeat: 'no-repeat',
-                                    backgroundSize: '1.5em 1.5em',
-                                }}
-                            >
-                                <option value="gpt-4o">GPT-4o</option>
-                                <option value="claude-3-5-sonnet-20240620">Claude 3.5</option>
-                                <option value="gemini-1-5-pro">Gemini 1.5</option>
-                            </select>
-                        </div>
+                        {/* Model selector removed for auto-balancing */}
                         <button
                             type="submit"
                             disabled={loading || !query.trim()}
@@ -414,7 +397,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                                                         Read Book
                                                     </a>
                                                     <a
-                                                        href={generateAffiliateLink(book.title, book.author)}
+                                                        href={generateTrackedLink(book.title, book.author, 'DeepSearch_Library')}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="px-3 py-1.5 bg-zinc-800 text-zinc-300 text-xs rounded-md hover:bg-zinc-700 border border-zinc-700 transition-colors"
@@ -471,12 +454,23 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                                                             </div>
                                                             <p className="text-xs text-zinc-500 truncate">{book.author}</p>
                                                         </div>
-                                                        <a
-                                                            href={`/library/reader/${book.book_id}`}
-                                                            className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-white/5 text-zinc-300 text-[10px] rounded hover:bg-white/10 transition-all"
-                                                        >
-                                                            Open
-                                                        </a>
+                                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                            <a
+                                                                href={generateTrackedLink(book.title, book.author, 'DeepSearch_Library_Small')}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-1 px-2 py-1 bg-amber-600/10 text-amber-300 text-[10px] rounded hover:bg-amber-600/20 border border-amber-600/20 transition-all"
+                                                            >
+                                                                <ShoppingCart className="w-2.5 h-2.5" />
+                                                                Buy
+                                                            </a>
+                                                            <a
+                                                                href={`/library/reader/${book.book_id}`}
+                                                                className="px-2 py-1 bg-white/5 text-zinc-300 text-[10px] rounded hover:bg-white/10 transition-all"
+                                                            >
+                                                                Open
+                                                            </a>
+                                                        </div>
                                                     </div>
 
                                                     {/* Preview Snippet */}

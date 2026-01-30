@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Book, Sparkles, Brain, History, Clock, ArrowRight, Loader2, X } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ArcaneLoader from '@/components/ui/ArcaneLoader';
+import AppLoader from '@/components/ui/AppLoader';
 import DeepSearchPanel from '@/components/DeepSearch/DeepSearchPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
@@ -149,7 +151,7 @@ function SearchPageContent() {
                                         disabled={!query.trim() || isSearching}
                                         className="pr-4 pl-2 text-amber-500 hover:text-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
                                     >
-                                        {isSearching ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight className="w-6 h-6" />}
+                                        {isSearching ? <ArcaneLoader size="sm" /> : <ArrowRight className="w-6 h-6" />}
                                     </button>
                                 </div>
                             </form>
@@ -226,8 +228,9 @@ function SearchPageContent() {
 
 export default function SearchPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+        <Suspense fallback={<AppLoader fullScreen />}>
             <SearchPageContent />
         </Suspense>
     );
 }
+

@@ -35,5 +35,7 @@ export async function GET(request: NextRequest) {
     const searchTerm = encodeURIComponent(query);
     const amazonUrl = `https://www.amazon.com/s?k=${searchTerm}&tag=${AMAZON_TRACKING_ID}`;
 
+    console.log('🔗 Redirecting to Amazon with tracking:', amazonUrl);
+
     return NextResponse.redirect(amazonUrl);
 }

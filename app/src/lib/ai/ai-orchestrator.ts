@@ -7,7 +7,7 @@ export type AIProvider = 'openai' | 'anthropic' | 'google';
 export type AIModel =
     | 'gpt-4o'
     | 'gpt-4o-mini'
-    | 'claude-3-5-sonnet-20240620'
+    | 'claude-3-5-sonnet-latest'
     | 'claude-3-opus-20240229'
     | 'gemini-1-5-pro'
     | 'gemini-1-5-flash';
@@ -70,15 +70,27 @@ class AIOrchestrator {
         const model = options.model || 'gpt-4o';
         const provider = this.getProviderForModel(model);
 
-        switch (provider) {
-            case 'openai':
-                return this.openaiChat(messages, options);
-            case 'anthropic':
-                return this.anthropicChat(messages, options);
-            case 'google':
-                return this.googleChat(messages, options);
-            default:
-                throw new Error(`Unsupported provider: ${provider}`);
+        try {
+            switch (provider) {
+                case 'openai':
+                    return await this.openaiChat(messages, options);
+                case 'anthropic':
+                    return await this.anthropicChat(messages, options);
+                case 'google':
+                    return await this.googleChat(messages, options);
+                default:
+                    throw new Error(`Unsupported provider: ${provider}`);
+            }
+        } catch (error: any) {
+            console.error(`AI Error (${model} / ${provider}):`, error);
+
+            // Fallback to GPT-4o if the specific model fails (e.g. 404 model not found)
+            // But verify we aren't already trying GPT-4o to avoid infinite loops if OpenAI is down
+            if (model !== 'gpt-4o') {
+                console.warn(`Falling back to gpt-4o due to error with ${model}`);
+                return this.openaiChat(messages, { ...options, model: 'gpt-4o' });
+            }
+            throw error;
         }
     }
 
@@ -108,7 +120,7 @@ class AIOrchestrator {
         const userMessages = messages.filter(m => m.role !== 'system');
 
         const response = await this.anthropic.messages.create({
-            model: (options.model as any) || 'claude-3-5-sonnet-20240620',
+            model: (options.model as any) || 'claude-3-5-sonnet-latest',
             system: systemMessage,
             messages: userMessages.map(m => ({
                 role: m.role as 'user' | 'assistant',
@@ -181,7 +193,7 @@ class AIOrchestrator {
      * Run multiple models in parallel and synthesize their results
      */
     async consensusChat(messages: ChatMessage[]): Promise<AIResponse & { individualResponses: Record<string, string> }> {
-        const models: AIModel[] = ['gpt-4o', 'claude-3-5-sonnet-20240620', 'gemini-1-5-pro'];
+        const models: AIModel[] = ['gpt-4o', 'claude-3-5-sonnet-latest', 'gemini-1-5-pro'];
 
         // Execute all models in parallel
         const responses = await Promise.allSettled(

@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { ftsSearchChunks } from '@/lib/convergence/fts-search';
 import { vectorSearch } from '@/lib/convergence/vector-search';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
+import { getLeastUsedModel } from '@/lib/ai/usage-stats';
 
 // Types
 type ScoredChunk = {
@@ -23,7 +24,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: NextRequest) {
     try {
-        const { query, model } = await req.json();
+        const { query } = await req.json();
+
+        // Automatically select the least used model to balance costs/limits
+        const model = await getLeastUsedModel();
 
         if (!query) {
             return NextResponse.json({ error: 'Query is required' }, { status: 400 });

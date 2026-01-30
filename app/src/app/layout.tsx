@@ -89,11 +89,13 @@ export default function RootLayout({
         <Analytics />
         <CookieConsent />
         {/* Cloudflare Web Analytics */}
-        <Script
-          defer
-          src='https://static.cloudflareinsights.com/beacon.min.js'
-          data-cf-beacon='{"token": "86053cf09b4a4aea94dfc87aa44ff19c"}'
-        />
+        {process.env.NODE_ENV === 'production' && (
+          <Script
+            defer
+            src='https://static.cloudflareinsights.com/beacon.min.js'
+            data-cf-beacon='{"token": "86053cf09b4a4aea94dfc87aa44ff19c"}'
+          />
+        )}
       </body>
     </html>
   );

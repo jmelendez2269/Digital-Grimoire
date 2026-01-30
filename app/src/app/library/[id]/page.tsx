@@ -1623,24 +1623,8 @@ export default function DocumentDetailPage() {
 
               {/* Sidebar */}
               <div className="lg:col-span-1 space-y-6">
-                {/* Curator Note Section */}
-                {document.curator_note && (
-                  <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-amber-600" />
-                      Curator Note
-                    </h3>
-                    <div className="max-h-64 overflow-y-auto pr-2">
-                      <p className="text-sm text-amber-100/80 leading-relaxed">
-                        {document.curator_note}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Table of Contents */}
                 {/* Buy on Amazon Section */}
-                <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 mb-6">
                   <h3 className="text-sm font-medium text-amber-100/60 mb-4 flex items-center gap-2">
                     <ShoppingCart className="w-4 h-4 text-amber-600" />
                     Support the Project
@@ -1659,6 +1643,22 @@ export default function DocumentDetailPage() {
                     As an Amazon Associate I earn from qualifying purchases.
                   </p>
                 </div>
+
+                {/* Curator Note Section */}
+                {document.curator_note && (
+                  <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-amber-100 mb-4 flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-amber-600" />
+                      Curator Note
+                    </h3>
+                    <div className="max-h-64 overflow-y-auto pr-2">
+                      <p className="text-sm text-amber-100/80 leading-relaxed">
+                        {document.curator_note}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
 
                 {/* Table of Contents */}
                 <TableOfContents

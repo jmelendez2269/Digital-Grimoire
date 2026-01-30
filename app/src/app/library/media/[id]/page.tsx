@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Calendar, User, Tag, Clock, Download, Loader2, AlertCircle, Music } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Tag, Clock, Download, Loader2, AlertCircle, Music, ShoppingCart, ExternalLink } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { formatDate } from '@/lib/utils/formatting';
+import { generateTrackedLink } from '@/lib/utils/affiliate';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 
@@ -319,6 +320,27 @@ export default function MediaDetailPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Buy on Amazon Section */}
+              <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
+                <h3 className="text-sm font-medium text-amber-100/60 mb-4 flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4 text-amber-600" />
+                  Support the Project
+                </h3>
+                <a
+                  href={generateTrackedLink(media.title, media.author || undefined, 'Media_Sidebar')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-lg shadow-amber-900/20"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Buy on Amazon
+                  <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
+                </a>
+                <p className="text-[10px] text-amber-100/40 mt-3 text-center leading-tight">
+                  As an Amazon Associate I earn from qualifying purchases.
+                </p>
+              </div>
+
               {/* Summary */}
               {media.long_summary && (
                 <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Sparkles, Loader2 } from 'lucide-react';
+import { Search, Sparkles, Loader2, ChevronDown, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy load AIChatModal - load it only when needed to avoid webpack resolution issues
@@ -16,6 +16,47 @@ interface UsageStats {
   gpt: number;
   gemini: number;
 }
+
+interface ModelConfig {
+  id: Model;
+  label: string;
+  description: string;
+  icon?: string;
+}
+
+const MODEL_CONFIGS: ModelConfig[] = [
+  {
+    id: 'auto',
+    label: '🤖 Auto',
+    description: 'Automatically selects the least used model to balance load and costs. Good for general queries.'
+  },
+  {
+    id: 'claude',
+    label: 'Claude',
+    description: 'Nuanced reasoning & coding. Best for complex logic, creative writing, and detailed analysis.'
+  },
+  {
+    id: 'gpt',
+    label: 'GPT',
+    description: 'General purpose powerhouse. Great for creative writing, broad knowledge, and quick answers.'
+  },
+  {
+    id: 'gemini',
+    label: 'Gemini',
+    description: 'Multimodal & fast. Excellent for processing large context and connecting diverse concepts.'
+  },
+  {
+    id: 'consensus',
+    label: '🤝 Consensus',
+    description: 'Aggregates insights from multiple leading models (Claude, GPT, Gemini) for verified accuracy and balanced perspectives.'
+  },
+  {
+    id: 'convergence',
+    label: '⚡ Convergence',
+    description: 'The "Convergence Machine". Analyzes deep mystical patterns and connections across the library. Best for esoteric research.'
+  }
+];
+
 
 interface AISearchBarProps {
   className?: string;
@@ -34,6 +75,10 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
   const [chatQuery, setChatQuery] = useState('');
   const hasFetchedUsage = useRef(false);
 
+  // Custom dropdown state
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   // Dynamically load AIChatModal only when needed
   const [AIChatModalComponent, setAIChatModalComponent] = useState<React.ComponentType<{ model: 'claude' | 'gpt' | 'gemini' | 'consensus'; initialQuery?: string; onClose: () => void }> | null>(null);
 
@@ -47,6 +92,19 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
       });
     }
   }, [showChatModal, AIChatModalComponent]);
+
+  // Click outside handler for dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Fetch usage stats when component mounts or when auto is selected
   // Only fetch if auth is ready and user is logged in
@@ -115,6 +173,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
 
   function handleModelChange(newModel: Model) {
     setSelectedModel(newModel);
+    setIsDropdownOpen(false); // Close dropdown on selection
     if (newModel !== 'auto') {
       setAutoSelectedModel(null);
     } else if (!usageStats) {
@@ -146,21 +205,8 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
     }
   }
 
-  function getModelDisplayName(): string {
-    if (selectedModel === 'auto') {
-      if (loadingUsage) {
-        return 'Auto (loading...)';
-      }
-      if (autoSelectedModel) {
-        return `Auto → ${autoSelectedModel.charAt(0).toUpperCase() + autoSelectedModel.slice(1)}`;
-      }
-      return 'Auto';
-    }
-    if (selectedModel === 'convergence') {
-      return 'Convergence';
-    }
-    return selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1);
-  }
+  const selectedModelConfig = MODEL_CONFIGS.find(m => m.id === selectedModel);
+
 
   return (
     <>
@@ -185,33 +231,64 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
             />
           </div>
 
-          {/* Model Selector */}
-          <div className="relative">
-            <select
-              value={selectedModel}
-              onChange={(e) => handleModelChange(e.target.value as Model)}
-              className="px-4 py-4 bg-amber-600/10 hover:bg-amber-600/20 border-l border-amber-900/30 text-amber-100 focus:outline-none transition-colors appearance-none cursor-pointer pr-10 text-base"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23fef3c7' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'right 0.5rem center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em',
-                paddingRight: '2.5rem',
-              }}
+          {/* Custom Model Selector */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full sm:w-48 px-4 py-4 bg-amber-600/10 hover:bg-amber-600/20 border-l border-amber-900/30 text-amber-100 focus:outline-none transition-colors flex items-center justify-between text-base"
             >
-              <option value="auto">🤖 Auto</option>
-              <option value="claude">Claude</option>
-              <option value="gpt">GPT</option>
-              <option value="gemini">Gemini</option>
-              <option value="consensus">🤝 Consensus</option>
-              <option value="convergence">⚡ Convergence</option>
-            </select>
+              <span className="truncate">{selectedModelConfig?.label}</span>
+              <ChevronDown className={`w-4 h-4 text-amber-100/60 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute bottom-full right-0 mb-2 w-72 sm:w-80 bg-zinc-900/95 backdrop-blur-md border border-amber-900/30 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="py-1">
+                  {MODEL_CONFIGS.map((model) => (
+                    <div
+                      key={model.id}
+                      className="group/item relative"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleModelChange(model.id)}
+                        className={`w-full text-left px-4 py-3 text-sm transition-colors flex items-center justify-between
+                                                    ${selectedModel === model.id ? 'bg-amber-900/40 text-amber-100' : 'text-amber-100/80 hover:bg-amber-900/20 hover:text-amber-50'}
+                                                `}
+                      >
+                        <span className="font-medium">{model.label}</span>
+                        {selectedModel === model.id && <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                      </button>
+
+                      {/* Tooltip on right (desktop) or bottom (mobile - tough, assume hover works primarily with mouse/long press) */}
+                      {/* For simplicity, we'll render descriptions inside the dropdown on hover or just below the item to make it clear.
+                                                Let's try a floating tooltip to the left of the dropdown for better layout if space permits,
+                                                OR just expand the item height to show description on hover. Expanding is janky.
+                                                Let's do a side tooltip.
+                                            */}
+                      <div className="hidden sm:block absolute right-full top-0 mr-2 w-64 p-3 bg-black/90 border border-amber-500/20 rounded-lg shadow-2xl opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all duration-200 pointer-events-none z-50 backdrop-blur-sm">
+                        <div className="text-amber-400 font-semibold mb-1 text-sm">{model.label}</div>
+                        <div className="text-zinc-300 text-xs leading-relaxed">{model.description}</div>
+                        {/* Arrow */}
+                        <div className="absolute top-4 -right-1.5 w-3 h-3 bg-black/90 border-r border-t border-amber-500/20 transform rotate-45"></div>
+                      </div>
+
+                      {/* Mobile: Simple inline description for selected or just relying on checking them out */}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {selectedModel === 'auto' && loadingUsage && (
-              <div className="absolute right-10 top-1/2 -translate-y-1/2">
+              <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
                 <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
               </div>
             )}
           </div>
+
 
           {/* Go Button */}
           <button
@@ -262,4 +339,3 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
     </>
   );
 }
-

@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Edit } from 'lucide-react';
+import { BookOpen, Edit, ShoppingCart } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import type { Text } from '@/hooks/useLibrary';
+import { generateTrackedLink } from '@/lib/utils/affiliate';
 
 interface LibraryGridProps {
   texts: Text[];
@@ -104,6 +105,16 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
                           <Edit className="w-3.5 h-3.5" />
                         </button>
                       )}
+                      <a
+                        href={generateTrackedLink(text.title, text.author || undefined, 'Library_Grid')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-zinc-500 hover:text-amber-500 p-1.5 hover:bg-white/5 rounded transition-colors"
+                        title="Buy on Amazon"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                      </a>
                       <div onClick={(e) => { e.preventDefault(); }}>
                         <BookmarkButton textId={text.id} size="sm" />
                       </div>
