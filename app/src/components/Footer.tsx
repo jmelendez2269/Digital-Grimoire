@@ -32,6 +32,13 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Amazon disclosure */}
+        <div className="w-full mt-4 pt-4 border-t border-white/5">
+          <p className="text-[10px] text-zinc-600 font-mono text-center md:text-left leading-relaxed">
+            As an Amazon Associate I earn from qualifying purchases.
+          </p>
+        </div>
+
       </div>
     </footer>
   );

@@ -400,6 +400,19 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
+          <section className="mt-8">
+            <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">13. Affiliate Link Disclosure</h2>
+            <p className="text-zinc-300">
+              Convergence participates in the Amazon Services LLC Associates Program, an affiliate advertising program
+              designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com.
+            </p>
+            <p className="text-zinc-300 mt-4">
+              As an Amazon Associate, we earn from qualifying purchases. This means that when you click on certain
+              links to products on Amazon and make a purchase, we may receive a small commission at no additional cost to you.
+              This helps support the maintenance and development of the Convergence platform.
+            </p>
+          </section>
+
           <div className="mt-12 pt-8 border-t border-zinc-800">
             <p className="text-zinc-400 text-sm">
               This Privacy Policy is effective as of {currentDate} and applies to all users of the Convergence platform.
