@@ -21,7 +21,7 @@ import {
   ShoppingCart,
   ExternalLink
 } from 'lucide-react';
-import { generateAffiliateLink } from '@/lib/utils/affiliate';
+import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
@@ -1548,7 +1548,7 @@ export default function DocumentDetailPage() {
                       {/* Buy on Amazon Link */}
                       <div className="pt-4 border-t border-amber-900/10 mt-6">
                         <a
-                          href={generateAffiliateLink(document.title, document.author || undefined)}
+                          href={generateTrackedLink(document.title, document.author || undefined, 'Library_Detail')}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-lg shadow-amber-900/20"

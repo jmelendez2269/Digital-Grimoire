@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import SafeImage from './SafeImage';
 import { Music, Video, Image as ImageIcon, Clock, User, Calendar, ShoppingCart } from 'lucide-react';
-import { generateAffiliateLink } from '@/lib/utils/affiliate';
+import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
 import BookmarkButton from './BookmarkButton';
 
 export interface MediaItem {
@@ -140,7 +140,7 @@ export default function MediaCard({ media, onDelete, isAdmin }: MediaCardProps) 
             View {media.media_type === 'audio' ? 'Audio' : media.media_type === 'video' ? 'Video' : 'Photo'}
           </Link>
           <a
-            href={generateAffiliateLink(media.title, media.author)}
+            href={generateTrackedLink(media.title, media.author, 'Media_Card')}
             target="_blank"
             rel="noopener noreferrer"
             className="w-10 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-amber-400 border border-amber-900/30 rounded-lg transition-all duration-200"

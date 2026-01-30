@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2, Book, AlertCircle, Lightbulb } from 'lucide-react';
 import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
 import BookResultCard from '@/components/DeepSearch/BookResultCard';
-import { generateAffiliateLink } from '@/lib/utils/affiliate';
+import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
 
 interface ConceptSuggestion {
     id: string;
@@ -501,7 +501,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                                             <p className="text-xs text-amber-100/50 mb-4 line-clamp-3">{rec.reason}</p>
                                         </div>
                                         <a
-                                            href={generateAffiliateLink(rec.title, rec.author)}
+                                            href={generateTrackedLink(rec.title, rec.author, 'DeepSearch_External')}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="w-full text-center py-2 bg-zinc-800 text-zinc-300 text-xs rounded hover:bg-zinc-700 border border-zinc-700 transition-colors mt-auto"

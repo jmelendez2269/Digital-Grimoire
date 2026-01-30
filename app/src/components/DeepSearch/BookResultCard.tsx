@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Book, ChevronDown, ChevronUp, User, ExternalLink, ShoppingCart } from 'lucide-react';
-import { generateAffiliateLink } from '@/lib/utils/affiliate';
+import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
 
 interface Chunk {
     chunk_id: string;
@@ -149,7 +149,7 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
                                     </span>
                                     <div className="flex items-center gap-3">
                                         <a
-                                            href={generateAffiliateLink(book.title, book.author)}
+                                            href={generateTrackedLink(book.title, book.author, 'DeepSearch_Result')}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-xs text-amber-500 hover:text-amber-400 flex items-center gap-1 transition-colors"
