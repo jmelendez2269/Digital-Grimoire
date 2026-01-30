@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import SafeImage from './SafeImage';
-import { Music, Video, Image as ImageIcon, Clock, User, Calendar } from 'lucide-react';
+import { Music, Video, Image as ImageIcon, Clock, User, Calendar, ShoppingCart } from 'lucide-react';
+import { generateAffiliateLink } from '@/lib/utils/affiliate';
 import BookmarkButton from './BookmarkButton';
 
 export interface MediaItem {
@@ -130,13 +131,24 @@ export default function MediaCard({ media, onDelete, isAdmin }: MediaCardProps) 
           </div>
         )}
 
-        {/* View Button */}
-        <Link
-          href={`/library/media/${media.id}`}
-          className="block w-full py-2 text-center bg-amber-600/10 hover:bg-amber-600 text-amber-400 hover:text-white rounded-lg text-xs font-medium transition-all duration-200"
-        >
-          View {media.media_type === 'audio' ? 'Audio' : media.media_type === 'video' ? 'Video' : 'Photo'}
-        </Link>
+        {/* Actions */}
+        <div className="flex gap-2">
+          <Link
+            href={`/library/media/${media.id}`}
+            className="flex-1 py-2 text-center bg-amber-600/10 hover:bg-amber-600 text-amber-400 hover:text-white rounded-lg text-xs font-medium transition-all duration-200"
+          >
+            View {media.media_type === 'audio' ? 'Audio' : media.media_type === 'video' ? 'Video' : 'Photo'}
+          </Link>
+          <a
+            href={generateAffiliateLink(media.title, media.author)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 text-amber-400 border border-amber-900/30 rounded-lg transition-all duration-200"
+            title="Buy on Amazon"
+          >
+            <ShoppingCart className="w-4 h-4" />
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2, Book, AlertCircle, Lightbulb } from 'lucide-react';
 import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
 import BookResultCard from '@/components/DeepSearch/BookResultCard';
+import { generateAffiliateLink } from '@/lib/utils/affiliate';
 
 interface ConceptSuggestion {
     id: string;
@@ -248,10 +249,6 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             }
         }, 200);
     }, []);
-    const generateAffiliateLink = (title: string, author: string) => {
-        const searchTerm = encodeURIComponent(`${title} ${author}`);
-        return `https://www.amazon.com/s?k=${searchTerm}`;
-    };
 
     return (
         <div className="w-full">

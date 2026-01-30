@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Book, ChevronDown, ChevronUp, User, ExternalLink } from 'lucide-react';
+import { Book, ChevronDown, ChevronUp, User, ExternalLink, ShoppingCart } from 'lucide-react';
+import { generateAffiliateLink } from '@/lib/utils/affiliate';
 
 interface Chunk {
     chunk_id: string;
@@ -146,13 +147,24 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
                                     <span className="text-xs text-amber-400/70">
                                         Similarity: {(chunk.similarity * 100).toFixed(1)}%
                                     </span>
-                                    <Link
-                                        href={`/library/${book.text_id}?chunk=${chunk.chunk_id}`}
-                                        className="text-xs text-amber-400 hover:text-amber-300 hover:underline flex items-center gap-1 transition-colors"
-                                    >
-                                        View excerpt
-                                        <ExternalLink className="w-3 h-3" />
-                                    </Link>
+                                    <div className="flex items-center gap-3">
+                                        <a
+                                            href={generateAffiliateLink(book.title, book.author)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-amber-500 hover:text-amber-400 flex items-center gap-1 transition-colors"
+                                        >
+                                            <ShoppingCart className="w-3 h-3" />
+                                            Buy on Amazon
+                                        </a>
+                                        <Link
+                                            href={`/library/${book.text_id}?chunk=${chunk.chunk_id}`}
+                                            className="text-xs text-amber-400 hover:text-amber-300 hover:underline flex items-center gap-1 transition-colors"
+                                        >
+                                            View excerpt
+                                            <ExternalLink className="w-3 h-3" />
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>

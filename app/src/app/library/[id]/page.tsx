@@ -17,8 +17,11 @@ import {
   Sparkles,
   RefreshCw,
   Edit,
-  Trash2
+  Trash2,
+  ShoppingCart,
+  ExternalLink
 } from 'lucide-react';
+import { generateAffiliateLink } from '@/lib/utils/affiliate';
 import BookmarkButton from '@/components/BookmarkButton';
 import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
@@ -162,10 +165,10 @@ export default function DocumentDetailPage() {
 
   // Full text extracted from HTML for TTS matching
   const [htmlFullText, setHtmlFullText] = useState<string | null>(null);
-  
+
   // Full text extracted from PDF for TTS matching
   const [pdfFullText, setPdfFullText] = useState<string | null>(null);
-  
+
   // Handler to set HTML full text with logging
   const handleHtmlFullTextExtracted = useCallback((text: string) => {
     console.log('[DocumentDetailPage] ✅ HTML full text extracted callback called:', {
@@ -175,7 +178,7 @@ export default function DocumentDetailPage() {
     });
     setHtmlFullText(text);
   }, []);
-  
+
   // Debug: Log when htmlFullText changes
   useEffect(() => {
     if (htmlFullText) {
@@ -204,7 +207,7 @@ export default function DocumentDetailPage() {
       // Check both source_format and htmlUrl to detect HTML documents
       // If htmlUrl exists and we don't have pdfUrl, it's likely an HTML document
       const isHtmlDocument = htmlUrl && !pdfUrl && !document?.metadata?.isStructuredText;
-      
+
       console.log('[DocumentDetailPage] Computing fullText:', {
         isHtmlDocument,
         hasHtmlUrl: !!htmlUrl,
@@ -215,7 +218,7 @@ export default function DocumentDetailPage() {
         htmlFullTextLength: htmlFullText?.length || 0,
         documentContentLength: document?.content?.length || 0
       });
-      
+
       // If we have htmlFullText, use it regardless of detection (it means HTMLViewer extracted it)
       if (htmlFullText && htmlFullText.length > 100) {
         // Use the full text extracted from rendered HTML
@@ -228,7 +231,7 @@ export default function DocumentDetailPage() {
           chapterOffsets: {} as Record<string, number>
         };
       }
-      
+
       // If we have pdfFullText, use it for PDF documents
       if (pdfFullText && pdfFullText.length > 100) {
         console.log('[DocumentDetailPage] ✅ Using extracted PDF fullText for TTS:', {
@@ -240,15 +243,15 @@ export default function DocumentDetailPage() {
           chapterOffsets: {} as Record<string, number>
         };
       }
-      
+
       if (isHtmlDocument && !htmlFullText) {
         console.warn('[DocumentDetailPage] ⚠️ HTML document but htmlFullText not available yet, using document.content fallback');
       }
-      
+
       // For non-structured text, clean HTML from document content before using for TTS
       const rawContent = document?.content || '';
       const cleanedContent = rawContent ? cleanHtmlText(rawContent) : '';
-      
+
       // Debug: Log if we cleaned HTML
       if (rawContent && (rawContent.includes('<') || rawContent.includes('&'))) {
         console.log('[DocumentDetailPage] Cleaned fullText for TTS:', {
@@ -259,7 +262,7 @@ export default function DocumentDetailPage() {
           cleanedPreview: cleanedContent.substring(0, 200)
         });
       }
-      
+
       return {
         fullText: cleanedContent,
         chapterOffsets: {} as Record<string, number>
@@ -357,37 +360,37 @@ export default function DocumentDetailPage() {
     // Calculate global position
     // 1. Get chapter start offset
     const chapterStart = chapterOffsets[activeChapterId] || 0;
-    
+
     // 2. Get the chapter text from fullText (most reliable)
     const chapterKeys = Object.keys(chapterOffsets).sort((a, b) => chapterOffsets[a] - chapterOffsets[b]);
     const currentChapterIndex = chapterKeys.indexOf(activeChapterId);
-    const nextChapterId = currentChapterIndex >= 0 && currentChapterIndex < chapterKeys.length - 1 
-      ? chapterKeys[currentChapterIndex + 1] 
+    const nextChapterId = currentChapterIndex >= 0 && currentChapterIndex < chapterKeys.length - 1
+      ? chapterKeys[currentChapterIndex + 1]
       : null;
     const chapterEnd = nextChapterId ? chapterOffsets[nextChapterId] : fullText.length;
-    
+
     const chapterTextInFull = fullText.substring(chapterStart, chapterEnd);
-    
+
     if (!chapterTextInFull) {
       console.warn('[TTS] Chapter text is empty', { chapterStart, chapterEnd, fullTextLength: fullText.length });
       return;
     }
-    
+
     // 3. Normalize both texts for better matching
     const normalizeForSearch = (t: string) => t.replace(/\s+/g, ' ').trim();
     const normalizedClicked = normalizeForSearch(text);
     const normalizedChapter = normalizeForSearch(chapterTextInFull);
-    
+
     // Try multiple search strategies
     let localIndex = -1;
     let searchMethod = '';
-    
+
     // Strategy 1: Exact match in original text
     localIndex = chapterTextInFull.indexOf(text);
     if (localIndex !== -1) {
       searchMethod = 'exact';
     }
-    
+
     // Strategy 2: Normalized match
     if (localIndex === -1) {
       localIndex = normalizedChapter.indexOf(normalizedClicked);
@@ -395,7 +398,7 @@ export default function DocumentDetailPage() {
         searchMethod = 'normalized';
       }
     }
-    
+
     // Strategy 3: First 50 chars match (for long paragraphs)
     if (localIndex === -1 && text.length > 50) {
       const shortText = text.substring(0, 50);
@@ -404,7 +407,7 @@ export default function DocumentDetailPage() {
         searchMethod = 'short-exact';
       }
     }
-    
+
     // Strategy 4: First 50 chars normalized
     if (localIndex === -1 && normalizedClicked.length > 50) {
       const shortNormalized = normalizedClicked.substring(0, 50);
@@ -413,7 +416,7 @@ export default function DocumentDetailPage() {
         searchMethod = 'short-normalized';
       }
     }
-    
+
     // Strategy 5: Fuzzy match with regex (handles whitespace variations)
     if (localIndex === -1) {
       try {
@@ -435,7 +438,7 @@ export default function DocumentDetailPage() {
     if (localIndex === -1) {
       const rawChapterContent = activeChapter.content;
       const rawIndex = rawChapterContent.indexOf(text);
-      
+
       if (rawIndex !== -1) {
         // Found in raw content, estimate position in fullText chapter
         const ratio = rawIndex / Math.max(rawChapterContent.length, 1);
@@ -447,7 +450,7 @@ export default function DocumentDetailPage() {
     if (localIndex !== -1 && localIndex >= 0) {
       const globalIndex = chapterStart + localIndex;
       console.log(`[TTS] Seek to ${globalIndex} (Chapter: ${activeChapterId}, Local: ${localIndex}, Method: ${searchMethod}, Text length: ${text.length})`);
-      
+
       // Verify the position is within bounds
       if (globalIndex >= 0 && globalIndex < fullText.length) {
         audioControlsRef.current.startFromPosition(globalIndex);
@@ -455,7 +458,7 @@ export default function DocumentDetailPage() {
         console.warn('[TTS] Calculated position out of bounds', { globalIndex, fullTextLength: fullText.length });
       }
     } else {
-      console.warn('[TTS] Could not find clicked text in active chapter content', { 
+      console.warn('[TTS] Could not find clicked text in active chapter content', {
         text: text.substring(0, 50),
         chapterId: activeChapterId,
         chapterStart,
@@ -463,7 +466,7 @@ export default function DocumentDetailPage() {
         chapterTextLength: chapterTextInFull.length,
         normalizedClicked: normalizedClicked.substring(0, 50)
       });
-      
+
       // Final Fallback: Search anywhere in fullText (might jump to another chapter if text is duplicate)
       const allGlobalOccurrences = findAllOccurrences(fullText, text);
       if (allGlobalOccurrences.length > 0) {
@@ -474,7 +477,7 @@ export default function DocumentDetailPage() {
           return currentDist < closestDist ? current : closest;
         });
         console.log(`[TTS] Global Fallback Seek to ${closestIndex} (${allGlobalOccurrences.length} occurrences found, using closest to chapter)`);
-        
+
         if (closestIndex >= 0 && closestIndex < fullText.length) {
           audioControlsRef.current.startFromPosition(closestIndex);
         }
@@ -492,7 +495,7 @@ export default function DocumentDetailPage() {
         fullTextPreview: fullText?.substring(0, 200) || 'null',
         hasControls: !!audioControlsRef.current
       });
-      
+
       if (!audioControlsRef.current || !fullText || typeof fullText !== 'string') {
         console.warn('[TTS] Missing required data for block click', {
           hasControls: !!audioControlsRef.current,
@@ -505,7 +508,7 @@ export default function DocumentDetailPage() {
 
       // Clean the clicked text to ensure no HTML artifacts
       const cleanedText = cleanHtmlText(text);
-      
+
       // Debug: Log cleaning process
       if (text !== cleanedText) {
         console.log('[TTS] Cleaned clicked text:', {
@@ -514,15 +517,15 @@ export default function DocumentDetailPage() {
           hadHtml: text.includes('<') || text.includes('&')
         });
       }
-      
+
       if (!cleanedText || typeof cleanedText !== 'string' || cleanedText.trim().length === 0) {
-        console.warn('[TTS] Invalid text for block click after cleaning', { 
+        console.warn('[TTS] Invalid text for block click after cleaning', {
           originalText: text?.substring(0, 50),
           cleanedText: cleanedText?.substring(0, 50)
         });
         return;
       }
-      
+
       // Also check if fullText has HTML and warn
       if (fullText.includes('<') || fullText.includes('&')) {
         console.warn('[TTS] WARNING: fullText contains HTML! This will be read aloud. FullText preview:', fullText.substring(0, 200));
@@ -534,7 +537,7 @@ export default function DocumentDetailPage() {
           .replace(/\s+/g, ' ') // Normalize all whitespace to single space
           .trim();
       };
-      
+
       const normalizedClicked = normalizeForSearch(cleanedText);
       const normalizedFull = normalizeForSearch(fullText);
 
@@ -631,7 +634,7 @@ export default function DocumentDetailPage() {
         });
         audioControlsRef.current.startFromPosition(index);
       } else {
-        console.error('[TTS] ❌ Could not find clicked text in full content', { 
+        console.error('[TTS] ❌ Could not find clicked text in full content', {
           clickedTextLength: cleanedText.length,
           clickedTextPreview: cleanedText.substring(0, 100),
           normalizedClickedPreview: normalizedClicked.substring(0, 100),
@@ -683,7 +686,7 @@ export default function DocumentDetailPage() {
       // Check if this is an HTML file (not structured text, source_format is html)
       // Fallback: if source_format is null, check file extension from s3_key
       let isHtmlFile = data.source_format === 'html' && !data.metadata?.isStructuredText;
-      
+
       // Fallback detection: check file extension when source_format is null
       if (!isHtmlFile && !data.source_format && data.s3_key && !data.metadata?.isStructuredText) {
         const filename = data.s3_key.split('/').pop() || '';
@@ -926,7 +929,7 @@ export default function DocumentDetailPage() {
   const handleDocumentLoad = useCallback(async (totalPages: number) => {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
-    
+
     // Extract full text from PDF for TTS matching
     if (pdfUrl) {
       try {
@@ -1541,6 +1544,20 @@ export default function DocumentDetailPage() {
                           </div>
                         )}
                       </dl>
+
+                      {/* Buy on Amazon Link */}
+                      <div className="pt-4 border-t border-amber-900/10 mt-6">
+                        <a
+                          href={generateAffiliateLink(document.title, document.author || undefined)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-lg shadow-amber-900/20"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Buy on Amazon
+                          <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
+                        </a>
+                      </div>
                     </div>
 
                     <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6">
