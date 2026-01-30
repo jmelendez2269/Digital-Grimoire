@@ -172,7 +172,7 @@ export default function MonitoringPage() {
                                                 <div className="h-2 bg-zinc-950 rounded-full overflow-hidden">
                                                     <div
                                                         className="h-full bg-amber-600 rounded-full transition-all duration-1000"
-                                                        style={{ width: `${(source.click_count / stats.totalClicks) * 100}%` }}
+                                                        style={{ '--width': `${(source.click_count / stats.totalClicks) * 100}%` } as React.CSSProperties}
                                                     />
                                                 </div>
                                             </div>
