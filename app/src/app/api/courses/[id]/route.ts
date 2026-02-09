@@ -137,3 +137,69 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+    if (authError || !session) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+    const json = await request.json();
+
+    // Fields allowed to update
+    const allowedFields = [
+      'title', 'slug', 'description', 'premise',
+      'course_type', 'level', 'is_published',
+      'content', 'cover_image', 'thumbnail_image'
+    ];
+
+    const updates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    allowedFields.forEach(field => {
+      if (json[field] !== undefined) {
+        updates[field] = json[field];
+      }
+    });
+
+    const { data: course, error } = await supabase
+      .from('courses')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating course:', error);
+      return NextResponse.json(
+        { error: 'Failed to update course', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      course
+    });
+
+  } catch (error) {
+    console.error('Unexpected error in updating course:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}

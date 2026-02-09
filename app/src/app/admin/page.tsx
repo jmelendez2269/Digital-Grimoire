@@ -101,6 +101,13 @@ export default function AdminDashboardHub() {
       icon: <MessageSquare className="w-8 h-8 text-yellow-400" />,
       href: "/admin/feedback",
       color: "yellow"
+    },
+    {
+      title: "Technical Wiki",
+      description: "Access system documentation and technical guides.",
+      icon: <BookOpen className="w-8 h-8 text-teal-400" />,
+      href: "/admin/wiki",
+      color: "teal"
     }
   ];
 

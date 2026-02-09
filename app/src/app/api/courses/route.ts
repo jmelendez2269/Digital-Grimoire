@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const { data: { session }, error: authError } = await supabase.auth.getSession();
-    
+
     if (authError) {
       return NextResponse.json(
         { error: 'Authentication error', details: authError.message },
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 
     // Remove content field from listing (it's large and not needed for cards)
     // Content should only be fetched on the detail page
-    const coursesWithoutContent = (courses || []).map(({ content, ...course }: { content?: any; [key: string]: any }) => course);
+    const coursesWithoutContent = (courses || []).map(({ content, ...course }: { content?: any;[key: string]: any }) => course);
 
     return NextResponse.json({
       success: true,
@@ -81,6 +81,70 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Unexpected error in courses API:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+    if (authError || !session) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const json = await request.json();
+    const { title, slug, description, premise, course_type, level, is_published, content } = json;
+
+    // Validate required fields
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
+
+    // Generate slug if not provided
+    const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    const { data: course, error } = await supabase
+      .from('courses')
+      .insert({
+        title,
+        slug: finalSlug,
+        description,
+        premise,
+        course_type,
+        level,
+        is_published: is_published || false,
+        content: content || {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating course:', error);
+      return NextResponse.json(
+        { error: 'Failed to create course', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      course
+    });
+
+  } catch (error) {
+    console.error('Unexpected error in creating course:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

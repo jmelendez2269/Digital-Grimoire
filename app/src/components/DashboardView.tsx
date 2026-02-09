@@ -19,7 +19,7 @@ export default function DashboardView() {
             <div className="mx-auto w-full max-w-7xl">
                 {/* Welcome Section */}
                 <div className="mb-12 text-center">
-                    <h1 className="text-4xl font-bold text-amber-100">
+                    <h1 className="text-4xl font-bold text-zinc-100">
                         {loading ? (
                             "Welcome!"
                         ) : username ? (
@@ -42,7 +42,7 @@ export default function DashboardView() {
 
                 {/* Explore Your Tools Section */}
                 <div className="mb-12">
-                    <h2 className="mb-8 text-2xl font-bold text-amber-100 text-center">
+                    <h2 className="mb-8 text-2xl font-bold text-cyan-100 text-center">
                         Explore Your Tools
                     </h2>
 
@@ -51,14 +51,14 @@ export default function DashboardView() {
                         {/* Library Card */}
                         <Link
                             href="/library"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 to-amber-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
-                                    <BookOpen className="w-6 h-6 text-amber-400" />
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
+                                    <BookOpen className="w-6 h-6 text-cyan-400" />
                                 </div>
-                                <h3 className="text-xl font-bold text-amber-100 group-hover:text-amber-400">
+                                <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
                                     Library
                                 </h3>
                             </div>
@@ -72,7 +72,7 @@ export default function DashboardView() {
                             href="/journal"
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-indigo-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/30 to-indigo-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/15 to-indigo-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20">
                                     <Tablet className="w-6 h-6 text-indigo-400" />
@@ -91,7 +91,7 @@ export default function DashboardView() {
                             href="/graph"
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 to-cyan-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
                                     <Network className="w-6 h-6 text-cyan-400" />
@@ -121,7 +121,7 @@ export default function DashboardView() {
                             }}
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-blue-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/30 to-blue-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/15 to-blue-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/20">
                                     <GraduationCap className="w-6 h-6 text-blue-400" />
@@ -141,11 +141,11 @@ export default function DashboardView() {
 
                     {/* Extras Separator */}
                     <div className="flex items-center gap-4 mb-8 max-w-6xl mx-auto">
-                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
-                        <span className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-[0.3em] whitespace-nowrap">
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
+                        <span className="text-[10px] font-mono font-bold text-cyan-500/50 uppercase tracking-[0.3em] whitespace-nowrap">
                             Extras
                         </span>
-                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent"></div>
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
                     </div>
 
                     {/* Extras Tools Grid - Centered & Expanded for Tarot */}
@@ -153,14 +153,14 @@ export default function DashboardView() {
                         {/* Ritual Machine Card */}
                         <Link
                             href="/ritual-machine"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 to-amber-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
                                     <span className="text-2xl">⚡</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-amber-100 group-hover:text-amber-400">
+                                <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
                                     Ritual Machine
                                 </h3>
                             </div>
@@ -172,14 +172,14 @@ export default function DashboardView() {
                         {/* Workbench Card */}
                         <Link
                             href="/practitioner/rituals"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 to-amber-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
                                     <span className="text-2xl">🛠️</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-amber-100 group-hover:text-amber-400">
+                                <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
                                     Workbench
                                 </h3>
                             </div>
@@ -193,7 +193,7 @@ export default function DashboardView() {
                             href="/practitioner/tarot"
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-purple-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/30 to-pink-600/30 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/15 to-pink-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/20">
                                     <Sparkles className="w-6 h-6 text-purple-400" />
@@ -218,14 +218,14 @@ export default function DashboardView() {
                         By using this site, you agree to our{" "}
                         <Link
                             href="/privacy"
-                            className="text-amber-400 underline transition-colors hover:text-amber-300"
+                            className="text-cyan-400 underline transition-colors hover:text-cyan-300"
                         >
                             Privacy Policy
                         </Link>
                         {" "}and{" "}
                         <Link
                             href="/terms"
-                            className="text-amber-400 underline transition-colors hover:text-amber-300"
+                            className="text-cyan-400 underline transition-colors hover:text-cyan-300"
                         >
                             Terms of Service
                         </Link>
