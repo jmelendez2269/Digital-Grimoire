@@ -1,4 +1,4 @@
-export type SearchSource = 'library' | 'concept' | 'convergence';
+export type SearchSource = 'library' | 'concept' | 'parallax' | 'convergence';
 
 export interface SearchHistoryEntry {
     id: string;

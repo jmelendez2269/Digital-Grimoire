@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Convergence",
-  description: "Privacy Policy for Convergence - How we collect, use, and protect your data",
+  title: "Privacy Policy | Project Parallax",
+  description: "Privacy Policy for Project Parallax - How we collect, use, and protect your data",
   openGraph: {
-    title: "Privacy Policy | Convergence",
-    description: "Privacy Policy for Convergence - How we collect, use, and protect your data",
+    title: "Privacy Policy | Project Parallax",
+    description: "Privacy Policy for Project Parallax - How we collect, use, and protect your data",
     type: "website",
-    url: "https://www.convergencelibrary.com/privacy",
+    url: "https://www.projectparallax.io/privacy",
     images: [
       {
-        url: "https://www.convergencelibrary.com/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence Privacy Policy",
+        alt: "Project Parallax - Multi-lens library and knowledge network",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Privacy Policy | Convergence",
-    description: "Privacy Policy for Convergence - How we collect, use, and protect your data",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    title: "Privacy Policy | Project Parallax",
+    description: "Privacy Policy for Project Parallax - How we collect, use, and protect your data",
+    images: ["https://www.projectparallax.io/og-image.png"],
   },
 };
 
@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">1. Introduction</h2>
             <p className="text-zinc-300">
-              Welcome to Convergence ("we," "our," or "us"). This Privacy Policy explains how we collect,
+              Welcome to Project Parallax ("we," "our," or "us"). This Privacy Policy explains how we collect,
               use, disclose, and safeguard your information when you use our digital library platform (the "Service").
             </p>
             <p className="text-zinc-300">
@@ -294,7 +294,7 @@ export default function PrivacyPolicyPage() {
               <li>Log into your account</li>
               <li>Go to your profile settings</li>
               <li>Navigate to Privacy Settings, or</li>
-              <li>Contact us at: <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">privacy@convergencelibrary.com</a></li>
+              <li>Contact us at: <a href="mailto:privacy@digitalgrimoire.io" className="text-amber-400 hover:text-amber-300">privacy@digitalgrimoire.io</a></li>
             </ol>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">7.3 GDPR Rights (EU Users)</h3>
@@ -317,8 +317,8 @@ export default function PrivacyPolicyPage() {
               Our Service is not intended for children under 13 years of age. We do not knowingly collect personal
               information from children under 13. If you are a parent or guardian and believe your child has provided
               us with personal information, please contact us immediately at{" "}
-              <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                privacy@convergencelibrary.com
+              <a href="mailto:privacy@digitalgrimoire.io" className="text-amber-400 hover:text-amber-300">
+                privacy@digitalgrimoire.io
               </a>.
             </p>
             <p className="text-zinc-300 mt-2">
@@ -362,10 +362,10 @@ export default function PrivacyPolicyPage() {
             </p>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">
-                <strong>Service:</strong> Convergence<br />
+                <strong>Service:</strong> Project Parallax<br />
                 <strong>Contact:</strong>{" "}
-                <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                  privacy@convergencelibrary.com
+                <a href="mailto:privacy@digitalgrimoire.io" className="text-amber-400 hover:text-amber-300">
+                  privacy@digitalgrimoire.io
                 </a>
                 <br />
                 <strong>Operated by:</strong> Jeanine Melendez
@@ -382,11 +382,11 @@ export default function PrivacyPolicyPage() {
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">12.1 Data Controller</h3>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">
-                <strong>Service:</strong> Convergence<br />
+                <strong>Service:</strong> Project Parallax<br />
                 <strong>Operated by:</strong> Jeanine Melendez<br />
                 <strong>Contact Email:</strong>{" "}
-                <a href="mailto:privacy@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                  privacy@convergencelibrary.com
+                <a href="mailto:privacy@digitalgrimoire.io" className="text-amber-400 hover:text-amber-300">
+                  privacy@digitalgrimoire.io
                 </a>
               </p>
               <p className="text-zinc-400 text-sm mt-2 italic">
@@ -403,19 +403,19 @@ export default function PrivacyPolicyPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">13. Affiliate Link Disclosure</h2>
             <p className="text-zinc-300">
-              Convergence participates in the Amazon Services LLC Associates Program, an affiliate advertising program
+              Project Parallax participates in the Amazon Services LLC Associates Program, an affiliate advertising program
               designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com.
             </p>
             <p className="text-zinc-300 mt-4">
               As an Amazon Associate, we earn from qualifying purchases. This means that when you click on certain
               links to products on Amazon and make a purchase, we may receive a small commission at no additional cost to you.
-              This helps support the maintenance and development of the Convergence platform.
+              This helps support the maintenance and development of the Project Parallax platform.
             </p>
           </section>
 
           <div className="mt-12 pt-8 border-t border-zinc-800">
             <p className="text-zinc-400 text-sm">
-              This Privacy Policy is effective as of {currentDate} and applies to all users of the Convergence platform.
+              This Privacy Policy is effective as of {currentDate} and applies to all users of the Project Parallax platform.
             </p>
           </div>
         </div>

@@ -781,7 +781,7 @@ export default function DocumentDetailPage() {
   // Fetch chunk content by chunk ID
   const fetchChunkContent = useCallback(async (chunkId: string) => {
     try {
-      const response = await fetch(`/api/convergence/chunk/${chunkId}`);
+      const response = await fetch(`/api/parallax/chunk/${chunkId}`);
       if (response.ok) {
         const data = await response.json();
         setChunkContent(data.chunk.content);
@@ -1410,7 +1410,7 @@ export default function DocumentDetailPage() {
                             <div className="flex items-center gap-2 mb-1">
                               <Sparkles className="w-4 h-4 text-purple-400" />
                               <span className="text-sm font-medium text-purple-300">
-                                Viewing section from Convergence Machine
+                                Viewing section from Parallax Engine
                               </span>
                             </div>
                             {targetChunkIndex !== null && (

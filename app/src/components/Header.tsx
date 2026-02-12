@@ -97,7 +97,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             </svg>
           </div>
           <span className="text-lg font-bold tracking-tight text-zinc-100 group-hover:text-white font-sans uppercase">
-            Convergence <span className="text-cyan-500 text-xs align-top opacity-70">OS</span>
+            Project Parallax
           </span>
         </Link>
 
@@ -270,7 +270,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <div className="flex items-center gap-2">
               <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">Log In</Link>
               <Link href="/register" className="px-4 py-1.5 text-sm font-bold text-black bg-cyan-500 hover:bg-cyan-400 rounded transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                JOIN_CONVERGENCE &gt;
+                JOIN_PARALLAX &gt;
               </Link>
             </div>
           )}

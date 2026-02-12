@@ -59,7 +59,7 @@ export default function AdminUploadPage() {
         e.stopPropagation();
       }
     };
-    
+
     const handleGlobalDragOver = (e: DragEvent) => {
       // Prevent default to allow drop
       if (e.dataTransfer?.types.includes('Files')) {
@@ -69,7 +69,7 @@ export default function AdminUploadPage() {
 
     document.addEventListener('drop', handleGlobalDrop);
     document.addEventListener('dragover', handleGlobalDragOver);
-    
+
     return () => {
       document.removeEventListener('drop', handleGlobalDrop);
       document.removeEventListener('dragover', handleGlobalDragOver);
@@ -84,11 +84,11 @@ export default function AdminUploadPage() {
 
     // Override console.error to filter out FileSystemFileHandle errors
     console.error = (...args: any[]) => {
-      const errorString = args.map(arg => 
-        typeof arg === 'string' ? arg : 
-        arg?.message || arg?.toString() || ''
+      const errorString = args.map(arg =>
+        typeof arg === 'string' ? arg :
+          arg?.message || arg?.toString() || ''
       ).join(' ');
-      
+
       // Suppress FileSystemFileHandle errors - more permissive check
       if (
         errorString.includes('FileSystemFileHandle') ||
@@ -98,18 +98,18 @@ export default function AdminUploadPage() {
         // Suppress the error - don't log it
         return;
       }
-      
+
       // Log other errors normally
       originalConsoleError.apply(console, args);
     };
 
     // Override console.warn to filter out FileSystemFileHandle warnings
     console.warn = (...args: any[]) => {
-      const warnString = args.map(arg => 
-        typeof arg === 'string' ? arg : 
-        arg?.message || arg?.toString() || ''
+      const warnString = args.map(arg =>
+        typeof arg === 'string' ? arg :
+          arg?.message || arg?.toString() || ''
       ).join(' ');
-      
+
       // Suppress FileSystemFileHandle warnings - more permissive check
       if (
         warnString.includes('FileSystemFileHandle') ||
@@ -119,7 +119,7 @@ export default function AdminUploadPage() {
         // Suppress the warning - don't log it
         return;
       }
-      
+
       // Log other warnings normally
       originalConsoleWarn.apply(console, args);
     };
@@ -127,7 +127,7 @@ export default function AdminUploadPage() {
     const handleError = (event: ErrorEvent) => {
       const error = event.error;
       const errorMessage = error?.message || error?.toString() || '';
-      
+
       // Suppress FileSystemFileHandle errors - these are expected when File System Access API is not available
       if (
         errorMessage.includes('FileSystemFileHandle') ||
@@ -144,7 +144,7 @@ export default function AdminUploadPage() {
     const handleRejection = (event: PromiseRejectionEvent) => {
       const error = event.reason;
       const errorMessage = error?.message || error?.toString() || '';
-      
+
       // Suppress FileSystemFileHandle errors - these are expected when File System Access API is not available
       if (
         errorMessage.includes('FileSystemFileHandle') ||
@@ -164,7 +164,7 @@ export default function AdminUploadPage() {
       // Restore original console methods
       console.error = originalConsoleError;
       console.warn = originalConsoleWarn;
-      
+
       window.removeEventListener('error', handleError, true);
       window.removeEventListener('unhandledrejection', handleRejection, true);
     };
@@ -176,7 +176,7 @@ export default function AdminUploadPage() {
     const isVideo = file.type.startsWith('video/');
     const maxSize = isVideo ? 200 * 1024 * 1024 : 50 * 1024 * 1024; // 200MB for video, 50MB for others
     const ocrRecommendedSize = 8 * 1024 * 1024; // 8MB recommended for OCR processing
-    
+
     const allowedTypes = [
       // Documents
       'application/pdf',
@@ -201,7 +201,7 @@ export default function AdminUploadPage() {
     ];
 
     // Also allow any audio/*, video/*, or image/* MIME types
-    const isAllowedGenericType = 
+    const isAllowedGenericType =
       file.type.startsWith('audio/') ||
       file.type.startsWith('video/') ||
       file.type.startsWith('image/');
@@ -211,7 +211,7 @@ export default function AdminUploadPage() {
     }
 
     if (file.size > maxSize) {
-      return isVideo 
+      return isVideo
         ? 'Video file size must be less than 200MB'
         : 'File size must be less than 50MB';
     }
@@ -229,27 +229,27 @@ export default function AdminUploadPage() {
   // Drag-and-drop handler
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     try {
-      console.log('[UPLOAD] onDrop called:', { 
-        acceptedCount: acceptedFiles.length, 
+      console.log('[UPLOAD] onDrop called:', {
+        acceptedCount: acceptedFiles.length,
         rejectedCount: rejectedFiles.length,
         acceptedFiles: acceptedFiles.map(f => ({ name: f.name, type: f.type, size: f.size })),
-        rejectedFiles: rejectedFiles.map(({ file, errors }) => ({ 
-          name: file.name, 
-          type: file.type, 
-          errors: errors.map((e: any) => `${e.code}: ${e.message}`) 
+        rejectedFiles: rejectedFiles.map(({ file, errors }) => ({
+          name: file.name,
+          type: file.type,
+          errors: errors.map((e: any) => `${e.code}: ${e.message}`)
         }))
       });
-      
+
       if (rejectedFiles.length > 0) {
         console.error('[UPLOAD] Files rejected:', rejectedFiles);
       }
-      
+
       const ocrRecommendedSize = 8 * 1024 * 1024; // 8MB recommended for OCR processing
       const newFiles: UploadFile[] = acceptedFiles.map((file) => {
         const error = validateFile(file);
         const isImage = file.type.startsWith('image/');
         const isPDF = file.type === 'application/pdf';
-        
+
         // Warning for large images
         let warning: string | undefined = undefined;
         if (isImage && file.size > ocrRecommendedSize) {
@@ -258,13 +258,13 @@ export default function AdminUploadPage() {
           // Warning for large PDFs
           warning = 'Large PDF detected. OCR may fail due to Azure\'s 4MB per-page limit. Consider compressing the PDF before uploading.';
         }
-        
+
         // Create preview URL for PDFs and images
-        const previewUrl = 
-          file.type === 'application/pdf' || 
-          file.type.startsWith('image/') ||
-          file.type.startsWith('video/')
-            ? URL.createObjectURL(file) 
+        const previewUrl =
+          file.type === 'application/pdf' ||
+            file.type.startsWith('image/') ||
+            file.type.startsWith('video/')
+            ? URL.createObjectURL(file)
             : undefined;
         return {
           id: Math.random().toString(36).substring(7),
@@ -393,16 +393,16 @@ export default function AdminUploadPage() {
           prev.map((f) =>
             f.id === uploadFile.id
               ? {
-                  ...f,
-                  file: compressedFile,
-                  originalFile: uploadFile.file, // Store original
-                  status: 'pending',
-                  isCompressed: true,
-                  originalSize: result.originalSize,
-                  compressionRatio: result.compressionRatio,
-                  previewUrl: newPreviewUrl,
-                  warning: undefined, // Clear warning after compression
-                }
+                ...f,
+                file: compressedFile,
+                originalFile: uploadFile.file, // Store original
+                status: 'pending',
+                isCompressed: true,
+                originalSize: result.originalSize,
+                compressionRatio: result.compressionRatio,
+                previewUrl: newPreviewUrl,
+                warning: undefined, // Clear warning after compression
+              }
               : f
           )
         );
@@ -412,10 +412,10 @@ export default function AdminUploadPage() {
           prev.map((f) =>
             f.id === uploadFile.id
               ? {
-                  ...f,
-                  status: 'pending',
-                  error: result.error || 'Compression failed. Using original file.',
-                }
+                ...f,
+                status: 'pending',
+                error: result.error || 'Compression failed. Using original file.',
+              }
               : f
           )
         );
@@ -426,10 +426,10 @@ export default function AdminUploadPage() {
         prev.map((f) =>
           f.id === uploadFile.id
             ? {
-                ...f,
-                status: 'pending',
-                error: error instanceof Error ? error.message : 'Compression failed. Using original file.',
-              }
+              ...f,
+              status: 'pending',
+              error: error instanceof Error ? error.message : 'Compression failed. Using original file.',
+            }
             : f
         )
       );
@@ -455,17 +455,17 @@ export default function AdminUploadPage() {
       prev.map((f) =>
         f.id === uploadFile.id
           ? {
-              ...f,
-              file: uploadFile.originalFile!,
-              originalFile: undefined,
-              isCompressed: false,
-              originalSize: uploadFile.originalFile!.size,
-              compressionRatio: undefined,
-              previewUrl: newPreviewUrl,
-              warning: shouldCompressPDF(uploadFile.originalFile!)
-                ? 'Large PDF detected. OCR may fail due to Azure\'s 4MB per-page limit. Consider compressing the PDF before uploading.'
-                : undefined,
-            }
+            ...f,
+            file: uploadFile.originalFile!,
+            originalFile: undefined,
+            isCompressed: false,
+            originalSize: uploadFile.originalFile!.size,
+            compressionRatio: undefined,
+            previewUrl: newPreviewUrl,
+            warning: shouldCompressPDF(uploadFile.originalFile!)
+              ? 'Large PDF detected. OCR may fail due to Azure\'s 4MB per-page limit. Consider compressing the PDF before uploading.'
+              : undefined,
+          }
           : f
       )
     );
@@ -586,19 +586,19 @@ export default function AdminUploadPage() {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       // Determine if this is a media file
-      const isMediaFile = 
+      const isMediaFile =
         file.type.startsWith('audio/') ||
         file.type.startsWith('video/') ||
         (file.type.startsWith('image/') && file.type !== 'image/png' && file.type !== 'image/jpeg' && file.type !== 'image/jpg');
 
       // Route to appropriate processing endpoint
       const processEndpoint = isMediaFile ? '/api/process-media' : '/api/process-document';
-      
+
       // Trigger processing (OCR/metadata extraction for documents, media processing for media)
       const processResponse = await fetch(processEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           key,
           userId: currentUser?.id,
           skipOCR: uploadFile.skipOCR || false
@@ -615,13 +615,13 @@ export default function AdminUploadPage() {
           // Response wasn't JSON, use status text
           errorMessage = `${errorMessage}: ${processResponse.statusText}`;
         }
-        
+
         // Check if error is due to file size (Azure OCR size limit)
-        const isSizeError = errorMessage.includes('too large') || 
-                           errorMessage.includes('larger than') || 
-                           errorMessage.includes('4MB limit') ||
-                           errorMessage.includes('size limit');
-        
+        const isSizeError = errorMessage.includes('too large') ||
+          errorMessage.includes('larger than') ||
+          errorMessage.includes('4MB limit') ||
+          errorMessage.includes('size limit');
+
         throw new Error(errorMessage);
       }
 
@@ -637,44 +637,44 @@ export default function AdminUploadPage() {
         prev.map((f) =>
           f.id === uploadFile.id
             ? {
-                ...f,
-                status: 'success',
-                progress: 100,
-                metadata: processData.metadata,
-                shortSummary: processData.shortSummary,
-                longSummary: processData.longSummary,
-                rawAiOutput: processData.rawAiOutput,
-                pageCount: processData.pageCount,
-                lineCount: processData.lineCount,
-                lenses: processData.metadata?.lenses || [],
-                similarDocuments: processData.similarDocuments,
-                hasDuplicates: processData.hasDuplicates,
-              }
+              ...f,
+              status: 'success',
+              progress: 100,
+              metadata: processData.metadata,
+              shortSummary: processData.shortSummary,
+              longSummary: processData.longSummary,
+              rawAiOutput: processData.rawAiOutput,
+              pageCount: processData.pageCount,
+              lineCount: processData.lineCount,
+              lenses: processData.metadata?.lenses || [],
+              similarDocuments: processData.similarDocuments,
+              hasDuplicates: processData.hasDuplicates,
+            }
             : f
         )
       );
     } catch (error) {
       console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-      
+
       // Check if error is due to file size (Azure OCR size limit)
-      const isSizeError = errorMessage.includes('too large') || 
-                         errorMessage.includes('larger than') || 
-                         errorMessage.includes('4MB limit') ||
-                         errorMessage.includes('size limit');
-      
+      const isSizeError = errorMessage.includes('too large') ||
+        errorMessage.includes('larger than') ||
+        errorMessage.includes('4MB limit') ||
+        errorMessage.includes('size limit');
+
       setFiles((prev) =>
         prev.map((f) =>
           f.id === uploadFile.id
             ? {
-                ...f,
-                status: 'error',
-                error: errorMessage,
-                // Add flag to show compression retry option for size errors
-                warning: isSizeError && !f.isCompressed 
-                  ? 'File size error detected. Try compressing the PDF and retrying.'
-                  : undefined,
-              }
+              ...f,
+              status: 'error',
+              error: errorMessage,
+              // Add flag to show compression retry option for size errors
+              warning: isSizeError && !f.isCompressed
+                ? 'File size error detected. Try compressing the PDF and retrying.'
+                : undefined,
+            }
             : f
         )
       );
@@ -686,7 +686,7 @@ export default function AdminUploadPage() {
     // First compress the file if not already compressed
     if (!fileItem.isCompressed && fileItem.file.type === 'application/pdf') {
       await handleCompressPDF(fileItem);
-      
+
       // Wait a moment for state to update, then retry upload
       setTimeout(() => {
         setFiles((prev) => {
@@ -730,17 +730,17 @@ export default function AdminUploadPage() {
   };
 
   return (
-      <div className="min-h-screen bg-zinc-950 text-amber-50">
-        {/* Main Header */}
-        <Header />
-      
+    <div className="min-h-screen bg-zinc-950 text-amber-50">
+      {/* Main Header */}
+      <Header />
+
       {/* Admin Navigation Bar */}
       <div className="border-b border-amber-900/20 bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             {/* Breadcrumb Navigation */}
             <div className="flex items-center gap-2 text-sm">
-              <Link 
+              <Link
                 href="/"
                 className="text-amber-100/60 hover:text-amber-100 transition-colors flex items-center gap-1.5"
               >
@@ -748,7 +748,7 @@ export default function AdminUploadPage() {
                 Home
               </Link>
               <span className="text-amber-900">/</span>
-              <Link 
+              <Link
                 href="/dashboard"
                 className="text-amber-100/60 hover:text-amber-100 transition-colors flex items-center gap-1.5"
               >
@@ -783,7 +783,7 @@ export default function AdminUploadPage() {
             Upload Documents
           </h1>
           <p className="text-sm text-amber-100/60 mt-1">
-            Add texts to The Convergence Library
+            Add texts to Project Parallax Library
           </p>
         </div>
       </div>
@@ -795,10 +795,9 @@ export default function AdminUploadPage() {
           className={`
             border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
             transition-all duration-200
-            ${
-              isDragActive
-                ? 'border-amber-500 bg-amber-950/20'
-                : 'border-amber-900/30 hover:border-amber-800/50 bg-zinc-900/30'
+            ${isDragActive
+              ? 'border-amber-500 bg-amber-950/20'
+              : 'border-amber-900/30 hover:border-amber-800/50 bg-zinc-900/30'
             }
           `}
         >
@@ -841,7 +840,7 @@ export default function AdminUploadPage() {
                 {errorCount > 0 && (
                   <span className="text-sm text-red-400">{errorCount} failed</span>
                 )}
-                
+
                 {/* Clear buttons */}
                 {(successCount > 0 || errorCount > 0) && (
                   <>
@@ -877,7 +876,7 @@ export default function AdminUploadPage() {
                     )}
                   </>
                 )}
-                
+
                 {pendingCount > 0 && (
                   <button
                     onClick={handleUploadAll}
@@ -900,421 +899,421 @@ export default function AdminUploadPage() {
             <div className="space-y-2">
               {files.map((uploadFile) => {
                 return (
-                <div
-                  key={uploadFile.id}
-                  className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
-                      <FileText className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-amber-100 truncate">
-                          {uploadFile.file.name}
-                        </p>
-                        <p className="text-xs text-amber-100/60 mt-0.5">
-                          {uploadFile.isCompressed && uploadFile.originalSize
-                            ? `${formatFileSize(uploadFile.originalSize)} → ${formatFileSize(uploadFile.file.size)} (${uploadFile.compressionRatio}% smaller)`
-                            : formatFileSize(uploadFile.file.size)}
-                          {uploadFile.status === 'pending' && (
-                            <span className="ml-2 text-amber-500/60">• Pending</span>
-                          )}
-                        </p>
-                        {uploadFile.isCompressed && (
-                          <p className="text-xs text-emerald-400 mt-0.5 flex items-center gap-1">
-                            <Shrink className="w-3 h-3" />
-                            Compressed
+                  <div
+                    key={uploadFile.id}
+                    className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3 flex-1">
+                        <FileText className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-amber-100 truncate">
+                            {uploadFile.file.name}
                           </p>
-                        )}
-                        {uploadFile.error && (
-                          <p className="text-xs text-red-400 mt-1">
-                            {uploadFile.error}
-                          </p>
-                        )}
-                        {uploadFile.warning && (
-                          <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            {uploadFile.warning}
-                          </p>
-                        )}
-                        {uploadFile.status === 'success' && uploadFile.hasDuplicates && (
-                          <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Possible duplicate detected - expand for details
-                          </p>
-                        )}
-                        {/* Skip OCR option for PDFs and Images */}
-                        {(() => {
-                          const isPending = uploadFile.status === 'pending';
-                          const isPDFOrImage = uploadFile.file.type === 'application/pdf' || uploadFile.file.type.startsWith('image/');
-                          const shouldShow = isPending && isPDFOrImage;
-                          
-                          // Debug logging (remove in production)
-                          if (isPDFOrImage && !shouldShow) {
-                            console.log('Skip OCR checkbox conditions:', {
-                              status: uploadFile.status,
-                              fileType: uploadFile.file.type,
-                              isPending,
-                              isPDFOrImage,
-                              shouldShow
-                            });
-                          }
-                          
-                          return shouldShow ? (
-                          <div className="mt-3 p-2.5 bg-amber-950/30 border border-amber-800/50 rounded-md">
-                            <label className="flex items-center gap-2.5 cursor-pointer group">
-                              <input
-                                type="checkbox"
-                                checked={uploadFile.skipOCR || false}
-                                onChange={(e) => {
-                                  setFiles((prev) =>
-                                    prev.map((f) =>
-                                      f.id === uploadFile.id
-                                        ? { ...f, skipOCR: e.target.checked }
-                                        : f
-                                    )
-                                  );
-                                }}
-                                className="w-4 h-4 text-amber-600 bg-zinc-800 border-amber-600 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
-                              />
-                              <span className="text-xs text-amber-100 font-medium group-hover:text-amber-50 transition-colors">
-                                ⚡ Skip OCR (upload without text extraction)
-                              </span>
-                            </label>
-                            {uploadFile.skipOCR && (
-                              <p className="text-xs text-amber-200/70 mt-2 ml-6 italic">
-                                File will be uploaded but text won't be extracted. You can add metadata manually later.
-                              </p>
+                          <p className="text-xs text-amber-100/60 mt-0.5">
+                            {uploadFile.isCompressed && uploadFile.originalSize
+                              ? `${formatFileSize(uploadFile.originalSize)} → ${formatFileSize(uploadFile.file.size)} (${uploadFile.compressionRatio}% smaller)`
+                              : formatFileSize(uploadFile.file.size)}
+                            {uploadFile.status === 'pending' && (
+                              <span className="ml-2 text-amber-500/60">• Pending</span>
                             )}
-                          </div>
-                          ) : null;
-                        })()}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Compress PDF button for large PDFs */}
-                      {uploadFile.status === 'pending' && 
-                       uploadFile.file.type === 'application/pdf' && 
-                       shouldCompressPDF(uploadFile.file) && 
-                       !uploadFile.isCompressed && (
-                        <button
-                          onClick={() => handleCompressPDF(uploadFile)}
-                          className="text-amber-100/60 hover:text-amber-100 transition-colors"
-                          title="Compress PDF to reduce file size"
-                        >
-                          <Shrink className="w-4 h-4" />
-                        </button>
-                      )}
-                      
-                      {/* Restore Original button for compressed files */}
-                      {uploadFile.status === 'pending' && uploadFile.isCompressed && uploadFile.originalFile && (
-                        <button
-                          onClick={() => handleRestoreOriginal(uploadFile)}
-                          className="text-amber-100/60 hover:text-amber-100 transition-colors"
-                          title="Restore original file"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                        </button>
-                      )}
-                      
-                      {/* Preview button for PDFs */}
-                      {uploadFile.previewUrl && uploadFile.status === 'pending' && (
-                        <button
-                          onClick={() => setPreviewFile(uploadFile)}
-                          className="text-amber-100/60 hover:text-amber-100 transition-colors"
-                          title="Preview PDF"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      )}
-                      
-                      {/* Status Icon */}
-                      {uploadFile.status === 'pending' && (
-                        <button
-                          onClick={() => removeFile(uploadFile.id)}
-                          className="text-amber-100/40 hover:text-amber-100 transition-colors"
-                          title="Remove from queue"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                      {uploadFile.status === 'compressing' && (
-                        <Loader2 className="w-4 h-4 text-amber-600 animate-spin" aria-label="Compressing PDF..." />
-                      )}
-                      {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
-                        <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
-                      )}
-                      {uploadFile.status === 'success' && (
-                        <>
-                          {uploadFile.hasDuplicates ? (
-                            <div title="Possible duplicate detected">
-                              <AlertCircle className="w-4 h-4 text-amber-500" />
-                            </div>
-                          ) : (
-                            <Check className="w-4 h-4 text-emerald-400" />
-                          )}
-                          <button
-                            onClick={() => removeFile(uploadFile.id)}
-                            className="text-amber-100/40 hover:text-amber-100 transition-colors"
-                            title="Remove from list"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      {uploadFile.status === 'error' && (
-                        <>
-                          <AlertCircle className="w-4 h-4 text-red-400" />
-                          {/* Retry with compression button for size errors */}
-                          {uploadFile.warning && 
-                           uploadFile.file.type === 'application/pdf' && 
-                           !uploadFile.isCompressed && (
-                            <button
-                              onClick={() => handleRetryWithCompression(uploadFile)}
-                              className="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-medium transition-colors flex items-center gap-1"
-                              title="Compress PDF and retry upload"
-                            >
+                          </p>
+                          {uploadFile.isCompressed && (
+                            <p className="text-xs text-emerald-400 mt-0.5 flex items-center gap-1">
                               <Shrink className="w-3 h-3" />
-                              Compress & Retry
+                              Compressed
+                            </p>
+                          )}
+                          {uploadFile.error && (
+                            <p className="text-xs text-red-400 mt-1">
+                              {uploadFile.error}
+                            </p>
+                          )}
+                          {uploadFile.warning && (
+                            <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {uploadFile.warning}
+                            </p>
+                          )}
+                          {uploadFile.status === 'success' && uploadFile.hasDuplicates && (
+                            <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              Possible duplicate detected - expand for details
+                            </p>
+                          )}
+                          {/* Skip OCR option for PDFs and Images */}
+                          {(() => {
+                            const isPending = uploadFile.status === 'pending';
+                            const isPDFOrImage = uploadFile.file.type === 'application/pdf' || uploadFile.file.type.startsWith('image/');
+                            const shouldShow = isPending && isPDFOrImage;
+
+                            // Debug logging (remove in production)
+                            if (isPDFOrImage && !shouldShow) {
+                              console.log('Skip OCR checkbox conditions:', {
+                                status: uploadFile.status,
+                                fileType: uploadFile.file.type,
+                                isPending,
+                                isPDFOrImage,
+                                shouldShow
+                              });
+                            }
+
+                            return shouldShow ? (
+                              <div className="mt-3 p-2.5 bg-amber-950/30 border border-amber-800/50 rounded-md">
+                                <label className="flex items-center gap-2.5 cursor-pointer group">
+                                  <input
+                                    type="checkbox"
+                                    checked={uploadFile.skipOCR || false}
+                                    onChange={(e) => {
+                                      setFiles((prev) =>
+                                        prev.map((f) =>
+                                          f.id === uploadFile.id
+                                            ? { ...f, skipOCR: e.target.checked }
+                                            : f
+                                        )
+                                      );
+                                    }}
+                                    className="w-4 h-4 text-amber-600 bg-zinc-800 border-amber-600 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
+                                  />
+                                  <span className="text-xs text-amber-100 font-medium group-hover:text-amber-50 transition-colors">
+                                    ⚡ Skip OCR (upload without text extraction)
+                                  </span>
+                                </label>
+                                {uploadFile.skipOCR && (
+                                  <p className="text-xs text-amber-200/70 mt-2 ml-6 italic">
+                                    File will be uploaded but text won't be extracted. You can add metadata manually later.
+                                  </p>
+                                )}
+                              </div>
+                            ) : null;
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Compress PDF button for large PDFs */}
+                        {uploadFile.status === 'pending' &&
+                          uploadFile.file.type === 'application/pdf' &&
+                          shouldCompressPDF(uploadFile.file) &&
+                          !uploadFile.isCompressed && (
+                            <button
+                              onClick={() => handleCompressPDF(uploadFile)}
+                              className="text-amber-100/60 hover:text-amber-100 transition-colors"
+                              title="Compress PDF to reduce file size"
+                            >
+                              <Shrink className="w-4 h-4" />
                             </button>
                           )}
+
+                        {/* Restore Original button for compressed files */}
+                        {uploadFile.status === 'pending' && uploadFile.isCompressed && uploadFile.originalFile && (
+                          <button
+                            onClick={() => handleRestoreOriginal(uploadFile)}
+                            className="text-amber-100/60 hover:text-amber-100 transition-colors"
+                            title="Restore original file"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {/* Preview button for PDFs */}
+                        {uploadFile.previewUrl && uploadFile.status === 'pending' && (
+                          <button
+                            onClick={() => setPreviewFile(uploadFile)}
+                            className="text-amber-100/60 hover:text-amber-100 transition-colors"
+                            title="Preview PDF"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {/* Status Icon */}
+                        {uploadFile.status === 'pending' && (
                           <button
                             onClick={() => removeFile(uploadFile.id)}
                             className="text-amber-100/40 hover:text-amber-100 transition-colors"
-                            title="Remove from list"
+                            title="Remove from queue"
                           >
                             <X className="w-4 h-4" />
                           </button>
-                        </>
-                      )}
+                        )}
+                        {uploadFile.status === 'compressing' && (
+                          <Loader2 className="w-4 h-4 text-amber-600 animate-spin" aria-label="Compressing PDF..." />
+                        )}
+                        {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
+                          <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+                        )}
+                        {uploadFile.status === 'success' && (
+                          <>
+                            {uploadFile.hasDuplicates ? (
+                              <div title="Possible duplicate detected">
+                                <AlertCircle className="w-4 h-4 text-amber-500" />
+                              </div>
+                            ) : (
+                              <Check className="w-4 h-4 text-emerald-400" />
+                            )}
+                            <button
+                              onClick={() => removeFile(uploadFile.id)}
+                              className="text-amber-100/40 hover:text-amber-100 transition-colors"
+                              title="Remove from list"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        {uploadFile.status === 'error' && (
+                          <>
+                            <AlertCircle className="w-4 h-4 text-red-400" />
+                            {/* Retry with compression button for size errors */}
+                            {uploadFile.warning &&
+                              uploadFile.file.type === 'application/pdf' &&
+                              !uploadFile.isCompressed && (
+                                <button
+                                  onClick={() => handleRetryWithCompression(uploadFile)}
+                                  className="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-medium transition-colors flex items-center gap-1"
+                                  title="Compress PDF and retry upload"
+                                >
+                                  <Shrink className="w-3 h-3" />
+                                  Compress & Retry
+                                </button>
+                              )}
+                            <button
+                              onClick={() => removeFile(uploadFile.id)}
+                              className="text-amber-100/40 hover:text-amber-100 transition-colors"
+                              title="Remove from list"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Compression Status */}
-                  {uploadFile.status === 'compressing' && (
-                    <div className="mt-3">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
-                        <p className="text-xs text-amber-100/60">
-                          Compressing PDF... (this may take a moment)
+                    {/* Compression Status */}
+                    {uploadFile.status === 'compressing' && (
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+                          <p className="text-xs text-amber-100/60">
+                            Compressing PDF... (this may take a moment)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Progress Bar */}
+                    {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
+                      <div className="mt-3">
+                        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-600 transition-all duration-300"
+                            style={{ width: `${uploadFile.progress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-amber-100/60 mt-1">
+                          {uploadFile.status === 'uploading' ? 'Uploading...' : 'Processing with OCR...'}
                         </p>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Progress Bar */}
-                  {(uploadFile.status === 'uploading' || uploadFile.status === 'processing') && (
-                    <div className="mt-3">
-                      <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-amber-600 transition-all duration-300"
-                          style={{ width: `${uploadFile.progress}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-amber-100/60 mt-1">
-                        {uploadFile.status === 'uploading' ? 'Uploading...' : 'Processing with OCR...'}
-                      </p>
-                    </div>
-                  )}
+                    {/* Expandable Details Section for Success */}
+                    {uploadFile.status === 'success' && uploadFile.metadata && (
+                      <div className="mt-3 border-t border-amber-900/20 pt-3">
+                        <button
+                          onClick={() => toggleExpanded(uploadFile.id)}
+                          className="flex items-center gap-2 text-sm text-amber-100 hover:text-amber-50 transition-colors"
+                        >
+                          {expandedFiles.has(uploadFile.id) ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                          <span className="font-medium">
+                            {expandedFiles.has(uploadFile.id) ? 'Hide Details' : 'View Details'}
+                          </span>
+                        </button>
 
-                  {/* Expandable Details Section for Success */}
-                  {uploadFile.status === 'success' && uploadFile.metadata && (
-                    <div className="mt-3 border-t border-amber-900/20 pt-3">
-                      <button
-                        onClick={() => toggleExpanded(uploadFile.id)}
-                        className="flex items-center gap-2 text-sm text-amber-100 hover:text-amber-50 transition-colors"
-                      >
-                        {expandedFiles.has(uploadFile.id) ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
-                        )}
-                        <span className="font-medium">
-                          {expandedFiles.has(uploadFile.id) ? 'Hide Details' : 'View Details'}
-                        </span>
-                      </button>
-
-                      {expandedFiles.has(uploadFile.id) && (
-                        <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
-                          {/* Duplicate Warning */}
-                          {uploadFile.hasDuplicates && uploadFile.similarDocuments && uploadFile.similarDocuments.length > 0 && (
-                            <div className="bg-amber-950/50 border-2 border-amber-600/50 rounded-lg p-4">
-                              <div className="flex items-start gap-3">
-                                <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                                <div className="flex-1">
-                                  <h4 className="text-sm font-semibold text-amber-200 mb-2">
-                                    ⚠️ Possible Duplicate Detected
-                                  </h4>
-                                  <p className="text-xs text-amber-100/70 mb-3">
-                                    We found {uploadFile.similarDocuments.length} similar document{uploadFile.similarDocuments.length > 1 ? 's' : ''} that may be duplicates:
-                                  </p>
-                                  <div className="space-y-2">
-                                    {uploadFile.similarDocuments.map((similar, idx) => (
-                                      <div
-                                        key={similar.id}
-                                        className="bg-zinc-900/50 border border-amber-900/30 rounded-md p-3"
-                                      >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="flex-1 min-w-0">
+                        {expandedFiles.has(uploadFile.id) && (
+                          <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                            {/* Duplicate Warning */}
+                            {uploadFile.hasDuplicates && uploadFile.similarDocuments && uploadFile.similarDocuments.length > 0 && (
+                              <div className="bg-amber-950/50 border-2 border-amber-600/50 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                  <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                  <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-amber-200 mb-2">
+                                      ⚠️ Possible Duplicate Detected
+                                    </h4>
+                                    <p className="text-xs text-amber-100/70 mb-3">
+                                      We found {uploadFile.similarDocuments.length} similar document{uploadFile.similarDocuments.length > 1 ? 's' : ''} that may be duplicates:
+                                    </p>
+                                    <div className="space-y-2">
+                                      {uploadFile.similarDocuments.map((similar, idx) => (
+                                        <div
+                                          key={similar.id}
+                                          className="bg-zinc-900/50 border border-amber-900/30 rounded-md p-3"
+                                        >
+                                          <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                              <Link
+                                                href={`/library/${similar.id}`}
+                                                target="_blank"
+                                                className="text-sm font-medium text-amber-200 hover:text-amber-100 transition-colors block truncate"
+                                              >
+                                                {similar.title}
+                                              </Link>
+                                              {similar.author && (
+                                                <p className="text-xs text-amber-100/60 mt-0.5">
+                                                  by {similar.author}
+                                                  {similar.year && ` (${similar.year})`}
+                                                </p>
+                                              )}
+                                              <p className="text-xs text-amber-100/50 mt-1">
+                                                {similar.matchReason} • {Math.round(similar.similarityScore * 100)}% match
+                                              </p>
+                                            </div>
                                             <Link
                                               href={`/library/${similar.id}`}
                                               target="_blank"
-                                              className="text-sm font-medium text-amber-200 hover:text-amber-100 transition-colors block truncate"
+                                              className="text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
+                                              title="View document"
                                             >
-                                              {similar.title}
+                                              <Eye className="w-4 h-4" />
                                             </Link>
-                                            {similar.author && (
-                                              <p className="text-xs text-amber-100/60 mt-0.5">
-                                                by {similar.author}
-                                                {similar.year && ` (${similar.year})`}
-                                              </p>
-                                            )}
-                                            <p className="text-xs text-amber-100/50 mt-1">
-                                              {similar.matchReason} • {Math.round(similar.similarityScore * 100)}% match
-                                            </p>
                                           </div>
-                                          <Link
-                                            href={`/library/${similar.id}`}
-                                            target="_blank"
-                                            className="text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
-                                            title="View document"
-                                          >
-                                            <Eye className="w-4 h-4" />
-                                          </Link>
                                         </div>
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
+                                    <p className="text-xs text-amber-100/60 mt-3 italic">
+                                      The document was uploaded successfully. If this is a duplicate, you may want to delete it.
+                                    </p>
                                   </div>
-                                  <p className="text-xs text-amber-100/60 mt-3 italic">
-                                    The document was uploaded successfully. If this is a duplicate, you may want to delete it.
-                                  </p>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {/* Short Summary */}
-                          {uploadFile.shortSummary && (
-                            <div className="bg-amber-950/30 border border-amber-900/30 rounded-md p-4">
-                              <h4 className="text-sm font-semibold text-amber-100 mb-2">Summary</h4>
-                              <p className="text-sm text-amber-100/80 leading-relaxed">
-                                {uploadFile.shortSummary}
-                              </p>
-                            </div>
-                          )}
+                            {/* Short Summary */}
+                            {uploadFile.shortSummary && (
+                              <div className="bg-amber-950/30 border border-amber-900/30 rounded-md p-4">
+                                <h4 className="text-sm font-semibold text-amber-100 mb-2">Summary</h4>
+                                <p className="text-sm text-amber-100/80 leading-relaxed">
+                                  {uploadFile.shortSummary}
+                                </p>
+                              </div>
+                            )}
 
-                          {/* Metadata Grid */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-zinc-900/50 rounded-md p-3">
-                              <p className="text-xs text-amber-100/60 mb-1">Title</p>
-                              <p className="text-sm text-amber-100 font-medium">
-                                {uploadFile.metadata.title}
-                              </p>
+                            {/* Metadata Grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Title</p>
+                                <p className="text-sm text-amber-100 font-medium">
+                                  {uploadFile.metadata.title}
+                                </p>
+                              </div>
+                              {uploadFile.metadata.author && (
+                                <div className="bg-zinc-900/50 rounded-md p-3">
+                                  <p className="text-xs text-amber-100/60 mb-1">Author</p>
+                                  <p className="text-sm text-amber-100 font-medium">
+                                    {uploadFile.metadata.author}
+                                  </p>
+                                </div>
+                              )}
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Type</p>
+                                <p className="text-sm text-amber-100 font-medium">
+                                  {uploadFile.metadata.type}
+                                </p>
+                              </div>
+                              {uploadFile.metadata.year && (
+                                <div className="bg-zinc-900/50 rounded-md p-3">
+                                  <p className="text-xs text-amber-100/60 mb-1">Year</p>
+                                  <p className="text-sm text-amber-100 font-medium">
+                                    {uploadFile.metadata.year}
+                                  </p>
+                                </div>
+                              )}
+                              {uploadFile.metadata.domain && (
+                                <div className="bg-zinc-900/50 rounded-md p-3">
+                                  <p className="text-xs text-amber-100/60 mb-1">Domain</p>
+                                  <p className="text-sm text-amber-100 font-medium">
+                                    {uploadFile.metadata.domain}
+                                  </p>
+                                </div>
+                              )}
+                              <div className="bg-zinc-900/50 rounded-md p-3">
+                                <p className="text-xs text-amber-100/60 mb-1">Confidence</p>
+                                <p className="text-sm text-amber-100 font-medium capitalize">
+                                  {uploadFile.metadata.confidence}
+                                </p>
+                              </div>
+                              {uploadFile.pageCount && (
+                                <div className="bg-zinc-900/50 rounded-md p-3">
+                                  <p className="text-xs text-amber-100/60 mb-1">Pages</p>
+                                  <p className="text-sm text-amber-100 font-medium">
+                                    {uploadFile.pageCount}
+                                  </p>
+                                </div>
+                              )}
+                              {uploadFile.lineCount && (
+                                <div className="bg-zinc-900/50 rounded-md p-3">
+                                  <p className="text-xs text-amber-100/60 mb-1">Lines</p>
+                                  <p className="text-sm text-amber-100 font-medium">
+                                    {uploadFile.lineCount}
+                                  </p>
+                                </div>
+                              )}
                             </div>
-                            {uploadFile.metadata.author && (
-                              <div className="bg-zinc-900/50 rounded-md p-3">
-                                <p className="text-xs text-amber-100/60 mb-1">Author</p>
-                                <p className="text-sm text-amber-100 font-medium">
-                                  {uploadFile.metadata.author}
-                                </p>
+
+                            {/* Lenses */}
+                            {uploadFile.lenses && uploadFile.lenses.length > 0 && (
+                              <div>
+                                <p className="text-xs text-amber-100/60 mb-2">Convergence Machine Lenses</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {uploadFile.lenses.map((lens, index) => (
+                                    <span
+                                      key={index}
+                                      className="px-3 py-1.5 bg-amber-600/20 border border-amber-600/40 rounded-md text-xs text-amber-100 font-medium"
+                                    >
+                                      {lens.replace(/_/g, ' ')}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                             )}
-                            <div className="bg-zinc-900/50 rounded-md p-3">
-                              <p className="text-xs text-amber-100/60 mb-1">Type</p>
-                              <p className="text-sm text-amber-100 font-medium">
-                                {uploadFile.metadata.type}
-                              </p>
-                            </div>
-                            {uploadFile.metadata.year && (
-                              <div className="bg-zinc-900/50 rounded-md p-3">
-                                <p className="text-xs text-amber-100/60 mb-1">Year</p>
-                                <p className="text-sm text-amber-100 font-medium">
-                                  {uploadFile.metadata.year}
-                                </p>
+
+                            {/* Tags */}
+                            {uploadFile.metadata.tags && uploadFile.metadata.tags.length > 0 && (
+                              <div>
+                                <p className="text-xs text-amber-100/60 mb-2">Tags</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {uploadFile.metadata.tags.map((tag, index) => (
+                                    <span
+                                      key={index}
+                                      className="px-2 py-1 bg-amber-900/20 border border-amber-900/30 rounded text-xs text-amber-100"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                             )}
-                            {uploadFile.metadata.domain && (
-                              <div className="bg-zinc-900/50 rounded-md p-3">
-                                <p className="text-xs text-amber-100/60 mb-1">Domain</p>
-                                <p className="text-sm text-amber-100 font-medium">
-                                  {uploadFile.metadata.domain}
-                                </p>
-                              </div>
-                            )}
-                            <div className="bg-zinc-900/50 rounded-md p-3">
-                              <p className="text-xs text-amber-100/60 mb-1">Confidence</p>
-                              <p className="text-sm text-amber-100 font-medium capitalize">
-                                {uploadFile.metadata.confidence}
-                              </p>
-                            </div>
-                            {uploadFile.pageCount && (
-                              <div className="bg-zinc-900/50 rounded-md p-3">
-                                <p className="text-xs text-amber-100/60 mb-1">Pages</p>
-                                <p className="text-sm text-amber-100 font-medium">
-                                  {uploadFile.pageCount}
-                                </p>
-                              </div>
-                            )}
-                            {uploadFile.lineCount && (
-                              <div className="bg-zinc-900/50 rounded-md p-3">
-                                <p className="text-xs text-amber-100/60 mb-1">Lines</p>
-                                <p className="text-sm text-amber-100 font-medium">
-                                  {uploadFile.lineCount}
-                                </p>
+
+                            {/* Raw AI Output */}
+                            {uploadFile.rawAiOutput && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-amber-100 mb-2">
+                                  Raw AI Output
+                                </h4>
+                                <pre className="bg-zinc-950 border border-amber-900/20 rounded-md p-3 text-xs text-amber-100/70 overflow-x-auto max-h-64 overflow-y-auto">
+                                  {JSON.stringify(JSON.parse(uploadFile.rawAiOutput), null, 2)}
+                                </pre>
                               </div>
                             )}
                           </div>
-
-                          {/* Lenses */}
-                          {uploadFile.lenses && uploadFile.lenses.length > 0 && (
-                            <div>
-                              <p className="text-xs text-amber-100/60 mb-2">Convergence Machine Lenses</p>
-                              <div className="flex flex-wrap gap-2">
-                                {uploadFile.lenses.map((lens, index) => (
-                                  <span
-                                    key={index}
-                                    className="px-3 py-1.5 bg-amber-600/20 border border-amber-600/40 rounded-md text-xs text-amber-100 font-medium"
-                                  >
-                                    {lens.replace(/_/g, ' ')}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Tags */}
-                          {uploadFile.metadata.tags && uploadFile.metadata.tags.length > 0 && (
-                            <div>
-                              <p className="text-xs text-amber-100/60 mb-2">Tags</p>
-                              <div className="flex flex-wrap gap-2">
-                                {uploadFile.metadata.tags.map((tag, index) => (
-                                  <span
-                                    key={index}
-                                    className="px-2 py-1 bg-amber-900/20 border border-amber-900/30 rounded text-xs text-amber-100"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Raw AI Output */}
-                          {uploadFile.rawAiOutput && (
-                            <div>
-                              <h4 className="text-sm font-semibold text-amber-100 mb-2">
-                                Raw AI Output
-                              </h4>
-                              <pre className="bg-zinc-950 border border-amber-900/20 rounded-md p-3 text-xs text-amber-100/70 overflow-x-auto max-h-64 overflow-y-auto">
-                                {JSON.stringify(JSON.parse(uploadFile.rawAiOutput), null, 2)}
-                              </pre>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -1333,11 +1332,11 @@ export default function AdminUploadPage() {
 
       {/* PDF Preview Modal */}
       {previewFile && previewFile.previewUrl && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setPreviewFile(null)}
         >
-          <div 
+          <div
             className="bg-zinc-900 border border-amber-900/30 rounded-lg max-w-6xl w-full h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >

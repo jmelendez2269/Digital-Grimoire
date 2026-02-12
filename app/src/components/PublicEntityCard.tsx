@@ -12,7 +12,7 @@ interface CorrespondenceEntity {
     lenses?: string[];
 }
 
-interface ConvergenceConcept {
+interface ParallaxConcept {
     id: string;
     slug: string;
     name: string;
@@ -25,8 +25,8 @@ interface ConvergenceConcept {
     tags?: string[];
 }
 
-type Entity = CorrespondenceEntity | ConvergenceConcept;
-type GraphType = "correspondences" | "convergence";
+type Entity = CorrespondenceEntity | ParallaxConcept;
+type GraphType = "correspondences" | "parallax";
 
 interface PublicEntityCardProps {
     entity: Entity;
@@ -71,14 +71,14 @@ export default function PublicEntityCard({
                 ) : (
                     <div className="space-y-2">
                         <span className="inline-block px-2 py-0.5 bg-amber-900/20 border border-amber-700/30 rounded text-xs text-amber-100/80">
-                            {(entity as ConvergenceConcept).tradition_ref?.icon
-                                ? `${(entity as ConvergenceConcept).tradition_ref?.icon} `
+                            {(entity as ParallaxConcept).tradition_ref?.icon
+                                ? `${(entity as ParallaxConcept).tradition_ref?.icon} `
                                 : ""}
-                            {(entity as ConvergenceConcept).tradition_ref?.label || (entity as ConvergenceConcept).tradition}
+                            {(entity as ParallaxConcept).tradition_ref?.label || (entity as ParallaxConcept).tradition}
                         </span>
-                        {(entity as ConvergenceConcept).short_definition && (
+                        {(entity as ParallaxConcept).short_definition && (
                             <p className="text-sm text-amber-100/60 line-clamp-2">
-                                {(entity as ConvergenceConcept).short_definition}
+                                {(entity as ParallaxConcept).short_definition}
                             </p>
                         )}
                     </div>

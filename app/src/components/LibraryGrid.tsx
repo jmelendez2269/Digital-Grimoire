@@ -105,16 +105,17 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
                           <Edit className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      <a
-                        href={generateTrackedLink(text.title, text.author || undefined, 'Library_Grid')}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.open(generateTrackedLink(text.title, text.author || undefined, 'Library_Grid'), '_blank', 'noopener,noreferrer');
+                        }}
                         className="text-zinc-500 hover:text-amber-500 p-1.5 hover:bg-white/5 rounded transition-colors"
                         title="Buy on Amazon"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
-                      </a>
+                      </button>
                       <div onClick={(e) => { e.preventDefault(); }}>
                         <BookmarkButton textId={text.id} size="sm" />
                       </div>

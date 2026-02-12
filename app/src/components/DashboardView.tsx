@@ -2,16 +2,16 @@
 
 import { Suspense } from 'react';
 import DashboardSearchHub from "@/components/DashboardSearchHub";
-import ConvergenceMachineInfo from "@/components/ConvergenceMachineInfo";
+import ParallaxEngineInfo from "@/components/ParallaxEngineInfo";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { BookOpen, Tablet, Network, GraduationCap, Sparkles } from "lucide-react";
+import { BookOpen, Tablet, Network, GraduationCap, Sparkles, Zap, Hammer } from "lucide-react";
 
 export default function DashboardView() {
     const { user, loading } = useAuth();
 
-    // Get custom journal name or default to "Digital Grimoire"
-    const journalName = user?.user_metadata?.journal_name || "Digital Grimoire";
+    // Get custom journal name or default to "Project Parallax"
+    const journalName = user?.user_metadata?.journal_name || "Project Parallax";
     const username = user?.user_metadata?.username || null;
 
     return (
@@ -25,7 +25,7 @@ export default function DashboardView() {
                         ) : username ? (
                             `Welcome, ${username}!`
                         ) : (
-                            "Welcome to Convergence"
+                            "Welcome back"
                         )}
                     </h1>
                     <p className="mt-2 text-lg text-zinc-400">
@@ -67,7 +67,7 @@ export default function DashboardView() {
                             </p>
                         </Link>
 
-                        {/* Digital Grimoire Card */}
+                        {/* Journal Card */}
                         <Link
                             href="/journal"
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-indigo-500/50 hover:bg-zinc-900 overflow-visible"
@@ -135,8 +135,8 @@ export default function DashboardView() {
                             </p>
                         </Link>
 
-                        {/* Convergence Machine Card */}
-                        <ConvergenceMachineInfo />
+                        {/* Parallax Engine Card */}
+                        <ParallaxEngineInfo />
                     </div>
 
                     {/* Extras Separator */}
@@ -158,7 +158,7 @@ export default function DashboardView() {
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
-                                    <span className="text-2xl">⚡</span>
+                                    <Zap className="w-6 h-6 text-cyan-400" />
                                 </div>
                                 <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
                                     Ritual Machine
@@ -177,7 +177,7 @@ export default function DashboardView() {
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
-                                    <span className="text-2xl">🛠️</span>
+                                    <Hammer className="w-6 h-6 text-cyan-400" />
                                 </div>
                                 <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
                                     Workbench

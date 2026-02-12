@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         }
 
         // 1. Generate Image with DALL-E 3
-        const fullPrompt = `Tarot Card: ${cardName}. Visually representative of: ${prompt}. The card should have a mystical, high-quality aesthetic suitable for a digital grimoire. ${meaning ? `Meaning context: ${meaning}` : ''}`;
+        const fullPrompt = `Tarot Card: ${cardName}. Visually representative of: ${prompt}. The card should have a mystical, high-quality aesthetic suitable for Project Parallax. ${meaning ? `Meaning context: ${meaning}` : ''}`;
 
         console.log(`Generating card '${cardName}' for user ${user.id}...`);
 

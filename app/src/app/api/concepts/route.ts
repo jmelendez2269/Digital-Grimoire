@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugifyEntityName } from "@/lib/graph/entity-utils";
-import { validateConceptData } from "@/lib/convergence/validation";
+import { validateConceptData } from "@/lib/parallax/validation";
 import {
   scoreConceptsWithAI,
   shouldUseAIScoring,

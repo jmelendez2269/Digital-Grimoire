@@ -125,7 +125,7 @@ export default function RegisterPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 tracking-tight">
-            Join Convergence
+            Join Project Parallax
           </h1>
           <p className="mt-2 text-sm text-zinc-400 font-mono tracking-wide">
             INITIATE_NEW_PROTOCOL &gt; CREATE_USER
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-amber-100 placeholder-zinc-700 font-mono text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all group-hover:border-white/20"
-                  placeholder="scholar@grimoire.com"
+                  placeholder="scholar@projectparallax.io"
                 />
                 <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
               </div>

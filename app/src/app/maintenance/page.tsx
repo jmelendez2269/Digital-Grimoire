@@ -20,12 +20,12 @@ export default function MaintenancePage() {
         <h1 className="mb-4 text-4xl font-bold text-amber-100">
           Under Maintenance
         </h1>
-        
+
         {/* Description */}
         <p className="mb-8 text-lg text-zinc-400">
-          The Convergence Library is temporarily unavailable while we make improvements.
+          Project Parallax is temporarily unavailable while we make improvements.
         </p>
-        
+
         {/* Footer message */}
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 shadow-xl backdrop-blur">
           <p className="text-sm text-zinc-500">

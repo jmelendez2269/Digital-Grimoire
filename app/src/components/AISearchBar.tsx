@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 // Lazy load AIChatModal - load it only when needed to avoid webpack resolution issues
 // We'll create it inside the component when showChatModal becomes true
 
-type Model = 'auto' | 'claude' | 'gpt' | 'gemini' | 'convergence' | 'consensus';
+type Model = 'auto' | 'claude' | 'gpt' | 'gemini' | 'parallax' | 'consensus';
 
 interface UsageStats {
   claude: number;
@@ -51,9 +51,9 @@ const MODEL_CONFIGS: ModelConfig[] = [
     description: 'Aggregates insights from multiple leading models (Claude, GPT, Gemini) for verified accuracy and balanced perspectives.'
   },
   {
-    id: 'convergence',
-    label: '⚡ Convergence',
-    description: 'The "Convergence Machine". Analyzes deep mystical patterns and connections across the library. Best for esoteric research.'
+    id: 'parallax',
+    label: '⚡ Parallax',
+    description: 'The "Parallax Engine". Analyzes deep mystical patterns and connections across the library. Best for esoteric research.'
   }
 ];
 
@@ -66,7 +66,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [query, setQuery] = useState('');
-  const [selectedModel, setSelectedModel] = useState<Model>('convergence');
+  const [selectedModel, setSelectedModel] = useState<Model>('parallax');
   const [autoSelectedModel, setAutoSelectedModel] = useState<'claude' | 'gpt' | 'gemini' | null>(null);
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
@@ -192,10 +192,10 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
       ? (autoSelectedModel || 'claude')
       : selectedModel;
 
-    if (effectiveModel === 'convergence') {
-      // Navigate to convergence machine with query
+    if (effectiveModel === 'parallax') {
+      // Navigate to parallax engine with query
       const encodedQuery = encodeURIComponent(query.trim());
-      router.push(`/convergence-machine?query=${encodedQuery}`);
+      router.push(`/parallax-engine?query=${encodedQuery}`);
     } else if (effectiveModel === 'claude' || effectiveModel === 'gpt' || effectiveModel === 'gemini' || effectiveModel === 'consensus') {
       // Open chat modal
       setChatModel(effectiveModel as any);
@@ -298,7 +298,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
           >
             {loadingUsage ? (
               <Loader2 className="w-6 h-6 animate-spin" />
-            ) : selectedModel === 'convergence' ? (
+            ) : selectedModel === 'parallax' ? (
               <>
                 <Sparkles className="w-6 h-6" />
               </>

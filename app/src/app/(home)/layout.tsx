@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Home | Convergence | Multi-Lens Library & Knowledge Network",
-  description: "Welcome to Convergence - A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+  title: "Home | Project Parallax | Multi-Lens Library & Knowledge Network",
+  description: "Welcome to Project Parallax - A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through Parallax Engine analysis.",
   openGraph: {
-    title: "Convergence | Multi-Lens Library & Knowledge Network",
-    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+    title: "Project Parallax | Multi-Lens Library & Knowledge Network",
+    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through Parallax Engine analysis.",
     type: "website",
-    url: "https://www.convergencelibrary.com",
+    url: "https://www.projectparallax.io",
     images: [
       {
-        url: "https://www.convergencelibrary.com/og-image.png",
+        url: "https://www.projectparallax.io/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence - Multi-Lens Library & Knowledge Network",
+        alt: "Project Parallax - Multi-Lens Library & Knowledge Network",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Convergence | Multi-Lens Library & Knowledge Network",
+    title: "Project Parallax | Multi-Lens Library & Knowledge Network",
     description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity.",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    images: ["https://www.projectparallax.io/og-image.png"],
   },
 };
 

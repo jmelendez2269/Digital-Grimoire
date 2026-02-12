@@ -10,7 +10,7 @@ interface JournalNameSetupModalProps {
 }
 
 const PRESET_OPTIONS = [
-  { value: 'Digital Grimoire', description: 'Modern meets ancient - a personal collection of wisdom' },
+  { value: 'Project Parallax', description: 'Modern meets ancient - a personal collection of knowing' },
   { value: 'Study Journal', description: 'A scholarly approach to learning and reflection' },
   { value: 'Wisdom Journal', description: 'Where insights and discoveries converge' },
   { value: 'Personal Journal', description: 'Your private space for thoughts and notes' },
@@ -82,11 +82,10 @@ export default function JournalNameSetupModal({ onComplete }: JournalNameSetupMo
               <button
                 key={option.value}
                 onClick={() => setSelectedOption(option.value)}
-                className={`w-full text-left p-4 rounded-lg border transition-all ${
-                  selectedOption === option.value
+                className={`w-full text-left p-4 rounded-lg border transition-all ${selectedOption === option.value
                     ? 'border-amber-500 bg-amber-500/10'
                     : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'
-                }`}
+                  }`}
               >
                 <div className="font-medium text-amber-100 mb-1">{option.value}</div>
                 <div className="text-sm text-zinc-400">{option.description}</div>

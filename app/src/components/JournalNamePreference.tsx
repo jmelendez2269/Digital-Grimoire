@@ -15,7 +15,7 @@ export default function JournalNamePreference({ onSave }: JournalNamePreferenceP
 
   useEffect(() => {
     if (user) {
-      setJournalName(user.user_metadata?.journal_name || 'Digital Grimoire');
+      setJournalName(user.user_metadata?.journal_name || 'Project Parallax');
     }
   }, [user]);
 
@@ -58,7 +58,7 @@ export default function JournalNamePreference({ onSave }: JournalNamePreferenceP
           onChange={(e) => setJournalName(e.target.value)}
           maxLength={50}
           className="flex-1 rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-          placeholder="Digital Grimoire"
+          placeholder="Project Parallax"
         />
         <button
           onClick={handleSave}

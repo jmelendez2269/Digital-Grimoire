@@ -17,8 +17,8 @@ import EntityNode from "@/components/admin/knowledge/EntityNode";
 import { Toaster, toast } from "sonner";
 
 // Convergence Specifics
-import SimilarityControls from "@/components/convergence/SimilarityControls";
-import ComparativeTable from "@/components/convergence/ComparativeTable";
+import SimilarityControls from "@/components/parallax/SimilarityControls";
+import ComparativeTable from "@/components/parallax/ComparativeTable";
 
 // Dynamically import graph visualization
 const GraphVisualization = dynamic(

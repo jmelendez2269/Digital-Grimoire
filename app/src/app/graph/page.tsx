@@ -14,8 +14,8 @@ import GraphControls from "@/components/admin/knowledge/GraphControls";
 import EntityNode from "@/components/admin/knowledge/EntityNode";
 
 // Convergence Specifics (retained for functionality but integrated)
-import SimilarityControls from "@/components/convergence/SimilarityControls";
-import ComparativeTable from "@/components/convergence/ComparativeTable";
+import SimilarityControls from "@/components/parallax/SimilarityControls";
+import ComparativeTable from "@/components/parallax/ComparativeTable";
 
 // Dynamically import graph visualization
 const GraphVisualization = dynamic(

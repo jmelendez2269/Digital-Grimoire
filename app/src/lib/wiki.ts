@@ -32,10 +32,13 @@ async function getDocContent(section: 'user' | 'technical', slugPath: string[]):
         const titleMatch = content.match(/^#\s+(.+)$/m);
         const title = titleMatch ? titleMatch[1] : slug;
 
+        // Remove the title from the content to avoid duplication in the UI
+        const contentWithoutTitle = titleMatch ? content.replace(titleMatch[0], '') : content;
+
         return {
             slug,
             title,
-            content,
+            content: contentWithoutTitle.trim(),
             lastModified: stats.mtime.toISOString(),
         };
     } catch (error) {

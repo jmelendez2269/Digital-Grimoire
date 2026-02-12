@@ -9,8 +9,8 @@ import EmojiPicker, { Theme } from 'emoji-picker-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import useWikiLinkActivation from '@/hooks/useWikiLinkActivation';
-import LensWeightsChart from '@/components/convergence/LensWeightsChart';
-import { LensWeights } from '@/lib/convergence/lens-orchestrator';
+import LensWeightsChart from '@/components/parallax/LensWeightsChart';
+import { LensWeights } from '@/lib/parallax/lens-orchestrator';
 import dynamic from 'next/dynamic';
 
 // Dynamically import FloatingAISearch with error handling

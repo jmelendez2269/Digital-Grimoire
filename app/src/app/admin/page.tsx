@@ -122,7 +122,7 @@ export default function AdminDashboardHub() {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
               <div>
                 <h1 className="text-4xl font-bold text-amber-100 mb-2">Admin Command Center</h1>
-                <p className="text-zinc-400 text-lg">Central control hub for Digital Grimoire operations.</p>
+                <p className="text-zinc-400 text-lg">Central control hub for Project Parallax operations.</p>
               </div>
 
               <div className="flex items-center gap-4">

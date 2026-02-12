@@ -155,7 +155,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             onSearch(query);
         }
         try {
-            const res = await fetch('/api/convergence/ai-search', {
+            const res = await fetch('/api/parallax/ai-search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -353,7 +353,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                         >
                             <h2 className="text-xl font-serif text-amber-100 flex items-center gap-2">
                                 <Book className="w-5 h-5 text-amber-400" />
-                                From the Convergence Library
+                                From Project Parallax
                                 <span className="ml-2 text-sm text-amber-100/50 font-sans px-2 py-0.5 bg-amber-900/30 rounded-full">
                                     {aiResults.libraryResults.length} Books
                                 </span>

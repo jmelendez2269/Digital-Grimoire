@@ -30,7 +30,7 @@ export async function extractMediaMetadata(
   documentId?: string
 ): Promise<{ metadata: MediaMetadata; rawOutput: string }> {
   const apiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error('OpenAI API key not configured. Add OPENAI_API_KEY to .env.local');
   }
@@ -55,7 +55,7 @@ book_esoteric, book_spiritual, book_psychology, book_science, article_scholarly,
 anthropology, reference_table, historical, mythology, medical_overview, commentary, 
 webpage, dictionary, astrology, ritual_guide, diagram, transcript, summary, speculative, misc
 
-The 7 Convergence Machine Lenses represent different perspectives for understanding knowledge:
+The 7 Parallax Engine Lenses represent different perspectives for understanding knowledge:
 1. scientific - Physics, biology, cosmology, empirical evidence, natural sciences
 2. psychological - Jungian archetypes, cognitive science, shadow work, depth psychology
 3. philosophical - Metaphysics, ethics, epistemology, ontology, philosophical inquiry
@@ -88,13 +88,13 @@ Always respond with valid JSON only.`
 - type (one of the 20 types above, required): Classify the image content
 - domain (string, optional: e.g., "astrology", "ritual", "symbolism", "nature")
 - tags (array of strings, required, 3-5 relevant tags describing the image)
-- lenses (array of strings, required): Which of the 7 Convergence Machine lenses apply?
+- lenses (array of strings, required): Which of the 7 Parallax Engine lenses apply?
   * Choose from: scientific, psychological, philosophical, religious_spiritual, historical_anthropological, symbolic_occult, mathematical
   * Most images should have 1-3 lenses
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
 - shortSummary (string, required): A concise 2-3 sentence description of what this image shows
 - longSummary (string, required): A detailed 1-2 paragraph description of the image content, symbolism, and significance
-- curatorNote (string, optional): A brief explanation of why this image is significant for the Convergence collection
+- curatorNote (string, optional): A brief explanation of why this image is significant for the Parallax collection
 
 Filename: ${filename}
 ${fileInfo.exif ? `EXIF Data: ${JSON.stringify(fileInfo.exif)}` : ''}
@@ -125,10 +125,10 @@ Respond with valid JSON only, no markdown code blocks.`
     console.log('='.repeat(80));
     console.log(responseText);
     console.log('='.repeat(80));
-    
+
     const metadata = JSON.parse(responseText);
     console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
-    
+
     // Log token usage for tracking
     await logMetadataExtractionUsage({
       inputTokens: completion.usage?.prompt_tokens || 0,
@@ -138,7 +138,7 @@ Respond with valid JSON only, no markdown code blocks.`
       success: true,
       model: 'gpt-4o',
     });
-    
+
     return { metadata, rawOutput: responseText };
   } else {
     // Use GPT-4 for audio/video transcript analysis
@@ -156,7 +156,7 @@ book_esoteric, book_spiritual, book_psychology, book_science, article_scholarly,
 anthropology, reference_table, historical, mythology, medical_overview, commentary, 
 webpage, dictionary, astrology, ritual_guide, diagram, transcript, summary, speculative, misc
 
-The 7 Convergence Machine Lenses represent different perspectives for understanding knowledge:
+The 7 Parallax Engine Lenses represent different perspectives for understanding knowledge:
 1. scientific - Physics, biology, cosmology, empirical evidence, natural sciences
 2. psychological - Jungian archetypes, cognitive science, shadow work, depth psychology
 3. philosophical - Metaphysics, ethics, epistemology, ontology, philosophical inquiry
@@ -186,13 +186,13 @@ Always respond with valid JSON only.`
 - type (one of the 20 types above, required): Classify the ${mediaType} content
 - domain (string, optional: e.g., "astrology", "psychology", "ritual", "lecture")
 - tags (array of strings, required, 3-5 relevant tags)
-- lenses (array of strings, required): Which of the 7 Convergence Machine lenses apply?
+- lenses (array of strings, required): Which of the 7 Parallax Engine lenses apply?
   * Choose from: scientific, psychological, philosophical, religious_spiritual, historical_anthropological, symbolic_occult, mathematical
   * Most ${mediaType} should have 2-4 lenses
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
 - shortSummary (string, required): A concise 2-3 sentence description of what this ${mediaType} is about
 - longSummary (string, required): A detailed 1-2 paragraph summary covering the main themes, content, and significance
-- curatorNote (string, optional): A brief explanation of why this ${mediaType} is significant for the Convergence collection
+- curatorNote (string, optional): A brief explanation of why this ${mediaType} is significant for the Parallax collection
 
 Filename: ${filename}
 Duration: ${fileInfo.duration ? `${Math.floor(fileInfo.duration / 60)}:${String(fileInfo.duration % 60).padStart(2, '0')}` : 'Unknown'}
@@ -219,10 +219,10 @@ Respond with valid JSON only, no markdown code blocks.`
     console.log('='.repeat(80));
     console.log(responseText);
     console.log('='.repeat(80));
-    
+
     const metadata = JSON.parse(responseText);
     console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
-    
+
     // Log token usage for tracking
     await logMetadataExtractionUsage({
       inputTokens: completion.usage?.prompt_tokens || 0,
@@ -232,7 +232,7 @@ Respond with valid JSON only, no markdown code blocks.`
       success: true,
       model: 'gpt-4o',
     });
-    
+
     return { metadata, rawOutput: responseText };
   }
 }

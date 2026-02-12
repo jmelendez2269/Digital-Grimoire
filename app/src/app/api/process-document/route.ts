@@ -7,7 +7,7 @@ import { scrapeCover } from '@/lib/cover-scraper';
 import { generateBookCover } from '@/lib/getimg-cover';
 import { logStorageUpload, logUserActivity, logOcrUsage } from '@/lib/usage-tracker';
 import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
-import { generateTextEmbeddings } from '@/lib/convergence/embeddings';
+import { generateTextEmbeddings } from '@/lib/parallax/embeddings';
 
 // Initialize R2 client for cleanup on error
 const s3Client = getR2Client();
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // If extension says HTML but MIME type says PDF, it's likely a misnamed file - use OCR
     if (isHtmlByExtension && !isHtmlByMimeType && mimeType === 'application/pdf') {
-      console.warn('⚠️ File has .html extension but MIME type is PDF. Treating as PDF and using OCR.');
+      console.warn('âš ï¸ File has .html extension but MIME type is PDF. Treating as PDF and using OCR.');
     }
 
     let ocrResult;
@@ -135,12 +135,12 @@ export async function POST(request: NextRequest) {
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'")
           .replace(/&apos;/g, "'")
-          .replace(/&mdash;/g, '—')
-          .replace(/&ndash;/g, '–')
-          .replace(/&hellip;/g, '…')
-          .replace(/&copy;/g, '©')
-          .replace(/&reg;/g, '®')
-          .replace(/&trade;/g, '™')
+          .replace(/&mdash;/g, 'â€”')
+          .replace(/&ndash;/g, 'â€“')
+          .replace(/&hellip;/g, 'â€¦')
+          .replace(/&copy;/g, 'Â©')
+          .replace(/&reg;/g, 'Â®')
+          .replace(/&trade;/g, 'â„¢')
           // Decode numeric entities (&#123; and &#x1F;)
           .replace(/&#(\d+);/g, (_, num) => {
             try {
@@ -280,9 +280,9 @@ export async function POST(request: NextRequest) {
       );
 
       if (similarDocuments.length > 0) {
-        console.log(`⚠️ Found ${similarDocuments.length} similar document(s):`, similarDocuments.map(d => d.title));
+        console.log(`âš ï¸ Found ${similarDocuments.length} similar document(s):`, similarDocuments.map(d => d.title));
       } else {
-        console.log('✅ No similar documents found');
+        console.log('âœ… No similar documents found');
       }
     } catch (similarityError) {
       console.error('Similarity check failed (non-blocking):', similarityError);
@@ -296,10 +296,10 @@ export async function POST(request: NextRequest) {
     try {
       coverResult = await scrapeCover(metadata.title, metadata.author || '');
       if (coverResult.success) {
-        console.log(`✅ Cover scraped successfully: ${coverResult.imageUrl} (source: ${coverResult.source})`);
+        console.log(`âœ… Cover scraped successfully: ${coverResult.imageUrl} (source: ${coverResult.source})`);
         coverSource = 'scraped';
       } else {
-        console.log(`⚠️ Cover scraping failed: ${coverResult.error}`);
+        console.log(`âš ï¸ Cover scraping failed: ${coverResult.error}`);
 
         // Step 2.6: Fallback to AI generation if scraping failed (and API key is configured)
         if (!coverResult.success && process.env.GETIMG_API_KEY && metadata.domain) {
@@ -313,23 +313,23 @@ export async function POST(request: NextRequest) {
             );
 
             if (aiResult.success) {
-              console.log(`✅ AI cover generated successfully: ${aiResult.imageUrl}`);
+              console.log(`âœ… AI cover generated successfully: ${aiResult.imageUrl}`);
               coverResult = {
                 success: true,
                 imageUrl: aiResult.imageUrl,
               };
               coverSource = 'ai-generated';
             } else {
-              console.log(`⚠️ AI cover generation failed: ${aiResult.error}`);
+              console.log(`âš ï¸ AI cover generation failed: ${aiResult.error}`);
             }
           } catch (aiError) {
             console.error('AI cover generation error (non-blocking):', aiError);
             // Continue processing even if AI generation fails
           }
         } else if (!coverResult.success && !process.env.GETIMG_API_KEY) {
-          console.log('⚠️ Skipping AI generation: GETIMG_API_KEY not configured');
+          console.log('âš ï¸ Skipping AI generation: GETIMG_API_KEY not configured');
         } else if (!coverResult.success && !metadata.domain) {
-          console.log('⚠️ Skipping AI generation: document domain not available');
+          console.log('âš ï¸ Skipping AI generation: document domain not available');
         }
       }
     } catch (coverError) {
@@ -352,7 +352,7 @@ export async function POST(request: NextRequest) {
       : 'misc';
 
     if (sanitizedType !== metadata.type) {
-      console.warn(`⚠️ Invalid document type "${metadata.type}" received from AI, defaulting to "misc"`);
+      console.warn(`âš ï¸ Invalid document type "${metadata.type}" received from AI, defaulting to "misc"`);
     }
 
     // Step 3.5: Rename file in R2 based on metadata
@@ -435,7 +435,7 @@ export async function POST(request: NextRequest) {
         if (sanitizedTitle) {
           r2Metadata['title'] = sanitizedTitle;
           if (originalTitle !== sanitizedTitle) {
-            console.log(`⚠️ Title sanitized: "${originalTitle}" -> "${sanitizedTitle}"`);
+            console.log(`âš ï¸ Title sanitized: "${originalTitle}" -> "${sanitizedTitle}"`);
           }
         }
       }
@@ -482,7 +482,7 @@ export async function POST(request: NextRequest) {
 
       try {
         await s3Client.send(putCommand);
-        console.log('✅ File uploaded to new location');
+        console.log('âœ… File uploaded to new location');
         newKey = desiredNewKey;
         renameSucceeded = true;
       } catch (putError) {
@@ -492,7 +492,7 @@ export async function POST(request: NextRequest) {
         // If error is related to metadata, try uploading without metadata
         const errorMessage = putError instanceof Error ? putError.message : String(putError);
         if (errorMessage.includes('header') || errorMessage.includes('metadata') || errorMessage.includes('Invalid character')) {
-          console.warn('⚠️ Metadata caused upload failure, retrying without metadata...');
+          console.warn('âš ï¸ Metadata caused upload failure, retrying without metadata...');
           try {
             const putCommandWithoutMetadata = new PutObjectCommand({
               Bucket: bucketName,
@@ -502,14 +502,14 @@ export async function POST(request: NextRequest) {
               // No Metadata field
             });
             await s3Client.send(putCommandWithoutMetadata);
-            console.log('✅ File uploaded to new location (without metadata)');
+            console.log('âœ… File uploaded to new location (without metadata)');
             newKey = desiredNewKey;
             renameSucceeded = true;
           } catch (retryError) {
             console.error('PutObjectCommand retry failed:', retryError);
             // Continue to original error handling
             if (isHtmlFile) {
-              console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+              console.warn('âš ï¸ Failed to rename HTML file, continuing with original key');
               newKey = key;
               renameSucceeded = false;
             } else {
@@ -519,7 +519,7 @@ export async function POST(request: NextRequest) {
         } else {
           // For HTML files, allow processing to continue with original key
           if (isHtmlFile) {
-            console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+            console.warn('âš ï¸ Failed to rename HTML file, continuing with original key');
             newKey = key; // Keep original key
             renameSucceeded = false;
           } else {
@@ -537,14 +537,14 @@ export async function POST(request: NextRequest) {
             Key: key,
           });
           await s3Client.send(deleteOldCommand);
-          console.log('✅ Old file deleted');
+          console.log('âœ… Old file deleted');
         } catch (deleteError) {
           console.error('DeleteObjectCommand failed (non-fatal):', deleteError);
           // Don't throw - the file was copied successfully, deletion failure is non-critical
         }
-        console.log('✅ File renamed successfully');
+        console.log('âœ… File renamed successfully');
       } else {
-        console.log('⚠️ Skipping file rename (using original key)');
+        console.log('âš ï¸ Skipping file rename (using original key)');
       }
     } catch (r2Error) {
       console.error('R2 file operations failed:', r2Error);
@@ -553,7 +553,7 @@ export async function POST(request: NextRequest) {
 
       // For HTML files, skip rename and continue with original key
       if (isHtmlFile) {
-        console.warn('⚠️ R2 rename failed for HTML file, continuing with original key');
+        console.warn('âš ï¸ R2 rename failed for HTML file, continuing with original key');
         newKey = key; // Use original key
         renameSucceeded = false;
       } else {
@@ -583,7 +583,7 @@ export async function POST(request: NextRequest) {
         ContentType: 'application/json',
       });
       await s3Client.send(putMetadataCommand);
-      console.log(`✅ Metadata uploaded to: ${metadataKey}`);
+      console.log(`âœ… Metadata uploaded to: ${metadataKey}`);
     } catch (metadataUploadError) {
       console.error('Metadata upload to R2 failed:', metadataUploadError);
       throw new Error(`Failed to upload metadata file: ${metadataUploadError instanceof Error ? metadataUploadError.message : 'Unknown error'}`);
@@ -638,7 +638,7 @@ export async function POST(request: NextRequest) {
       if (ocrResult.text) {
         console.log('Step 6: Generating embeddings for the processed text...');
         chunksCreated = await generateTextEmbeddings(textRecord.id, ocrResult.text);
-        console.log(`✅ Generated ${chunksCreated} chunks for ${textRecord.id}`);
+        console.log(`âœ… Generated ${chunksCreated} chunks for ${textRecord.id}`);
       }
     } catch (embeddingError) {
       console.error('Embedding generation failed (non-blocking):', embeddingError);

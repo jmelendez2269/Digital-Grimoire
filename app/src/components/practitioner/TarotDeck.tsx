@@ -91,7 +91,7 @@ export default function TarotDeck() {
             `}
                     >
                         <div className="text-zinc-600 font-serif text-center p-4 border border-zinc-700 m-2 h-[90%] w-[90%] flex items-center justify-center box-border">
-                            <span className="tracking-widest uppercase text-xs">Digital Grimoire</span>
+                            <span className="tracking-widest uppercase text-xs">Project Parallax</span>
                         </div>
                     </button>
 
@@ -121,11 +121,13 @@ export default function TarotDeck() {
                     ))}
                 </div>
 
-                {drawnCards.length === 0 && (
-                    <p className="absolute bottom-8 text-zinc-500 text-sm animate-pulse">
-                        Click the deck to draw a card.
-                    </p>
-                )}
+                {
+                    drawnCards.length === 0 && (
+                        <p className="absolute bottom-8 text-zinc-500 text-sm animate-pulse">
+                            Click the deck to draw a card.
+                        </p>
+                    )
+                }
             </div>
 
             {/* Controls & Reflection */}

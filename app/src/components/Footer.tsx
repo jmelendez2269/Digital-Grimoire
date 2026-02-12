@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
 
-          {/* Column 1: Convergence */}
+          {/* Column 1: Parallax */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="relative flex items-center justify-center w-6 h-6 rounded-full border border-amber-500/30 bg-black/50 group-hover:border-amber-500/70 transition-colors">
@@ -24,20 +24,20 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-sm font-bold tracking-tight text-zinc-100 group-hover:text-white uppercase">
-                Convergence
+                Project Parallax
               </span>
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed font-mono uppercase tracking-tight">
-              A multi-lens library where hidden wisdom reveals our unity. Explore sacred writings and wisdom traditions.
+              A synthesis-driven platform for exploring the plurality of knowing. Explore truth through multiple analytical lenses.
             </p>
             <div className="flex items-center gap-4 mt-2">
-              <a href="https://github.com/jmelendez2269/Digital-Grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
+              <a href="https://github.com/jmelendez2269/Project-Parallax" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
                 <Github size={18} />
               </a>
-              <a href="https://twitter.com/digital-grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-cyan-400 transition-colors" title="Twitter">
+              <a href="https://twitter.com/project-parallax" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-cyan-400 transition-colors" title="Twitter">
                 <Twitter size={18} />
               </a>
-              <a href="https://discord.gg/digital-grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-indigo-400 transition-colors" title="Discord">
+              <a href="https://discord.gg/project-parallax" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-indigo-400 transition-colors" title="Discord">
                 <MessageSquare size={18} />
               </a>
             </div>
@@ -58,12 +58,12 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <h3 className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest">Tools</h3>
             <div className="flex flex-col gap-2">
-              <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Digital Grimoire</Link>
+              <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Project Parallax</Link>
               <Link href="/ritual-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Ritual Machine</Link>
-              <Link href="/convergence-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Convergence Machine</Link>
-              <Link href="https://github.com/jmelendez2269/Digital-Grimoire/blob/main/README.md" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
+              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Parallax Engine</Link>
+              <Link href="/wiki/home" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
-                Documentation
+                Wiki
               </Link>
             </div>
           </div>
@@ -88,7 +88,7 @@ export default function Footer() {
         {/* Bottom Bar: Copyright & Disclosures */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">
-            © {currentYear} CONVERGENCE // ALL RIGHTS RESERVED
+            © {currentYear} PROJECT PARALLAX // ALL RIGHTS RESERVED
           </p>
 
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
