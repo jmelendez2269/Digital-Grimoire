@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Convergence",
-  description: "Privacy Policy for Convergence - How we collect, use, and protect your data",
+  title: "Privacy Policy | Project Parallax",
+  description: "Privacy Policy for Project Parallax - How we collect, use, and protect your data",
   openGraph: {
-    title: "Privacy Policy | Convergence",
-    description: "Privacy Policy for Convergence - How we collect, use, and protect your data",
+    title: "Privacy Policy | Project Parallax",
+    description: "Privacy Policy for Project Parallax - How we collect, use, and protect your data",
     type: "website",
-    url: "https://www.convergencelibrary.com/privacy",
+    url: "https://projectparallax.xyz/privacy",
     images: [
       {
-        url: "https://www.convergencelibrary.com/og-image.png",
+        url: "https://projectparallax.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence Privacy Policy",
+        alt: "Project Parallax - Multi-lens library and knowledge network",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Privacy Policy | Convergence",
-    description: "Privacy Policy for Convergence - How we collect, use, and protect your data",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    title: "Privacy Policy | Project Parallax",
+    description: "Privacy Policy for Project Parallax - How we collect, use, and protect your data",
+    images: ["https://www.projectparallax.xyz/og-image.png"],
   },
 };
 

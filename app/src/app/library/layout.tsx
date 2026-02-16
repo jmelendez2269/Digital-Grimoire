@@ -1,27 +1,27 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Library | Convergence | Multi-Lens Library & Knowledge Network",
-  description: "Browse and explore the Convergence Library - a curated collection of esoteric texts, sacred writings, and wisdom traditions from across cultures and time periods. Discover hidden wisdom through AI-powered analysis.",
+  title: "Library | Project Parallax | Multi-lens library and knowledge network",
+  description: "Browse and explore the Project Parallax - a curated collection of esoteric texts, sacred writings, and wisdom traditions from across cultures and time periods. Discover hidden wisdom through AI-powered analysis.",
   openGraph: {
-    title: "Library | Convergence",
-    description: "Browse and explore the Convergence Library - a curated collection of esoteric texts, sacred writings, and wisdom traditions.",
+    title: "Library | Project Parallax",
+    description: "Browse and explore the Project Parallax - a curated collection of esoteric texts, sacred writings, and wisdom traditions.",
     type: "website",
-    url: "https://www.convergencelibrary.com/library",
+    url: "https://projectparallax.xyz/library",
     images: [
       {
-        url: "https://www.convergencelibrary.com/og-image.png",
+        url: "https://projectparallax.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence Library - Esoteric Texts & Wisdom Traditions",
+        alt: "Project Parallax - Esoteric Texts & Wisdom Traditions",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Library | Convergence",
-    description: "Browse and explore the Convergence Library - a curated collection of esoteric texts and wisdom traditions.",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    title: "Library | Project Parallax",
+    description: "Browse and explore the Project Parallax - a curated collection of esoteric texts and wisdom traditions.",
+    images: ["https://projectparallax.xyz/og-image.png"],
   },
 };
 

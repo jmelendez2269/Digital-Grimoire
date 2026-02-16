@@ -15,9 +15,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     } catch (error) {
       console.error('Error getting params in generateMetadata:', error);
     }
-    
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.convergencelibrary.com';
-    
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://projectparallax.xyz';
+
     try {
       let supabase;
       try {
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         // Fall through to return default metadata
         supabase = null;
       }
-      
+
       // Only try to fetch if we have a valid client
       if (supabase) {
         try {
@@ -42,21 +42,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           if (!queryError && document) {
             const title = document.title || 'Untitled Document';
             const author = document.author ? ` by ${document.author}` : '';
-            const description = document.summary || 
-                               document.curator_note || 
-                               `Explore ${title}${author} in the Convergence Library - a curated collection of esoteric texts and wisdom traditions.`;
-            
+            const description = document.summary ||
+              document.curator_note ||
+              `Explore ${title}${author} in the Project Parallax - a curated collection of esoteric texts and wisdom traditions.`;
+
             return {
-              title: `${title}${author} | Convergence Library`,
+              title: `${title}${author} | Project Parallax`,
               description,
               openGraph: {
-                title: `${title}${author} | Convergence`,
+                title: `${title}${author} | Project Parallax`,
                 description,
                 type: "website",
                 url: `${baseUrl}/library/${id}`,
                 images: [
                   {
-                    url: "https://www.convergencelibrary.com/og-image.png",
+                    url: "https://projectparallax.xyz/og-image.png",
                     width: 1200,
                     height: 630,
                     alt: title,
@@ -65,9 +65,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
               },
               twitter: {
                 card: "summary_large_image",
-                title: `${title}${author} | Convergence`,
+                title: `${title}${author} | Project Parallax`,
                 description,
-                images: ["https://www.convergencelibrary.com/og-image.png"],
+                images: ["https://projectparallax.xyz/og-image.png"],
               },
               robots: {
                 index: true,
@@ -88,27 +88,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     // Fallback metadata
     return {
-      title: "Document | Convergence Library",
-      description: "Explore this document in the Convergence Library - a curated collection of esoteric texts and wisdom traditions.",
+      title: "Document | Project Parallax",
+      description: "Explore this document in the Project Parallax - a curated collection of esoteric texts and wisdom traditions.",
       openGraph: {
-        title: "Document | Convergence Library",
-        description: "Explore this document in the Convergence Library.",
+        title: "Document | Project Parallax",
+        description: "Explore this document in the Project Parallax.",
         type: "website",
         url: `${baseUrl}/library/${id}`,
         images: [
           {
-            url: "https://www.convergencelibrary.com/og-image.png",
+            url: "https://projectparallax.xyz/og-image.png",
             width: 1200,
             height: 630,
-            alt: "Convergence Library Document",
+            alt: "Project Parallax Document",
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
-        title: "Document | Convergence Library",
-        description: "Explore this document in the Convergence Library.",
-        images: ["https://www.convergencelibrary.com/og-image.png"],
+        title: "Document | Project Parallax",
+        description: "Explore this document in the Project Parallax.",
+        images: ["https://projectparallax.xyz/og-image.png"],
       },
       robots: {
         index: false,

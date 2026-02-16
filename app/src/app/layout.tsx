@@ -24,33 +24,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Convergence | Multi-Lens Library & Knowledge Network",
+  title: "Project Parallax | Multi-Lens Library & Knowledge Network",
   description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+  metadataBase: new URL("https://projectparallax.xyz"),
   keywords: ["esoteric texts", "sacred writings", "wisdom traditions", "knowledge network", "digital library", "hermeticism", "spiritual texts", "AI analysis"],
-  authors: [{ name: "Convergence Library" }],
-  creator: "Convergence Library",
-  publisher: "Convergence Library",
+  authors: [{ name: "Project Parallax" }],
+  creator: "Project Parallax",
+  publisher: "Project Parallax",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://www.convergencelibrary.com",
-    siteName: "Convergence",
-    title: "Convergence | Multi-Lens Library & Knowledge Network",
+    url: "https://projectparallax.xyz",
+    siteName: "Project Parallax",
+    title: "Project Parallax | Multi-Lens Library & Knowledge Network",
     description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
     images: [
       {
-        url: "https://www.convergencelibrary.com/og-image.png",
+        url: "https://projectparallax.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence - Multi-Lens Library & Knowledge Network",
+        alt: "Project Parallax - Multi-Lens Library & Knowledge Network",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Convergence | Multi-Lens Library & Knowledge Network",
+    title: "Project Parallax | Multi-Lens Library & Knowledge Network",
     description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity.",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    images: ["https://projectparallax.xyz/og-image.png"],
   },
   robots: {
     index: true,

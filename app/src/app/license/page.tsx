@@ -8,10 +8,10 @@ export const metadata: Metadata = {
     title: "License | Convergence",
     description: "License information for Convergence - Software, documentation, and content licensing",
     type: "website",
-    url: "https://www.convergencelibrary.com/license",
+    url: "https://projectparallax.xyz/license",
     images: [
       {
-        url: "https://www.convergencelibrary.com/og-image.png",
+        url: "https://projectparallax.xyz/og-image.png",
         width: 1200,
         height: 630,
         alt: "Convergence License",
@@ -27,17 +27,17 @@ export const metadata: Metadata = {
 };
 
 export default function LicensePage() {
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         <h1 className="mb-8 text-4xl font-bold text-amber-100">License</h1>
-        
+
         <div className="prose prose-invert prose-amber max-w-none">
           <p className="text-zinc-400">
             <strong>Last Updated:</strong> {currentDate}
@@ -46,20 +46,20 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">1. Overview</h2>
             <p className="text-zinc-300">
-              This page outlines the licensing terms for different components of the Convergence platform, 
-              including software code, documentation, and content. Different parts of Convergence are 
+              This page outlines the licensing terms for different components of the Convergence platform,
+              including software code, documentation, and content. Different parts of Convergence are
               licensed under different terms.
             </p>
           </section>
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">2. Software Code License</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">2.1 Source Code</h3>
             <p className="text-zinc-300 mb-4">
               The Convergence platform source code is licensed under the <strong>MIT License</strong>.
             </p>
-            
+
             <div className="bg-zinc-800/50 rounded-lg p-6 border border-zinc-700 my-4">
               <h4 className="text-lg font-semibold text-amber-200 mb-3">MIT License</h4>
               <p className="text-zinc-300 text-sm mb-2">
@@ -111,13 +111,13 @@ export default function LicensePage() {
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">3. Documentation License</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">3.1 Planning and Development Documentation</h3>
             <p className="text-zinc-300 mb-4">
-              Planning documentation, development guides, and project documentation are licensed under the 
+              Planning documentation, development guides, and project documentation are licensed under the
               <strong> Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)</strong>.
             </p>
-            
+
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700 my-4">
               <p className="text-zinc-300 mb-2"><strong>CC BY-SA 4.0 Summary:</strong></p>
               <ul className="list-disc pl-6 text-zinc-300 space-y-1 text-sm">
@@ -130,17 +130,17 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">3.2 API Documentation</h3>
             <p className="text-zinc-300">
-              API documentation follows the same CC BY-SA 4.0 license as other documentation. 
+              API documentation follows the same CC BY-SA 4.0 license as other documentation.
               You may use, modify, and distribute API documentation with proper attribution.
             </p>
           </section>
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">4. Content Licensing</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.1 User-Generated Content</h3>
             <p className="text-zinc-300 mb-2">
-              Content you create and upload to Convergence (documents, annotations, notes, journal entries) 
+              Content you create and upload to Convergence (documents, annotations, notes, journal entries)
               remains your intellectual property. By uploading content, you grant Convergence:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
@@ -149,7 +149,7 @@ export default function LicensePage() {
               <li>The right to display your content to you and, if you choose to make it public, to other users</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              <strong>You retain all ownership rights</strong> to your content. You can delete your content 
+              <strong>You retain all ownership rights</strong> to your content. You can delete your content
               at any time, and we will remove it from our systems (subject to backup retention policies).
             </p>
 
@@ -164,7 +164,7 @@ export default function LicensePage() {
               <li><strong>Creative Commons:</strong> Licensed under various CC licenses (attribution required)</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              Each document in the library should indicate its license status. If you believe content 
+              Each document in the library should indicate its license status. If you believe content
               infringes your intellectual property rights, please contact us at{" "}
               <a href="mailto:legal@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
                 legal@convergencelibrary.com
@@ -184,13 +184,13 @@ export default function LicensePage() {
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">5. Third-Party Software and Dependencies</h2>
-            
+
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.1 Open Source Dependencies</h3>
             <p className="text-zinc-300 mb-4">
-              Convergence uses many open-source libraries and frameworks. Each has its own license, 
+              Convergence uses many open-source libraries and frameworks. Each has its own license,
               which we respect and comply with. Major dependencies include:
             </p>
-            
+
             <div className="overflow-x-auto">
               <table className="min-w-full border border-zinc-700">
                 <thead className="bg-zinc-800">
@@ -237,14 +237,14 @@ export default function LicensePage() {
 
             <p className="text-zinc-300 mt-4">
               For a complete list of dependencies and their licenses, see the{" "}
-              <code className="bg-zinc-800 px-2 py-1 rounded text-amber-300">package.json</code> file 
+              <code className="bg-zinc-800 px-2 py-1 rounded text-amber-300">package.json</code> file
               in the project repository. All dependencies are compatible with the MIT License.
             </p>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.2 Attribution Requirements</h3>
             <p className="text-zinc-300">
-              When using Convergence code, you should maintain attribution to third-party libraries 
-              as required by their respective licenses. Most MIT and Apache 2.0 licenses require 
+              When using Convergence code, you should maintain attribution to third-party libraries
+              as required by their respective licenses. Most MIT and Apache 2.0 licenses require
               including the original copyright notice and license text.
             </p>
           </section>
@@ -252,7 +252,7 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">6. Trademarks and Branding</h2>
             <p className="text-zinc-300 mb-4">
-              "Convergence" and the Convergence logo are trademarks. While the code is open source, 
+              "Convergence" and the Convergence logo are trademarks. While the code is open source,
               the Convergence name and branding are protected. You may:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
@@ -274,7 +274,7 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">7. Contributing</h2>
             <p className="text-zinc-300 mb-4">
-              We welcome contributions to Convergence! By contributing code, documentation, or content, 
+              We welcome contributions to Convergence! By contributing code, documentation, or content,
               you agree that your contributions will be licensed under the same terms as the project:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
@@ -284,8 +284,8 @@ export default function LicensePage() {
             </ul>
             <p className="text-zinc-300 mt-4">
               For more information about contributing, see our{" "}
-              <Link href="https://github.com/jmelendez2269/Digital-Grimoire" 
-                    className="text-amber-400 hover:text-amber-300">
+              <Link href="https://github.com/jmelendez2269/Digital-Grimoire"
+                className="text-amber-400 hover:text-amber-300">
                 GitHub repository
               </Link>.
             </p>
@@ -296,8 +296,8 @@ export default function LicensePage() {
             <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 my-4">
               <p className="text-amber-200 font-semibold mb-2">⚠️ Important:</p>
               <p className="text-zinc-300">
-                The software is provided "as is", without warranty of any kind. Convergence and its 
-                contributors are not liable for any damages arising from the use of this software. 
+                The software is provided "as is", without warranty of any kind. Convergence and its
+                contributors are not liable for any damages arising from the use of this software.
                 See the full MIT License text above for complete disclaimer language.
               </p>
             </div>
@@ -306,15 +306,15 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">9. Questions About Licensing</h2>
             <p className="text-zinc-300 mb-4">
-              If you have questions about licensing, want to use Convergence code in a way not covered 
+              If you have questions about licensing, want to use Convergence code in a way not covered
               by these licenses, or need clarification on any licensing terms, please contact us:
             </p>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">
                 <strong>Service:</strong> Convergence<br />
                 <strong>Contact:</strong>{" "}
-                <a href="mailto:legal@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                  legal@convergencelibrary.com
+                <a href="mailto:legal@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
+                  legal@projectparallax.xyz
                 </a>
                 <br />
                 <strong>Operated by:</strong> Jeanine Melendez

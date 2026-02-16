@@ -53,7 +53,7 @@ body {
   /* subtle starfield/noise texture would be added here via background-image if we had the asset, 
      for now we use a css radial gradient fallback for depth */
   background-image:
-    radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.03) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.02) 0%, transparent 50%);
   min-height: 100vh;
 }
@@ -74,8 +74,8 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #F59E0B;
-  /* Amber hover */
+  background: #06b6d4;
+  /* Cyan hover */
 }
 
 /* ===== Typography overrides for Data/Tech feel ===== */
@@ -109,8 +109,8 @@ h6 {
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(245, 158, 11, 0.3);
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+  border-color: rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
 }
 
 /* ===== TipTap Editor Styles (Akashic Update) ===== */
@@ -127,8 +127,8 @@ h6 {
   line-height: 1.2;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  color: #F59E0B;
-  /* Amber */
+  color: #06b6d4;
+  /* Cyan */
   letter-spacing: -0.03em;
 }
 
@@ -138,8 +138,8 @@ h6 {
   line-height: 1.3;
   margin-top: 1.75rem;
   margin-bottom: 0.75rem;
-  color: #fbbf24;
-  /* Lighter Amber */
+  color: #22d3ee;
+  /* Lighter Cyan */
 }
 
 .ProseMirror h3 {
@@ -147,7 +147,7 @@ h6 {
   font-weight: 600;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #fbbf24;
+  color: #22d3ee;
 }
 
 .ProseMirror ul,
@@ -162,8 +162,8 @@ h6 {
 }
 
 .ProseMirror blockquote {
-  border-left: 2px solid #F59E0B;
-  background: rgba(245, 158, 11, 0.05);
+  border-left: 2px solid #06b6d4;
+  background: rgba(6, 182, 212, 0.05);
   padding: 0.5rem 0 0.5rem 1rem;
   margin-left: 0;
   font-style: italic;
