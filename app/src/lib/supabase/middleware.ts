@@ -5,6 +5,8 @@ export async function updateSession(request: NextRequest) {
   // MAINTENANCE MODE CHECK - Check at the beginning
   const maintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === 'true';
 
+
+
   // Always allow access to maintenance page - return early to prevent redirect loops
   if (request.nextUrl.pathname === '/maintenance') {
     return NextResponse.next();
@@ -116,14 +118,23 @@ export async function updateSession(request: NextRequest) {
 
     // If there's an auth error (like invalid refresh token), clear the session
     if (authError) {
-      // Check if it's a refresh token error
-      if (authError.message?.includes('refresh_token') || authError.message?.includes('Refresh Token')) {
+      const isRefreshTokenError = authError.message?.includes('refresh_token') || authError.message?.includes('Refresh Token');
+      const isFetchError = authError.message?.includes('fetch failed') || (authError.cause as any)?.message?.includes('fetch failed');
+
+      if (isRefreshTokenError) {
         console.warn('[Middleware] Invalid refresh token detected, clearing session:', authError.message);
         // Clear auth cookies by setting them to empty with past expiration
         const expiredDate = new Date(0);
         supabaseResponse.cookies.set('sb-access-token', '', { expires: expiredDate, path: '/' });
         supabaseResponse.cookies.set('sb-refresh-token', '', { expires: expiredDate, path: '/' });
         // Continue without user - will redirect to login if needed
+      } else if (isFetchError) {
+        // Suppress noisy fetch errors in middleware, assume offline/unreachable
+        // intended: do nothing, just log a short warning
+        // Only log once per valid period ideally, but simplified here
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[Middleware] Supabase unreachable (fetch failed). Connection issues?');
+        }
       } else {
         console.warn('[Middleware] Auth error (non-refresh-token):', authError.message);
       }
