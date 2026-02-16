@@ -435,3 +435,5 @@ export async function checkCostThresholds(): Promise<{
   }
 }
 
+export const logParallaxQueryUsage = logConvergenceQueryUsage;
+
