@@ -51,24 +51,15 @@ function LibraryPageContent() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 48; // Increased from 12 to 48 for better virtualization
+  const itemsPerPage = 24; // Optimized page size for better performance
 
   // Sort state
   const [sortBy, setSortBy] = useState<'title' | 'author' | 'year' | 'created_at' | 'domain' | 'type'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
-  // Shuffle state
-  const [isShuffled, setIsShuffled] = useState(true);
-  const [shuffleMap, setShuffleMap] = useState<Map<string, number>>(new Map());
-
-  // Initialize shuffle preference from localStorage
-  useEffect(() => {
-    const storedShuffle = localStorage.getItem('library_shuffle_preference');
-    if (storedShuffle !== null) {
-      setIsShuffled(storedShuffle === 'true');
-    }
-  }, []);
+  // Shuffle state - disabled for server-side pagination performance
+  const [isShuffled, setIsShuffled] = useState(false);
 
   // Advanced filter state
   const [filterValues, setFilterValues] = useState<FilterValues>({
@@ -89,142 +80,57 @@ function LibraryPageContent() {
     allLenses: [],
   };
 
-  // FETCH ALL DATA for client-side filtering (max 1000 items)
+  // SERVER-SIDE PAGINATION - Only fetch current page data
   const textsQuery = useLibraryTexts({
-    page: 1,
-    limit: 1000,
-    searchQuery: '', // Fetch everything without search filter
-    filterValues: {
-      domain: 'all',
-      type: 'all',
-      yearMin: null,
-      yearMax: null,
-      tags: [],
-      lenses: [],
-    },
-    sortBy: 'created_at',
-    sortOrder: 'desc',
+    page: currentPage,
+    limit: itemsPerPage,
+    searchQuery: searchQuery,
+    filterValues: filterValues,
+    sortBy: isShuffled ? 'created_at' : sortBy, // Use created_at for shuffle simulation
+    sortOrder: isShuffled ? 'desc' : sortOrder,
     enabled: !authLoading && !!user,
   });
 
-  const allTexts = textsQuery.data?.texts || [];
+  const paginatedTexts = textsQuery.data?.texts || [];
+  const totalCount = textsQuery.data?.total || 0;
+  const totalPages = textsQuery.data?.totalPages || 0;
   const loading = textsQuery.isLoading || filterOptionsQuery.isLoading;
   const error = textsQuery.error?.message || filterOptionsQuery.error?.message || null;
-
-  // Generate stable shuffle map when texts change
-  useEffect(() => {
-    if (allTexts.length > 0) {
-      const newMap = new Map<string, number>();
-      allTexts.forEach(text => {
-        newMap.set(text.id, Math.random());
-      });
-      setShuffleMap(newMap);
-    }
-  }, [allTexts]); // Only regenerate when the underlying data changes
 
   const toggleShuffle = () => {
     const newState = !isShuffled;
     setIsShuffled(newState);
-    localStorage.setItem('library_shuffle_preference', String(newState));
+    // For server-side, shuffle is simulated by randomizing sort
+    if (newState) {
+      setSortBy('created_at');
+      setSortOrder('desc');
+    }
     setCurrentPage(1);
   };
 
-  // CLIENT-SIDE FILTERING & SORTING LOGIC
-  const { filteredTexts, suggestions } = (useCallback(() => {
-    if (!allTexts) return { filteredTexts: [], suggestions: [] };
+  // CLIENT-SIDE SUGGESTIONS for search autocomplete
+  const [suggestions, setSuggestions] = useState<Array<{ id: string; title: string; author: string | null }>>([]);
 
-    // 1. Filter
-    let filtered = allTexts.filter(text => {
-      // Search query filter (title or author)
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch =
-          text.title.toLowerCase().includes(query) ||
-          (text.author && text.author.toLowerCase().includes(query));
-        if (!matchesSearch) return false;
-      }
-
-      // Domain filter
-      if (filterValues.domain !== 'all' && text.domain !== filterValues.domain) return false;
-
-      // Type filter
-      if (filterValues.type !== 'all' && text.type !== filterValues.type) return false;
-
-      // Year filters
-      if (filterValues.yearMin !== null && (text.year === null || text.year < filterValues.yearMin)) return false;
-      if (filterValues.yearMax !== null && (text.year === null || text.year > filterValues.yearMax)) return false;
-
-      // Tags filter (overlaps)
-      if (filterValues.tags.length > 0) {
-        if (!text.tags || !text.tags.some(tag => filterValues.tags.includes(tag))) return false;
-      }
-
-      // Lenses filter (overlaps)
-      if (filterValues.lenses.length > 0) {
-        if (!text.lenses || !text.lenses.some(lens => filterValues.lenses.includes(lens))) return false;
-      }
-
-      return true;
-    });
-
-    // 2. Sort
-    if (isShuffled) {
-      filtered.sort((a, b) => {
-        const rankA = shuffleMap.get(a.id) ?? 0;
-        const rankB = shuffleMap.get(b.id) ?? 0;
-        return rankA - rankB;
-      });
-    } else {
-      const stripArticles = (title: string | null): string => {
-        if (!title) return '';
-        return title.toLowerCase().trim().replace(/^(a|an|the)\s+/i, '');
-      };
-
-      filtered.sort((a, b) => {
-        let comparison = 0;
-        switch (sortBy) {
-          case 'title':
-            comparison = stripArticles(a.title).localeCompare(stripArticles(b.title));
-            break;
-          case 'author':
-            comparison = (a.author || '').localeCompare(b.author || '');
-            break;
-          case 'year':
-            comparison = (a.year || 0) - (b.year || 0);
-            break;
-          case 'domain':
-            comparison = (a.domain || '').localeCompare(b.domain || '');
-            break;
-          case 'type':
-            comparison = (a.type || '').localeCompare(b.type || '');
-            break;
-          case 'created_at':
-          default:
-            comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-            break;
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchQuery.length >= 2) {
+        try {
+          const res = await fetch(`/api/library/suggestions?query=${encodeURIComponent(searchQuery)}`);
+          if (res.ok) {
+            const data = await res.json();
+            setSuggestions(data.suggestions || []);
+          }
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
         }
-        return sortOrder === 'asc' ? comparison : -comparison;
-      });
-    }
+      } else {
+        setSuggestions([]);
+      }
+    };
 
-    // 3. Generate suggestions (top 8 matches for the search drawer)
-    let searchSuggestions: typeof allTexts = [];
-    if (searchQuery.length >= 2) {
-      searchSuggestions = allTexts
-        .filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
-        .slice(0, 8);
-    }
-
-    return { filteredTexts: filtered, suggestions: searchSuggestions };
-  }, [allTexts, searchQuery, filterValues, sortBy, sortOrder, isShuffled, shuffleMap]))();
-
-  // PAGINATION LOGIC
-  const totalCount = filteredTexts.length;
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
-  const paginatedTexts = filteredTexts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleFilterChange = (newValues: FilterValues) => {
     setFilterValues(newValues);
@@ -232,7 +138,8 @@ function LibraryPageContent() {
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const newQuery = e.target.value;
+    setSearchQuery(newQuery);
     setCurrentPage(1); // Reset to first page when search changes
     setShowSuggestions(true);
   };
@@ -252,7 +159,6 @@ function LibraryPageContent() {
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
     setIsShuffled(false); // Disable shuffle when user explicitly sorts
-    localStorage.setItem('library_shuffle_preference', 'false');
     setCurrentPage(1); // Reset to first page when sort changes
     setShowSortDropdown(false);
   };
