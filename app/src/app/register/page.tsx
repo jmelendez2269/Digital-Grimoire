@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Loader2, ArrowRight, Github, Mail, Check } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -71,159 +72,154 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
 
-    console.log("🔐 Google sign-in initiated");
+    // Check if Supabase env vars are present
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      const errorMessage = "Configuration error: Missing Supabase environment variables";
+      console.error(errorMessage);
+      setError(errorMessage);
+      setLoading(false);
+      return;
+    }
+
+    const redirectUrl = `${window.location.origin}/auth/callback`;
 
     try {
       const supabase = createClient();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
       if (oauthError) {
-        console.error("❌ Google OAuth error:", oauthError);
-        setError(oauthError.message);
+        console.error("Google Sign-in Error:", oauthError);
+        setError(`Google Sign-in failed: ${oauthError.message}`);
         setLoading(false);
         return;
       }
 
       // OAuth redirect will happen automatically
-      console.log("✅ Google OAuth redirect initiated");
     } catch (err) {
-      console.error("❌ Unexpected error during Google sign-in:", err);
-      setError("An unexpected error occurred during Google sign-in");
+      console.error("Unexpected error during Google Sign-in:", err);
+      setError("An unexpected error occurred during Google sign-in. Check console for details.");
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-[#050505] to-black px-4 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 relative overflow-hidden text-zinc-100 py-12">
       {/* Background Ambience */}
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 blur-[100px] rounded-full" />
-      </div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-black pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none" />
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo/Title */}
-        <div className="mb-8 text-center">
-          <div className="mb-6 inline-block relative group">
-            <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-500 to-cyan-500 opacity-25 group-hover:opacity-50 blur transition duration-500" />
-            <div className="relative bg-black rounded-full p-2 ring-1 ring-white/10">
-              <svg
-                viewBox="0 0 100 100"
-                className="h-16 w-16 text-amber-500"
-                fill="currentColor"
-              >
-                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" className="opacity-50" />
-                <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="1" fill="none" />
-                <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" className="opacity-70" />
-                <circle cx="50" cy="50" r="3" fill="currentColor" className="animate-pulse" />
-              </svg>
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 tracking-tight">
-            Join Convergence
-          </h1>
-          <p className="mt-2 text-sm text-zinc-400 font-mono tracking-wide">
-            INITIATE_NEW_PROTOCOL &gt; CREATE_USER
+      <div className="w-full max-w-2xl relative z-10">
+        {/* Back to Home Link */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors mb-8 group"
+        >
+          <ArrowRight className="h-6 w-6 rotate-180 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-xl font-semibold">Home</span>
+        </Link>
+
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <Link href="/" className="inline-block mb-8 group">
+            <h1 className="text-5xl font-bold tracking-tight text-white group-hover:text-amber-500 transition-colors">
+              Project Parallax
+            </h1>
+          </Link>
+          <h2 className="text-3xl font-semibold text-zinc-200">
+            Create your account
+          </h2>
+          <p className="mt-4 text-xl text-zinc-400">
+            Join the knowledge network to explore multiple perspectives.
           </p>
         </div>
 
         {/* Register Form */}
-        <div className="glass-panel p-8 backdrop-blur-xl relative overflow-hidden rounded-2xl border-white/5">
-          {/* Top Border Gradient */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
-
-          <form onSubmit={handleRegister} className="space-y-5 relative z-10">
+        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl p-10 md:p-12 shadow-2xl">
+          <form onSubmit={handleRegister} className="space-y-8">
             {/* Username Field */}
-            <div className="group">
-              <label htmlFor="username" className="block text-xs font-mono text-amber-500/70 mb-1.5 uppercase tracking-wider">
-                User_Handle (Username)
+            <div className="space-y-3">
+              <label htmlFor="username" className="block text-lg font-medium text-zinc-400">
+                Username
               </label>
-              <div className="relative">
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  minLength={3}
-                  className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-amber-100 placeholder-zinc-700 font-mono text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all group-hover:border-white/20"
-                  placeholder="mystic_scholar"
-                />
-                <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
-              </div>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                minLength={3}
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                placeholder="johndoe"
+              />
             </div>
 
             {/* Email Field */}
-            <div className="group">
-              <label htmlFor="email" className="block text-xs font-mono text-amber-500/70 mb-1.5 uppercase tracking-wider">
-                Comms_Link (Email)
+            <div className="space-y-3">
+              <label htmlFor="email" className="block text-lg font-medium text-zinc-400">
+                Email address
               </label>
-              <div className="relative">
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-amber-100 placeholder-zinc-700 font-mono text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all group-hover:border-white/20"
-                  placeholder="scholar@grimoire.com"
-                />
-                <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
-              </div>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                placeholder="you@example.com"
+              />
             </div>
 
             {/* Password Field */}
-            <div className="group">
-              <label htmlFor="password" className="block text-xs font-mono text-amber-500/70 mb-1.5 uppercase tracking-wider">
-                Access_Code (Password)
+            <div className="space-y-3">
+              <label htmlFor="password" className="block text-lg font-medium text-zinc-400">
+                Password
               </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-amber-100 placeholder-zinc-700 font-mono text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all group-hover:border-white/20"
-                  placeholder="••••••••"
-                />
-                <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
-              </div>
-              <p className="mt-1 text-[10px] text-zinc-600 font-mono text-right">
-                MIN_LENGTH: 8_CHARS
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                placeholder="••••••••"
+              />
+              <p className="text-base text-zinc-500">
+                Must be at least 8 characters
               </p>
             </div>
 
             {/* Confirm Password Field */}
-            <div className="group">
-              <label htmlFor="confirmPassword" className="block text-xs font-mono text-amber-500/70 mb-1.5 uppercase tracking-wider">
-                Verify_Code (Confirm)
+            <div className="space-y-3">
+              <label htmlFor="confirmPassword" className="block text-lg font-medium text-zinc-400">
+                Confirm Password
               </label>
-              <div className="relative">
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-amber-100 placeholder-zinc-700 font-mono text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all group-hover:border-white/20"
-                  placeholder="••••••••"
-                />
-                <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
-              </div>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                placeholder="••••••••"
+              />
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-mono text-red-400 flex items-center gap-2">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                ERROR: {error}
+              <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-6 py-4 text-lg text-red-400 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                {error}
               </div>
             )}
 
@@ -231,41 +227,39 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="relative w-full overflow-hidden rounded bg-amber-500 px-4 py-3 text-sm font-bold text-black uppercase tracking-wider hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50 transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] group"
+              className="w-full relative flex items-center justify-center gap-3 rounded-xl bg-amber-600 px-6 py-4 text-xl font-bold text-white hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-amber-500/20"
             >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? (
-                  <>
-                    <span className="animate-spin text-lg">⟳</span> PROCESSING...
-                  </>
-                ) : (
-                  <>
-                    ESTABLISH_LINK <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  </>
-                )}
-              </span>
-              {/* Shine effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              {loading ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="h-6 w-6" />
+                </>
+              )}
             </button>
 
-            {/* Terms */}
-            <p className="text-center text-[10px] text-zinc-500 font-mono">
-              BY_EXECUTING, YOU_AGREE_TO{" "}
-              <Link href="/terms" className="text-amber-500/70 hover:text-amber-400 underline decoration-amber-500/30">
-                TERMS
+            <div className="text-base text-center text-zinc-500 leading-relaxed">
+              By creating an account, you agree to our{" "}
+              <Link href="/terms" className="text-zinc-400 hover:text-amber-500 underline decoration-zinc-700 underline-offset-4 hover:decoration-amber-500 transition-all">
+                Terms of Service
               </Link>{" "}
-              &{" "}
-              <Link href="/privacy" className="text-amber-500/70 hover:text-amber-400 underline decoration-amber-500/30">
-                PRIVACY_PROTOCOLS
+              and{" "}
+              <Link href="/privacy" className="text-zinc-400 hover:text-amber-500 underline decoration-zinc-700 underline-offset-4 hover:decoration-amber-500 transition-all">
+                Privacy Policy
               </Link>
-            </p>
+              .
+            </div>
           </form>
 
           {/* Divider */}
-          <div className="my-6 flex items-center gap-4">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-zinc-800"></div>
-            <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Alt_Protocol</span>
-            <div className="flex-1 h-px bg-gradient-to-l from-transparent to-zinc-800"></div>
+          <div className="my-10 flex items-center gap-6">
+            <div className="flex-1 h-px bg-white/10"></div>
+            <span className="text-sm font-semibold text-zinc-500 tracking-wider">OR CONTINUE WITH</span>
+            <div className="flex-1 h-px bg-white/10"></div>
           </div>
 
           {/* Google Sign-In Button */}
@@ -273,9 +267,9 @@ export default function RegisterPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="group relative flex w-full items-center justify-center gap-3 rounded border border-zinc-800 bg-black/30 px-4 py-3 text-sm font-medium text-zinc-300 transition-all hover:border-zinc-600 hover:text-white hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-700 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-4 rounded-xl border border-white/10 bg-white/5 px-6 py-4 text-lg font-medium text-zinc-300 transition-all hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-zinc-700 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="h-5 w-5 opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24">
+            <svg className="h-6 w-6" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -293,35 +287,23 @@ export default function RegisterPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="font-mono tracking-wide text-xs">GOOGLE_AUTH</span>
+            Google
           </button>
 
           {/* Login Link */}
-          <div className="mt-8 text-center">
-            <p className="text-xs text-zinc-500 font-mono">
-              EXISTING_ENTITY?{" "}
+          <div className="mt-10 text-center">
+            <p className="text-lg text-zinc-500">
+              Already have an account?{" "}
               <Link
                 href="/login"
-                className="text-amber-500 hover:text-amber-400 underline decoration-amber-500/30 hover:decoration-amber-500 transition-all font-bold tracking-wider ml-1"
+                className="text-amber-500 hover:text-amber-400 font-bold transition-colors ml-1"
               >
-                ACCESS_TERMINAL
+                Sign in
               </Link>
             </p>
           </div>
-        </div>
-
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/"
-            className="text-xs font-mono text-zinc-500 hover:text-amber-500 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 group"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            ABORT_PROTOCOL
-          </Link>
         </div>
       </div>
     </div>
   );
 }
-

@@ -98,7 +98,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
           </div>
 
           <div className="flex flex-col leading-none font-sans uppercase">
-            <span className="text-[0.6rem] font-medium tracking-[0.2em] text-zinc-400 group-hover:text-cyan-500/70 transition-colors ml-[2px]">Project</span>
+            <span className="text-[0.6rem] font-bold tracking-[0.2em] text-zinc-400 group-hover:text-cyan-500/70 transition-colors ml-[2px]">Project</span>
             <span className="text-xl font-bold tracking-widest text-zinc-100 group-hover:text-cyan-400 transition-colors">Parallax</span>
           </div>
         </Link>
@@ -187,7 +187,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full border border-white/10 hover:border-amber-500/30 bg-black/30 transition-all group"
               >
-                <span className="hidden sm:block text-sm font-mono text-zinc-400 group-hover:text-amber-200 px-2 text-right">
+                <span className="hidden sm:block text-sm font-mono font-bold text-zinc-400 group-hover:text-amber-200 px-2 text-right">
                   {user.user_metadata?.username || user.email?.split("@")[0]}
                 </span>
 

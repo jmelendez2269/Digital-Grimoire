@@ -12,6 +12,15 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
+        {/* Back to Home Link */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors mb-8 group"
+        >
+          <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+          <span className="text-xl font-semibold">Home</span>
+        </Link>
+
         {/* Logo/Title */}
         <div className="mb-8 text-center">
           <div className="mb-6 inline-block relative group">
