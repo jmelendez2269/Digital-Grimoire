@@ -24,11 +24,11 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-sm font-bold tracking-tight text-zinc-100 group-hover:text-white uppercase">
-                Convergence
+                Project Parallax
               </span>
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed font-mono uppercase tracking-tight">
-              A multi-lens library where hidden wisdom reveals our unity. Explore sacred writings and wisdom traditions.
+              A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore sacred writings and wisdom traditions.
             </p>
             <div className="flex items-center gap-4 mt-2">
               <a href="https://github.com/jmelendez2269/Digital-Grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
@@ -60,7 +60,7 @@ export default function Footer() {
             <div className="flex flex-col gap-2">
               <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Digital Grimoire</Link>
               <Link href="/ritual-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Ritual Machine</Link>
-              <Link href="/convergence-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Convergence Machine</Link>
+              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Parallax Engine</Link>
               <Link href="https://github.com/jmelendez2269/Digital-Grimoire/blob/main/README.md" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
                 Documentation
@@ -88,7 +88,7 @@ export default function Footer() {
         {/* Bottom Bar: Copyright & Disclosures */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">
-            © {currentYear} CONVERGENCE // ALL RIGHTS RESERVED
+            © {currentYear} PROJECT PARALLAX // ALL RIGHTS RESERVED
           </p>
 
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
