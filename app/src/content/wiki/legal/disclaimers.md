@@ -6,7 +6,7 @@ audience: user
 description: Essential legal disclaimers regarding educational purpose, non-endorsement, and medical/professional advice.
 ---
 
-# CONVERGENCE - LEGAL DISCLAIMERS
+# PROJECT PARALLAX - LEGAL DISCLAIMERS
 
 **Effective Date:** October 25, 2025
 **Last Updated:** October 25, 2025
@@ -16,7 +16,7 @@ description: Essential legal disclaimers regarding educational purpose, non-endo
 
 ## EDUCATIONAL PURPOSE STATEMENT
 
-**All content on Convergence is presented for educational and exploratory purposes only.**
+**All content on Project Parallax is presented for educational and exploratory purposes only.**
 
 Convergence is a platform for learning, research, personal exploration, and intellectual inquiry. We aggregate and synthesize knowledge from diverse traditions and systems to facilitate understanding and cross-cultural synthesis.
 
@@ -28,7 +28,7 @@ Convergence is a platform for learning, research, personal exploration, and inte
 
 ### Inclusion ≠ Endorsement
 
-**The inclusion of content, systems, or traditions on Convergence does not constitute endorsement, validation, verification, or scientific confirmation.**
+**The inclusion of content, systems, or traditions on Project Parallax does not constitute endorsement, validation, verification, or scientific confirmation.**
 
 We include a wide range of knowledge systems based on one criterion: **if it has been meaningful to human beings in their quest to understand themselves, their world, and their universe, it belongs in our library.**
 
@@ -45,7 +45,7 @@ This includes, but is not limited to:
 
 ### Scientific Validation Not Required
 
-**Scientific validation is not a prerequisite for inclusion in the Convergence Library.**
+**Scientific validation is not a prerequisite for inclusion in the Project Parallax Library.**
 
 Many systems we include (such as astrology, human design, and certain spiritual practices) have not been validated by contemporary scientific methods. **We include them anyway** because:
 
@@ -62,7 +62,7 @@ Users should understand that inclusion does not imply we believe these systems a
 
 ### Our Role
 
-**Convergence is not an academic institution, research university, or scholarly authority.**
+**Project Parallax is not an academic institution, research university, or scholarly authority.**
 
 We are a technology platform that:
 
@@ -95,7 +95,7 @@ While we strive to maintain **scholarly presentation standards** (proper citatio
 
 ### Personal Interpretation
 
-**Users are solely responsible for how they interpret, evaluate, and apply knowledge found on Convergence.**
+**Users are solely responsible for how they interpret, evaluate, and apply knowledge found on Project Parallax.**
 
 The platform provides information, perspectives, and synthesis tools. **Wisdom, discernment, and application are the responsibility of the user.**
 
@@ -111,7 +111,7 @@ We actively encourage users to:
 
 ### Professional Advice
 
-**Convergence is not a substitute for professional advice.**
+**Project Parallax is not a substitute for professional advice.**
 
 Content on our platform should not be used as a substitute for:
 
@@ -129,7 +129,7 @@ Content on our platform should not be used as a substitute for:
 
 ### Our Commitment
 
-**Convergence actively encourages critical thinking, questioning, and intellectual independence.**
+**Project Parallax actively encourages critical thinking, questioning, and intellectual independence.**
 
 We want users to:
 
@@ -139,7 +139,7 @@ We want users to:
 - **Maintain uncertainty** - Intellectual humility is a strength, not a weakness
 - **Form their own conclusions** - We provide tools; you provide judgment
 
-### The Convergence Approach
+### The Project Parallax Approach
 
 We explicitly **do not** want users to:
 
@@ -273,7 +273,7 @@ Convergence provides information and perspectives. What you do with them - wheth
 
 ### Our Content
 
-Content created by Convergence (synthesized AI responses, user interface, original writing) is © Convergence 2025.
+Content created by Project Parallax (synthesized AI responses, user interface, original writing) is © Project Parallax 2025. All rights reserved.
 
 ### Third-Party Content
 
@@ -285,7 +285,7 @@ We strive to include only:
 
 If you believe content on Convergence infringes your intellectual property rights:
 
-- Contact us at [legal@convergence.example]
+- Contact us at [legal@projectparallax.xyz]
 - Provide specific information about the allegedly infringing content
 - We will investigate and respond promptly
 
@@ -307,7 +307,7 @@ Users who upload or contribute content represent and warrant that:
 
 **AI-generated responses are computational syntheses, not authoritative truth.**
 
-Our AI system (The Convergence Machine):
+Our AI system (The Parallax Engine):
 
 - Analyzes content through seven perspectives
 - Synthesizes information from our database

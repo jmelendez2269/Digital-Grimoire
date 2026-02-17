@@ -28,7 +28,7 @@ export default function PremiumGate({
       </div>
 
       <h2 className="text-3xl font-bold text-amber-100 mb-4">
-        Convergence Machine
+        Parallax Engine
       </h2>
 
       <p className="text-lg text-amber-100/70 mb-2 max-w-md">

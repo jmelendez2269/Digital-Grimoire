@@ -18,13 +18,13 @@ export interface DocumentMetadata {
 }
 
 export async function extractMetadata(
-  ocrText: string, 
+  ocrText: string,
   filename: string = 'document',
   userId?: string,
   documentId?: string
 ): Promise<{ metadata: DocumentMetadata; rawOutput: string }> {
   const apiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error('OpenAI API key not configured. Add OPENAI_API_KEY to .env.local');
   }
@@ -32,7 +32,7 @@ export async function extractMetadata(
   const openai = new OpenAI({ apiKey });
 
   console.log('🤖 Calling OpenAI GPT-4 for metadata extraction...');
-  
+
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o',
     messages: [
@@ -43,7 +43,7 @@ book_esoteric, book_spiritual, book_psychology, book_science, article_scholarly,
 anthropology, reference_table, historical, mythology, medical_overview, commentary, 
 webpage, dictionary, astrology, ritual_guide, diagram, transcript, summary, speculative, misc
 
-The 7 Convergence Machine Lenses represent different perspectives for understanding knowledge:
+The 7 Parallax Lenses represent different perspectives for understanding knowledge:
 1. scientific - Physics, biology, cosmology, empirical evidence, natural sciences
 2. psychological - Jungian archetypes, cognitive science, shadow work, depth psychology
 3. philosophical - Metaphysics, ethics, epistemology, ontology, philosophical inquiry
@@ -73,7 +73,7 @@ Always respond with valid JSON only.`
 - type (one of the 20 types above, required)
 - domain (string, optional: e.g., "astrology", "psychology", "anthropology")
 - tags (array of strings, required, 3-5 relevant tags)
-- lenses (array of strings, required): Which of the 7 Convergence Machine lenses apply to this document?
+- lenses (array of strings, required): Which of the 7 Parallax Lenses apply to this document?
   * Choose from: scientific, psychological, philosophical, religious_spiritual, historical_anthropological, symbolic_occult, mathematical
   * Most documents should have 2-4 lenses
   * Select based on the document's primary perspectives and approaches
@@ -107,10 +107,10 @@ Respond with valid JSON only, no markdown code blocks.`
   console.log('='.repeat(80));
   console.log(responseText);
   console.log('='.repeat(80));
-  
+
   const metadata = JSON.parse(responseText);
   console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
-  
+
   // Log token usage for tracking
   await logMetadataExtractionUsage({
     inputTokens: completion.usage?.prompt_tokens || 0,
@@ -120,7 +120,7 @@ Respond with valid JSON only, no markdown code blocks.`
     success: true,
     model: 'gpt-4o',
   });
-  
+
   return { metadata, rawOutput: responseText };
 }
 

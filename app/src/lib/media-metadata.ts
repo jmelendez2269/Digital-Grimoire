@@ -30,7 +30,7 @@ export async function extractMediaMetadata(
   documentId?: string
 ): Promise<{ metadata: MediaMetadata; rawOutput: string }> {
   const apiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error('OpenAI API key not configured. Add OPENAI_API_KEY to .env.local');
   }
@@ -55,7 +55,7 @@ book_esoteric, book_spiritual, book_psychology, book_science, article_scholarly,
 anthropology, reference_table, historical, mythology, medical_overview, commentary, 
 webpage, dictionary, astrology, ritual_guide, diagram, transcript, summary, speculative, misc
 
-The 7 Convergence Machine Lenses represent different perspectives for understanding knowledge:
+The 7 Parallax Lenses represent different perspectives for understanding knowledge:
 1. scientific - Physics, biology, cosmology, empirical evidence, natural sciences
 2. psychological - Jungian archetypes, cognitive science, shadow work, depth psychology
 3. philosophical - Metaphysics, ethics, epistemology, ontology, philosophical inquiry
@@ -125,10 +125,10 @@ Respond with valid JSON only, no markdown code blocks.`
     console.log('='.repeat(80));
     console.log(responseText);
     console.log('='.repeat(80));
-    
+
     const metadata = JSON.parse(responseText);
     console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
-    
+
     // Log token usage for tracking
     await logMetadataExtractionUsage({
       inputTokens: completion.usage?.prompt_tokens || 0,
@@ -138,7 +138,7 @@ Respond with valid JSON only, no markdown code blocks.`
       success: true,
       model: 'gpt-4o',
     });
-    
+
     return { metadata, rawOutput: responseText };
   } else {
     // Use GPT-4 for audio/video transcript analysis
@@ -156,7 +156,7 @@ book_esoteric, book_spiritual, book_psychology, book_science, article_scholarly,
 anthropology, reference_table, historical, mythology, medical_overview, commentary, 
 webpage, dictionary, astrology, ritual_guide, diagram, transcript, summary, speculative, misc
 
-The 7 Convergence Machine Lenses represent different perspectives for understanding knowledge:
+The 7 Parallax Lenses represent different perspectives for understanding knowledge:
 1. scientific - Physics, biology, cosmology, empirical evidence, natural sciences
 2. psychological - Jungian archetypes, cognitive science, shadow work, depth psychology
 3. philosophical - Metaphysics, ethics, epistemology, ontology, philosophical inquiry
@@ -219,10 +219,10 @@ Respond with valid JSON only, no markdown code blocks.`
     console.log('='.repeat(80));
     console.log(responseText);
     console.log('='.repeat(80));
-    
+
     const metadata = JSON.parse(responseText);
     console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
-    
+
     // Log token usage for tracking
     await logMetadataExtractionUsage({
       inputTokens: completion.usage?.prompt_tokens || 0,
@@ -232,7 +232,7 @@ Respond with valid JSON only, no markdown code blocks.`
       success: true,
       model: 'gpt-4o',
     });
-    
+
     return { metadata, rawOutput: responseText };
   }
 }
