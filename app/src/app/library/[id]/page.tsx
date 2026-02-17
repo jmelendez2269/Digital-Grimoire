@@ -781,7 +781,7 @@ export default function DocumentDetailPage() {
   // Fetch chunk content by chunk ID
   const fetchChunkContent = useCallback(async (chunkId: string) => {
     try {
-      const response = await fetch(`/api/convergence/chunk/${chunkId}`);
+      const response = await fetch(`/api/parallax/chunk/${chunkId}`);
       if (response.ok) {
         const data = await response.json();
         setChunkContent(data.chunk.content);

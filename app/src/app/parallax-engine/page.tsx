@@ -142,7 +142,7 @@ function ParallaxEngineContent() {
 
   async function fetchRateLimit() {
     try {
-      const res = await fetch('/api/convergence/rate-limit');
+      const res = await fetch('/api/parallax/rate-limit');
       if (res.ok) {
         const data = await res.json();
         setRateLimit(data);
@@ -172,7 +172,7 @@ function ParallaxEngineContent() {
     setIsStreaming(true);
 
     try {
-      const res = await fetch('/api/convergence/query', {
+      const res = await fetch('/api/parallax/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, lensWeights, responseLength }),
@@ -296,7 +296,7 @@ function ParallaxEngineContent() {
     if (user) {
       try {
         // 1. Save to Project Parallax specific history
-        await fetch('/api/convergence/history', {
+        await fetch('/api/parallax/history', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

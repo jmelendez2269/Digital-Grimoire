@@ -307,7 +307,7 @@ export async function logConvergenceQueryUsage(params: {
   await logApiUsage({
     service: 'convergence_query',
     operation: 'convergence_machine_query',
-    endpoint: '/api/convergence/query',
+    endpoint: '/api/parallax/query',
     unitsUsed: totalTokens,
     unitType: 'tokens',
     estimatedCost: totalCost,

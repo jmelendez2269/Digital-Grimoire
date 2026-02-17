@@ -155,7 +155,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             onSearch(query);
         }
         try {
-            const res = await fetch('/api/convergence/ai-search', {
+            const res = await fetch('/api/parallax/ai-search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

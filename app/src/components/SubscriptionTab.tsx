@@ -380,7 +380,7 @@ export default function SubscriptionTab() {
       console.log('🎯 Determined tier:', tier);
 
       // Fetch rate limit info
-      const rateLimitResponse = await fetch('/api/convergence/rate-limit');
+      const rateLimitResponse = await fetch('/api/parallax/rate-limit');
       const rateLimitData = rateLimitResponse.ok
         ? await rateLimitResponse.json()
         : { remaining: 5, limit: 5, resetDate: new Date() };
