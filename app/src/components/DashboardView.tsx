@@ -19,13 +19,13 @@ export default function DashboardView() {
             <div className="mx-auto w-full max-w-7xl">
                 {/* Welcome Section */}
                 <div className="mb-12 text-center">
-                    <h1 className="text-4xl font-bold text-zinc-100">
+                    <h1 className="text-5xl md:text-6xl font-bold text-zinc-100">
                         {loading ? (
                             "Welcome!"
                         ) : username ? (
                             `Welcome, ${username}!`
                         ) : (
-                            "Welcome to Convergence"
+                            "Welcome to Project Parallax"
                         )}
                     </h1>
                     <p className="mt-2 text-lg text-zinc-400">
@@ -34,24 +34,24 @@ export default function DashboardView() {
                 </div>
 
                 {/* Integrated Search Hub - Primary Focus */}
-                <div className="mb-16">
+                <div className="mb-20">
                     <Suspense fallback={<div className="w-full h-64 bg-zinc-900/30 rounded-xl animate-pulse" />}>
                         <DashboardSearchHub />
                     </Suspense>
                 </div>
 
                 {/* Explore Your Tools Section */}
-                <div className="mb-12">
-                    <h2 className="mb-8 text-2xl font-bold text-cyan-100 text-center">
+                <div className="mb-16">
+                    <h2 className="mb-10 text-3xl font-bold text-cyan-100 text-center">
                         Explore Your Tools
                     </h2>
 
                     {/* Primary Tools Grid */}
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-12">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-16">
                         {/* Library Card */}
                         <Link
                             href="/library"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
@@ -70,7 +70,7 @@ export default function DashboardView() {
                         {/* Digital Grimoire Card */}
                         <Link
                             href="/journal"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-indigo-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-indigo-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/15 to-indigo-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function DashboardView() {
                         {/* Graph Card */}
                         <Link
                             href="/graph"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
@@ -119,7 +119,7 @@ export default function DashboardView() {
                                     // Silently fail - tracking shouldn't block navigation
                                 }
                             }}
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-blue-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-blue-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/15 to-blue-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
@@ -153,7 +153,7 @@ export default function DashboardView() {
                         {/* Ritual Machine Card */}
                         <Link
                             href="/ritual-machine"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
@@ -172,7 +172,7 @@ export default function DashboardView() {
                         {/* Workbench Card */}
                         <Link
                             href="/practitioner/rituals"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
@@ -191,7 +191,7 @@ export default function DashboardView() {
                         {/* Tarot Card - NEW */}
                         <Link
                             href="/practitioner/tarot"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 transition-all hover:border-purple-500/50 hover:bg-zinc-900 overflow-visible"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-purple-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/15 to-pink-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">

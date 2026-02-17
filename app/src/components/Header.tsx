@@ -78,7 +78,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
 
   return (
     <header className="sticky top-0 z-50 pt-4 px-4 pb-2 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-      <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 glass-panel rounded-full relative">
+      <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center justify-between px-6 py-4 glass-panel rounded-full relative">
         {/* Decorative Grid Line */}
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent opacity-50"></div>
 
@@ -96,9 +96,11 @@ function Header({ librarySearch }: HeaderProps = {}) {
               <circle cx="50" cy="50" r="4" fill="currentColor" />
             </svg>
           </div>
-          <span className="text-lg font-bold tracking-tight text-zinc-100 group-hover:text-white font-sans uppercase">
-            Convergence <span className="text-cyan-500 text-xs align-top opacity-70">OS</span>
-          </span>
+
+          <div className="flex flex-col leading-none font-sans uppercase">
+            <span className="text-[0.6rem] font-medium tracking-[0.2em] text-zinc-400 group-hover:text-cyan-500/70 transition-colors ml-[2px]">Project</span>
+            <span className="text-xl font-bold tracking-widest text-zinc-100 group-hover:text-cyan-400 transition-colors">Parallax</span>
+          </div>
         </Link>
 
         {/* Desktop Navigation (HUD Tabs) */}
@@ -113,7 +115,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <Link
               key={item.path}
               href={item.path}
-              className={`relative px-4 py-1.5 text-base font-medium transition-all duration-300 rounded-md border border-transparent ${isActive(item.path) || pathname?.startsWith(item.path + '/')
+              className={`relative px-5 py-2 text-lg font-medium transition-all duration-300 rounded-md border border-transparent ${isActive(item.path) || pathname?.startsWith(item.path + '/')
                 ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
                 : "text-zinc-400 hover:text-cyan-200 hover:bg-white/5"
                 }`}
@@ -270,7 +272,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             <div className="flex items-center gap-2">
               <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">Log In</Link>
               <Link href="/register" className="px-4 py-1.5 text-sm font-bold text-black bg-cyan-500 hover:bg-cyan-400 rounded transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                JOIN_CONVERGENCE &gt;
+                JOIN_PARALLAX &gt;
               </Link>
             </div>
           )}
