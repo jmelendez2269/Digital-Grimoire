@@ -1,10 +1,6 @@
 "use client";
 
-interface ParallaxConcept {
-  id: string;
-  tradition: string;
-  tradition_ref?: { id: string; slug: string; label: string; color?: string; icon?: string };
-}
+import { ParallaxConcept } from "@/lib/types";
 
 interface TraditionLegendProps {
   traditions: string[];

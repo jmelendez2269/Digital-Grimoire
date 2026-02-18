@@ -3,49 +3,35 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-interface ParallaxConcept {
-  id: string;
-  slug: string;
-  name: string;
-  tradition: string;
-  tradition_ref?: { id: string; slug: string; label: string; color?: string; icon?: string };
-  era?: string;
-  short_definition?: string;
-  primary_sources?: string[];
-  tags?: string[];
-}
-
-interface ParallaxRelationship {
-  id: string;
-  source_id: string;
-  target_id: string;
-  similarity: number;
-  source_citation?: string;
-  notes?: string;
-}
+import { ParallaxConcept, ParallaxRelationship, CorrespondenceEntity } from "@/lib/types";
 
 interface ParallaxGraphProps {
-  concepts: ParallaxConcept[];
+  concepts: (ParallaxConcept | CorrespondenceEntity)[];
   relationships: ParallaxRelationship[];
-  onSelectConcept: (concept: ParallaxConcept) => void;
+  onSelectConcept: (concept: ParallaxConcept | CorrespondenceEntity) => void;
   minSimilarity: number;
 }
 
 // Color scheme for different traditions
 const TRADITION_COLORS: Record<string, string> = {
-  Buddhist: "#8B5CF6", // Purple
-  Christian: "#3B82F6", // Blue
-  Taoist: "#10B981", // Green
-  Hindu: "#F59E0B", // Amber
+  Buddhist: "#B48F4A", // Gold
+  Christian: "#22D3EE", // Cyan
+  Taoist: "#10B981", // Emerald
+  Hindu: "#F97316", // Orange
   Islamic: "#EF4444", // Red
   Jewish: "#6366F1", // Indigo
-  Quantum: "#06B6D4", // Cyan
+  Quantum: "#A855F7", // Purple
   Philosophy: "#EC4899", // Pink
-  Hermetic: "#F97316", // Orange
+  Hermetic: "#F59E0B", // Amber
   Other: "#6B7280", // Gray
 };
 
-const DEFAULT_COLOR = "#6B7280";
+const DEFAULT_COLOR = "#22D3EE";
+
+// Helper type guard
+function isCorrespondence(entity: ParallaxConcept | CorrespondenceEntity): entity is CorrespondenceEntity {
+  return (entity as CorrespondenceEntity).type !== undefined;
+}
 
 export default function ParallaxGraph({
   concepts,
@@ -54,18 +40,22 @@ export default function ParallaxGraph({
   minSimilarity,
 }: ParallaxGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 900, height: 600 });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
+  // Handle Resize
   useEffect(() => {
-    if (!svgRef.current || concepts.length === 0) return;
+    const handleResize = () => {
+      if (svgRef.current?.parentElement) {
+        const { width, height } = svgRef.current.parentElement.getBoundingClientRect();
+        setDimensions({ width, height });
+      }
+    };
 
-    // Update dimensions based on container
-    const container = svgRef.current.parentElement;
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      setDimensions({ width: rect.width - 32, height: Math.max(600, rect.height - 32) });
-    }
-  }, [concepts]);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!svgRef.current || concepts.length === 0) return;
@@ -140,10 +130,10 @@ export default function ParallaxGraph({
       .data(links)
       .enter()
       .append("line")
-      .attr("stroke", "#6B7280")
-      .attr("stroke-opacity", (d) => 0.3 + d.similarity * 0.4)
-      .attr("stroke-width", (d) => 1 + d.similarity * 2)
-      .attr("stroke-dasharray", (d) => (d.similarity > 0.8 ? "0" : "5,5"));
+      .attr("stroke", "#22D3EE")
+      .attr("stroke-opacity", (d) => 0.1 + d.similarity * 0.3)
+      .attr("stroke-width", (d) => 0.5 + d.similarity * 1.5)
+      .attr("stroke-dasharray", (d) => (d.similarity > 0.85 ? "0" : "4,4"));
 
     // Draw nodes
     const node = g
@@ -181,11 +171,16 @@ export default function ParallaxGraph({
     node
       .append("circle")
       .attr("r", 12)
-      .attr("fill", (d) =>
-        d.concept.tradition_ref?.color ||
-        TRADITION_COLORS[d.concept.tradition] ||
-        DEFAULT_COLOR
-      )
+      .attr("fill", (d) => {
+        if (isCorrespondence(d.concept)) {
+          return d.concept.type?.color ||
+            TRADITION_COLORS[d.concept.category || "Other"] ||
+            DEFAULT_COLOR;
+        }
+        return d.concept.tradition_ref?.color ||
+          TRADITION_COLORS[d.concept.tradition || "Other"] ||
+          DEFAULT_COLOR;
+      })
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
       .style("cursor", "pointer");
@@ -249,7 +244,7 @@ export default function ParallaxGraph({
         ref={svgRef}
         width="100%"
         height={dimensions.height}
-        className="bg-zinc-950/60 rounded-lg min-h-[600px]"
+        className="bg-[#0A1212] rounded-lg min-h-[600px] border border-white/5"
       >
         {/* SVG content is rendered by D3 */}
       </svg>

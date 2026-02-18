@@ -39,19 +39,19 @@ const CORRESPONDENCE_COLORS: Record<string, string> = {
 };
 
 const TRADITION_COLORS: Record<string, string> = {
-  Buddhist: "#8B5CF6",
-  Christian: "#3B82F6",
-  Taoist: "#10B981",
-  Hindu: "#F59E0B",
-  Islamic: "#EF4444",
-  Jewish: "#6366F1",
-  Quantum: "#06B6D4",
-  Philosophy: "#EC4899",
-  Hermetic: "#F97316",
+  Buddhist: "#B48F4A", // Gold
+  Christian: "#22D3EE", // Cyan
+  Taoist: "#10B981", // Emerald
+  Hindu: "#F97316", // Orange
+  Islamic: "#EF4444", // Red
+  Jewish: "#6366F1", // Indigo
+  Quantum: "#A855F7", // Purple
+  Philosophy: "#EC4899", // Pink
+  Hermetic: "#F59E0B", // Amber
   Other: "#6B7280",
 };
 
-const DEFAULT_COLOR = "#6B7280";
+const DEFAULT_COLOR = "#22D3EE";
 
 export default function GraphVisualization({
   entities,
@@ -166,9 +166,9 @@ export default function GraphVisualization({
       .data(links)
       .enter()
       .append("line")
-      .attr("stroke", "#4b5563") // zinc-600
-      .attr("stroke-opacity", (d) => 0.2 + (d.weight || 0.5) * 0.3)
-      .attr("stroke-width", (d) => (d.weight || 0.5) * 2);
+      .attr("stroke", "#22D3EE") // brand-cyan
+      .attr("stroke-opacity", (d) => 0.1 + (d.weight || 0.5) * 0.2)
+      .attr("stroke-width", (d) => (d.weight || 0.5) * 1.5);
 
     // Nodes Group
     const node = g
@@ -262,15 +262,7 @@ export default function GraphVisualization({
   }
 
   return (
-    <div ref={wrapperRef} className="w-full h-full relative overflow-hidden bg-[#050505] rounded-xl border border-white/10 shadow-[inner_0_0_40px_rgba(0,0,0,0.8)]">
-      {/* Graph HUD Overlay */}
-      <div className="absolute top-4 right-4 pointer-events-none text-[10px] font-mono text-amber-500/30 flex flex-col items-end gap-1 select-none">
-        <span>PHYSICS_ENGINE: ACTIVE</span>
-        <span>NODES: {entities.length}</span>
-        <span>LINKS: {relationships.length}</span>
-        <span>SIMULATION_ALPHA: {simulationRef.current?.alpha().toFixed(3) || "0.000"}</span>
-      </div>
-
+    <div ref={wrapperRef} className="w-full h-full relative overflow-hidden bg-[#0A1212] rounded-xl border border-white/5 shadow-[inner_0_0_40px_rgba(0,0,0,0.8)]">
       <svg
         ref={svgRef}
         width="100%"

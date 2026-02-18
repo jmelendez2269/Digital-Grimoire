@@ -15,10 +15,10 @@ export default function LoginPage() {
         {/* Back to Home Link */}
         <Link
           href="/"
-          className="inline-flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors mb-8 group"
+          className="inline-flex items-center gap-2.5 text-zinc-400 hover:text-amber-500 transition-colors mb-6 group"
         >
-          <span className="text-xl group-hover:-translate-x-1 transition-transform">←</span>
-          <span className="text-xl font-semibold">Home</span>
+          <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
+          <span className="text-lg font-semibold">Home</span>
         </Link>
 
         {/* Logo/Title */}

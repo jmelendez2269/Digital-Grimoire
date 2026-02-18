@@ -9,6 +9,8 @@ import Link from 'next/link';
 import DocumentationLink from "@/components/DocumentationLink";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import AppLoader from '@/components/ui/AppLoader';
+import ParallaxLoader from '@/components/ui/ParallaxLoader';
 import LensIntensitySelector from '@/components/parallax/LensIntensitySelector';
 import LensPresets from '@/components/parallax/LensPresets';
 import ResponseLengthSlider from '@/components/parallax/ResponseLengthSlider';
@@ -24,8 +26,8 @@ import { Save, Check } from 'lucide-react';
 const ResponseStream = dynamic(() => import('@/components/parallax/ResponseStream'), {
   ssr: false,
   loading: () => (
-    <div className="h-64 bg-zinc-900/50 border border-amber-900/20 rounded-lg animate-pulse flex items-center justify-center">
-      <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+    <div className="h-64 bg-zinc-900/50 border border-amber-900/20 rounded-lg flex items-center justify-center">
+      <ParallaxLoader size="md" />
     </div>
   ),
 });
@@ -570,7 +572,7 @@ function ParallaxEngineContent() {
                 >
                   {isStreaming ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <ParallaxLoader size="sm" className="mr-2" />
                       Analyzing...
                     </>
                   ) : (
@@ -612,11 +614,7 @@ function ParallaxEngineContent() {
 
 export default function ParallaxEnginePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center select-none pointer-events-none">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<AppLoader fullScreen />}>
       <ParallaxEngineContent />
     </Suspense>
   );

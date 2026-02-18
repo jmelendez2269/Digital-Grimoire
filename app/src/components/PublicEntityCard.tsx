@@ -1,32 +1,11 @@
 import { Link2 } from "lucide-react";
 
-interface CorrespondenceEntity {
-    id: string;
-    slug: string;
-    name: string;
-    category: string;
-    type_id?: string;
-    type?: { id: string; slug: string; label: string; color?: string; icon?: string };
-    aliases?: string[];
-    description?: string;
-    lenses?: string[];
-}
+import { ParallaxConcept, CorrespondenceEntity, GraphType } from "@/lib/types";
 
-interface ParallaxConcept {
-    id: string;
-    slug: string;
-    name: string;
-    tradition: string;
-    tradition_id?: string;
-    tradition_ref?: { id: string; slug: string; label: string; color?: string; icon?: string };
-    era?: string;
-    short_definition?: string;
-    primary_sources?: string[];
-    tags?: string[];
-}
+// Removed local interfaces
 
 type Entity = CorrespondenceEntity | ParallaxConcept;
-type GraphType = "correspondences" | "parallax";
+// Removed local GraphType definition
 
 interface PublicEntityCardProps {
     entity: Entity;

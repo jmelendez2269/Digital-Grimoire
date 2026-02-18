@@ -26,8 +26,10 @@ async function isAdmin() {
 }
 
 export async function GET(req: NextRequest) {
+  console.log('[API] GET /api/concepts - Request received');
   try {
     const supabase = await createSupabaseServerClient();
+    console.log('[API] GET /api/concepts - Supabase client created');
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
     const tradition = searchParams.get("tradition");
@@ -39,7 +41,7 @@ export async function GET(req: NextRequest) {
     // We can add the relationship later if needed, but for now prioritize reliability
     let query = supabase
       .from("convergence_concepts")
-      .select("*")
+      .select("*, tradition_ref:convergence_traditions(id, slug, label, color, icon)")
       .order("created_at", { ascending: false })
       .limit(limit * 2); // Get more results to sort by relevance
 
@@ -48,7 +50,9 @@ export async function GET(req: NextRequest) {
     if (tag) query = query.contains("tags", [tag]);
     if (q) query = query.ilike("name", `% ${q}% `);
 
+    console.log(`[API] GET /api/concepts - Executing query for q="${q || ''}"`);
     const { data, error } = await query;
+    console.log(`[API] GET /api/concepts - Query complete. Error: ${error ? 'YES' : 'NO'}, Data length: ${data?.length}`);
 
     console.log(`[API] GET / api / concepts - Found ${data?.length || 0} concepts`, {
       limit,

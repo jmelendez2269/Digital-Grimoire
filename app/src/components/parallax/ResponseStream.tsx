@@ -5,7 +5,7 @@ import { Copy, Check, Link2, ChevronDown, ChevronUp, BookOpen, Sparkles, Loader2
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getAllLenses, getActiveLenses } from '@/lib/parallax/lenses';
-import { LensWeights } from '@/lib/parallax/lens-orchestrator';
+import { LensWeights } from '@/lib/parallax/types';
 import ExpandableLensCard from './ExpandableLensCard';
 import SourceCard from './SourceCard';
 

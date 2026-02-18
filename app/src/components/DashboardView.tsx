@@ -1,11 +1,19 @@
 "use client";
 
 import { Suspense } from 'react';
-import DashboardSearchHub from "@/components/DashboardSearchHub";
-import ParallaxEngineInfo from "@/components/ParallaxEngineInfo";
+import dynamic from 'next/dynamic';
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { BookOpen, Tablet, Network, GraduationCap, Sparkles } from "lucide-react";
+
+const DashboardSearchHub = dynamic(() => import("@/components/DashboardSearchHub"), {
+    loading: () => <div className="h-[500px] animate-pulse bg-zinc-900/10 rounded-xl mb-12" />,
+    ssr: false
+});
+
+const ParallaxEngineInfo = dynamic(() => import("@/components/ParallaxEngineInfo"), {
+    ssr: false
+});
 
 export default function DashboardView() {
     const { user, loading } = useAuth();
@@ -15,21 +23,23 @@ export default function DashboardView() {
     const username = user?.user_metadata?.username || null;
 
     return (
-        <div className="flex flex-1 flex-col px-8 py-12">
+        <div className="flex flex-1 flex-col px-6 py-10">
             <div className="mx-auto w-full max-w-7xl">
                 {/* Welcome Section */}
                 <div className="mb-12 text-center">
-                    <h1 className="text-5xl md:text-6xl font-bold text-zinc-100">
-                        {loading ? (
-                            "Welcome!"
-                        ) : username ? (
-                            `Welcome, ${username}!`
-                        ) : (
-                            "Welcome to Project Parallax"
-                        )}
-                    </h1>
+                    <div className="min-h-[60px] md:min-h-[72px] flex items-center justify-center">
+                        <h1 className="text-4xl md:text-5xl font-bold text-zinc-100">
+                            {loading ? (
+                                "Welcome!"
+                            ) : username ? (
+                                `Welcome, ${username}!`
+                            ) : (
+                                "Welcome to Project Parallax"
+                            )}
+                        </h1>
+                    </div>
                     <p className="mt-2 text-lg text-zinc-400">
-                        Your journey of discovery begins here
+                        What will you uncover today?
                     </p>
                 </div>
 
@@ -42,7 +52,7 @@ export default function DashboardView() {
 
                 {/* Explore Your Tools Section */}
                 <div className="mb-16">
-                    <h2 className="mb-10 text-3xl font-bold text-cyan-100 text-center">
+                    <h2 className="mb-10 text-2xl font-bold text-cyan-100 text-center">
                         Explore Your Tools
                     </h2>
 

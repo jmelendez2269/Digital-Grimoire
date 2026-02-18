@@ -8,6 +8,8 @@ interface KnowledgeGraphHeaderProps {
     entityCount: number;
     connectionCount: number;
     loading?: boolean;
+    title?: string;
+    subtitle?: string;
 }
 
 export default function KnowledgeGraphHeader({
@@ -16,17 +18,24 @@ export default function KnowledgeGraphHeader({
     onCreateClick,
     entityCount,
     connectionCount,
-    loading
+    loading,
+    title,
+    subtitle
 }: KnowledgeGraphHeaderProps) {
     return (
-        <div className="fixed top-20 left-4 right-4 z-40 bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-full py-3 px-6 shadow-2xl flex items-center justify-between gap-6 pointer-events-auto">
+        <div className="z-40 bg-zinc-900/60 backdrop-blur-md border border-white/10 rounded-full py-3 px-6 shadow-2xl flex items-center justify-between gap-6 pointer-events-auto mb-8">
             {/* Title & Stats */}
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${loading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
-                    <h1 className="text-lg font-bold text-amber-100 tracking-wide uppercase">
-                        Neural Interface <span className="text-amber-500/50">v2.0</span>
-                    </h1>
+                    <div className={`w-2 h-2 rounded-full ${loading ? 'bg-cyan-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
+                    <div className="flex flex-col">
+                        <h1 className="text-lg font-bold text-amber-100 tracking-wide uppercase font-serif leading-tight">
+                            {title || <>The Parallax <span className="text-amber-500/50">Graph</span></>}
+                        </h1>
+                        <span className="text-[10px] font-mono text-cyan-500/50 tracking-[0.2em] uppercase">
+                            {subtitle || "Neural Interface Active"}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="h-4 w-px bg-white/10" />
@@ -55,7 +64,7 @@ export default function KnowledgeGraphHeader({
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="block w-full pl-10 pr-3 py-1.5 bg-black/40 border border-white/10 rounded-full text-sm text-amber-100 placeholder-amber-100/20 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all font-mono"
-                        placeholder="SEARCH_NEURAL_NET..."
+                        placeholder="Search the Archives..."
                     />
                 </div>
 

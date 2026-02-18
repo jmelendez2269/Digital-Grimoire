@@ -3,28 +3,10 @@
  * Each lens represents a distinct perspective for analyzing queries
  */
 
-import { AIModel } from '@/lib/ai/ai-orchestrator';
+import { AIModel } from '@/lib/ai/types';
+import { Lens, LensType, RetrievalStrategy } from './types';
 
-export type LensType =
-  | 'scientific'
-  | 'psychological'
-  | 'philosophical'
-  | 'religious_spiritual'
-  | 'historical_anthropological'
-  | 'symbolic_occult'
-  | 'mathematical';
-
-export type RetrievalStrategy = 'vector' | 'fts' | 'hybrid';
-
-export interface Lens {
-  id: LensType;
-  name: string;
-  description: string;
-  retrievalStrategy: RetrievalStrategy;
-  systemPrompt: string;
-  keywords: string[];
-  defaultModel: AIModel;
-}
+export { type Lens, type LensType, type RetrievalStrategy };
 
 /**
  * The 7 Parallax Engine Lenses
