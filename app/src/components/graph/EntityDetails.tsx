@@ -27,7 +27,7 @@ export default function EntityDetails({
     id: string;
     name: string;
     category?: string;       // Optional, for Correspondences
-    tradition?: string;      // Optional, for Convergence
+    tradition?: string;      // Optional, for Parallax
     aliases?: string[];
     description?: string;
     lenses?: string[];

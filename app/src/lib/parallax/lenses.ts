@@ -3,7 +3,7 @@
  * Each lens represents a distinct perspective for analyzing queries
  */
 
-import { AIModel } from '../ai/ai-orchestrator';
+import { AIModel } from '@/lib/ai/ai-orchestrator';
 
 export type LensType =
   | 'scientific'

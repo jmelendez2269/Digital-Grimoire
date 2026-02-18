@@ -33,7 +33,7 @@ function SearchPageContent() {
 
         if (q) setQuery(q);
         if (type === 'library' || type === 'books') setActiveTab('library');
-        if (type === 'convergence') setActiveTab('convergence');
+        if (type === 'convergence' || type === 'parallax') setActiveTab('parallax');
 
     }, [user, fetchHistory, searchParams]);
 
@@ -51,8 +51,8 @@ function SearchPageContent() {
         // Route based on tab
         if (activeTab === 'library') {
             router.push(`/library?search=${encodeURIComponent(query)}`);
-        } else if (activeTab === 'convergence') {
-            router.push(`/convergence-machine?query=${encodeURIComponent(query)}`);
+        } else if (activeTab === 'parallax') {
+            router.push(`/parallax-engine?query=${encodeURIComponent(query)}`);
         } else {
             // Concept search handled inline
             return;
@@ -93,7 +93,7 @@ function SearchPageContent() {
 
                         {/* Search Tabs */}
                         <div className="flex p-1 bg-zinc-900/50 rounded-lg border border-white/5 backdrop-blur-sm">
-                            {(['concept', 'library', 'convergence'] as SearchSource[]).map((tab) => (
+                            {(['concept', 'library', 'parallax'] as SearchSource[]).map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
@@ -104,12 +104,12 @@ function SearchPageContent() {
                                             : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'}
                                     `}
                                 >
-                                    {tab === 'convergence' && <Sparkles className="w-4 h-4" />}
+                                    {tab === 'parallax' && <Sparkles className="w-4 h-4" />}
                                     {tab === 'library' && <Book className="w-4 h-4" />}
                                     {tab === 'concept' && <Brain className="w-4 h-4" />}
 
                                     <span className="capitalize">
-                                        {tab === 'convergence' ? 'AI Search' :
+                                        {tab === 'parallax' ? 'AI Search' :
                                             tab === 'library' ? 'Library Search' :
                                                 'Concept Search'}
                                     </span>
@@ -141,7 +141,7 @@ function SearchPageContent() {
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
                                         placeholder={
-                                            activeTab === 'convergence' ? "Ask the Convergence Machine..." :
+                                            activeTab === 'parallax' ? "Ask the Parallax Engine..." :
                                                 "Search across the library..."
                                         }
                                         className="flex-1 w-full bg-transparent border-0 px-4 py-4 text-lg text-white placeholder-zinc-600 focus:ring-0 focus:outline-none"
@@ -181,7 +181,7 @@ function SearchPageContent() {
                                         onClick={() => handleHistoryClick(item)}
                                     >
                                         <div className="mt-1 shrink-0">
-                                            {item.source === 'convergence' && <Sparkles className="w-4 h-4 text-cyan-400" />}
+                                            {item.source === 'parallax' && <Sparkles className="w-4 h-4 text-cyan-400" />}
                                             {item.source === 'library' && <Book className="w-4 h-4 text-emerald-400" />}
                                             {item.source === 'concept' && <Brain className="w-4 h-4 text-amber-400" />}
                                         </div>

@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateLensResponse, getResponseLengthConfig, ResponseLength } from '@/lib/convergence/lens-orchestrator';
-import { hybridSearch } from '@/lib/convergence/hybrid-retrieval';
-import { getLens } from '@/lib/convergence/lenses';
+import { generateLensResponse, getResponseLengthConfig, ResponseLength } from '@/lib/parallax/lens-orchestrator';
+import { hybridSearch } from '@/lib/parallax/hybrid-retrieval';
+import { getLens } from '@/lib/parallax/lenses';
 import { logApiUsage } from '@/lib/usage-tracker';
 
 /**
- * POST /api/convergence/lens/[lensId]
+ * POST /api/parallax/lens/[lensId]
  * Generate detailed lens response on demand
  * 
  * Body: {
@@ -82,7 +82,7 @@ export async function POST(
     // AI Usage tracking
     if (lensResponse.tokenUsage) {
       await logApiUsage({
-        service: 'convergence_query',
+        service: 'parallax_query',
         operation: `lens_detail_${lensId}`,
         unitsUsed: lensResponse.tokenUsage.inputTokens + lensResponse.tokenUsage.outputTokens,
         unitType: 'tokens',

@@ -1,8 +1,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { ftsSearchChunks } from '@/lib/convergence/fts-search';
-import { vectorSearch } from '@/lib/convergence/vector-search';
+import { ftsSearchChunks } from '@/lib/parallax/fts-search';
+import { vectorSearch } from '@/lib/parallax/vector-search';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 import { getLeastUsedModel } from '@/lib/ai/usage-stats';
 

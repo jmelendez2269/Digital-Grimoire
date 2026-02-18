@@ -6,7 +6,7 @@ audience: developer
 description: Technical implementation of Stripe subscriptions and access tiers.
 ---
 
-# Subscription Tier Structure
+## Subscription Tier Structure
 
 ## Overview
 
@@ -128,7 +128,7 @@ The `users` table includes:
 
 ### Rate Limiting
 
-Rate limits are enforced in `app/src/lib/convergence/rate-limit.ts`:
+Rate limits are enforced in `app/src/lib/parallax/rate-limit.ts`:
 
 ```typescript
 const FREE_TIER_LIMIT = 5;
@@ -257,7 +257,7 @@ WHERE subscription_status IN ('premium', 'active');
 
 All AI queries are tracked in the `api_usage` table with:
 
-- `service`: `'convergence_query'`
+- `service`: `'parallax_query'`
 - `input_tokens`: Input tokens used
 - `output_tokens`: Output tokens used
 - `estimated_cost`: Calculated cost based on OpenAI pricing
@@ -383,9 +383,9 @@ For issues with:
 
 ## References
 
-- **Rate Limit Logic:** `app/src/lib/convergence/rate-limit.ts`
+- **Rate Limit Logic:** `app/src/lib/parallax/rate-limit.ts`
 - **Subscription UI:** `app/src/components/SubscriptionTab.tsx`
 - **Stripe Checkout:** `app/src/app/api/stripe/create-checkout-session/route.ts`
 - **Stripe Webhook:** `app/src/app/api/stripe/webhook/route.ts`
-- **Rate Limit API:** `app/src/app/api/convergence/rate-limit/route.ts`
+- **Rate Limit API:** `app/src/app/api/parallax/rate-limit/route.ts`
 - **Database Migration:** `migrations/025_add_subscription_tiers.sql`

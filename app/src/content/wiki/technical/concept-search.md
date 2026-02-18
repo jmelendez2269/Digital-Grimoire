@@ -53,7 +53,7 @@ graph TD
 
 ## 2. API Endpoints
 
-### `POST /api/convergence/deep-search`
+### `POST /api/parallax/deep-search`
 
 Performs the semantic search.
 
@@ -86,7 +86,7 @@ Performs the semantic search.
 }
 ```
 
-### `POST /api/convergence/generate-embeddings`
+### `POST /api/parallax/generate-embeddings`
 
 Triggers embedding generation for texts.
 

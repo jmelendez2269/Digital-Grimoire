@@ -46,6 +46,7 @@ export async function streamParallaxResponse(
   // Log usage and costs
   const supabase = await createClient();
   const { data: recentQuery } = await supabase
+    // NOTE: 'convergence_queries' is the legacy table name. Do not change unless database migration is performed.
     .from('convergence_queries')
     .select('id')
     .eq('user_id', userId)
@@ -179,6 +180,7 @@ export async function* createSSEStream(
     // Get query ID from the most recent query
     const supabase = await createClient();
     const { data: recentQuery, error: queryError } = await supabase
+      // NOTE: 'convergence_queries' is the legacy table name. Do not change unless database migration is performed.
       .from('convergence_queries')
       .select('id')
       .eq('user_id', userId)
@@ -277,6 +279,8 @@ async function saveConversationHistory(
     `\n\n## Synthesis\n\n${response.synthesis}`;
 
   const { error } = await supabase
+    // NOTE: 'convergence_responses' is the legacy table name. Do not change unless database migration is performed.
+    // NOTE: 'convergence_responses' is the legacy table name. Do not change unless database migration is performed.
     .from('convergence_responses')
     .insert({
       user_id: userId,

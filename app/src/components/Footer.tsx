@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
 
-          {/* Column 1: Convergence */}
+          {/* Column 1: Parallax */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="relative flex items-center justify-center w-6 h-6 rounded-full border border-amber-500/30 bg-black/50 group-hover:border-amber-500/70 transition-colors">

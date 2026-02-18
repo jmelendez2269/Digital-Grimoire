@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateTextEmbeddings, backfillAllTextEmbeddings } from '@/lib/convergence/embeddings';
+import { generateTextEmbeddings, backfillAllTextEmbeddings } from '@/lib/parallax/embeddings';
 
 /**
- * POST /api/convergence/generate-embeddings
+ * POST /api/parallax/generate-embeddings
  * Generate embeddings for texts
  * 
  * Body options:
@@ -13,7 +13,7 @@ import { generateTextEmbeddings, backfillAllTextEmbeddings } from '@/lib/converg
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const {
       data: { user },

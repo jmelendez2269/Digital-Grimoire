@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * GET /api/convergence/chunk/[chunkId]
+ * GET /api/parallax/chunk/[chunkId]
  * Fetch chunk content by chunk ID
  */
 export async function GET(

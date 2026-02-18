@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Sparkles, Edit } from "lucide-react";
 
-type GraphType = "correspondences" | "convergence";
+type GraphType = "correspondences" | "parallax";
 
 interface KnowledgeSource {
   id: string;
@@ -41,7 +41,7 @@ export default function EntityDetailModal({ entity, graphType, onClose, readOnly
     const loadClaims = async () => {
       if (!entity?.id) return;
       const res = await fetch(
-        `/api/knowledge/claims?entityType=${graphType === "correspondences" ? "correspondence" : "convergence"}&entityId=${entity.id}`
+        `/api/knowledge/claims?entityType=${graphType === "correspondences" ? "correspondence" : "parallax"}&entityId=${entity.id}`
       );
       const data = await res.json();
       setClaims(data.items || []);
@@ -115,7 +115,7 @@ export default function EntityDetailModal({ entity, graphType, onClose, readOnly
     // Pass generated consensus if it exists
     const params = new URLSearchParams({
       editId: entity.id,
-      graphType: graphType === "correspondences" ? "correspondences" : "convergence",
+      graphType: graphType === "correspondences" ? "correspondences" : "parallax",
     });
     if (generatedConsensus) {
       // Encode consensus text to pass via URL (or use sessionStorage for longer text)
@@ -165,6 +165,7 @@ export default function EntityDetailModal({ entity, graphType, onClose, readOnly
             )}
             <button
               onClick={onClose}
+              aria-label="Close"
               className="text-amber-100/60 hover:text-amber-100 transition-colors p-2 hover:bg-zinc-800 rounded"
             >
               <X className="w-5 h-5" />

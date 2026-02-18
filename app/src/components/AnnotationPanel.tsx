@@ -59,7 +59,7 @@ export default function AnnotationPanel({
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNote, setEditNote] = useState('');
-  
+
   // Add annotation form state
   const [showForm, setShowForm] = useState(showAddForm);
   const [newQuote, setNewQuote] = useState('');
@@ -69,12 +69,12 @@ export default function AnnotationPanel({
   const [newPosition, setNewPosition] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const [savingToJournal, setSavingToJournal] = useState(false);
-  
+
   // Filter state
   const [filterCategory, setFilterCategory] = useState<Annotation['category'] | 'all'>('all');
-  
-  // Convergence Machine modal state
-  const [showConvergenceModal, setShowConvergenceModal] = useState(false);
+
+  // Parallax Engine modal state
+  const [showParallaxModal, setShowParallaxModal] = useState(false);
 
   // Journal save modal state
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -160,7 +160,7 @@ export default function AnnotationPanel({
 
     // Show modal to let user choose
     setShowSaveModal(true);
-    
+
     // Fetch existing pages
     setLoadingPages(true);
     try {
@@ -262,7 +262,7 @@ export default function AnnotationPanel({
         }
 
         const { page: existingPage } = await getResponse.json();
-        
+
         // Parse existing content
         let existingContent = existingPage.content;
         if (existingContent === null || existingContent === undefined) {
@@ -293,17 +293,17 @@ export default function AnnotationPanel({
 
         // Build merged content array
         const mergedContentArray: any[] = [];
-        
+
         // Add existing content
         if (existingContent.content.length > 0) {
           mergedContentArray.push(...existingContent.content);
         }
-        
+
         // Add separator (horizontal rule) if we have both existing and new content
         if (existingContent.content.length > 0 && newContent.content.length > 0) {
           mergedContentArray.push(horizontalRule);
         }
-        
+
         // Add new content
         if (newContent.content.length > 0) {
           mergedContentArray.push(...newContent.content);
@@ -430,15 +430,15 @@ export default function AnnotationPanel({
         </button>
       </div>
 
-      {/* Convergence Machine Placeholder Button (only for The Kybalion) */}
+      {/* Parallax Engine Placeholder Button (only for The Kybalion) */}
       {documentTitle === 'The Kybalion' && (
         <div className="mb-4 p-4 bg-gradient-to-r from-purple-900/20 via-amber-900/20 to-purple-900/20 border border-purple-600/30 rounded-lg">
           <button
-            onClick={() => setShowConvergenceModal(true)}
+            onClick={() => setShowParallaxModal(true)}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-700 hover:to-amber-700 text-white rounded-lg font-medium transition-all transform hover:scale-[1.02]"
           >
             <Sparkles className="w-5 h-5" />
-            Explore in Convergence Machine
+            Explore in Parallax Engine
           </button>
           <p className="text-xs text-amber-100/60 mt-2 text-center">
             Experience The Kybalion through 7 unique analytical lenses
@@ -446,20 +446,20 @@ export default function AnnotationPanel({
         </div>
       )}
 
-      {/* Convergence Machine Coming Soon Modal */}
-      {showConvergenceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowConvergenceModal(false)}>
+      {/* Parallax Engine Coming Soon Modal */}
+      {showParallaxModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowParallaxModal(false)}>
           <div className="bg-zinc-900 border-2 border-purple-600/50 rounded-xl p-6 max-w-lg mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
               <Sparkles className="w-8 h-8 text-purple-400" />
-              <h3 className="text-2xl font-bold text-amber-100">Convergence Machine</h3>
+              <h3 className="text-2xl font-bold text-amber-100">Parallax Engine</h3>
             </div>
-            
+
             <div className="space-y-4 mb-6">
               <p className="text-amber-100/80 leading-relaxed">
-                The <span className="font-semibold text-purple-400">Convergence Machine</span> will allow you to explore The Kybalion through seven unique analytical lenses:
+                The <span className="font-semibold text-purple-400">Parallax Engine</span> will allow you to explore The Kybalion through seven unique analytical lenses:
               </p>
-              
+
               <ul className="space-y-2 text-sm text-amber-100/70">
                 <li className="flex items-start gap-2">
                   <span className="text-purple-400 mt-0.5">•</span>
@@ -490,11 +490,11 @@ export default function AnnotationPanel({
                   <span><strong className="text-amber-100">Literary:</strong> Appreciate language, style, and narrative structure</span>
                 </li>
               </ul>
-              
+
               <p className="text-amber-100/80 leading-relaxed">
                 Highlight any passage in The Kybalion to trigger AI-powered analysis across all seven perspectives, revealing deep interconnections and insights.
               </p>
-              
+
               <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-3">
                 <p className="text-xs text-purple-300">
                   <strong className="block mb-1">Coming Soon</strong>
@@ -502,9 +502,9 @@ export default function AnnotationPanel({
                 </p>
               </div>
             </div>
-            
+
             <button
-              onClick={() => setShowConvergenceModal(false)}
+              onClick={() => setShowParallaxModal(false)}
               className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
             >
               Got It
@@ -618,11 +618,10 @@ export default function AnnotationPanel({
           <span className="text-xs text-amber-100/60">Filter:</span>
           <button
             onClick={() => setFilterCategory('all')}
-            className={`text-xs px-2 py-1 rounded-md transition-colors ${
-              filterCategory === 'all'
+            className={`text-xs px-2 py-1 rounded-md transition-colors ${filterCategory === 'all'
                 ? 'bg-amber-600 text-white'
                 : 'bg-zinc-800 text-amber-100/60 hover:bg-zinc-700'
-            }`}
+              }`}
           >
             All ({annotations.length})
           </button>
@@ -633,11 +632,10 @@ export default function AnnotationPanel({
               <button
                 key={cat.value}
                 onClick={() => setFilterCategory(cat.value as Annotation['category'])}
-                className={`text-xs px-2 py-1 rounded-md transition-colors ${
-                  filterCategory === cat.value
+                className={`text-xs px-2 py-1 rounded-md transition-colors ${filterCategory === cat.value
                     ? 'bg-amber-600 text-white'
                     : 'bg-zinc-800 text-amber-100/60 hover:bg-zinc-700'
-                }`}
+                  }`}
               >
                 {cat.label.split(' ')[0]} {count}
               </button>
@@ -687,11 +685,10 @@ export default function AnnotationPanel({
                   key={color.value}
                   type="button"
                   onClick={() => setNewHighlightColor(color.value as Annotation['highlight_color'])}
-                  className={`w-10 h-10 rounded-md border-2 transition-all ${
-                    newHighlightColor === color.value
+                  className={`w-10 h-10 rounded-md border-2 transition-all ${newHighlightColor === color.value
                       ? 'border-amber-400 scale-110'
                       : 'border-zinc-700 hover:border-zinc-600'
-                  }`}
+                    }`}
                   style={{ backgroundColor: color.preview }}
                   title={color.label}
                   aria-label={`Select ${color.label} highlight color`}
@@ -755,7 +752,7 @@ export default function AnnotationPanel({
         <div className="text-center py-8">
           <Highlighter className="w-12 h-12 mx-auto mb-3 text-amber-100/20" />
           <p className="text-sm text-amber-100/60">
-            {filterCategory === 'all' 
+            {filterCategory === 'all'
               ? 'No annotations yet. Highlight text and add your notes while reading.'
               : 'No annotations in this category.'}
           </p>
@@ -839,20 +836,19 @@ function VirtualizedAnnotationList({
                 {/* Category Badge */}
                 <div className="flex items-center justify-between">
                   <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                      categoryColor === 'red' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                      categoryColor === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                      categoryColor === 'yellow' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
-                      categoryColor === 'purple' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                      categoryColor === 'green' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                      categoryColor === 'orange' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-                      'bg-zinc-700/50 text-zinc-400 border border-zinc-600/20'
-                    }`}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${categoryColor === 'red' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                        categoryColor === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                          categoryColor === 'yellow' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                            categoryColor === 'purple' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                              categoryColor === 'green' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                categoryColor === 'orange' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
+                                  'bg-zinc-700/50 text-zinc-400 border border-zinc-600/20'
+                      }`}
                   >
                     {categoryInfo?.label}
                   </span>
                 </div>
-                
+
                 {/* Quoted Text */}
                 <div className="pl-3 border-l-2 border-amber-600/50">
                   <p className="text-sm text-amber-100/90 italic">

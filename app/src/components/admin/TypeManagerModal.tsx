@@ -25,7 +25,7 @@ interface TypeManagerModalProps {
 const TYPE_KIND_LABELS: Record<TypeKind, string> = {
   entity: "Correspondence Entity Types",
   relationship: "Correspondence Relationship Types",
-  tradition: "Convergence Traditions",
+  tradition: "Parallax Traditions",
 };
 
 const TYPE_KIND_ENDPOINTS: Record<TypeKind, string> = {

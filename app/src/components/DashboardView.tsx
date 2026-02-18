@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import DashboardSearchHub from "@/components/DashboardSearchHub";
-import ConvergenceMachineInfo from "@/components/ConvergenceMachineInfo";
+import ParallaxEngineInfo from "@/components/ParallaxEngineInfo";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { BookOpen, Tablet, Network, GraduationCap, Sparkles } from "lucide-react";
@@ -135,8 +135,8 @@ export default function DashboardView() {
                             </p>
                         </Link>
 
-                        {/* Convergence Machine Card */}
-                        <ConvergenceMachineInfo />
+                        {/* Parallax Engine Card */}
+                        <ParallaxEngineInfo />
                     </div>
 
                     {/* Extras Separator */}

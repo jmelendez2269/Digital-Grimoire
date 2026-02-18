@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * GET /api/convergence/history
+ * GET /api/parallax/history
  * Get user's conversation history
  */
 export async function GET(request: NextRequest) {
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/convergence/history
+ * POST /api/parallax/history
  * Save a conversation to history
  */
 export async function POST(request: NextRequest) {
@@ -130,9 +130,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { 
+      {
         id: savedResponse.id,
-        conversation: savedResponse 
+        conversation: savedResponse
       },
       { status: 201 }
     );

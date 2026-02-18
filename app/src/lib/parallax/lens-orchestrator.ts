@@ -1,6 +1,6 @@
 import { Lens, LensType, getLens, getActiveLenses, getAllLenses } from './lenses';
 import { hybridSearch, HybridSearchResult } from './hybrid-retrieval';
-import { aiOrchestrator, ChatMessage, AIModel } from '../ai/ai-orchestrator';
+import { aiOrchestrator, ChatMessage, AIModel } from '@/lib/ai/ai-orchestrator';
 
 export interface LensWeights {
   scientific: number;

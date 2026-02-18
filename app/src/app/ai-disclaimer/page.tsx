@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllLenses } from "@/lib/convergence/lenses";
+import { getAllLenses } from "@/lib/parallax/lenses";
 
 export const metadata: Metadata = {
   title: "AI Disclaimer & Discernment Guide | Convergence",

@@ -1,6 +1,6 @@
 import { Network, Database, BookOpen, Layers } from "lucide-react";
 
-type GraphType = "correspondences" | "convergence";
+type GraphType = "correspondences" | "parallax";
 type ViewMode = "cards" | "graph";
 
 interface GraphControlsProps {
@@ -23,8 +23,8 @@ export default function GraphControls({
                 <button
                     onClick={() => onGraphTypeChange("correspondences")}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${graphType === "correspondences"
-                            ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
-                            : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                        : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                         }`}
                 >
                     <Database className="w-3 h-3" />
@@ -32,14 +32,14 @@ export default function GraphControls({
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-1" />
                 <button
-                    onClick={() => onGraphTypeChange("convergence")}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${graphType === "convergence"
-                            ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
-                            : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                    onClick={() => onGraphTypeChange("parallax")}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${graphType === "parallax"
+                        ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                        : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                         }`}
                 >
                     <Network className="w-3 h-3" />
-                    Convergence
+                    Parallax
                 </button>
             </div>
 
@@ -50,8 +50,8 @@ export default function GraphControls({
                 <button
                     onClick={() => onViewModeChange("cards")}
                     className={`p-1.5 rounded-md transition-all ${viewMode === "cards"
-                            ? "bg-zinc-800 text-amber-400 border border-white/10"
-                            : "text-zinc-600 hover:text-zinc-400"
+                        ? "bg-zinc-800 text-amber-400 border border-white/10"
+                        : "text-zinc-600 hover:text-zinc-400"
                         }`}
                     title="Grid View"
                 >
@@ -60,8 +60,8 @@ export default function GraphControls({
                 <button
                     onClick={() => onViewModeChange("graph")}
                     className={`p-1.5 rounded-md transition-all ${viewMode === "graph"
-                            ? "bg-zinc-800 text-amber-400 border border-white/10"
-                            : "text-zinc-600 hover:text-zinc-400"
+                        ? "bg-zinc-800 text-amber-400 border border-white/10"
+                        : "text-zinc-600 hover:text-zinc-400"
                         }`}
                     title="Graph View"
                 >

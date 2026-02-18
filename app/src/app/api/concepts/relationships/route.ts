@@ -6,7 +6,7 @@ import {
   validateSimilarity,
   validateRelationshipData,
   checkDuplicateRelationship,
-} from "@/lib/convergence/validation";
+} from "@/lib/parallax/validation";
 
 async function isAdmin() {
   const supabase = await createSupabaseServerClient();

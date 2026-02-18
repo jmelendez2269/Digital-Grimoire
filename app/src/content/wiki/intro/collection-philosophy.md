@@ -112,7 +112,7 @@ This collection is not comprehensive. It is curated to reveal convergence.
 
 - Completeness for its own sake
 - Texts that exist in isolation
-- Works that don't serve the convergence mission
+- Works that don't serve the Project Parallax mission
 
 **The Result:**
 

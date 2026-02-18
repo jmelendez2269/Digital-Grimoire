@@ -18,7 +18,7 @@ export default function PrivacySettingsPage() {
     setIsExporting(true);
     try {
       const response = await fetch("/api/user/export-data");
-      
+
       if (!response.ok) {
         throw new Error("Failed to export data");
       }
@@ -28,12 +28,12 @@ export default function PrivacySettingsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `convergence-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `parallax-data-export-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast.success("Data export started! Check your downloads folder.");
     } catch (error) {
       console.error("Error exporting data:", error);
@@ -60,7 +60,7 @@ export default function PrivacySettingsPage() {
       }
 
       toast.success("Account deleted successfully. Redirecting...");
-      
+
       // Redirect to home after a short delay
       setTimeout(() => {
         router.push("/");

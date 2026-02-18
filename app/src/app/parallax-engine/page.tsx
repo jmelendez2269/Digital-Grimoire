@@ -314,7 +314,7 @@ function ParallaxEngineContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query,
-            source: 'convergence',
+            source: 'parallax',
             metadata: { lensWeights, responseId: response.id }
           }),
         });

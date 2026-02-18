@@ -18,7 +18,7 @@ description: Essential legal disclaimers regarding educational purpose, non-endo
 
 **All content on Project Parallax is presented for educational and exploratory purposes only.**
 
-Convergence is a platform for learning, research, personal exploration, and intellectual inquiry. We aggregate and synthesize knowledge from diverse traditions and systems to facilitate understanding and cross-cultural synthesis.
+Project Parallax is a platform for learning, research, personal exploration, and intellectual inquiry. We aggregate and synthesize knowledge from diverse traditions and systems to facilitate understanding and cross-cultural synthesis.
 
 **We do not claim that any particular tradition, system, teaching, or practice represents objective, absolute, or universal truth.**
 
@@ -150,7 +150,7 @@ We explicitly **do not** want users to:
 
 ### Contradictions Are Features, Not Bugs
 
-**You will find contradictory information on Convergence.** This is intentional.
+**You will find contradictory information on Project Parallax.** This is intentional.
 
 Different traditions have different answers to the same questions. This doesn't mean one is "right" and others are "wrong." It means:
 
@@ -195,7 +195,7 @@ We welcome corrections and clarifications. If you find an error:
 
 ### Not Medical or Mental Health Advice
 
-**Nothing on Convergence constitutes medical advice, diagnosis, or treatment.**
+**Nothing on Project Parallax constitutes medical advice, diagnosis, or treatment.**
 
 Some content may discuss:
 
@@ -227,7 +227,7 @@ Some spiritual or esoteric practices may involve:
 - The importance of proper guidance from experienced practitioners
 - Local laws and regulations
 
-**Convergence is not responsible for consequences of practices undertaken based on information found on the platform.**
+**Project Parallax is not responsible for consequences of practices undertaken based on information found on the platform.**
 
 ---
 
@@ -235,7 +235,7 @@ Some spiritual or esoteric practices may involve:
 
 ### Religious Neutrality
 
-**Convergence does not favor any particular religious or spiritual tradition.**
+**Project Parallax does not favor any particular religious or spiritual tradition.**
 
 Our inclusion of diverse religious and spiritual content does not constitute:
 
@@ -258,7 +258,7 @@ We strive to present all traditions respectfully and in context. However:
 
 **Your spiritual or religious path is your own.**
 
-Convergence provides information and perspectives. What you do with them - whether you:
+Project Parallax provides information and perspectives. What you do with them - whether you:
 
 - Explore traditions outside your own
 - Deepen understanding of your own tradition
@@ -283,7 +283,7 @@ We strive to include only:
 - **Licensed content** (with proper permissions)
 - **Fair use** (properly attributed excerpts for educational purposes)
 
-If you believe content on Convergence infringes your intellectual property rights:
+If you believe content on Project Parallax infringes your intellectual property rights:
 
 - Contact us at [legal@projectparallax.xyz]
 - Provide specific information about the allegedly infringing content
@@ -328,7 +328,7 @@ We strive for high availability, but:
 
 ### Third-Party Services
 
-Convergence integrates with third-party services (payment processors, cloud storage, etc.). We are not responsible for:
+Project Parallax integrates with third-party services (payment processors, cloud storage, etc.). We are not responsible for:
 
 - Third-party service outages or failures
 - Third-party data practices
@@ -340,7 +340,7 @@ Convergence integrates with third-party services (payment processors, cloud stor
 
 **TO THE MAXIMUM EXTENT PERMITTED BY LAW:**
 
-Convergence and its operators, employees, and contributors shall not be liable for:
+Project Parallax and its operators, employees, and contributors shall not be liable for:
 
 - Decisions made based on information found on the platform
 - Harm resulting from practices or teachings described on the platform
@@ -348,7 +348,7 @@ Convergence and its operators, employees, and contributors shall not be liable f
 - Technical failures, data loss, or service interruptions
 - Actions taken by third parties based on content from the platform
 
-**Your use of Convergence is at your own risk.**
+**Your use of Project Parallax is at your own risk.**
 
 ---
 
@@ -356,7 +356,7 @@ Convergence and its operators, employees, and contributors shall not be liable f
 
 ### Respectful Engagement
 
-Users engaging with the Convergence community agree to:
+Users engaging with the Project Parallax community agree to:
 
 - Respect all traditions and perspectives
 - Engage in good faith dialogue
@@ -374,7 +374,7 @@ User contributions must:
 - Respect intellectual property
 - Follow community guidelines
 
-**Convergence reserves the right to moderate or remove content that violates these standards.**
+**Project Parallax reserves the right to moderate or remove content that violates these standards.**
 
 ---
 
@@ -388,7 +388,7 @@ Changes will:
 - Include an updated "Last Updated" date
 - Take effect immediately upon posting
 
-**Continued use of Convergence after changes constitutes acceptance of the updated disclaimers.**
+**Continued use of Project Parallax after changes constitutes acceptance of the updated disclaimers.**
 
 ---
 
@@ -396,7 +396,7 @@ Changes will:
 
 For questions, concerns, or feedback regarding these disclaimers:
 
-**Email:** <legal@convergence.example>
+**Email:** <legal@projectparallax.xyz>
 **Mailing Address:** [To be determined]
 **Community Forum:** [Link to forum]
 
@@ -404,7 +404,7 @@ For questions, concerns, or feedback regarding these disclaimers:
 
 ## FINAL NOTE
 
-**Convergence is a tool for exploration, not a replacement for wisdom.**
+**Project Parallax is a tool for exploration, not a replacement for wisdom.**
 
 We provide:
 
@@ -425,4 +425,4 @@ We do not provide:
 
 **Effective Date:** October 25, 2025
 **Version:** 1.0
-**Convergence Platform**
+**Project Parallax Platform**

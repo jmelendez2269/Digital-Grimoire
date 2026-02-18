@@ -20,10 +20,10 @@ import { QueryClient } from '@tanstack/react-query';
 export function invalidateTextCaches(queryClient: QueryClient, textId?: string) {
   // Invalidate library listings (all pages, filters, sorts)
   queryClient.invalidateQueries({ queryKey: ['library', 'texts'] });
-  
+
   // Invalidate filter options (domains, types, tags, lenses may have changed)
   queryClient.invalidateQueries({ queryKey: ['library', 'filterOptions'] });
-  
+
   // Invalidate specific text if ID provided
   if (textId) {
     queryClient.invalidateQueries({ queryKey: ['text', textId] });
@@ -33,13 +33,13 @@ export function invalidateTextCaches(queryClient: QueryClient, textId?: string) 
 
 /**
  * Invalidate concept-related caches
- * Use after creating, updating, or deleting convergence concepts
+ * Use after creating, updating, or deleting parallax concepts
  * 
  * @param queryClient - React Query client instance
  */
 export function invalidateConceptCaches(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ['concepts'] });
-  queryClient.invalidateQueries({ queryKey: ['convergence', 'concepts'] });
+  queryClient.invalidateQueries({ queryKey: ['parallax', 'concepts'] });
 }
 
 /**
@@ -63,7 +63,7 @@ export function invalidateGraphCaches(queryClient: QueryClient) {
  */
 export function invalidateAnnotationCaches(queryClient: QueryClient, textId?: string) {
   queryClient.invalidateQueries({ queryKey: ['annotations'] });
-  
+
   if (textId) {
     queryClient.invalidateQueries({ queryKey: ['annotations', textId] });
   }
@@ -79,7 +79,7 @@ export function invalidateAnnotationCaches(queryClient: QueryClient, textId?: st
 export function invalidateJournalCaches(queryClient: QueryClient, pageId?: string) {
   queryClient.invalidateQueries({ queryKey: ['journal'] });
   queryClient.invalidateQueries({ queryKey: ['journal', 'pages'] });
-  
+
   if (pageId) {
     queryClient.invalidateQueries({ queryKey: ['journal', 'page', pageId] });
   }
@@ -94,7 +94,7 @@ export function invalidateJournalCaches(queryClient: QueryClient, pageId?: strin
  */
 export function invalidateCollectionCaches(queryClient: QueryClient, collectionId?: string) {
   queryClient.invalidateQueries({ queryKey: ['collections'] });
-  
+
   if (collectionId) {
     queryClient.invalidateQueries({ queryKey: ['collections', collectionId] });
   }

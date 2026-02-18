@@ -1,5 +1,5 @@
 
-import { STOP_WORDS } from '../lib/convergence/search-dictionary';
+import { STOP_WORDS } from '../lib/parallax/search-dictionary';
 import fs from 'fs';
 import path from 'path';
 

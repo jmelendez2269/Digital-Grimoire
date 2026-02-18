@@ -7,7 +7,7 @@ import { scrapeCover } from '@/lib/cover-scraper';
 import { generateBookCover } from '@/lib/getimg-cover';
 import { logStorageUpload, logUserActivity, logOcrUsage } from '@/lib/usage-tracker';
 import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
-import { generateTextEmbeddings } from '@/lib/convergence/embeddings';
+import { generateTextEmbeddings } from '@/lib/parallax/embeddings';
 
 // Initialize R2 client for cleanup on error
 const s3Client = getR2Client();

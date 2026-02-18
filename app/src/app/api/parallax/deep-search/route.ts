@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { vectorSearch, VectorSearchResult } from '@/lib/convergence/vector-search';
-import { ftsSearchChunks, FTSSearchResult } from '@/lib/convergence/fts-search';
+import { vectorSearch, VectorSearchResult } from '@/lib/parallax/vector-search';
+import { ftsSearchChunks, FTSSearchResult } from '@/lib/parallax/fts-search';
 import OpenAI from 'openai';
 import { logApiUsage } from '@/lib/usage-tracker';
-import { getSearchVariants, ESOTERIC_DICTIONARY, STOP_WORDS } from '@/lib/convergence/search-dictionary';
+import { getSearchVariants, ESOTERIC_DICTIONARY, STOP_WORDS } from '@/lib/parallax/search-dictionary';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -196,7 +196,7 @@ async function generateExcerptSummary(chunkContent: string, query: string, userI
 }
 
 /**
- * POST /api/convergence/deep-search
+ * POST /api/parallax/deep-search
  * 
  * Body: { query: string }
  * 

@@ -88,13 +88,13 @@ Always respond with valid JSON only.`
 - type (one of the 20 types above, required): Classify the image content
 - domain (string, optional: e.g., "astrology", "ritual", "symbolism", "nature")
 - tags (array of strings, required, 3-5 relevant tags describing the image)
-- lenses (array of strings, required): Which of the 7 Convergence Machine lenses apply?
+- lenses (array of strings, required): Which of the 7 Parallax Lenses apply?
   * Choose from: scientific, psychological, philosophical, religious_spiritual, historical_anthropological, symbolic_occult, mathematical
   * Most images should have 1-3 lenses
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
 - shortSummary (string, required): A concise 2-3 sentence description of what this image shows
 - longSummary (string, required): A detailed 1-2 paragraph description of the image content, symbolism, and significance
-- curatorNote (string, optional): A brief explanation of why this image is significant for the Convergence collection
+- curatorNote (string, optional): A brief explanation of why this image is significant for the Project Parallax collection
 
 Filename: ${filename}
 ${fileInfo.exif ? `EXIF Data: ${JSON.stringify(fileInfo.exif)}` : ''}
@@ -186,13 +186,13 @@ Always respond with valid JSON only.`
 - type (one of the 20 types above, required): Classify the ${mediaType} content
 - domain (string, optional: e.g., "astrology", "psychology", "ritual", "lecture")
 - tags (array of strings, required, 3-5 relevant tags)
-- lenses (array of strings, required): Which of the 7 Convergence Machine lenses apply?
+- lenses (array of strings, required): Which of the 7 Parallax Lenses apply?
   * Choose from: scientific, psychological, philosophical, religious_spiritual, historical_anthropological, symbolic_occult, mathematical
   * Most ${mediaType} should have 2-4 lenses
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
 - shortSummary (string, required): A concise 2-3 sentence description of what this ${mediaType} is about
 - longSummary (string, required): A detailed 1-2 paragraph summary covering the main themes, content, and significance
-- curatorNote (string, optional): A brief explanation of why this ${mediaType} is significant for the Convergence collection
+- curatorNote (string, optional): A brief explanation of why this ${mediaType} is significant for the Project Parallax collection
 
 Filename: ${filename}
 Duration: ${fileInfo.duration ? `${Math.floor(fileInfo.duration / 60)}:${String(fileInfo.duration % 60).padStart(2, '0')}` : 'Unknown'}

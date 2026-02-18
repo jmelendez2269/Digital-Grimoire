@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateTextEmbeddings } from '@/lib/convergence/embeddings';
+import { generateTextEmbeddings } from '@/lib/parallax/embeddings';
 
 /**
- * POST /api/convergence/generate-embeddings-by-title
+ * POST /api/parallax/generate-embeddings-by-title
  * Generate embeddings for a text by searching for it by title
  * 
  * Body: { title: string }
@@ -11,7 +11,7 @@ import { generateTextEmbeddings } from '@/lib/convergence/embeddings';
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const {
       data: { user },
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     if (!texts || texts.length === 0) {
       return NextResponse.json(
-        { 
+        {
           error: 'Text not found',
           message: `No texts found matching "${title}"`,
           suggestion: 'Try a partial title match or check the library for the exact title',
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
           author: t.author,
           hasContent: !!t.content && t.content.length > 0,
         })),
-        instruction: 'Use the textId from one of these texts with /api/convergence/generate-embeddings',
+        instruction: 'Use the textId from one of these texts with /api/parallax/generate-embeddings',
       });
     }
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     if (!text.content) {
       return NextResponse.json(
-        { 
+        {
           error: 'Text has no content',
           text: {
             id: text.id,

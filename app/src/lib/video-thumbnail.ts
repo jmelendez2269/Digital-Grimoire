@@ -30,11 +30,11 @@ export async function extractVideoThumbnail(
 ): Promise<ThumbnailResult> {
   try {
     console.log(`📹 Extracting thumbnail from video: ${videoKey} at ${timestamp * 100}%`);
-    
+
     // For MVP, we'll use the video URL itself as a placeholder
     // The browser will generate a thumbnail automatically
     // In production, implement ffmpeg extraction:
-    
+
     /*
     // Example implementation with ffmpeg (requires ffmpeg-static package):
     const ffmpeg = require('fluent-ffmpeg');
@@ -45,7 +45,7 @@ export async function extractVideoThumbnail(
     // Download video from R2
     const s3Client = getR2Client();
     const getCommand = new GetObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+      Bucket: process.env.R2_BUCKET_NAME || 'parallax-library',
       Key: videoKey,
     });
     
@@ -73,7 +73,7 @@ export async function extractVideoThumbnail(
     const thumbnailKey = videoKey.replace(/\.(mp4|webm|mov)$/, '_thumb.jpg');
     const thumbnailBuffer = fs.readFileSync(tempThumbPath);
     const putCommand = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+      Bucket: process.env.R2_BUCKET_NAME || 'parallax-library',
       Key: thumbnailKey,
       Body: thumbnailBuffer,
       ContentType: 'image/jpeg',
@@ -91,7 +91,7 @@ export async function extractVideoThumbnail(
       thumbnailKey,
     };
     */
-    
+
     // MVP: Return video URL (browser will handle thumbnail generation)
     console.log(`⚠️ Thumbnail extraction not implemented, using video URL as placeholder`);
     return {
@@ -123,7 +123,7 @@ export async function generateThumbnailSizes(
   // For MVP, return single thumbnail
   // In production, extract multiple sizes
   const result = await extractVideoThumbnail(videoKey, videoUrl);
-  
+
   if (result.success && result.thumbnailUrl) {
     return {
       thumbnail: result.thumbnailUrl,
@@ -131,7 +131,7 @@ export async function generateThumbnailSizes(
       large: result.thumbnailUrl,
     };
   }
-  
+
   return {};
 }
 

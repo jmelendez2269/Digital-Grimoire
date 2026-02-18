@@ -92,6 +92,7 @@ export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
 
   // Get queries in current period
   const { data: queries, error } = await supabase
+    // NOTE: 'convergence_queries' is the legacy table name. Do not change unless database migration is performed.
     .from('convergence_queries')
     .select('id')
     .eq('user_id', userId)

@@ -1,8 +1,9 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugifyEntityName } from "@/lib/graph/entity-utils";
-import { validateConceptData } from "@/lib/convergence/validation";
+import { validateConceptData } from "@/lib/parallax/validation";
 import {
   scoreConceptsWithAI,
   shouldUseAIScoring,
@@ -45,11 +46,11 @@ export async function GET(req: NextRequest) {
     if (tradition) query = query.eq("tradition", tradition);
     if (traditionId) query = query.eq("tradition_id", traditionId);
     if (tag) query = query.contains("tags", [tag]);
-    if (q) query = query.ilike("name", `%${q}%`);
+    if (q) query = query.ilike("name", `% ${q}% `);
 
     const { data, error } = await query;
 
-    console.log(`[API] GET /api/concepts - Found ${data?.length || 0} concepts`, {
+    console.log(`[API] GET / api / concepts - Found ${data?.length || 0} concepts`, {
       limit,
       tradition,
       traditionId,
@@ -78,8 +79,8 @@ export async function GET(req: NextRequest) {
         if (bStarts && !aStarts) return 1;
 
         // Word boundary match (starts with word) gets third priority
-        const aWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(aName);
-        const bWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(bName);
+        const aWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} `, 'i').test(aName);
+        const bWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} `, 'i').test(bName);
         if (aWordStart && !bWordStart) return -1;
         if (bWordStart && !aWordStart) return 1;
 
@@ -130,7 +131,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log(`[API] GET /api/concepts - Returning ${sortedData.length} concepts after sorting/filtering`);
+    console.log(`[API] GET / api / concepts - Returning ${sortedData.length} concepts after sorting / filtering`);
 
     const response = NextResponse.json({ items: sortedData });
 

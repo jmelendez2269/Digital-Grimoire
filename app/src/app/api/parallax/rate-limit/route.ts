@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, getSubscriptionTier } from '@/lib/convergence/rate-limit';
+import { checkRateLimit, getSubscriptionTier } from '@/lib/parallax/rate-limit';
 
 /**
- * GET /api/convergence/rate-limit
+ * GET /api/parallax/rate-limit
  * Get user's rate limit status
  */
 export async function GET() {

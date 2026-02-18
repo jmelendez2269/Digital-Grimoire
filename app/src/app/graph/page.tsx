@@ -13,9 +13,9 @@ import KnowledgeGraphHeader from "@/components/admin/knowledge/KnowledgeGraphHea
 import GraphControls from "@/components/admin/knowledge/GraphControls";
 import EntityNode from "@/components/admin/knowledge/EntityNode";
 
-// Convergence Specifics (retained for functionality but integrated)
-import SimilarityControls from "@/components/convergence/SimilarityControls";
-import ComparativeTable from "@/components/convergence/ComparativeTable";
+// Parallax Specifics (retained for functionality but integrated)
+import SimilarityControls from "@/components/parallax/SimilarityControls";
+import ComparativeTable from "@/components/parallax/ComparativeTable";
 
 // Dynamically import graph visualization
 const GraphVisualization = dynamic(
@@ -24,13 +24,13 @@ const GraphVisualization = dynamic(
     ssr: false,
     loading: () => (
       <div className="w-full h-full flex items-center justify-center text-amber-500/40 font-mono text-sm uppercase tracking-widest animate-pulse">
-        Initializing Neural Net...
+        Initializing Parallax Engine...
       </div>
     )
   }
 );
 
-type GraphType = "correspondences" | "convergence";
+type GraphType = "correspondences" | "parallax";
 type ViewMode = "cards" | "graph" | "table"; // Added table for convergence support
 
 // Reusing interfaces
@@ -46,7 +46,7 @@ interface CorrespondenceEntity {
   lenses?: string[];
 }
 
-interface ConvergenceConcept {
+interface ParallaxConcept {
   id: string;
   slug: string;
   name: string;
@@ -59,7 +59,7 @@ interface ConvergenceConcept {
   tags?: string[];
 }
 
-type Entity = CorrespondenceEntity | ConvergenceConcept;
+type Entity = CorrespondenceEntity | ParallaxConcept;
 
 function GraphPageContent() {
   const router = useRouter();
@@ -81,7 +81,7 @@ function GraphPageContent() {
   useEffect(() => {
     const typeParam = searchParams.get("type");
     const viewParam = searchParams.get("view");
-    if (typeParam === "convergence") setGraphType("convergence");
+    if (typeParam === "convergence" || typeParam === "parallax") setGraphType("parallax");
     if (viewParam === "graph") setViewMode("graph");
     if (viewParam === "table") setViewMode("table");
   }, [searchParams]);
@@ -123,16 +123,16 @@ function GraphPageContent() {
     }
   };
 
-  const traditions = graphType === "convergence"
-    ? Array.from(new Set((entities as ConvergenceConcept[]).map((c) => c.tradition))).sort()
+  const traditions = graphType === "parallax"
+    ? Array.from(new Set((entities as ParallaxConcept[]).map((c) => c.tradition))).sort()
     : [];
 
   const filteredEntities = entities.filter((entity) => {
     const query = searchQuery.toLowerCase();
 
-    // Convergence Tradition Filter
-    if (graphType === "convergence" && selectedTradition) {
-      const e = entity as ConvergenceConcept;
+    // Parallax Tradition Filter
+    if (graphType === "parallax" && selectedTradition) {
+      const e = entity as ParallaxConcept;
       if (e.tradition !== selectedTradition) return false;
     }
 
@@ -147,7 +147,7 @@ function GraphPageContent() {
         e.description?.toLowerCase().includes(query)
       );
     } else {
-      const e = entity as ConvergenceConcept;
+      const e = entity as ParallaxConcept;
       return (
         e.name.toLowerCase().includes(query) ||
         e.tradition.toLowerCase().includes(query) ||
@@ -228,7 +228,7 @@ function GraphPageContent() {
             />
 
             {/* Extra View Modes for Public (Componentized if possible, but inline for now) */}
-            {graphType === 'convergence' && (
+            {graphType === 'parallax' && (
               <div className="flex gap-2">
                 <button
                   onClick={() => handleViewChange("table")}
@@ -241,8 +241,8 @@ function GraphPageContent() {
             )}
           </div>
 
-          {/* Convergence Specific Controls */}
-          {graphType === 'convergence' && (
+          {/* Parallax Specific Controls */}
+          {graphType === 'parallax' && (
             <div className="animate-in slide-in-from-top-2 duration-300">
               <SimilarityControls
                 minSimilarity={minSimilarity}
@@ -290,7 +290,7 @@ function GraphPageContent() {
             </div>
           ) : viewMode === "table" ? (
             <ComparativeTable
-              concepts={filteredEntities as ConvergenceConcept[]}
+              concepts={filteredEntities as ParallaxConcept[]}
               relationships={relationships}
               onSelectConcept={(entity) => {
                 setSelectedEntity(entity);

@@ -10,7 +10,7 @@ description: Guide for populating the initial 100 texts in the library.
 
 ## Overview
 
-Guide for populating the Project Parallax library with the initial 100 public domain texts, covering the 7 lenses of the Convergence Machine.
+Guide for populating the Project Parallax library with the initial 100 public domain texts, covering the 7 lenses of the Parallax Engine.
 
 ---
 

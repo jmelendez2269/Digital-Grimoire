@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit } from '@/lib/convergence/rate-limit';
-import { createSSEStream } from '@/lib/convergence/streaming';
-import { LensWeights, ResponseLength } from '@/lib/convergence/lens-orchestrator';
+import { checkRateLimit } from '@/lib/parallax/rate-limit';
+import { createSSEStream } from '@/lib/parallax/streaming';
+import { LensWeights, ResponseLength } from '@/lib/parallax/lens-orchestrator';
 
 /**
- * POST /api/convergence/query
- * Main query endpoint for Convergence Machine
+ * POST /api/parallax/query
+ * Main query endpoint for Parallax Engine
  * Returns Server-Sent Events stream
  * 
  * Body: {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const rateLimit = await checkRateLimit(user.id);
     if (!rateLimit.allowed) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Rate limit exceeded',
           remaining: rateLimit.remaining,
           limit: rateLimit.limit,
@@ -81,13 +81,13 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
-        
+
         try {
           // Write SSE headers (already set by Next.js, but ensure proper format)
           for await (const chunk of createSSEStream(query, validLensWeights, user.id, responseLength as ResponseLength)) {
             controller.enqueue(encoder.encode(chunk));
           }
-          
+
           controller.close();
         } catch (error) {
           console.error('Error in SSE stream:', error);

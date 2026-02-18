@@ -2,7 +2,7 @@ import { Edit, Trash2, Link2, Plus, Box, Zap } from "lucide-react";
 
 interface EntityNodeProps {
     entity: any;
-    graphType: "correspondences" | "convergence";
+    graphType: "correspondences" | "parallax";
     relationships: any[];
     onSelect: () => void;
     onEdit?: () => void;
@@ -23,22 +23,22 @@ export default function EntityNode({
         (r) => r.source_id === entity.id || r.target_id === entity.id
     ).length;
 
-    const isConvergence = graphType === "convergence";
+    const isParallax = graphType === "parallax";
 
     // Extract display data based on type
-    const typeLabel = isConvergence
+    const typeLabel = isParallax
         ? (entity.tradition_ref?.label || entity.tradition)
         : (entity.type?.label || entity.category || "Unknown");
 
-    const typeIcon = isConvergence
+    const typeIcon = isParallax
         ? (entity.tradition_ref?.icon)
         : (entity.type?.icon);
 
     // Styling based on type
-    const borderColor = isConvergence ? "border-cyan-500/20" : "border-amber-500/20 hover:border-amber-500/50";
-    const glowColor = isConvergence ? "hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]" : "hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]";
-    const iconColor = isConvergence ? "text-cyan-500" : "text-amber-500";
-    const badgeBg = isConvergence ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-200" : "bg-amber-500/10 border-amber-500/20 text-amber-200";
+    const borderColor = isParallax ? "border-cyan-500/20" : "border-amber-500/20 hover:border-amber-500/50";
+    const glowColor = isParallax ? "hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]" : "hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]";
+    const iconColor = isParallax ? "text-cyan-500" : "text-amber-500";
+    const badgeBg = isParallax ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-200" : "bg-amber-500/10 border-amber-500/20 text-amber-200";
 
     return (
         <div
@@ -65,7 +65,7 @@ export default function EntityNode({
             {/* Header Bar */}
             <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.02]">
                 <div className={`flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest ${iconColor}`}>
-                    {typeIcon ? (<span>{typeIcon}</span>) : (isConvergence ? <Box className="w-3 h-3" /> : <Zap className="w-3 h-3" />)}
+                    {typeIcon ? (<span>{typeIcon}</span>) : (isParallax ? <Box className="w-3 h-3" /> : <Zap className="w-3 h-3" />)}
                     <span className="opacity-70">ID: {entity.id.slice(0, 8)}</span>
                 </div>
 
@@ -109,7 +109,7 @@ export default function EntityNode({
                 </div>
 
                 <p className="text-amber-100/40 text-xs leading-relaxed line-clamp-2 h-9">
-                    {isConvergence ? entity.short_definition : entity.description}
+                    {isParallax ? entity.short_definition : entity.description}
                 </p>
 
                 {/* Footer / Connections */}

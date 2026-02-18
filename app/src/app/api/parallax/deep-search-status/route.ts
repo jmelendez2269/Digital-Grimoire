@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
         nextSteps: missingItems.length > 0 ? [
           'Run missing migrations in Supabase SQL Editor',
           checks.hasOpenAIKey ? null : 'Set OPENAI_API_KEY in .env.local',
-          checks.chunksWithEmbeddings === 0 ? 'Generate embeddings for texts via /api/convergence/generate-embeddings' : null,
+          checks.chunksWithEmbeddings === 0 ? 'Generate embeddings for texts via /api/parallax/generate-embeddings' : null,
         ].filter(Boolean) : ['✅ Search is optimized and ready!'],
       },
     });

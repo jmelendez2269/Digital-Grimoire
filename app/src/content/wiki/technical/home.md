@@ -21,7 +21,7 @@ src/app/(home)/
 
 * **Purpose**: Provides the root layout structure and metadata for the home route.
 * **Key Features**:
-  * **Metadata**: Defines SEO titles ("Home | Convergence"), descriptions, and Open Graph content for social sharing.
+  * **Metadata**: Defines SEO titles ("Home | Project Parallax"), descriptions, and Open Graph content for social sharing.
   * **Wrapper**: Renders children directly without wrapping them in extensive UI shell elements (which are likely handled by the root `app/layout.tsx` or the page itself).
 
 ### 2. `page.tsx`
@@ -53,7 +53,7 @@ This is the primary functional component rendered by `page.tsx`. It acts as a "B
     * **Journal** (`/journal`): Personal notes. Title defaults to "Digital Grimoire" or user's custom `journal_name`.
     * **Graph** (`/graph`): Knowledge graph visualization.
     * **Courses** (`/courses`): Learning paths. Includes analytics tracking on click (`/api/track/courses-click`).
-    * **Convergence Machine** (`<ConvergenceMachineInfo />`): Link to the AI analysis engine with details on the 7-lens perspective.
+    * **Parallax Engine** (`<ParallaxEngineInfo />`): Link to the AI analysis engine with details on the 7-lens perspective.
 4. **Extras / Practitioner Tools**:
     * **Ritual Machine** (`/ritual-machine`): Tool for generating ritual protocols.
     * **Workbench** (`/practitioner/rituals`): Ritual management dashboard.

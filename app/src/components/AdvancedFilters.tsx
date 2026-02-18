@@ -76,7 +76,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
     });
   };
 
-  const activeFilterCount = useMemo(() => 
+  const activeFilterCount = useMemo(() =>
     (values.domain !== 'all' ? 1 : 0) +
     (values.type !== 'all' ? 1 : 0) +
     (values.yearMin !== null ? 1 : 0) +
@@ -136,10 +136,11 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
         <div className="px-4 py-4 border-t border-amber-900/20 space-y-4">
           {/* Domain Filter */}
           <div>
-            <label className="block text-sm font-medium text-amber-100 mb-2">
+            <label htmlFor="domain-filter" className="block text-sm font-medium text-amber-100 mb-2">
               Domain
             </label>
             <select
+              id="domain-filter"
               value={values.domain}
               onChange={(e) => handleDomainChange(e.target.value)}
               className="w-full px-3 py-2 bg-zinc-800/50 border border-amber-900/20 rounded-lg text-amber-100 focus:outline-none focus:border-amber-600/50 transition-colors"
@@ -155,10 +156,11 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
 
           {/* Type Filter */}
           <div>
-            <label className="block text-sm font-medium text-amber-100 mb-2">
+            <label htmlFor="type-filter" className="block text-sm font-medium text-amber-100 mb-2">
               Document Type
             </label>
             <select
+              id="type-filter"
               value={values.type}
               onChange={(e) => handleTypeChange(e.target.value)}
               className="w-full px-3 py-2 bg-zinc-800/50 border border-amber-900/20 rounded-lg text-amber-100 focus:outline-none focus:border-amber-600/50 transition-colors"
@@ -182,6 +184,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
                 <input
                   type="number"
                   placeholder="From"
+                  aria-label="Min Year"
                   min="0"
                   max={currentYear}
                   value={values.yearMin || ''}
@@ -193,6 +196,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
                 <input
                   type="number"
                   placeholder="To"
+                  aria-label="Max Year"
                   min={values.yearMin || 0}
                   max={currentYear}
                   value={values.yearMax || ''}
@@ -270,6 +274,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
                     {tag}
                     <button
                       onClick={() => handleTagToggle(tag)}
+                      aria-label={`Remove ${tag}`}
                       className="hover:bg-amber-600/20 rounded-full p-0.5 transition-colors"
                     >
                       <X className="w-3 h-3" />
@@ -283,7 +288,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
           {/* Lenses Filter */}
           <div>
             <label className="block text-sm font-medium text-amber-100 mb-2">
-              Convergence Lenses
+              Parallax Lenses
               <span className="ml-2 text-xs text-amber-100/60 font-normal">
                 (The 7 perspectives)
               </span>
@@ -312,7 +317,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
                       options.allLenses.map((lens) => {
                         const lensDisplay = formatLensName(lens);
                         const lensDescription = LENS_DESCRIPTIONS[lens];
-                        
+
                         return (
                           <label
                             key={lens}
@@ -352,6 +357,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
                     {formatLensName(lens)}
                     <button
                       onClick={() => handleLensToggle(lens)}
+                      aria-label={`Remove ${formatLensName(lens)}`}
                       className="hover:bg-amber-600/20 rounded-full p-0.5 transition-colors"
                     >
                       <X className="w-3 h-3" />

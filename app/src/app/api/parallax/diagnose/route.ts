@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
 /**
- * Diagnostic endpoint for Convergence Graph database structure
- * GET /api/convergence/diagnose
+ * Diagnostic endpoint for Parallax Graph database structure
+ * GET /api/parallax/diagnose
  * 
  * Returns comprehensive diagnostic information about:
  * - Table existence

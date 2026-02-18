@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * GET /api/convergence/embeddings-status
+ * GET /api/parallax/embeddings-status
  * Diagnostic endpoint to check which texts have embeddings
  * 
  * Query params:

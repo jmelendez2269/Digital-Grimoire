@@ -36,7 +36,7 @@ export async function fetchTrackedUsage(
     .select('created_at, units_used, unit_type, estimated_cost, request_metadata')
     .gte('created_at', startDate.toISOString())
     .lte('created_at', endDate.toISOString())
-    .in('service', ['convergence_query', 'openai_metadata', 'other'])
+    .in('service', ['parallax_query', 'openai_metadata', 'other'])
     .eq('unit_type', 'tokens');
 
   if (userId) {

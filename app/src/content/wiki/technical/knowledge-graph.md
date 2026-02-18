@@ -13,6 +13,9 @@ description: Guide for seeding initial concepts and relationships into the Paral
 
 ---
 
+> [!NOTE]
+> The database currently uses legacy table names `convergence_concepts` and `convergence_relationships`. These will be migrated to `parallax_*` in a future update.
+
 ## Overview
 
 The Parallax Graph visualizes how concepts from different wisdom traditions converge and relate to each other. This guide shows you how to add your first concepts and relationships.
@@ -117,7 +120,7 @@ INSERT INTO public.convergence_relationships (
 
 ## Example: The "Emptiness Cluster"
 
-Here's a complete example seeding the classic convergence example:
+Here's a complete example seeding the classic Parallax example:
 
 ### Step 1: Add the Concepts
 

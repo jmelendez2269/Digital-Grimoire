@@ -25,6 +25,7 @@ export async function validateConceptExists(conceptId: string): Promise<Validati
   try {
     const supabase = createServiceClient();
     const { data, error } = await supabase
+      // NOTE: 'convergence_concepts' is the legacy table name. Do not change unless database migration is performed.
       .from("convergence_concepts")
       .select("id, name")
       .eq("id", conceptId)

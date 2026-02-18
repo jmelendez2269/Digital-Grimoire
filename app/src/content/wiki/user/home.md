@@ -1,8 +1,8 @@
-# User Guide: Convergence Dashboard
+# User Guide: Project Parallax Dashboard
 
 ## Welcome Home
 
-Your Dashboard is the central command center for the Convergence platform. From here, you can access all your tools for research, practice, and discovery.
+Your Dashboard is the central command center for the Project Parallax platform. From here, you can access all your tools for research, practice, and discovery.
 
 ## Getting Started
 
@@ -34,8 +34,8 @@ These are your primary instruments for study and exploration:
 * **🎓 Courses**
     Structured learning paths. If you want a guided deep-dive into a specific tradition or topic, start here.
 
-* **✨ Convergence Machine**
-    The engine of insight. This advanced AI tool analyzes any text or topic through **7 distinct lenses**:
+* **✨ Parallax Engine**
+    The engine of insight. This advanced AI tool analyzes any text or topic through **7 distinct Parallax Lenses**:
     1. Scientific
     2. Psychological
     3. Philosophical

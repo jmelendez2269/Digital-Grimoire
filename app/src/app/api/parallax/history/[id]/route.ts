@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * GET /api/convergence/history/[id]
+ * GET /api/parallax/history/[id]
  * Get a specific conversation by ID
  */
 export async function GET(

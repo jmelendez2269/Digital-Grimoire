@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-type GraphType = "correspondences" | "convergence";
+type GraphType = "correspondences" | "parallax";
 
 interface Entity {
   id: string;

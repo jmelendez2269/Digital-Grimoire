@@ -73,13 +73,14 @@ export default function ResponseStream({
   // localStorage functions
   const getNavigatePreference = (): boolean => {
     if (typeof window === 'undefined') return false;
-    const stored = localStorage.getItem('convergence_navigate_after_save');
+    const stored = localStorage.getItem('parallax_navigate_after_save');
     return stored === 'true';
   };
 
   const setNavigatePreference = (value: boolean) => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('convergence_navigate_after_save', value.toString());
+    localStorage.setItem('parallax_navigate_after_save', value.toString());
+
     setDontAskAgain(value);
   };
 

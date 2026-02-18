@@ -31,7 +31,7 @@ export const PRICING = {
 };
 
 export interface UsageLogParams {
-  service: 'azure_ocr' | 'openai_metadata' | 'r2_storage' | 'r2_bandwidth' | 'notion' | 'convergence_query' | 'other';
+  service: 'azure_ocr' | 'openai_metadata' | 'r2_storage' | 'r2_bandwidth' | 'notion' | 'parallax_query' | 'other';
   endpoint?: string;
   operation: string;
   unitsUsed: number;
@@ -271,9 +271,9 @@ export async function logNotionUsage(params: {
 }
 
 /**
- * Log Convergence Machine query usage and costs
+ * Log Parallax Engine query usage and costs
  */
-export async function logConvergenceQueryUsage(params: {
+export async function logParallaxQueryUsage(params: {
   inputTokens: number;
   outputTokens: number;
   userId: string;
@@ -305,8 +305,8 @@ export async function logConvergenceQueryUsage(params: {
   const totalCost = inputCost + outputCost;
 
   await logApiUsage({
-    service: 'convergence_query',
-    operation: 'convergence_machine_query',
+    service: 'parallax_query',
+    operation: 'parallax_engine_query',
     endpoint: '/api/parallax/query',
     unitsUsed: totalTokens,
     unitType: 'tokens',
@@ -435,5 +435,5 @@ export async function checkCostThresholds(): Promise<{
   }
 }
 
-export const logParallaxQueryUsage = logConvergenceQueryUsage;
+
 

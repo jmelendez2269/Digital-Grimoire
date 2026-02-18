@@ -39,10 +39,10 @@ export async function extractPhotoExif(
 ): Promise<PhotoProcessingResult> {
   try {
     console.log(`📸 Extracting EXIF data from photo: ${imageUrl}`);
-    
+
     // For MVP, return empty EXIF structure
     // In production, implement actual EXIF extraction:
-    
+
     /*
     // Example implementation with exif-reader:
     const ExifReader = require('exif-reader');
@@ -82,7 +82,7 @@ export async function extractPhotoExif(
       exif: photoExif,
     };
     */
-    
+
     // MVP: Return empty EXIF structure
     console.log(`⚠️ EXIF extraction not implemented, returning empty structure`);
     return {
@@ -119,10 +119,10 @@ export async function generatePhotoSizes(
 }> {
   try {
     console.log(`📸 Generating multiple sizes for photo: ${imageKey}`);
-    
+
     // For MVP, return original URL for all sizes
     // In production, implement actual resizing:
-    
+
     /*
     // Example implementation with sharp:
     const sharp = require('sharp');
@@ -131,7 +131,7 @@ export async function generatePhotoSizes(
     // Download original image
     const s3Client = getR2Client();
     const getCommand = new GetObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+      Bucket: process.env.R2_BUCKET_NAME || 'parallax-library',
       Key: imageKey,
     });
     const imageResponse = await s3Client.send(getCommand);
@@ -154,7 +154,7 @@ export async function generatePhotoSizes(
       
       const resizedKey = imageKey.replace(/\.(jpg|jpeg|png)$/, `_${sizeName}.jpg`);
       const putCommand = new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
+        Bucket: process.env.R2_BUCKET_NAME || 'parallax-library',
         Key: resizedKey,
         Body: resizedBuffer,
         ContentType: 'image/jpeg',
@@ -166,7 +166,7 @@ export async function generatePhotoSizes(
     
     return results;
     */
-    
+
     // MVP: Return original URL for all sizes
     console.log(`⚠️ Photo resizing not implemented, using original URL`);
     return {
