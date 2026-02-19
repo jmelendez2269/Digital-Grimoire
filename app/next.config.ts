@@ -130,7 +130,7 @@ const nextConfig: NextConfig = {
       "font-src 'self' data:",
       `connect-src ${connectSrc} https://accounts.google.com`,
       "worker-src 'self' blob:",
-      "frame-src 'self' https://*.supabase.co https://*.supabase.in https://accounts.google.com",
+      "frame-src 'self' https://*.supabase.co https://*.supabase.in https://accounts.google.com https://vercel.live",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

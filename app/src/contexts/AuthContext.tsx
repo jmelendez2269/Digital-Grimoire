@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch('/api/auth/admin-status', {
         credentials: 'include', // Important: include cookies for auth
       });
-      
+
       if (!response.ok) {
         // 401 means not authenticated - this is expected, not an error
         if (response.status === 401) {
@@ -35,22 +35,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Other errors (500, etc.) are actual problems
           console.error('[AuthContext] API admin check failed:', response.status);
+          try {
+            const errorData = await response.json();
+            console.error('[AuthContext] API error details:', errorData);
+          } catch (e) {
+            console.error('[AuthContext] Could not parse error response');
+          }
         }
         return false;
       }
-      
+
       const data = await response.json();
       console.log('[AuthContext] API admin check result:', data);
-      
+
       // Debug: Log the actual values
       if (data.debug) {
         console.log('[AuthContext] Debug info:', data.debug);
       }
-      
+
       // Check both isAdmin boolean and role string
       const isAdminResult = data.isAdmin === true || data.role === 'admin';
       console.log('[AuthContext] Final admin status:', isAdminResult, '(from isAdmin:', data.isAdmin, ', role:', data.role, ')');
-      
+
       return isAdminResult;
     } catch (error) {
       console.error('[AuthContext] API admin check error:', error);
@@ -69,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('[AuthContext] Initializing authentication...');
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           // Handle refresh token errors gracefully
           if (error.message?.includes('refresh_token') || error.message?.includes('Refresh Token')) {
@@ -90,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('[AuthContext] Session found:', session.user.email);
           setUser(session.user);
           setLoading(false); // Set loading false immediately for better UX
-          
+
           // Check admin via API asynchronously (non-blocking)
           checkAdminViaAPI(session.user.id).then((adminStatus) => {
             setIsAdmin(adminStatus);
@@ -133,10 +139,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         try {
           console.log('[AuthContext] Auth state changed:', event, session?.user?.email);
-          
+
           if (session?.user) {
             setUser(session.user);
-            
+
             // Check admin via API
             const adminStatus = await checkAdminViaAPI(session.user.id);
             setIsAdmin(adminStatus);
