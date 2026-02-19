@@ -118,37 +118,37 @@ export default function RegisterPage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-black pointer-events-none" />
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none" />
 
-      <div className="w-full max-w-2xl relative z-10">
+      <div className="w-full max-w-xl relative z-10">
         {/* Back to Home Link */}
         <Link
           href="/"
           className="inline-flex items-center gap-3 text-zinc-400 hover:text-amber-500 transition-colors mb-8 group"
         >
-          <ArrowRight className="h-6 w-6 rotate-180 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-xl font-semibold">Home</span>
+          <ArrowRight className="h-5 w-5 rotate-180 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-lg font-semibold">Home</span>
         </Link>
 
         {/* Header */}
         <div className="mb-12 text-center">
           <Link href="/" className="inline-block mb-8 group">
-            <h1 className="text-5xl font-bold tracking-tight text-white group-hover:text-amber-500 transition-colors">
+            <h1 className="text-4xl font-bold tracking-tight text-white group-hover:text-amber-500 transition-colors">
               Project Parallax
             </h1>
           </Link>
-          <h2 className="text-3xl font-semibold text-zinc-200">
+          <h2 className="text-2xl font-semibold text-zinc-200">
             Create your account
           </h2>
-          <p className="mt-4 text-xl text-zinc-400">
+          <p className="mt-4 text-lg text-zinc-400">
             Join the knowledge network to explore multiple perspectives.
           </p>
         </div>
 
         {/* Register Form */}
-        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl p-10 md:p-12 shadow-2xl">
-          <form onSubmit={handleRegister} className="space-y-8">
+        <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl p-8 md:p-10 shadow-2xl">
+          <form onSubmit={handleRegister} className="space-y-6">
             {/* Username Field */}
-            <div className="space-y-3">
-              <label htmlFor="username" className="block text-lg font-medium text-zinc-400">
+            <div className="space-y-2">
+              <label htmlFor="username" className="block text-base font-medium text-zinc-400">
                 Username
               </label>
               <input
@@ -158,14 +158,14 @@ export default function RegisterPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 minLength={3}
-                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-lg text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
                 placeholder="johndoe"
               />
             </div>
 
             {/* Email Field */}
-            <div className="space-y-3">
-              <label htmlFor="email" className="block text-lg font-medium text-zinc-400">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-base font-medium text-zinc-400">
                 Email address
               </label>
               <input
@@ -174,14 +174,14 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-lg text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
                 placeholder="you@example.com"
               />
             </div>
 
             {/* Password Field */}
-            <div className="space-y-3">
-              <label htmlFor="password" className="block text-lg font-medium text-zinc-400">
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-base font-medium text-zinc-400">
                 Password
               </label>
               <input
@@ -191,17 +191,17 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-lg text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
                 placeholder="••••••••"
               />
-              <p className="text-base text-zinc-500">
+              <p className="text-sm text-zinc-500">
                 Must be at least 8 characters
               </p>
             </div>
 
             {/* Confirm Password Field */}
-            <div className="space-y-3">
-              <label htmlFor="confirmPassword" className="block text-lg font-medium text-zinc-400">
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="block text-base font-medium text-zinc-400">
                 Confirm Password
               </label>
               <input
@@ -210,15 +210,15 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="block w-full rounded-xl bg-black/40 border border-white/10 px-6 py-4 text-xl text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                className="block w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-lg text-zinc-100 placeholder-zinc-600 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
                 placeholder="••••••••"
               />
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-6 py-4 text-lg text-red-400 flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
+              <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-base text-red-400 flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                 {error}
               </div>
             )}
@@ -227,22 +227,22 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full relative flex items-center justify-center gap-3 rounded-xl bg-amber-600 px-6 py-4 text-xl font-bold text-white hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-amber-500/20"
+              className="w-full relative flex items-center justify-center gap-3 rounded-xl bg-amber-600 px-6 py-4 text-lg font-bold text-white hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-amber-500/20"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   Creating account...
                 </>
               ) : (
                 <>
                   Create Account
-                  <ArrowRight className="h-6 w-6" />
+                  <ArrowRight className="h-5 w-5" />
                 </>
               )}
             </button>
 
-            <div className="text-base text-center text-zinc-500 leading-relaxed">
+            <div className="text-sm text-center text-zinc-500 leading-relaxed">
               By creating an account, you agree to our{" "}
               <Link href="/terms" className="text-zinc-400 hover:text-amber-500 underline decoration-zinc-700 underline-offset-4 hover:decoration-amber-500 transition-all">
                 Terms of Service
@@ -256,9 +256,9 @@ export default function RegisterPage() {
           </form>
 
           {/* Divider */}
-          <div className="my-10 flex items-center gap-6">
+          <div className="my-8 flex items-center gap-4">
             <div className="flex-1 h-px bg-white/10"></div>
-            <span className="text-sm font-semibold text-zinc-500 tracking-wider">OR CONTINUE WITH</span>
+            <span className="text-[10px] font-semibold text-zinc-500 tracking-wider">OR CONTINUE WITH</span>
             <div className="flex-1 h-px bg-white/10"></div>
           </div>
 
@@ -267,9 +267,9 @@ export default function RegisterPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-4 rounded-xl border border-white/10 bg-white/5 px-6 py-4 text-lg font-medium text-zinc-300 transition-all hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-zinc-700 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex w-full items-center justify-center gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base font-medium text-zinc-300 transition-all hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-zinc-700 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="h-6 w-6" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -291,8 +291,8 @@ export default function RegisterPage() {
           </button>
 
           {/* Login Link */}
-          <div className="mt-10 text-center">
-            <p className="text-lg text-zinc-500">
+          <div className="mt-8 text-center">
+            <p className="text-base text-zinc-500">
               Already have an account?{" "}
               <Link
                 href="/login"

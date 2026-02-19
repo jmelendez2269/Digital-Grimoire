@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, Book, AlertCircle, Lightbulb, ShoppingCart } from 'lucide-react';
+import { Search, Book, AlertCircle, Lightbulb, ShoppingCart, Loader2 } from 'lucide-react';
 import RelatedTerms from '@/components/DeepSearch/RelatedTerms';
 import BookResultCard from '@/components/DeepSearch/BookResultCard';
 import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
+import ArcaneLoader from '@/components/ui/ArcaneLoader';
+import ParallaxLoader from '@/components/ui/ParallaxLoader';
+import StatusLoader from '@/components/ui/StatusLoader';
 
 interface ConceptSuggestion {
     id: string;
@@ -274,7 +277,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                             className="px-6 py-4 bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border-l border-amber-900/30 disabled:opacity-50 transition-colors"
                         >
                             {loading ? (
-                                <Loader2 className="w-6 h-6 animate-spin" />
+                                <ArcaneLoader size="sm" />
                             ) : (
                                 <Search className="w-6 h-6" />
                             )}
@@ -289,7 +292,7 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                         >
                             {loadingSuggestions ? (
                                 <div className="px-4 py-3 text-amber-100/60 text-sm flex items-center gap-2">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <ArcaneLoader size="sm" className="w-4 h-4" />
                                     <span>Loading suggestions...</span>
                                 </div>
                             ) : suggestions.length === 0 ? (
@@ -329,7 +332,15 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                 </div>
             )}
 
-            {aiResults && (
+            {/* Loading Feedback */}
+            {loading && (
+                <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in-95 duration-500">
+                    <ParallaxLoader size="lg" className="mb-8" />
+                    <StatusLoader message="ANALYZING CONCEPT..." />
+                </div>
+            )}
+
+            {aiResults && !loading && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     {/* 1. CONCEPT SUMMARY */}
                     <div className="bg-zinc-900/40 border border-amber-900/20 rounded-xl p-6 shadow-xl relative overflow-hidden group">

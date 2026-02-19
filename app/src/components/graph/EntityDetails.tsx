@@ -8,6 +8,8 @@ import ConvertPropertyModal from "@/components/admin/ConvertPropertyModal";
 import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import { parsePropertyValue } from "@/lib/graph/entity-utils";
 
+import { ParallaxConcept, CorrespondenceEntity } from "@/lib/types";
+
 interface KnowledgeClaim {
   id: string;
   field_key: string;
@@ -23,16 +25,7 @@ export default function EntityDetails({
   entity,
   onGraphRefresh,
 }: {
-  entity: {
-    id: string;
-    name: string;
-    category?: string;       // Optional, for Correspondences
-    tradition?: string;      // Optional, for Parallax
-    aliases?: string[];
-    description?: string;
-    lenses?: string[];
-    [key: string]: any;      // Allow other props
-  } | null;
+  entity: (ParallaxConcept | CorrespondenceEntity) & Record<string, any> | null;
   onGraphRefresh?: () => void;
 }) {
   const [claims, setClaims] = useState<KnowledgeClaim[]>([]);
@@ -223,7 +216,7 @@ export default function EntityDetails({
         <div className="mb-4">
           <div className="text-xs text-amber-100/50 mb-2 uppercase tracking-wide">Aliases</div>
           <div className="flex flex-wrap gap-2">
-            {entity.aliases!.map((a) => (
+            {entity.aliases!.map((a: string) => (
               <span key={a} className="px-2 py-1 rounded bg-zinc-800 text-xs text-amber-100/80">
                 {a}
               </span>
@@ -236,7 +229,7 @@ export default function EntityDetails({
         <div className="mb-4">
           <div className="text-xs text-amber-100/50 mb-2 uppercase tracking-wide">Lenses</div>
           <div className="flex flex-wrap gap-2">
-            {entity.lenses!.map((l) => (
+            {entity.lenses!.map((l: string) => (
               <span key={l} className="px-2 py-1 rounded bg-amber-900/20 border border-amber-700/30 text-xs text-amber-100/90">
                 {l}
               </span>

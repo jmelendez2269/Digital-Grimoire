@@ -2,25 +2,7 @@
 
 import { useEffect } from "react";
 
-interface ParallaxConcept {
-  id: string;
-  slug: string;
-  name: string;
-  tradition: string;
-  era?: string;
-  short_definition?: string;
-  primary_sources?: string[];
-  tags?: string[];
-}
-
-interface ParallaxRelationship {
-  id: string;
-  source_id: string;
-  target_id: string;
-  similarity: number;
-  source_citation?: string;
-  notes?: string;
-}
+import { ParallaxConcept, ParallaxRelationship } from "@/lib/types";
 
 interface ConceptDetailModalProps {
   concept: ParallaxConcept | null;

@@ -1,26 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-
-interface ParallaxConcept {
-  id: string;
-  slug: string;
-  name: string;
-  tradition: string;
-  era?: string;
-  short_definition?: string;
-  primary_sources?: string[];
-  tags?: string[];
-}
-
-interface ParallaxRelationship {
-  id: string;
-  source_id: string;
-  target_id: string;
-  similarity: number;
-  source_citation?: string;
-  notes?: string;
-}
+import { ParallaxConcept, ParallaxRelationship } from "@/lib/types";
 
 interface ComparativeTableProps {
   concepts: ParallaxConcept[];
@@ -81,9 +62,9 @@ export default function ComparativeTable({
           comparison = a.concept1.name.localeCompare(b.concept1.name);
           break;
         case "tradition":
-          comparison = a.concept1.tradition.localeCompare(b.concept1.tradition);
+          comparison = (a.concept1.tradition || "").localeCompare(b.concept1.tradition || "");
           if (comparison === 0) {
-            comparison = a.concept2.tradition.localeCompare(b.concept2.tradition);
+            comparison = (a.concept2.tradition || "").localeCompare(b.concept2.tradition || "");
           }
           break;
         case "similarity":

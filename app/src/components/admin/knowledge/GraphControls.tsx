@@ -39,7 +39,7 @@ export default function GraphControls({
                         }`}
                 >
                     <Network className="w-3 h-3" />
-                    Parallax
+                    Concepts
                 </button>
             </div>
 

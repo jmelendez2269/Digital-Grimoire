@@ -376,15 +376,8 @@ function LibraryPageContent() {
 
           {/* Loading State */}
           {!user ? null : loading ? (
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 p-1">
-              {[...Array(16)].map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-zinc-900/30 border border-amber-900/20 rounded-lg overflow-hidden animate-pulse h-full"
-                >
-                  <div className="aspect-[2/3] bg-zinc-800/50 w-full" />
-                </div>
-              ))}
+            <div className="flex-1 flex flex-col items-center justify-center py-20 min-h-[400px]">
+              <AppLoader message="Opening the Library..." />
             </div>
           ) : error ? null : paginatedTexts.length === 0 ? (
             /* Empty State */

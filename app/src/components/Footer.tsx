@@ -50,7 +50,7 @@ export default function Footer() {
               <Link href="/library" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Library</Link>
               <Link href="/search" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Global Search</Link>
               <Link href="/courses" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Wisdom Courses</Link>
-              <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Knowledge Graph</Link>
+              <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Parallax Graph</Link>
             </div>
           </div>
 
@@ -61,7 +61,7 @@ export default function Footer() {
               <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Digital Grimoire</Link>
               <Link href="/ritual-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Ritual Machine</Link>
               <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Parallax Engine</Link>
-              <Link href="https://github.com/jmelendez2269/Digital-Grimoire/blob/main/README.md" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
+              <Link href="/wiki" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
                 Documentation
               </Link>

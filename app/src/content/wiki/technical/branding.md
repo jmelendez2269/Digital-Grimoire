@@ -118,6 +118,7 @@ Evokes intellectual depth, quiet contemplation, and mystery. Dark Academia aesth
 | Study Journal | The Journal | `/journal` |
 | Correspondence Tables | Correspondences | `/correspondences` |
 | The Convergence Graph | The Parallax Graph | `/parallax-graph` |
+| *Atmospheric Subtitle* | Neural Interface | (Visual Identity) |
 | The Convergence Machine | The Parallax Engine | `/parallax-engine` |
 | Convergence School | Parallax School | `/school` |
 

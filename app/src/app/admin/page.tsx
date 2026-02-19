@@ -12,7 +12,8 @@ import {
   Network,
   Sparkles,
   MessageSquare,
-  LogOut
+  LogOut,
+  FileText
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -108,6 +109,13 @@ export default function AdminDashboardHub() {
       icon: <BookOpen className="w-8 h-8 text-teal-400" />,
       href: "/admin/wiki",
       color: "teal"
+    },
+    {
+      title: "Blog Management",
+      description: "Create and manage blog posts for the public site.",
+      icon: <FileText className="w-8 h-8 text-orange-400" />,
+      href: "/admin/blog",
+      color: "orange"
     }
   ];
 

@@ -1,0 +1,28 @@
+src/app/parallax-graph/page.tsx(198,25): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ParallaxGraphProps, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | ... 4 more ... | undefined', gave the following error.
+    Type 'Dispatch<SetStateAction<ParallaxConcept | null>>' is not assignable to type '(concept: ParallaxConcept | CorrespondenceEntity) => void'.
+      Types of parameters 'value' and 'concept' are incompatible.
+        Type 'ParallaxConcept | CorrespondenceEntity' is not assignable to type 'SetStateAction<ParallaxConcept | null>'.
+          Type 'ParallaxConcept' is not assignable to type 'SetStateAction<ParallaxConcept | null>'.
+            Type 'import("C:/Users/Jen_a/OneDrive/Documents/Projects/Digital Grimore/Digital-Grimoire/app/src/lib/types").ParallaxConcept' is not assignable to type 'ParallaxConcept'.
+              Types of property 'tradition' are incompatible.
+                Type 'string | null' is not assignable to type 'string'.
+                  Type 'null' is not assignable to type 'string'.
+  Overload 2 of 2, '(props: ParallaxGraphProps): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | ... 4 more ... | undefined', gave the following error.
+    Type 'Dispatch<SetStateAction<ParallaxConcept | null>>' is not assignable to type '(concept: ParallaxConcept | CorrespondenceEntity) => void'.
+      Types of parameters 'value' and 'concept' are incompatible.
+        Type 'ParallaxConcept | CorrespondenceEntity' is not assignable to type 'SetStateAction<ParallaxConcept | null>'.
+          Type 'ParallaxConcept' is not assignable to type 'SetStateAction<ParallaxConcept | null>'.
+            Type 'import("C:/Users/Jen_a/OneDrive/Documents/Projects/Digital Grimore/Digital-Grimoire/app/src/lib/types").ParallaxConcept' is not assignable to type 'ParallaxConcept'.
+              Types of property 'tradition' are incompatible.
+                Type 'string | null' is not assignable to type 'string'.
+                  Type 'null' is not assignable to type 'string'.
+src/app/parallax-graph/page.tsx(205,25): error TS2322: Type 'Dispatch<SetStateAction<ParallaxConcept | null>>' is not assignable to type '(concept: ParallaxConcept) => void'.
+  Types of parameters 'value' and 'concept' are incompatible.
+    Type 'ParallaxConcept' is not assignable to type 'SetStateAction<ParallaxConcept | null>'.
+      Type 'import("C:/Users/Jen_a/OneDrive/Documents/Projects/Digital Grimore/Digital-Grimoire/app/src/lib/types").ParallaxConcept' is not assignable to type 'ParallaxConcept'.
+        Types of property 'tradition' are incompatible.
+          Type 'string | null' is not assignable to type 'string'.
+            Type 'null' is not assignable to type 'string'.
+src/components/graph/EntityDetails.tsx(404,11): error TS2322: Type '{ [key: string]: any; id: string; name: string; category?: string | undefined; tradition?: string | undefined; aliases?: string[] | undefined; description?: string | undefined; lenses?: string[] | undefined; }' is not assignable to type 'ParallaxConcept | CorrespondenceEntity'.
+  Property 'slug' is missing in type '{ [key: string]: any; id: string; name: string; category?: string | undefined; tradition?: string | undefined; aliases?: string[] | undefined; description?: string | undefined; lenses?: string[] | undefined; }' but required in type 'ParallaxConcept'.

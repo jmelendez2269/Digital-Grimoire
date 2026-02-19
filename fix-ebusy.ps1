@@ -16,6 +16,14 @@ Set-Location $appPath
 Write-Host "📍 Working directory: $appPath" -ForegroundColor Yellow
 Write-Host ""
 
+# Step 0: Clear Git Locks (Dangling index.lock and OneDrive conflicts)
+Write-Host "0️⃣ Clearing Git locks and OneDrive conflicts..." -ForegroundColor Cyan
+$gitLockScript = Join-Path $PSScriptRoot "fix-git-locks.ps1"
+if (Test-Path $gitLockScript) {
+    & $gitLockScript
+}
+Write-Host ""
+
 # Step 1: Stop any running node processes
 Write-Host "1️⃣ Stopping Node.js processes..." -ForegroundColor Cyan
 $nodeProcesses = Get-Process -Name "node" -ErrorAction SilentlyContinue

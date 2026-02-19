@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Sparkles, Edit } from "lucide-react";
-
-type GraphType = "correspondences" | "parallax";
+import { ParallaxConcept, CorrespondenceEntity, GraphType } from "@/lib/types";
 
 interface KnowledgeSource {
   id: string;
@@ -23,7 +22,7 @@ interface KnowledgeClaim {
 }
 
 interface EntityDetailModalProps {
-  entity: any;
+  entity: ParallaxConcept | CorrespondenceEntity;
   graphType: GraphType;
   onClose: () => void;
   readOnly?: boolean;
@@ -36,6 +35,11 @@ export default function EntityDetailModal({ entity, graphType, onClose, readOnly
   const [generatingConsensus, setGeneratingConsensus] = useState(false);
   const [generatedConsensus, setGeneratedConsensus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Safe type accessors
+  const isCorrespondence = graphType === "correspondences";
+  const correspondence = isCorrespondence ? (entity as CorrespondenceEntity) : null;
+  const parallax = !isCorrespondence ? (entity as ParallaxConcept) : null;
 
   useEffect(() => {
     const loadClaims = async () => {
@@ -79,12 +83,12 @@ export default function EntityDetailModal({ entity, graphType, onClose, readOnly
         body: JSON.stringify({
           entityId: entity.id,
           entityName: entity.name,
-          entityCategory: entity.category || entity.type?.slug,
-          tradition: entity.tradition || entity.tradition_ref?.label,
+          entityCategory: correspondence?.category || correspondence?.type?.slug,
+          tradition: parallax?.tradition || parallax?.tradition_ref?.label,
           entityType: graphType,
-          existingDescription: graphType === "correspondences"
-            ? entity.description
-            : entity.short_definition,
+          existingDescription: isCorrespondence
+            ? correspondence?.description
+            : parallax?.short_definition,
         }),
       });
 
@@ -148,8 +152,8 @@ export default function EntityDetailModal({ entity, graphType, onClose, readOnly
             <h2 className="text-xl font-bold text-amber-100">{entity?.name}</h2>
             <p className="text-sm text-amber-100/60">
               {graphType === "correspondences"
-                ? entity?.type?.label || entity?.category
-                : entity?.tradition_ref?.label || entity?.tradition}
+                ? correspondence?.type?.label || correspondence?.category
+                : parallax?.tradition_ref?.label || parallax?.tradition}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -237,28 +241,28 @@ export default function EntityDetailModal({ entity, graphType, onClose, readOnly
 
               {graphType === "correspondences" ? (
                 <>
-                  {entity?.description && (
-                    <div className="text-amber-100/80 whitespace-pre-wrap">{entity.description}</div>
+                  {correspondence?.description && (
+                    <div className="text-amber-100/80 whitespace-pre-wrap">{correspondence.description}</div>
                   )}
-                  {entity?.aliases?.length ? (
+                  {correspondence?.aliases?.length ? (
                     <div className="text-sm text-amber-100/60">
-                      Aliases: {entity.aliases.join(", ")}
+                      Aliases: {correspondence.aliases.join(", ")}
                     </div>
                   ) : null}
                 </>
               ) : (
                 <>
-                  {entity?.short_definition && (
-                    <div className="text-amber-100/80 whitespace-pre-wrap">{entity.short_definition}</div>
+                  {parallax?.short_definition && (
+                    <div className="text-amber-100/80 whitespace-pre-wrap">{parallax.short_definition}</div>
                   )}
-                  {entity?.tags?.length ? (
+                  {parallax?.tags?.length ? (
                     <div className="text-sm text-amber-100/60">
-                      Tags: {entity.tags.join(", ")}
+                      Tags: {parallax.tags.join(", ")}
                     </div>
                   ) : null}
                 </>
               )}
-              {!entity?.description && !entity?.short_definition && !generatedConsensus && (
+              {!correspondence?.description && !parallax?.short_definition && !generatedConsensus && (
                 <div className="text-sm text-amber-100/50">No consensus summary yet.</div>
               )}
             </div>

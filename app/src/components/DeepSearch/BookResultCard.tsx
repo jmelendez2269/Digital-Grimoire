@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import Link from 'next/link';
 import { Book, ChevronDown, ChevronUp, User, ExternalLink, ShoppingCart } from 'lucide-react';
 import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
@@ -26,7 +26,7 @@ interface BookResultCardProps {
     searchQuery: string;
 }
 
-export default function BookResultCard({ book, searchQuery }: BookResultCardProps) {
+const BookResultCard = memo(function BookResultCard({ book, searchQuery }: BookResultCardProps) {
     const [expanded, setExpanded] = useState(false);
 
     // Calculate best score for badge
@@ -193,4 +193,6 @@ export default function BookResultCard({ book, searchQuery }: BookResultCardProp
             )}
         </div>
     );
-}
+});
+
+export default BookResultCard;

@@ -1,58 +1,10 @@
 import { Lens, LensType, getLens, getActiveLenses, getAllLenses } from './lenses';
 import { hybridSearch, HybridSearchResult } from './hybrid-retrieval';
-import { aiOrchestrator, ChatMessage, AIModel } from '@/lib/ai/ai-orchestrator';
+import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
+import { AIModel } from '@/lib/ai/types';
+import { LensWeights, ResponseLength, ResponseLengthConfig, LensResponse, MultiLensResponse, TokenUsage } from './types';
 
-export interface LensWeights {
-  scientific: number;
-  psychological: number;
-  philosophical: number;
-  religious_spiritual: number;
-  historical_anthropological: number;
-  symbolic_occult: number;
-  mathematical: number;
-}
-
-export type ResponseLength = 'short' | 'medium' | 'long';
-
-export interface ResponseLengthConfig {
-  synthesisMaxTokens: number;
-  lensMaxTokens: number;
-  lensSummaryMaxTokens: number;
-}
-
-export interface LensResponse {
-  lens: LensType;
-  lensName: string;
-  content: string;
-  sources: Array<{
-    text_id: string;
-    text_title?: string;
-    text_author?: string;
-    chunk_id?: string;
-    chunk_index?: number;
-    relevance: number;
-    content_preview?: string; // First 200 chars of chunk content
-  }>;
-}
-
-export interface MultiLensResponse {
-  query: string;
-  responses: LensResponse[];
-  synthesis: string;
-  sources: Array<{
-    text_id: string;
-    text_title?: string;
-    text_author?: string;
-    chunk_id?: string;
-    chunk_index?: number;
-    relevance?: number;
-  }>;
-}
-
-export interface TokenUsage {
-  inputTokens: number;
-  outputTokens: number;
-}
+export { type LensWeights, type ResponseLength, type ResponseLengthConfig, type LensResponse, type MultiLensResponse, type TokenUsage };
 
 /**
  * Get max tokens based on response length preference

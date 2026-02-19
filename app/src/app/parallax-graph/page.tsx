@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AppLoader from "@/components/ui/AppLoader";
 import ComparativeTable from "@/components/parallax/ComparativeTable";
 import ConceptDetailModal from "@/components/parallax/ConceptDetailModal";
 import SimilarityControls from "@/components/parallax/SimilarityControls";
@@ -14,14 +15,7 @@ const ParallaxGraph = dynamic(
   () => import("@/components/parallax/ParallaxGraph"),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full min-h-[600px]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-amber-100/60">Loading parallax graph…</p>
-        </div>
-      </div>
-    ),
+    loading: () => <AppLoader message="Loading parallax graph…" />
   }
 );
 
@@ -31,25 +25,9 @@ const FloatingAISearch = dynamic(() => import('@/components/FloatingAISearch'), 
   loading: () => null,
 });
 
-interface ParallaxConcept {
-  id: string;
-  slug: string;
-  name: string;
-  tradition: string;
-  era?: string;
-  short_definition?: string;
-  primary_sources?: string[];
-  tags?: string[];
-}
+import { ParallaxConcept, ParallaxRelationship } from "@/lib/types";
 
-interface ParallaxRelationship {
-  id: string;
-  source_id: string;
-  target_id: string;
-  similarity: number;
-  source_citation?: string;
-  notes?: string;
-}
+
 
 type ViewMode = "graph" | "table";
 
@@ -102,23 +80,28 @@ export default function ParallaxGraphPage() {
   });
 
   // Get unique traditions for filter
-  const traditions = Array.from(new Set(concepts.map((c) => c.tradition))).sort();
+  const traditions = Array.from(new Set(concepts.map((c) => c.tradition).filter((t): t is string => t !== null))).sort();
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+    <div className="flex min-h-screen flex-col bg-[#0A1212]">
       <Header />
       <main className="flex-1">
-        <div className="min-h-screen bg-zinc-950 text-amber-50">
+        <div className="min-h-screen bg-[#0A1212] text-slate-100">
           <div className="max-w-screen-2xl mx-auto px-4 py-8">
             {/* Header */}
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-amber-100 mb-2">
-                The Parallax Graph
-              </h1>
-              <p className="text-amber-100/60">
-                See how all wisdom paths converge. Visualize cross-tradition conceptual unity
-                showing how Buddhist emptiness connects to quantum zero-point fields, Taoist Wu,
-                and Christian apophatic theology.
+              <div className="flex flex-col gap-1 mb-2">
+                <h1 className="text-4xl font-serif font-bold text-amber-100">
+                  The Parallax Graph
+                </h1>
+                <span className="text-xs font-mono text-cyan-500/50 tracking-[0.3em] uppercase">
+                  Neural Interface Active
+                </span>
+              </div>
+              <p className="text-amber-100/70 max-w-3xl font-light">
+                Explore the convergence of human wisdom. This visualization maps cross-tradition
+                conceptual unity, bridging ancient philosophies with modern scientific frameworks
+                to reveal the singular architecture of the Great Work.
               </p>
             </div>
 
@@ -196,7 +179,7 @@ export default function ParallaxGraphPage() {
                       <ParallaxGraph
                         concepts={filteredConcepts}
                         relationships={relationships}
-                        onSelectConcept={setSelectedConcept}
+                        onSelectConcept={(c) => setSelectedConcept(c as ParallaxConcept)}
                         minSimilarity={minSimilarity}
                       />
                     ) : (
