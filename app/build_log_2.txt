@@ -1,0 +1,33 @@
+
+> app@0.1.0 build
+> next build --webpack
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   ▲ Next.js 16.0.10 (webpack)
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/lib/supabase/server.ts
+Error:   [31mx[0m You're importing a component that needs "next/headers". That only works in a Server Component which is not supported in the pages/ directory. Read more: https://nextjs.org/docs/app/building-your-application/rendering/server-components
+  [31m|[0m
+
+   ,-[[36;1;4mC:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire\app\src\lib\supabase\server.ts[0m:2:1]
+ [2m1[0m | import { createServerClient } from "@supabase/ssr";
+ [2m2[0m | import { cookies } from "next/headers";
+   : [35;1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+ [2m3[0m | 
+ [2m4[0m | export async function createClient() {
+ [2m4[0m |   let cookieStore;
+   `----
+
+Import trace for requested module:
+./src/lib/supabase/server.ts
+./src/app/api/parallax/ai-search/route.ts
+
+
+> Build failed because of webpack errors
