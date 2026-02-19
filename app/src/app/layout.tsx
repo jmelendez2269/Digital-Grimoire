@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Cormorant_Garamond, Fira_Code } from "next/font/google";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
@@ -9,17 +9,25 @@ import CookieConsent from "@/components/CookieConsent";
 import Script from "next/script";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-  display: 'swap', // Prevents FOIT (Flash of Invisible Text)
+  variable: "--font-inter",
+  display: "swap",
   preload: true,
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  display: 'swap',
+  variable: "--font-cormorant",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
+});
+
+const firaCode = Fira_Code({
+  subsets: ["latin"],
+  variable: "--font-fira-mono",
+  display: "swap",
   preload: true,
 });
 
@@ -78,7 +86,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${cormorant.variable} ${firaCode.variable} antialiased bg-background text-foreground`}
       >
         <ReactQueryProvider>
           <AuthProvider>
