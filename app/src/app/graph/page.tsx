@@ -13,7 +13,7 @@ import ParallaxLoader from "@/components/ui/ParallaxLoader";
 // Ported Components from Admin
 import KnowledgeGraphHeader from "@/components/admin/knowledge/KnowledgeGraphHeader";
 import CorrespondenceControls from "@/components/admin/knowledge/CorrespondenceControls";
-import GraphControls from "@/components/admin/knowledge/GraphControls";
+import GraphControls from "../../components/admin/knowledge/GraphControls";
 import SimilarityControls from "@/components/parallax/SimilarityControls";
 import EntityNode from "@/components/PublicEntityCard";
 import ComparativeTable from "@/components/parallax/ComparativeTable";
