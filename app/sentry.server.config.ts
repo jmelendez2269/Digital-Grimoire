@@ -13,6 +13,9 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
+  // Routes HTTP requests through "Monitoring" to circumvent ad-blockers
+  tunnel: "/monitoring",
+
   // Filter out sensitive data
   beforeSend(event, hint) {
     // Don't send events in development

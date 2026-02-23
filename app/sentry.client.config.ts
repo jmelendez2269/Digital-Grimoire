@@ -20,4 +20,16 @@ Sentry.init({
 
     // This sets the sample rate to be 10% for session-based replays
     replaysSessionSampleRate: 0.1,
+
+    // Routes HTTP requests through "Monitoring" to circumvent ad-blockers
+    tunnel: "/monitoring",
+
+    // Filter out sensitive data or events in development
+    beforeSend(event) {
+        // Don't send events in development
+        if (process.env.NODE_ENV === "development") {
+            return null;
+        }
+        return event;
+    },
 });
