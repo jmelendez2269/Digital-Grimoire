@@ -260,6 +260,7 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   org: "convergence-qa",
   project: "javascript-nextjs",
 
+  // Sentry SDK options
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
@@ -269,19 +270,14 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   // Routes HTTP requests through "Monitoring" to circumvent ad-blockers (requires additional setup)
   tunnelRoute: "/monitoring",
 
-  // Bundler-level optimizations
-  webpack: {
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
-    treeshake: {
-      removeDebugLogging: true,
-    },
+  // Enables automatic instrumentation of Vercel Cron Monitors.
+  // See the following for more information:
+  // https://docs.sentry.io/product/crons/
+  // https://vercel.com/docs/cron-jobs
+  automaticVercelMonitors: true,
 
-    // Enables automatic instrumentation of Vercel Cron Monitors.
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
-  },
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
 });
 
 
