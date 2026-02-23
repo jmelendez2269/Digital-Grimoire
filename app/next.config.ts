@@ -1,4 +1,3 @@
-
 import type { NextConfig } from "next";
 
 // Bundle analyzer for performance monitoring
@@ -258,8 +257,8 @@ export default withSentryConfig(withBundleAnalyzer(nextConfig), {
 
   // Suppresses source map uploading logs during bundling
   silent: true,
-  org: "digital-grimoire",
-  project: "digital-grimoire-nextjs",
+  org: "convergence-qa",
+  project: "javascript-nextjs",
 
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
