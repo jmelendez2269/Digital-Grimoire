@@ -1,0 +1,191 @@
+open supabase\.temp\profile: The system cannot find the path specified.
+Using workdir C:\Projects\Digital-Grimoire
+Supabase CLI 2.76.11
+Using profile: supabase (supabase.co)
+Loading project ref from file: supabase\.temp\project-ref
+Using access token for profile: supabase
+Using access token for profile: supabase
+2026/02/19 15:36:10 HTTP GET: https://api.supabase.com/v1/projects/ukguqtghfglirszsqqdj/api-keys?reveal=true
+2026/02/19 15:36:12 HTTP GET: https://api.supabase.com/v1/projects/ukguqtghfglirszsqqdj
+2026/02/19 15:36:12 HTTP GET: https://ukguqtghfglirszsqqdj.supabase.co/storage/v1/version
+2026/02/19 15:36:12 HTTP GET: https://ukguqtghfglirszsqqdj.supabase.co/rest/v1/
+2026/02/19 15:36:12 HTTP GET: https://ukguqtghfglirszsqqdj.supabase.co/auth/v1/health
+WARNING: You are running different service versions locally than your linked project:
+supabase/storage-api:v1.37.8 => v1.37.7
+Run supabase link to update them.
+ api Skipped - Image is already present locally 
+ storage Skipped - Image is already present locally 
+ imgProxy Skipped - Image is already present locally 
+ mailpit Skipped - Image is already present locally 
+ realtime Skipped - Image is already present locally 
+ edgeRuntime Skipped - Image is already present locally 
+ vector Skipped - Image is already present locally 
+ db Skipped - Image is already present locally 
+ gateway Skipped - Image is already present locally 
+ analytics Skipped - Image is already present locally 
+ auth Skipped - Image is already present locally 
+ studio Skipped - Image is already present locally 
+ pgmeta Skipped - Image is already present locally 
+Starting database...
+2026/02/19 15:36:24 PG Send: {"Type":"StartupMessage","ProtocolVersion":196608,"Parameters":{"database":"postgres","user":"postgres"}}
+2026/02/19 15:36:24 PG Recv: {"Type":"AuthenticationSASL","AuthMechanisms":["SCRAM-SHA-256"]}
+2026/02/19 15:36:24 PG Send: {"Type":"SASLInitialResponse","AuthMechanism":"SCRAM-SHA-256","Data":"n,,n=,r=+g9ASLu9PK1aVkx7u3yynNAa"}
+2026/02/19 15:36:24 PG Recv: {"Type":"AuthenticationSASLContinue","Data":"r=+g9ASLu9PK1aVkx7u3yynNAaCLDkaXqvc49qFSiavlxrGHjl,s=ehNkqSSXDXfSUl7V2o2i1g==,i=4096"}
+2026/02/19 15:36:24 PG Send: {"Type":"SASLResponse","Data":"c=biws,r=+g9ASLu9PK1aVkx7u3yynNAaCLDkaXqvc49qFSiavlxrGHjl,p=+m8JCGIkBHIhF3+Lwj35yjQxh5ohThaxWVl/6ozzs44="}
+2026/02/19 15:36:24 PG Recv: {"Type":"AuthenticationSASLFinal","Data":"v=s+lWsKGwXeyT1cZ9XExpZ0x5hio0sVGFbUPfTN7FtPE="}
+2026/02/19 15:36:24 PG Recv: {"Type":"AuthenticationOK"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"in_hot_standby","Value":"off"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"integer_datetimes","Value":"on"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"TimeZone","Value":"UTC"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"IntervalStyle","Value":"postgres"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"is_superuser","Value":"off"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"application_name","Value":""}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"default_transaction_read_only","Value":"off"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"scram_iterations","Value":"4096"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"DateStyle","Value":"ISO, MDY"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"standard_conforming_strings","Value":"on"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"session_authorization","Value":"postgres"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"client_encoding","Value":"UTF8"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"server_version","Value":"17.6"}
+2026/02/19 15:36:24 PG Recv: {"Type":"ParameterStatus","Name":"server_encoding","Value":"UTF8"}
+2026/02/19 15:36:24 PG Recv: {"Type":"BackendKeyData","ProcessID":216,"SecretKey":2814057849}
+2026/02/19 15:36:24 PG Recv: {"Type":"ReadyForQuery","TxStatus":"I"}
+Initialising schema...
++ ulimit -n
++ '[' '!' -z '' ']'
++ export ERL_CRASH_DUMP=/tmp/erl_crash.dump
++ ERL_CRASH_DUMP=/tmp/erl_crash.dump
++ '[' false = true ']'
++ [[ -n '' ]]
++ echo 'Running migrations'
++ sudo -E -u nobody /app/bin/migrate
++ '[' true = true ']'
++ echo 'Seeding selfhosted Realtime'
++ sudo -E -u nobody /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)'
+[os_mon] memory supervisor port (memsup): Erlang has closed
+[os_mon] cpu supervisor port (cpu_sup): Erlang has closed
++ echo 'Starting Realtime'
++ ulimit -n
++ exec /app/bin/realtime eval '{:ok, _} = Application.ensure_all_started(:realtime)
+{:ok, _} = Realtime.Tenants.health_check("realtime-dev")'
+[os_mon] memory supervisor port (memsup): Erlang has closed
+[os_mon] cpu supervisor port (cpu_sup): Erlang has closed
+(node:1) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Seeding globals from roles.sql...
+Skipping migration XX_034_search_optimizations_REVERT.sql... (file name must match pattern "<timestamp>_name.sql")
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"SET lock_timeout = '4s'","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"CREATE SCHEMA IF NOT EXISTS supabase_migrations","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations (version text NOT NULL PRIMARY KEY)","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"ALTER TABLE supabase_migrations.schema_migrations ADD COLUMN IF NOT EXISTS statements text[]","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"ALTER TABLE supabase_migrations.schema_migrations ADD COLUMN IF NOT EXISTS name text","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Sync"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"SET"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"CREATE SCHEMA"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"CREATE TABLE"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"ALTER TABLE"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"ALTER TABLE"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ReadyForQuery","TxStatus":"I"}
+Applying migration 017_journal_media_and_links.sql...
+2026/02/19 15:36:37 PG Send: {"Type":"Query","String":"RESET ALL"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"RESET"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ReadyForQuery","TxStatus":"I"}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"-- Create storage bucket for journal images\r\ninsert into storage.buckets (id, name, public)\r\nvalues ('journal-images', 'journal-images', false)\r\non conflict (id) do nothing","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"-- Policy: only authenticated users can upload to their own folder\r\ncreate policy \"journal images upload own folder\"\r\non storage.objects for insert to authenticated\r\nwith check (\r\n  bucket_id = 'journal-images'\r\n  and (storage.foldername(name))[1] = auth.uid()::text\r\n)","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"-- Policy: allow read via signed URLs only (no public read)\r\ncreate policy \"journal images read via select for signed url\"\r\non storage.objects for select to authenticated\r\nusing (\r\n  bucket_id = 'journal-images'\r\n)","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"-- Optional: allow owners to delete their own files\r\ncreate policy \"journal images delete own files\"\r\non storage.objects for delete to authenticated\r\nusing (\r\n  bucket_id = 'journal-images'\r\n  and (storage.foldername(name))[1] = auth.uid()::text\r\n)","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"-- Add slug to journal_pages if not exists\r\ndo $$ begin\r\n  if not exists (\r\n    select 1 from information_schema.columns\r\n    where table_schema = 'public' and table_name = 'journal_pages' and column_name = 'slug'\r\n  ) then\r\n    alter table public.journal_pages\r\n      add column slug text;\r\n    create unique index if not exists journal_pages_user_slug_unique\r\n      on public.journal_pages (user_id, slug);\r\n  end if;\r\nend $$","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"-- Backlinks helper index (for simple text search of [[slug]])\r\ncreate index if not exists journal_pages_content_gin_trgm\r\non public.journal_pages using gin ((content::text) gin_trgm_ops)","ParameterOIDs":null}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":null,"Parameters":[],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Parse","Name":"","Query":"INSERT INTO supabase_migrations.schema_migrations(version, name, statements) VALUES($1, $2, $3)","ParameterOIDs":[25,25,1009]}
+2026/02/19 15:36:37 PG Send: {"Type":"Bind","DestinationPortal":"","PreparedStatement":"","ParameterFormatCodes":[0,0,1],"Parameters":[{"text":"017"},{"text":"journal_media_and_links"},{"binary":"0000000100000000000000190000000600000001000000ac2d2d204372656174652073746f72616765206275636b657420666f72206a6f75726e616c20696d616765730d0a696e7365727420696e746f2073746f726167652e6275636b657473202869642c206e616d652c207075626c6963290d0a76616c7565732028276a6f75726e616c2d696d61676573272c20276a6f75726e616c2d696d61676573272c2066616c7365290d0a6f6e20636f6e666c696374202869642920646f206e6f7468696e670000010d2d2d20506f6c6963793a206f6e6c792061757468656e746963617465642075736572732063616e2075706c6f616420746f207468656972206f776e20666f6c6465720d0a63726561746520706f6c69637920226a6f75726e616c20696d616765732075706c6f6164206f776e20666f6c646572220d0a6f6e2073746f726167652e6f626a6563747320666f7220696e7365727420746f2061757468656e746963617465640d0a7769746820636865636b20280d0a20206275636b65745f6964203d20276a6f75726e616c2d696d61676573270d0a2020616e64202873746f726167652e666f6c6465726e616d65286e616d6529295b315d203d20617574682e75696428293a3a746578740d0a29000000d62d2d20506f6c6963793a20616c6c6f77207265616420766961207369676e65642055524c73206f6e6c7920286e6f207075626c69632072656164290d0a63726561746520706f6c69637920226a6f75726e616c20696d616765732072656164207669612073656c65637420666f72207369676e65642075726c220d0a6f6e2073746f726167652e6f626a6563747320666f722073656c65637420746f2061757468656e746963617465640d0a7573696e6720280d0a20206275636b65745f6964203d20276a6f75726e616c2d696d61676573270d0a29000000f82d2d204f7074696f6e616c3a20616c6c6f77206f776e65727320746f2064656c657465207468656972206f776e2066696c65730d0a63726561746520706f6c69637920226a6f75726e616c20696d616765732064656c657465206f776e2066696c6573220d0a6f6e2073746f726167652e6f626a6563747320666f722064656c65746520746f2061757468656e746963617465640d0a7573696e6720280d0a20206275636b65745f6964203d20276a6f75726e616c2d696d61676573270d0a2020616e64202873746f726167652e666f6c6465726e616d65286e616d6529295b315d203d20617574682e75696428293a3a746578740d0a29000001ab2d2d2041646420736c756720746f206a6f75726e616c5f7061676573206966206e6f74206578697374730d0a646f20242420626567696e0d0a20206966206e6f742065786973747320280d0a2020202073656c65637420312066726f6d20696e666f726d6174696f6e5f736368656d612e636f6c756d6e730d0a202020207768657265207461626c655f736368656d61203d20277075626c69632720616e64207461626c655f6e616d65203d20276a6f75726e616c5f70616765732720616e6420636f6c756d6e5f6e616d65203d2027736c7567270d0a202029207468656e0d0a20202020616c746572207461626c65207075626c69632e6a6f75726e616c5f70616765730d0a20202020202061646420636f6c756d6e20736c756720746578743b0d0a2020202063726561746520756e6971756520696e646578206966206e6f7420657869737473206a6f75726e616c5f70616765735f757365725f736c75675f756e697175650d0a2020202020206f6e207075626c69632e6a6f75726e616c5f70616765732028757365725f69642c20736c7567293b0d0a2020656e642069663b0d0a656e64202424000000bb2d2d204261636b6c696e6b732068656c70657220696e6465782028666f722073696d706c65207465787420736561726368206f66205b5b736c75675d5d290d0a63726561746520696e646578206966206e6f7420657869737473206a6f75726e616c5f70616765735f636f6e74656e745f67696e5f7472676d0d0a6f6e207075626c69632e6a6f75726e616c5f7061676573207573696e672067696e202828636f6e74656e743a3a74657874292067696e5f7472676d5f6f707329"}],"ResultFormatCodes":[]}
+2026/02/19 15:36:37 PG Send: {"Type":"Describe","ObjectType":"P","Name":""}
+2026/02/19 15:36:37 PG Send: {"Type":"Execute","Portal":"","MaxRows":0}
+2026/02/19 15:36:37 PG Send: {"Type":"Sync"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"INSERT 0 1"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"CREATE POLICY"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"CREATE POLICY"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"CommandComplete","CommandTag":"CREATE POLICY"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ParseComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"BindComplete"}
+2026/02/19 15:36:37 PG Recv: {"Type":"NoData"}
+2026/02/19 15:36:37 PG Recv: {"Type":"ErrorResponse","Severity":"ERROR","SeverityUnlocalized":"ERROR","Code":"42P01","Message":"relation \"public.journal_pages\" does not exist","Detail":"","Hint":"","Position":0,"InternalPosition":0,"InternalQuery":"","Where":"SQL statement \"alter table public.journal_pages\r\n      add column slug text\"\nPL/pgSQL function inline_code_block line 6 at SQL statement","SchemaName":"","TableName":"","ColumnName":"","DataTypeName":"","ConstraintName":"","File":"namespace.c","Line":631,"Routine":"RangeVarGetRelidExtended","UnknownFields":null}
+2026/02/19 15:36:37 PG Recv: {"Type":"ReadyForQuery","TxStatus":"I"}
+Stopping containers...
+2026/02/19 15:36:37 PG Send: {"Type":"Terminate"}
+Pruned containers: [635f4f07e5c495e5d1e1f745e25e3005e7e231f18a4c21fe172eb9e23342c728]
+Pruned volumes: [supabase_db_Digital-Grimoire]
+Pruned network: [supabase_network_Digital-Grimoire]
+ERROR: relation "public.journal_pages" does not exist (SQLSTATE 42P01)                     
+At statement: 4                                                                            
+-- Add slug to journal_pages if not exists                                                 
+do $$ begin                                                                                
+  if not exists (                                                                          
+    select 1 from information_schema.columns                                               
+    where table_schema = 'public' and table_name = 'journal_pages' and column_name = 'slug'
+  ) then                                                                                   
+    alter table public.journal_pages                                                       
+      add column slug text;                                                                
+    create unique index if not exists journal_pages_user_slug_unique                       
+      on public.journal_pages (user_id, slug);                                             
+  end if;                                                                                  
+end $$                                                                                     

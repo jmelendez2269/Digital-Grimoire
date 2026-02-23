@@ -1,0 +1,24 @@
+Using workdir C:\Projects\Digital-Grimoire
+Initialising login role...
+Connecting to remote database...
+Skipping migration 017_journal_media_and_links.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 033_practitioner_suite.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 034_search_optimizations.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 035_affiliate_tracking.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 036_library_performance_indexes.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20240127_create_search_history.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20260121152000_create_provider_usage.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20260219120000_indexing_helpers.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration XX_034_search_optimizations_REVERT.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+The remote database's migration history does not match local files in supabase\migrations directory.
+
+Make sure your local git repo is up-to-date. If the error persists, try repairing the migration history table:
+supabase migration repair --status reverted 017
+supabase migration repair --status reverted 033
+supabase migration repair --status reverted 034
+supabase migration repair --status reverted 035
+supabase migration repair --status reverted 036
+supabase migration repair --status reverted 20240127
+supabase migration repair --status reverted 20260121152000
+supabase migration repair --status reverted 20260219120000
+

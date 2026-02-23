@@ -18,7 +18,7 @@ export default function PractitionerLayout({
     ];
 
     return (
-        <div className="min-h-screen bg-black text-zinc-100">
+        <div className="min-h-screen bg-black text-zinc-100 pb-24">
             {/* Sub-Navigation */}
             <div className="border-b border-zinc-800 bg-black/40 backdrop-blur sticky top-16 z-30">
                 <div className="container mx-auto px-4">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Send, Loader2, Minimize2, Maximize2 } from 'lucide-react';
 
 interface Message {
@@ -16,15 +17,16 @@ interface AIChatModalProps {
 }
 
 export default function AIChatModal({ model, initialQuery = '', onClose }: AIChatModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState(initialQuery);
+  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Initialize with initial query if provided
   useEffect(() => {
+    setMounted(true);
     if (initialQuery) {
       handleSend(initialQuery);
     }
@@ -125,9 +127,11 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
     }
   }
 
+  if (!mounted) return null;
+
   if (isMinimized) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50 bg-zinc-900 border-2 border-amber-900/20 rounded-lg shadow-2xl max-w-sm">
+    return createPortal(
+      <div className="fixed bottom-4 right-4 z-[9999] bg-zinc-900 border-2 border-amber-900/20 rounded-lg shadow-2xl max-w-sm">
         <div className="flex items-center justify-between p-3 border-b border-zinc-800">
           <div className="flex items-center gap-2">
             <span className={`text-sm font-semibold ${getModelColor()}`}>
@@ -154,12 +158,13 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div
         className="bg-zinc-900 border-2 border-amber-900/20 rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -209,8 +214,8 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
               >
                 <div
                   className={`max-w-[80%] rounded-lg px-4 py-2 ${message.role === 'user'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-zinc-800 text-amber-100'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-zinc-800 text-amber-100'
                     }`}
                 >
                   <p className="whitespace-pre-wrap">{message.content}</p>
@@ -266,7 +271,8 @@ export default function AIChatModal({ model, initialQuery = '', onClose }: AICha
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

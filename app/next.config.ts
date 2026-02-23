@@ -6,6 +6,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
 
+
+import { withSentryConfig } from "@sentry/nextjs";
+
 const nextConfig: NextConfig = {
   /* config options here */
   // Set workspace root to prevent multiple lockfile warnings
@@ -248,5 +251,39 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Wrap with Sentry
+export default withSentryConfig(withBundleAnalyzer(nextConfig), {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
 
-export default withBundleAnalyzer(nextConfig);
+  // Suppresses source map uploading logs during bundling
+  silent: true,
+  org: "digital-grimoire",
+  project: "digital-grimoire-nextjs",
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Routes HTTP requests through "Monitoring" to circumvent ad-blockers (requires additional setup)
+  tunnelRoute: "/monitoring",
+
+  // Bundler-level optimizations
+  webpack: {
+    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    treeshake: {
+      removeDebugLogging: true,
+    },
+
+    // Enables automatic instrumentation of Vercel Cron Monitors.
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+  },
+});
+
+
+

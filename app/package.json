@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:safe": "tsx scripts/check-dev-safety.ts && next dev --webpack",
     "build": "next build --webpack",
     "build:analyze": "ANALYZE=true next build --webpack",
     "start": "next start",

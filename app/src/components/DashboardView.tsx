@@ -175,7 +175,7 @@ export default function DashboardView() {
                                 </h3>
                             </div>
                             <p className="text-sm text-zinc-400">
-                                Synthesize structured practice from esoteric principles. Define your intent and receive a personalized ritual protocol.
+                                Synthesize structured practice from esoteric principles. Define your intent and receive a personalized ritual protocol to enact real change.
                             </p>
                         </Link>
 
@@ -194,7 +194,7 @@ export default function DashboardView() {
                                 </h3>
                             </div>
                             <p className="text-sm text-zinc-400">
-                                The practitioner's workspace. Manage your rituals, track progress, and refine your craft in a dedicated environment.
+                                The Practitioner's Workbench. Centralize your magical practice: design new rituals, manage your library of rites, and track your spiritual progress.
                             </p>
                         </Link>
 
@@ -213,7 +213,7 @@ export default function DashboardView() {
                                 </h3>
                             </div>
                             <p className="text-sm text-zinc-400">
-                                Consult the Oracle. Daily draws and digital readings with a 78-card deck.
+                                Consult the Oracle. Perform digital readings with a 78-card deck, save your spreads, and journal your reflections.
                             </p>
                         </Link>
                     </div>

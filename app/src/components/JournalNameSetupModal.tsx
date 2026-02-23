@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -22,6 +23,11 @@ export default function JournalNameSetupModal({ onComplete }: JournalNameSetupMo
   const [customName, setCustomName] = useState('');
   const [useCustom, setUseCustom] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function handleSave() {
     if (!user) return;
@@ -55,7 +61,9 @@ export default function JournalNameSetupModal({ onComplete }: JournalNameSetupMo
 
   const canSave = (useCustom && customName.trim()) || (!useCustom && selectedOption);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="relative w-full max-w-2xl mx-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
         <button
@@ -82,11 +90,10 @@ export default function JournalNameSetupModal({ onComplete }: JournalNameSetupMo
               <button
                 key={option.value}
                 onClick={() => setSelectedOption(option.value)}
-                className={`w-full text-left p-4 rounded-lg border transition-all ${
-                  selectedOption === option.value
+                className={`w-full text-left p-4 rounded-lg border transition-all ${selectedOption === option.value
                     ? 'border-amber-500 bg-amber-500/10'
                     : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'
-                }`}
+                  }`}
               >
                 <div className="font-medium text-amber-100 mb-1">{option.value}</div>
                 <div className="text-sm text-zinc-400">{option.description}</div>
@@ -141,7 +148,8 @@ export default function JournalNameSetupModal({ onComplete }: JournalNameSetupMo
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
