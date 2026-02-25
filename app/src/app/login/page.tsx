@@ -8,14 +8,14 @@ export default function LoginPage() {
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 blur-[100px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/5 blur-[100px] rounded-full" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Back to Home Link */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2.5 text-zinc-400 hover:text-amber-500 transition-colors mb-6 group"
+          className="inline-flex items-center gap-2.5 text-zinc-400 hover:text-cyan-500 transition-colors mb-6 group"
         >
           <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
           <span className="text-lg font-semibold">Home</span>
@@ -28,7 +28,7 @@ export default function LoginPage() {
             <div className="relative bg-black rounded-full p-2 ring-1 ring-white/10">
               <svg
                 viewBox="0 0 100 100"
-                className="h-16 w-16 text-amber-500"
+                className="h-16 w-16 text-cyan-500"
                 fill="currentColor"
               >
                 <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" className="opacity-50" />
@@ -37,18 +37,18 @@ export default function LoginPage() {
                 <circle cx="50" cy="50" r="3" fill="currentColor" className="animate-pulse" />
                 <defs>
                   <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#F59E0B" />
-                    <stop offset="100%" stopColor="#06b6d4" />
+                    <stop offset="0%" stopColor="#06b6d4" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
                   </linearGradient>
                 </defs>
               </svg>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 tracking-tight">
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-cyan-500 tracking-tight">
             Welcome Back
           </h1>
-          <p className="mt-2 text-sm text-zinc-400 font-mono tracking-wide">
-            ACCESS_TERMINAL &gt; AUTHENTICATE
+          <p className="mt-2 text-sm text-zinc-400 tracking-wide">
+            Sign in to your account
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export default function LoginPage() {
           fallback={
             <div className="glass-panel rounded-xl p-8 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-500 border-t-transparent shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
               </div>
             </div>
           }
@@ -69,24 +69,24 @@ export default function LoginPage() {
         <div className="mt-8 text-center space-y-4">
           <Link
             href="/"
-            className="text-xs font-mono text-zinc-500 hover:text-amber-500 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 group"
+            className="text-xs text-zinc-500 hover:text-cyan-500 transition-colors tracking-widest flex items-center justify-center gap-2 group"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            Return to Nexus
+            Back to home
           </Link>
 
           {/* Legal Links for Verification */}
           <div className="flex items-center justify-center gap-4 pt-4 border-t border-white/5">
             <Link
               href="/privacy"
-              className="text-[10px] font-mono text-zinc-600 hover:text-amber-500/70 transition-colors uppercase tracking-widest"
+              className="text-[10px] font-mono text-zinc-600 hover:text-cyan-500/70 transition-colors uppercase tracking-widest"
             >
               Privacy Policy
             </Link>
             <div className="w-1 h-1 rounded-full bg-zinc-800" />
             <Link
               href="/terms"
-              className="text-[10px] font-mono text-zinc-600 hover:text-amber-500/70 transition-colors uppercase tracking-widest"
+              className="text-[10px] font-mono text-zinc-600 hover:text-cyan-500/70 transition-colors uppercase tracking-widest"
             >
               Terms of Service
             </Link>
