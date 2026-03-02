@@ -137,20 +137,20 @@ export function LoginForm() {
   return (
     <div className="glass-panel p-8 backdrop-blur-xl relative overflow-hidden rounded-2xl border-white/5">
       {/* Top Border Gradient */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
 
       {/* Iframe Warning */}
       {typeof window !== 'undefined' && window.self !== window.top && (
-        <div className="mb-6 p-4 rounded bg-amber-900/40 border border-amber-500/50 text-amber-200 text-xs font-mono">
-          <p className="mb-3">⚠️ DETECTED_SANDBOX_ENVIRONMENT</p>
+        <div className="mb-6 p-4 rounded bg-cyan-950/40 border border-cyan-500/30 text-cyan-200 text-xs">
+          <p className="mb-3 font-semibold">Security Notice</p>
           <p className="mb-3 opacity-80">
-            Authentication cannot be completed in this sidebar/frame. Please open the full application.
+            Authentication cannot be completed in this sidebar/frame. Please return to the source.
           </p>
           <button
             onClick={() => window.open(window.location.href, '_blank')}
-            className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider rounded transition-colors"
+            className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium tracking-wide rounded transition-colors"
           >
-            [ OPEN_IN_FULL_WINDOW ]
+            Open in browser
           </button>
         </div>
       )}
@@ -158,8 +158,8 @@ export function LoginForm() {
       <form onSubmit={handleLogin} className="space-y-6 relative z-10">
         {/* Email Field */}
         <div className="group">
-          <label htmlFor="email" className="block text-xs font-mono text-amber-500/70 mb-1.5 uppercase tracking-wider">
-            User_ID (Email)
+          <label htmlFor="email" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">
+            Email Address
           </label>
           <div className="relative">
             <input
@@ -168,8 +168,8 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-amber-100 placeholder-zinc-700 font-mono text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all group-hover:border-white/20"
-              placeholder="scholar@projectparallax.xyz"
+              className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-cyan-50 placeholder-zinc-700 text-sm focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 transition-all group-hover:border-white/20"
+              placeholder="email@example.com"
             />
             <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
           </div>
@@ -177,8 +177,8 @@ export function LoginForm() {
 
         {/* Password Field */}
         <div className="group">
-          <label htmlFor="password" className="block text-xs font-mono text-amber-500/70 mb-1.5 uppercase tracking-wider">
-            Access_Code (Password)
+          <label htmlFor="password" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">
+            Password
           </label>
           <div className="relative">
             <input
@@ -187,7 +187,7 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-amber-100 placeholder-zinc-700 font-mono text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20 transition-all group-hover:border-white/20"
+              className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-cyan-50 placeholder-zinc-700 text-sm focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 transition-all group-hover:border-white/20"
               placeholder="••••••••"
             />
             <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
@@ -207,16 +207,16 @@ export function LoginForm() {
           type="submit"
           disabled={loading}
           onClick={() => console.log("🖱️ Sign In button clicked")}
-          className="relative w-full overflow-hidden rounded bg-amber-500 px-4 py-3 text-sm font-bold text-black uppercase tracking-wider hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50 transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] group"
+          className="relative w-full overflow-hidden rounded bg-cyan-600 px-4 py-3 text-sm font-semibold text-white tracking-wide hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50 transition-all group"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
             {loading ? (
               <>
-                <span className="animate-spin text-lg">⟳</span> INITIATING_LINK...
+                <span className="animate-spin text-lg">⟳</span> Signing in...
               </>
             ) : (
               <>
-                INITIALIZE_SESSION <span className="group-hover:translate-x-1 transition-transform">→</span>
+                Sign In <span className="group-hover:translate-x-1 transition-transform">→</span>
               </>
             )}
           </span>
@@ -228,9 +228,9 @@ export function LoginForm() {
         <div className="text-center">
           <Link
             href="/forgot-password"
-            className="text-xs font-mono text-zinc-500 hover:text-amber-500 transition-colors uppercase tracking-wider"
+            className="text-xs text-zinc-500 hover:text-cyan-500 transition-colors tracking-wider"
           >
-            [ Reset_Access_Code ]
+            Forgot password?
           </Link>
         </div>
       </form>
@@ -238,7 +238,7 @@ export function LoginForm() {
       {/* Divider */}
       <div className="my-8 flex items-center gap-4">
         <div className="flex-1 h-px bg-gradient-to-r from-transparent to-zinc-800"></div>
-        <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Alt_Login</span>
+        <span className="text-[10px] text-zinc-600 uppercase tracking-widest text-center">Or continue with</span>
         <div className="flex-1 h-px bg-gradient-to-l from-transparent to-zinc-800"></div>
       </div>
 
@@ -267,28 +267,28 @@ export function LoginForm() {
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-        <span className="font-mono tracking-wide text-xs">GOOGLE_AUTH</span>
+        <span className="tracking-wide text-xs">Sign in with Google</span>
       </button>
 
       {/* Register Link */}
       <div className="mt-8 text-center">
-        <p className="text-xs text-zinc-500 font-mono">
-          NO_ID_FOUND?{" "}
+        <p className="text-xs text-zinc-500">
+          Don't have an account?{" "}
           <Link
             href="/register"
-            className="text-amber-500 hover:text-amber-400 underline decoration-amber-500/30 hover:decoration-amber-500 transition-all font-bold tracking-wider ml-1"
+            className="text-cyan-500 hover:text-cyan-400 underline decoration-cyan-500/30 hover:decoration-cyan-500 transition-all font-semibold tracking-wider ml-1"
           >
-            CREATE_RECORD
+            Sign up
           </Link>
         </p>
       </div>
 
       {/* Corner Decor */}
       <div className="absolute bottom-0 right-0 p-2 opacity-50">
-        <div className="w-2 h-2 border-r border-b border-amber-500/50"></div>
+        <div className="w-2 h-2 border-r border-b border-cyan-500/50"></div>
       </div>
       <div className="absolute top-0 left-0 p-2 opacity-50">
-        <div className="w-2 h-2 border-l border-t border-amber-500/50"></div>
+        <div className="w-2 h-2 border-l border-t border-cyan-500/50"></div>
       </div>
     </div>
   );
