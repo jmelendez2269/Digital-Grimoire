@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         // 1. Perform Hybrid Search
         console.log(`[Deep Search] Searching for: "${query}"`);
         const searchResults = await hybridSearch(query, {
-            limit: 10,
+            limit: 40,
             // We can add specific lenses or types if needed, but default is good for deep search
         });
 
@@ -102,7 +102,7 @@ interface AiSearchResult {
             text: string; // A relevant quote from the content snippet.
             page_number: number; // Estimate based on content or default to 1 if unknown.
         }>;
-    }>; // Limit to top 3-5 most relevant books from the provided context.
+    }>; // Include ALL books from the provided context that are relevant to the query. You MUST sort this array by relevance, placing the most relevant books first.
     externalRecommendations: Array<{
         title: string;
         author: string;

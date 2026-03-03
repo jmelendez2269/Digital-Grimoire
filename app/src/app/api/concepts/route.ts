@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     if (tradition) query = query.eq("tradition", tradition);
     if (traditionId) query = query.eq("tradition_id", traditionId);
     if (tag) query = query.contains("tags", [tag]);
-    if (q) query = query.ilike("name", `% ${q}% `);
+    if (q) query = query.ilike("name", `%${q}%`);
 
     console.log(`[API] GET /api/concepts - Executing query for q="${q || ''}"`);
     const { data, error } = await query;
@@ -69,8 +69,8 @@ export async function GET(req: NextRequest) {
     if (q && sortedData.length > 0) {
       const queryLower = q.toLowerCase();
       sortedData = sortedData.sort((a, b) => {
-        const aName = (a.name || '').toLowerCase();
-        const bName = (b.name || '').toLowerCase();
+        const aName = (a?.name || '').toLowerCase();
+        const bName = (b?.name || '').toLowerCase();
 
         // Exact match gets highest priority
         if (aName === queryLower && bName !== queryLower) return -1;
@@ -83,8 +83,8 @@ export async function GET(req: NextRequest) {
         if (bStarts && !aStarts) return 1;
 
         // Word boundary match (starts with word) gets third priority
-        const aWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} `, 'i').test(aName);
-        const bWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} `, 'i').test(bName);
+        const aWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(aName);
+        const bWordStart = new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(bName);
         if (aWordStart && !bWordStart) return -1;
         if (bWordStart && !aWordStart) return 1;
 
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
       // This allows the UI to work even if migrations haven't been run yet
       // If table doesn't exist (PGRST205), return empty array instead of error
       // This allows the UI to work even if migrations haven't been run yet
-      if (error.code === 'PGRST205' || error.message?.includes('Could not find the table')) {
+      if (error.code === 'PGRST205' || error.message?.includes('Could not find the table') || error.message?.includes('schema cache')) {
         console.warn('convergence_concepts table does not exist. Migration 019 may not have been run.');
         console.warn('Returning empty results. Please run migration: migrations/019_add_convergence_concepts.sql');
 

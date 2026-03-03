@@ -1,5 +1,5 @@
 import { vectorSearch, VectorSearchResult, LensFilters } from './vector-search';
-import { ftsSearch, FTSSearchResult } from './fts-search';
+import { ftsSearchChunks, FTSSearchResult } from './fts-search';
 
 export interface RetrievalOptions {
   vectorWeight?: number; // Default 0.7
@@ -56,8 +56,8 @@ export async function hybridSearch(
       console.warn('Vector search failed:', err);
       return [];
     }),
-    ftsSearch(query, limit * 2, filters).catch(err => {
-      console.warn('FTS search failed:', err);
+    ftsSearchChunks(query, limit * 2, filters).catch(err => {
+      console.warn('FTS chunk search failed:', err);
       return [];
     }),
   ]);
@@ -92,10 +92,10 @@ function mergeWithRRF(
   vectorResults.forEach((result, index) => {
     const rank = index + 1;
     const rrfScore = vectorWeight * (1 / (k + rank));
-    
+
     // Use chunk_id if available, otherwise text_id as key
     const key = result.chunk_id || result.text_id;
-    
+
     if (!mergedMap.has(key)) {
       mergedMap.set(key, {
         text_id: result.text_id,
@@ -120,10 +120,10 @@ function mergeWithRRF(
   ftsResults.forEach((result, index) => {
     const rank = index + 1;
     const rrfScore = ftsWeight * (1 / (k + rank));
-    
+
     // Use chunk_id if available, otherwise text_id as key
     const key = result.chunk_id || result.text_id;
-    
+
     if (!mergedMap.has(key)) {
       mergedMap.set(key, {
         text_id: result.text_id,
@@ -158,7 +158,7 @@ function deduplicateResults(
 
   results.forEach(result => {
     const existing = textMap.get(result.text_id);
-    
+
     if (!existing || result.finalScore > existing.finalScore) {
       textMap.set(result.text_id, result);
     }
