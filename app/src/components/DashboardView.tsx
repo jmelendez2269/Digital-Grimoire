@@ -160,7 +160,7 @@ export default function DashboardView() {
 
                     {/* Extras Tools Grid - Centered & Expanded for Tarot */}
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-3 max-w-6xl mx-auto">
-                        {/* Ritual Machine Card */}
+                        {/* Ritual Library Card */}
                         <Link
                             href="/ritual-machine"
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
@@ -168,39 +168,39 @@ export default function DashboardView() {
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
-                                    <span className="text-2xl">⚡</span>
+                                    <span className="text-2xl">📜</span>
                                 </div>
                                 <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
-                                    Ritual Machine
+                                    Ritual Library
                                 </h3>
                             </div>
                             <p className="text-sm text-zinc-400">
-                                Synthesize structured practice from esoteric principles. Define your intent and receive a personalized ritual protocol to enact real change.
+                                Browse curated ritual protocols drawn from esoteric traditions. Select a rite and follow along step by step.
                             </p>
                         </Link>
 
                         {/* Workbench Card */}
                         <Link
-                            href="/practitioner/rituals"
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-cyan-500/50 hover:bg-zinc-900 overflow-visible"
+                            href="/workbench"
+                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-amber-500/50 hover:bg-zinc-900 overflow-visible"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/15 to-cyan-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/15 to-amber-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                             <div className="mb-4 flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/20">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20">
                                     <span className="text-2xl">🛠️</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-cyan-100 group-hover:text-cyan-400">
+                                <h3 className="text-xl font-bold text-amber-100 group-hover:text-amber-400">
                                     Workbench
                                 </h3>
                             </div>
                             <p className="text-sm text-zinc-400">
-                                The Practitioner's Workbench. Centralize your magical practice: design new rituals, manage your library of rites, and track your spiritual progress.
+                                Design rituals, run the Ritual Machine, and forge custom tarot cards. Your maker's space for crafting personalized practice.
                             </p>
                         </Link>
 
-                        {/* Tarot Card - NEW */}
+                        {/* Oracle Card */}
                         <Link
-                            href="/practitioner/tarot"
+                            href="/extras/tarot"
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-purple-500/50 hover:bg-zinc-900 overflow-visible"
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/15 to-pink-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -209,11 +209,11 @@ export default function DashboardView() {
                                     <Sparkles className="w-6 h-6 text-purple-400" />
                                 </div>
                                 <h3 className="text-xl font-bold text-purple-100 group-hover:text-purple-400">
-                                    Tarot
+                                    The Oracle
                                 </h3>
                             </div>
                             <p className="text-sm text-zinc-400">
-                                Consult the Oracle. Perform digital readings with a 78-card deck, save your spreads, and journal your reflections.
+                                Consult the digital cards for guidance. Draw from the standard 78-card deck and save your readings.
                             </p>
                         </Link>
                     </div>

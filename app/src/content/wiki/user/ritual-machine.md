@@ -1,34 +1,49 @@
-# User Guide: The Ritual Machine
+# User Guide: Ritual Library
 
 ## Overview
 
-The **Ritual Machine** is a tool that synthesizes structured ritual protocols from esoteric principles. It uses AI to generate personalized rituals based on your specific intent, desired outcome, and constraints.
+The **Ritual Library** is a browsing space where you can discover curated ritual protocols drawn from esoteric traditions. Unlike the [Workbench](/wiki/workbench), this is a **read-only** viewing experience — a place to explore what's available and learn from established frameworks before building your own practice.
 
-Whether you're looking for a simple daily grounding practice or a complex ceremonial working, the Ritual Machine can draft a framework for you.
+**Access it from:** EXTRAS → Ritual Library
 
-## How to use the Ritual Machine
+---
 
-1. **Define Your Intent**: Be clear and concise. Instead of "I want more money," try "I intend to align myself with opportunities for abundance and financial stability."
-2. **Select Constraints**:
-    * **Time**: How long do you have? (5 mins, 30 mins, 1 hour?)
-    * **Tools**: Do you have candles, incense, a wand, or nothing at all?
-    * **Environment**: Are you indoors, outdoors, alone, or with a group?
-3. **Generate**: Click the **Generate Ritual** button.
-4. **Review Protocol**: The Machine will output a step-by-step guide, including:
-    * **Preparation**: What to gather and how to set the space.
-    * **Opening**: How to begin the ritual.
-    * **Main Working**: The core action or visualization.
-    * **Closing**: How to properly end the session.
-5. **Save or Edit**: You can save the generated ritual to your **Workbench** or edit it to better suit your needs.
+## What's in the Library?
 
-## Tips for Better Rituals
+The Ritual Library contains a growing collection of protocols from traditions including:
 
-* **Intent is Key**: The clarity of your intent directly impacts the quality of the generated ritual.
-* **Adaptability**: Treat the output as a draft. You are the practitioner; feel free to modify the words, gestures, or tools to what feels right for you.
-* **Consistency**: A simple ritual performed daily is often more powerful than a complex one performed once a year. Use the Machine to create sustainable daily practices.
+* **Traditional Wicca** — lunar cycle ceremonies, seasonal rites, elemental workings
+* **Hermetic / Golden Dawn** — invocations, pathworkings, middle pillar exercises
+* **Shamanic Practice** — ancestral communion, drumming journeys
+* **AI-Generated (Hermetic Style)** — custom protocols synthesized from multiple traditions
 
-## Safety and Ethics
+Each protocol card shows:
 
-* The Ritual Machine is a tool for *self-empowerment* and *psychological framing*.
-* It does not control external forces or guarantee physical outcomes.
-* Always practice discernment and ensure your rituals align with your personal ethics and well-being.
+* **Title and tradition**
+* **Duration** — how long the ritual takes
+* **Difficulty** — Beginner, Intermediate, or Advanced
+* **Tags** — the elements, planets, or themes involved
+
+---
+
+## How to Use
+
+1. **Browse** the protocol grid on the main Ritual Library page
+2. **Search** by name or tag (e.g. "moon", "fire", "clarity")
+3. **Click a card** to open the full ritual and begin
+
+---
+
+## Ritual Library vs. Workbench Ritual Machine
+
+Both the Ritual Library (*EXTRAS*) and the Ritual Machine (*Workbench*) give you access to curated protocols. The difference is intent:
+
+| | Ritual Library (EXTRAS) | Ritual Machine (Workbench) |
+|---|---|---|
+| **Purpose** | Browse and discover | Active practice tool |
+| **Experience** | Casual browsing | Focused, immersive |
+| **Future features** | Tradition filtering, collections | Favorites, progress tracking |
+
+---
+
+*Last Updated: March 2026*

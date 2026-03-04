@@ -31,5 +31,5 @@ The Search Bar is your primary gateway to the Project Parallax Library. It allow
 
 ## Related Links
 
-* [**Library Features**](/wiki/user/library-features): Learn about the advanced filtering and reading tools.
-* [**Parallax Graph**](/wiki/user/graph): Visualize connections between these books.
+* [**Library Features**](/wiki/library-features): Learn about the advanced filtering and reading tools.
+* [**Parallax Graph**](/wiki/graph): Visualize connections between these books.

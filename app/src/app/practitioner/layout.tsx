@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sparkles, ScrollText, PlayCircle } from 'lucide-react';
+import { ScrollText } from 'lucide-react';
+import Header from '@/components/Header';
 
 export default function PractitionerLayout({
     children,
@@ -13,12 +14,12 @@ export default function PractitionerLayout({
 
     const tabs = [
         { name: 'Rituals', href: '/practitioner/rituals', icon: ScrollText },
-        { name: 'Tarot Oracle', href: '/practitioner/tarot', icon: Sparkles },
         // { name: 'Meditation', href: '/practitioner/meditation', icon: PlayCircle }, // Future
     ];
 
     return (
         <div className="min-h-screen bg-black text-zinc-100 pb-24">
+            <Header />
             {/* Sub-Navigation */}
             <div className="border-b border-zinc-800 bg-black/40 backdrop-blur sticky top-16 z-30">
                 <div className="container mx-auto px-4">

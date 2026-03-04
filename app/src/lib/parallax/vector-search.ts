@@ -41,12 +41,8 @@ export async function vectorSearch(
 
   // Try RPC first (more efficient), fallback to manual if needed
   try {
-    const rpcResults = await vectorSearchRPC(queryEmbedding.embedding, limit, filters);    // If RPC returns empty results, it might mean the function doesn't exist
-    // or there are no matching chunks. Try manual search as fallback.
-    if (rpcResults.length === 0) {
-      console.warn('RPC search returned 0 results, trying manual search...');
-      return await vectorSearchManual(queryEmbedding.embedding, limit, filters);
-    }
+    const rpcResults = await vectorSearchRPC(queryEmbedding.embedding, limit, filters);
+    // Returning rpcResults even if it is empty. Only use manual fallback if RPC fails/throws.
     return rpcResults;
   } catch (error) {
     console.warn('RPC search failed, using manual calculation:', error);
@@ -162,8 +158,8 @@ async function vectorSearchRPC(
 
   if (error) {
     console.error('RPC function error:', error);
-    // If RPC doesn't exist, return empty results
-    return [];
+    // Throw error so the caller can fall back to manual search
+    throw new Error(`RPC vector search failed: ${error.message || JSON.stringify(error)}`);
   }
 
   return (data || []).map((item: any) => ({

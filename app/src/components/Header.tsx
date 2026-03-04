@@ -154,14 +154,21 @@ function Header({ librarySearch }: HeaderProps = {}) {
                   onClick={() => setMoreMenuOpen(false)}
                   className="block px-3 py-2 text-sm text-zinc-300 hover:text-cyan-400 hover:bg-white/5 transition-colors font-mono"
                 >
-                  Ritual Machine
+                  Ritual Library
                 </Link>
                 <Link
-                  href="/practitioner/rituals"
+                  href="/extras/tarot"
                   onClick={() => setMoreMenuOpen(false)}
                   className="block px-3 py-2 text-sm text-zinc-300 hover:text-cyan-400 hover:bg-white/5 transition-colors font-mono"
                 >
-                  Workbench (Practitioner)
+                  The Oracle
+                </Link>
+                <Link
+                  href="/workbench"
+                  onClick={() => setMoreMenuOpen(false)}
+                  className="block px-3 py-2 text-sm text-zinc-300 hover:text-cyan-400 hover:bg-white/5 transition-colors font-mono"
+                >
+                  Workbench
                 </Link>
               </div>
             )}

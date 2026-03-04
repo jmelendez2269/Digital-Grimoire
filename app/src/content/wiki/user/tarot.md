@@ -1,35 +1,56 @@
-# User Guide: Tarot
+# User Guide: The Oracle (Tarot)
 
 ## Overview
 
-The **Tarot** feature brings the ancient art of the 78-card deck into the digital realm. Whether you're a seasoned reader or a curious beginner, this tool offers a space for reflection, intuition, and guidance.
+**The Oracle** is a contemplative space for drawing tarot cards and receiving guidance. It is intentionally simple — no creation tools, no distractions. Come here when you want to consult the cards.
 
-## Features
+**Access it from:** EXTRAS → The Oracle
 
-### 1. Daily Draw
+---
 
-* **One Card**: Pull a single card each day to set a theme or intention.
-* **Reflection**: Use the provided interpretation as a starting point, but trust your own intuition first.
-* **Journal Link**: Easily save your daily draw to your **Journal** to track patterns over time.
+## Daily Draw
 
-### 2. Digital Readings
+The primary experience in The Oracle.
 
-* **Spreads**: Choose from various spreads (e.g., Celtic Cross, Past/Present/Future) suited to your question.
-* **Shuffling**: The digital deck is "shuffled" using a randomization algorithm, ensuring unpredictable outcomes.
-* **Interpretation**: Click on any card in your spread to see its detailed meaning, including keywords, elemental associations, and astrological correspondences.
+1. Navigate to **EXTRAS → The Oracle**
+2. Click **Daily Draw**
+3. Take a breath and hold your question in mind
+4. Click to draw — the card reveals itself
+5. Read the interpretation as a starting point, but **trust your own first impression**
 
-### 3. Reading Log
+> **Tip:** Ask open-ended questions — "What do I need to know about…?" rather than yes/no questions. Open questions invite deeper reflection.
 
-* **History**: All your readings are automatically saved.
-* **Review**: Look back at past readings to see how situations unfolded.
-* **Search**: Find specific cards or themes in your reading history.
+---
+
+## Reading History
+
+All your draws are automatically saved. Scroll down on The Oracle page to see your full draw history. Look back over time to spot patterns — certain cards returning, themes repeating — these signals are meaningful.
+
+---
 
 ## The Deck
 
-Project Parallax uses a classic Rider-Waite-Smith style deck, widely considered the standard for learning and practice. Its rich symbolism makes it accessible for beginners while offering depth for experienced readers.
+Project Parallax uses a **classic Rider-Waite-Smith style deck** — the standard reference deck, widely used for learning and practice. Its rich symbolism is accessible for beginners while offering depth for experienced readers.
 
-## Tips for Reading
+* **78 cards total** — 22 Major Arcana + 56 Minor Arcana
+* **Four suits** — Wands, Cups, Swords, Pentacles
+* **Each card** has keywords, elemental associations, and astrological correspondences
 
-* **Clear Mind**: Take a moment to breathe and clear your mind before clicking "Draw."
-* **Open Question**: Avoid "yes/no" questions. Instead, ask "What do I need to know about..." or "How can I approach..."
-* **First Impressions**: Pay attention to your immediate reaction to a card. That feeling is often the most accurate part of the reading.
+---
+
+## Want to Create Your Own Cards?
+
+The Oracle is for *reading*. If you want to generate custom cards using AI, visit the [Deck Forge](/wiki/workbench) in the Workbench.
+
+---
+
+## Tips for Better Readings
+
+* **Clear your mind first** — even 3 slow breaths before drawing makes a difference
+* **Write it down** — save your draw to the [Journal](/wiki/journal) for reflection
+* **Don't re-draw** — if you don't like what appears, sit with it. Discomfort is often the message
+* **Start simple** — one card a day is a complete practice for beginners
+
+---
+
+*Last Updated: March 2026*
