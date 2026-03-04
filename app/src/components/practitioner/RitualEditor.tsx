@@ -111,7 +111,7 @@ export default function RitualEditor() {
             if (stepsError) throw stepsError;
 
             toast.success('Ritual created successfully!');
-            router.push('/practitioner/rituals');
+            router.push('/workbench/rituals');
             router.refresh();
         } catch (error: any) {
             toast.error(error.message || 'Failed to create ritual');
@@ -174,8 +174,9 @@ export default function RitualEditor() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm text-zinc-400 mb-1">Phase</label>
+                            <label htmlFor="ritual-phase" className="block text-sm text-zinc-400 mb-1">Phase</label>
                             <select
+                                id="ritual-phase"
                                 value={phase}
                                 onChange={(e) => setPhase(e.target.value)}
                                 className="w-full bg-black border border-zinc-700 rounded px-3 py-2 text-zinc-200 focus:border-amber-500 outline-none"
@@ -186,8 +187,9 @@ export default function RitualEditor() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm text-zinc-400 mb-1">Est. Duration (min)</label>
+                            <label htmlFor="ritual-duration" className="block text-sm text-zinc-400 mb-1">Est. Duration (min)</label>
                             <input
+                                id="ritual-duration"
                                 type="number"
                                 value={estimatedDuration}
                                 onChange={(e) => setEstimatedDuration(Number(e.target.value))}
@@ -219,6 +221,7 @@ export default function RitualEditor() {
                                     onClick={() => moveStep(index, 'up')}
                                     disabled={index === 0}
                                     className="hover:text-amber-500 disabled:opacity-30"
+                                    aria-label="Move step up"
                                 >
                                     <ArrowUp size={16} />
                                 </button>
@@ -227,6 +230,7 @@ export default function RitualEditor() {
                                     onClick={() => moveStep(index, 'down')}
                                     disabled={index === steps.length - 1}
                                     className="hover:text-amber-500 disabled:opacity-30"
+                                    aria-label="Move step down"
                                 >
                                     <ArrowDown size={16} />
                                 </button>
@@ -239,6 +243,7 @@ export default function RitualEditor() {
                                         value={step.type}
                                         onChange={(e) => updateStep(step.id, 'type', e.target.value)}
                                         className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-300 focus:border-amber-500 outline-none"
+                                        aria-label="Step type"
                                     >
                                         <option value="action">Action</option>
                                         <option value="instruction">Instruction</option>
@@ -274,6 +279,7 @@ export default function RitualEditor() {
                                 <button
                                     onClick={() => removeStep(step.id)}
                                     className="text-zinc-600 hover:text-red-500 transition-colors p-2"
+                                    aria-label="Remove step"
                                 >
                                     <Trash2 size={18} />
                                 </button>
@@ -283,7 +289,7 @@ export default function RitualEditor() {
 
                     {steps.length === 0 && (
                         <div className="text-center py-8 text-zinc-500 border border-dashed border-zinc-800 rounded">
-                            No steps added yet. Click "Add Step" to begin.
+                            No steps added yet. Click &quot;Add Step&quot; to begin.
                         </div>
                     )}
                 </div>

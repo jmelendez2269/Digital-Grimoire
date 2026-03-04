@@ -1,25 +1,46 @@
 # Project Parallax Wiki
 
-Welcome to the documentation hub.
+Welcome to the documentation hub for Project Parallax.
+
+---
 
 ## User Guides
 
-* [**Home**](/wiki/user/home)
-* [**Library Features**](/wiki/user/library-features)
-* [**Search & Discovery**](/wiki/user/library-search-bar)
+### Core Features
+
+* [**Home & Dashboard**](/wiki/home)
+* [**Library Features**](/wiki/library-features)
+* [**Search & Discovery**](/wiki/library-search-bar)
+* [**Courses**](/wiki/courses)
+* [**Journal**](/wiki/journal)
+* [**Knowledge Graph**](/wiki/graph)
+* [**Parallax Engine**](/wiki/parallax-engine)
+
+### Extras & Practice Tools
+
+* [**The Workbench** — My Rituals, Ritual Machine, Deck Forge](/wiki/workbench)
+* [**The Oracle** — Tarot Readings](/wiki/tarot)
+* [**Ritual Library** — Curated Protocols](/wiki/ritual-machine)
+
+---
 
 ## Technical Documentation
 
-* [**Technical Home**](/wiki/technical/home)
-* [**Dashboard Architecture**](/wiki/technical/dashboard)
-* [**Branding & Design**](/wiki/technical/branding)
-* [**Journal System**](/wiki/technical/journal)
-* [**Knowledge Graph**](/wiki/technical/knowledge-graph)
-* [**Parallax Lenses**](/wiki/technical/lenses)
-* [**Library Search Bar**](/wiki/technical/library-search-bar)
-* [**Library Features**](/wiki/technical/library-features)
-* [**Performance**](/wiki/technical/performance)
-* [**Security**](/wiki/technical/security)
-* [**Subscriptions**](/wiki/technical/subscriptions)
-* [**Text-to-Speech**](/wiki/technical/tts)
-* [**Workflows**](/wiki/technical/workflow)
+### Architecture & Features
+
+* [**Technical Home**](/admin/wiki/home)
+* [**Dashboard Architecture**](/admin/wiki/dashboard)
+* [**Workbench & Extras**](/admin/wiki/workbench)
+* [**Branding & Design**](/admin/wiki/branding)
+* [**Journal System**](/admin/wiki/journal)
+* [**Knowledge Graph**](/admin/wiki/knowledge-graph)
+* [**Parallax Lenses**](/admin/wiki/lenses)
+* [**Library Search Bar**](/admin/wiki/library-search-bar)
+* [**Library Features**](/admin/wiki/library-features)
+* [**Subscriptions & Payments**](/admin/wiki/subscriptions)
+* [**Text-to-Speech**](/admin/wiki/tts)
+* [**Concept Search**](/admin/wiki/concept-search)
+* [**WikiLinks**](/admin/wiki/wikilinks)
+* [**Performance**](/admin/wiki/performance)
+* [**Security**](/admin/wiki/security)
+* [**Workflows**](/admin/wiki/workflow)

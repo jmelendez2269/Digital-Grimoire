@@ -77,7 +77,7 @@ export default function ActiveRitualPlayer({ ritual }: { ritual: Ritual }) {
 
     const handleExit = () => {
         if (confirm("Are you sure you want to end the ritual early?")) {
-            router.push('/practitioner/rituals');
+            router.push('/workbench/rituals');
         }
     };
 
@@ -100,7 +100,7 @@ export default function ActiveRitualPlayer({ ritual }: { ritual: Ritual }) {
                     </p>
                     <div className="flex gap-4 justify-center">
                         <button
-                            onClick={() => router.push('/practitioner/rituals')}
+                            onClick={() => router.push('/workbench/rituals')}
                             className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded transition-colors"
                         >
                             Return to Workbench
@@ -149,6 +149,7 @@ export default function ActiveRitualPlayer({ ritual }: { ritual: Ritual }) {
                 <button
                     onClick={handleExit}
                     className="text-zinc-500 hover:text-red-500 transition-colors"
+                    aria-label="Exit ritual"
                 >
                     <X size={24} />
                 </button>
@@ -177,8 +178,8 @@ export default function ActiveRitualPlayer({ ritual }: { ritual: Ritual }) {
                         <button
                             onClick={() => setIsTimerRunning(!isTimerRunning)}
                             className={`flex items-center gap-2 px-6 py-2 rounded-full border transition-colors ${isTimerRunning
-                                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-500'
-                                    : 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700'
+                                ? 'bg-amber-500/10 border-amber-500/50 text-amber-500'
+                                : 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700'
                                 }`}
                         >
                             <Timer size={18} />
