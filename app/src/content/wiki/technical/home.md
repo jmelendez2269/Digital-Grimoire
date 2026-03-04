@@ -55,9 +55,9 @@ This is the primary functional component rendered by `page.tsx`. It acts as a "B
     * **Courses** (`/courses`): Learning paths. Includes analytics tracking on click (`/api/track/courses-click`).
     * **Parallax Engine** (`<ParallaxEngineInfo />`): Link to the AI analysis engine with details on the 7-lens perspective.
 4. **Extras / Practitioner Tools**:
-    * **Ritual Machine** (`/ritual-machine`): Tool for generating ritual protocols.
-    * **Workbench** (`/practitioner/rituals`): Ritual management dashboard.
-    * **Tarot** (`/practitioner/tarot`): Digital tarot reading interface.
+    * **Ritual Library** (`/ritual-machine`): Browse curated pre-built ritual protocols.
+    * **Workbench** (`/workbench`): 3-tab creation hub — My Rituals, Ritual Machine (curated protocols runner), Deck Forge (AI tarot creation). See [Workbench Technical Reference](/admin/wiki/workbench).
+    * **The Oracle** (`/extras/tarot`): Consumption-only tarot daily draw and reading history.
 
 ## Key Implementation Details
 
