@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const aiResponse = await aiOrchestrator.chatComplete(messages, {
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
     });
 
     // Log API usage

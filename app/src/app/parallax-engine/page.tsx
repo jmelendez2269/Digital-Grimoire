@@ -54,11 +54,13 @@ function ParallaxEngineContent() {
   const [error, setError] = useState<string | null>(null);
   const [savingDefault, setSavingDefault] = useState(false);
   const [defaultSaved, setDefaultSaved] = useState(false);
+  const [rateLimitLoading, setRateLimitLoading] = useState(true);
   const [rateLimit, setRateLimit] = useState<{
     remaining: number;
     limit: number;
     resetDate: Date | string;
     isPremium: boolean;
+    tier?: string;
   } | null>(null);
   const [currentResponseId, setCurrentResponseId] = useState<string | null>(null);
   const [historyRefreshTrigger, setHistoryRefreshTrigger] = useState(0);
@@ -151,6 +153,8 @@ function ParallaxEngineContent() {
       }
     } catch (err) {
       console.error('Error fetching rate limit:', err);
+    } finally {
+      setRateLimitLoading(false);
     }
   }
 
@@ -462,13 +466,15 @@ function ParallaxEngineContent() {
               limit={rateLimit.limit}
               resetDate={rateLimit.resetDate}
               isPremium={rateLimit.isPremium}
+              tier={rateLimit.tier}
             />
           </div>
         )}
 
         <PremiumGate
           isPremium={rateLimit?.isPremium || false}
-          rateLimitRemaining={rateLimit?.remaining || 0}
+          rateLimitRemaining={rateLimitLoading ? 1 : (rateLimit?.remaining || 0)}
+          limit={rateLimit?.limit}
         >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: Lens Sliders */}

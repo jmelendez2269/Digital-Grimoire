@@ -89,7 +89,7 @@ export async function POST(
         userId: user.id,
         requestMetadata: {
           lensId,
-          model: 'gpt-4o',
+          model: 'gpt-4o-mini',
           inputTokens: lensResponse.tokenUsage.inputTokens,
           outputTokens: lensResponse.tokenUsage.outputTokens,
           query: query.substring(0, 100)

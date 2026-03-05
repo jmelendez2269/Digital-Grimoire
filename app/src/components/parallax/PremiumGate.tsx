@@ -7,12 +7,14 @@ interface PremiumGateProps {
   children: React.ReactNode;
   isPremium: boolean;
   rateLimitRemaining: number;
+  limit?: number;
 }
 
 export default function PremiumGate({
   children,
   isPremium,
   rateLimitRemaining,
+  limit = 5,
 }: PremiumGateProps) {
   // If premium or has remaining queries, show content
   if (isPremium || rateLimitRemaining > 0) {
@@ -32,7 +34,7 @@ export default function PremiumGate({
       </h2>
 
       <p className="text-lg text-amber-100/70 mb-2 max-w-md">
-        You've used all 5 free queries this month.
+        You've used all {limit} free queries this month.
       </p>
 
       <p className="text-sm text-amber-100/60 mb-8 max-w-md">

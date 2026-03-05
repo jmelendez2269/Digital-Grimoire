@@ -313,7 +313,7 @@ Provide a brief summary from the ${lens.name} perspective.`;
       { role: 'user', content: userPrompt },
     ];
 
-    const model = lens.defaultModel || 'gpt-4o';
+    const model = lens.defaultModel || 'gpt-4o-mini';
     const completion = await aiOrchestrator.chatComplete(messages, {
       model,
       temperature: 0.7,
@@ -376,7 +376,7 @@ Please answer the question from the ${lens.name} perspective.`;
       { role: 'user', content: userPrompt },
     ];
 
-    const model = lens.defaultModel || 'gpt-4o';
+    const model = lens.defaultModel || 'gpt-4o-mini';
     const completion = await aiOrchestrator.chatComplete(messages, {
       model,
       temperature: 0.7,
@@ -530,7 +530,7 @@ IMPORTANT: Your response must not exceed ${lengthConfig.synthesisMaxTokens} toke
     ];
 
     const completion = await aiOrchestrator.chatComplete(messages, {
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       temperature: 0.7,
       maxTokens: lengthConfig.synthesisMaxTokens,
     });
@@ -738,7 +738,7 @@ IMPORTANT: Your response must not exceed ${maxTokens} tokens. Stay strictly with
     ];
 
     const completion = await aiOrchestrator.chatComplete(messages, {
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       temperature: 0.7,
       maxTokens,
     });

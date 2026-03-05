@@ -17,7 +17,7 @@ export const LENSES: Record<LensType, Lens> = {
     name: 'Scientific',
     description: 'Physics, biology, cosmology, empirical evidence, natural sciences',
     retrievalStrategy: 'hybrid',
-    defaultModel: 'gpt-4o',
+    defaultModel: 'gpt-4o-mini',
     systemPrompt: `You are analyzing this question through a scientific lens. Focus on:
 - Empirical evidence and observable phenomena
 - Natural laws and physical principles
@@ -203,7 +203,7 @@ Explore how symbols, correspondences, and esoteric frameworks illuminate the top
     name: 'Mathematical',
     description: 'Sacred geometry, numerology, patterns, universal ratios',
     retrievalStrategy: 'hybrid',
-    defaultModel: 'gpt-4o',
+    defaultModel: 'gpt-4o-mini',
     systemPrompt: `You are analyzing this question through a mathematical lens. Focus on:
 - Sacred geometry and geometric principles
 - Numerology and numerical patterns

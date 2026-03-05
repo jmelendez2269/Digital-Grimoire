@@ -8,6 +8,7 @@ interface RateLimitDisplayProps {
   limit: number;
   resetDate: Date | string;
   isPremium: boolean;
+  tier?: string;
 }
 
 export default function RateLimitDisplay({
@@ -15,12 +16,23 @@ export default function RateLimitDisplay({
   limit,
   resetDate,
   isPremium,
+  tier = 'free',
 }: RateLimitDisplayProps) {
+  const tierLabel: Record<string, string> = {
+    free: 'Free',
+    student: 'Student',
+    scholar: 'Scholar',
+    adept: 'Adept',
+  };
+  const label = tierLabel[tier] ?? 'Free';
+
   if (isPremium) {
     return (
       <div className="flex items-center gap-2 p-3 bg-amber-900/20 border border-amber-600/30 rounded-lg">
         <Zap className="w-4 h-4 text-amber-400" />
-        <span className="text-sm text-amber-100/80">Premium: Unlimited queries</span>
+        <span className="text-sm text-amber-100/80">
+          {label} tier: {remaining} / {limit} queries remaining this period
+        </span>
       </div>
     );
   }
@@ -30,8 +42,8 @@ export default function RateLimitDisplay({
 
   return (
     <div className={`p-3 rounded-lg border ${isLow
-        ? 'bg-red-900/20 border-red-600/30'
-        : 'bg-zinc-900/50 border-amber-900/20'
+      ? 'bg-red-900/20 border-red-600/30'
+      : 'bg-zinc-900/50 border-amber-900/20'
       }`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -42,15 +54,17 @@ export default function RateLimitDisplay({
           )}
           <span className={`text-sm font-medium ${isLow ? 'text-red-400' : 'text-amber-100/80'
             }`}>
-            Free Tier: {remaining} / {limit} queries remaining
+            {label} Tier: {remaining} / {limit} queries remaining
           </span>
         </div>
-        <Link
-          href="/profile?tab=subscription"
-          className="text-xs text-amber-400 hover:text-amber-300 underline"
-        >
-          Upgrade
-        </Link>
+        {tier !== 'adept' && (
+          <Link
+            href="/profile?tab=subscription"
+            className="text-xs text-amber-400 hover:text-amber-300 underline"
+          >
+            Upgrade
+          </Link>
+        )}
       </div>
 
       <div className="w-full bg-zinc-800 rounded-full h-2">

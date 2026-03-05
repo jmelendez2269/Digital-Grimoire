@@ -8,6 +8,7 @@ import { getAllLenses, getActiveLenses } from '@/lib/parallax/lenses';
 import { LensWeights } from '@/lib/parallax/types';
 import ExpandableLensCard from './ExpandableLensCard';
 import SourceCard from './SourceCard';
+import ParallaxLoader from '@/components/ui/ParallaxLoader';
 
 interface Source {
   text_id: string;
@@ -59,7 +60,6 @@ export default function ResponseStream({
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [expandedLenses, setExpandedLenses] = useState<Set<string>>(new Set());
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveMode, setSaveMode] = useState<'new' | 'existing'>('new');
   const [existingPages, setExistingPages] = useState<JournalPage[]>([]);
@@ -882,10 +882,7 @@ export default function ResponseStream({
                   query={query || response?.query || ''}
                   lensWeights={lensWeights}
                   responseLength={responseLength}
-                  onExpand={(lensId) => {
-                    setExpandedLenses(prev => new Set(prev).add(lensId));
-                    if (onLensExpand) onLensExpand(lensId);
-                  }}
+                  onExpand={() => { if (onLensExpand) onLensExpand(lens.id); }}
                 />
               ))
           )}
@@ -894,11 +891,9 @@ export default function ResponseStream({
 
       {/* Streaming indicator */}
       {isStreaming && !response && (
-        <div className="flex items-center justify-center p-12">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-amber-100/70">Analyzing from multiple perspectives...</p>
-          </div>
+        <div className="flex flex-col items-center justify-center p-12 gap-6">
+          <ParallaxLoader size="md" />
+          <p className="text-amber-100/70">Analyzing from multiple perspectives...</p>
         </div>
       )}
     </div>
