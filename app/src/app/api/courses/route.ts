@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         // Build query
         let query = supabase
             .from('courses')
-            .select('*')
+            .select('id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, created_at, updated_at')
             .order('title', { ascending: true });
 
         // Apply filters

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const minSimilarity = Number(searchParams.get("minSimilarity") || 0);
     const limit = Math.min(Number(searchParams.get("limit") || 100), 400);
 
-    let query = supabase.from("convergence_relationships").select("*").limit(limit);
+    let query = supabase.from("convergence_relationships").select("id, source_id, target_id, similarity, source_citation, notes, created_at").limit(limit);
     if (sourceId) query = query.eq("source_id", sourceId);
     if (!Number.isNaN(minSimilarity)) query = query.gte("similarity", minSimilarity);
 

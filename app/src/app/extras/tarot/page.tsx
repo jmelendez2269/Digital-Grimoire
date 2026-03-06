@@ -27,9 +27,9 @@ export default async function TarotPage() {
             </div>
 
             <div className="max-w-xl mx-auto mb-16">
-                <Link href="/extras/tarot/draw" className="group p-8 bg-zinc-900/40 border border-zinc-800 rounded-xl hover:border-amber-500/50 transition-all hover:-translate-y-1 block">
+                <Link href="/extras/tarot/draw" className="group p-6 sm:p-8 bg-zinc-900/40 border border-zinc-800 rounded-xl hover:border-amber-500/50 transition-all hover:-translate-y-1 block">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-amber-500/10 rounded-lg text-amber-500">
+                        <div className="p-3 bg-amber-500/10 rounded-lg text-amber-500 group-hover:bg-amber-500/20 transition-colors">
                             <Sparkles size={24} />
                         </div>
                         <h2 className="text-2xl font-serif text-zinc-100 group-hover:text-amber-400 transition-colors">Daily Draw</h2>

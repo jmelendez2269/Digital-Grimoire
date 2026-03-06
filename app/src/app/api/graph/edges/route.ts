@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from("correspondence_relationships")
-      .select("*, relationship_type:correspondence_relationship_types(id, slug, label, color, icon)")
+      .select("id, source_id, target_id, type, weight, confidence, source_citation, notes, created_at, relationship_type:correspondence_relationship_types(id, slug, label, color, icon)")
       .limit(limit);
     if (type) query = query.eq("type", type);
     if (typeId) query = query.eq("relationship_type_id", typeId);
@@ -39,15 +39,15 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await query;
     if (error) throw error;
-    
+
     const response = NextResponse.json({ items: data || [] });
-    
+
     // Add cache headers for public, read-only data (15 minutes)
     response.headers.set(
       'Cache-Control',
       'public, s-maxage=900, stale-while-revalidate=1800'
     );
-    
+
     return response;
   } catch (err: any) {
     return NextResponse.json(

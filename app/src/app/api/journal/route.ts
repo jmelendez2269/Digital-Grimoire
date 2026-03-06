@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // Build query
     let query = supabase
       .from('journal_pages')
-      .select('*')
+      .select('id, title, icon, is_archived, created_at, updated_at, parent_id, user_id')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {

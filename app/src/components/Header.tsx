@@ -31,6 +31,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
   const pathname = usePathname();
   const { user, loading, signOut, isAdmin, refreshAdminStatus } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [searchSelectorOpen, setSearchSelectorOpen] = useState(false);
@@ -145,7 +146,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             </button>
 
             {moreMenuOpen && (
-              <div className="absolute right-0 top-full mt-3 w-48 glass-panel rounded-lg py-2 z-50">
+              <div className="absolute right-0 top-full mt-3 w-48 bg-zinc-950/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] py-2 z-50 overflow-hidden">
                 <div className="px-3 py-2 text-[10px] font-mono font-bold text-cyan-500/50 uppercase tracking-widest border-b border-white/5 mb-1">
                   Modules
                 </div>
@@ -183,17 +184,17 @@ function Header({ librarySearch }: HeaderProps = {}) {
           <div className="relative" ref={searchSelectorRef}>
             <button
               onClick={() => setSearchSelectorOpen(!searchSelectorOpen)}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg shadow-lg transition-all duration-200 active:scale-95 group ${searchSelectorOpen ? 'bg-cyan-500 text-black' : 'bg-cyan-950/50 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-900/50 hover:border-cyan-400/50'
+              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg shadow-lg transition-all duration-200 active:scale-95 group ${searchSelectorOpen ? 'bg-cyan-500 text-black' : 'bg-cyan-950/50 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-900/50 hover:border-cyan-400/50'
                 }`}
               title="Open Search Integration"
             >
               <Sparkles className={`w-4 h-4 ${searchSelectorOpen ? 'text-black' : 'text-cyan-400 group-hover:text-cyan-300'} group-hover:animate-pulse`} />
-              <span className="text-sm font-bold uppercase tracking-wider">Search</span>
+              <span className="hidden sm:inline-block text-sm font-bold uppercase tracking-wider">Search</span>
               <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${searchSelectorOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {searchSelectorOpen && (
-              <div className="absolute right-0 top-full mt-4 w-96 bg-zinc-950 border border-white/10 rounded-2xl p-4 z-50 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden">
+              <div className="absolute right-0 top-full mt-4 w-[calc(100vw-2rem)] sm:w-96 max-w-sm bg-zinc-950 border border-white/10 rounded-2xl p-4 z-50 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-purple-500/5 pointer-events-none"></div>
 
                 <div className="relative space-y-3">
@@ -233,12 +234,27 @@ function Header({ librarySearch }: HeaderProps = {}) {
             )}
           </div>
 
+          {/* Mobile Hamburger Menu Toggle */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-zinc-400 hover:text-cyan-400 focus:outline-none bg-black/30 rounded-full border border-white/10"
+              aria-label="Toggle mobile menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              )}
+            </button>
+          </div>
+
           {/* User Profile */}
-          <div className="flex items-center justify-end min-w-[140px]">
+          <div className="flex items-center justify-end min-w-[32px] sm:min-w-[140px]">
             {!mounted || loading ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-white/10" />
             ) : user ? (
-              <div className="relative">
+              <div className="relative hidden md:block">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
                   className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full border border-white/10 hover:border-cyan-500/30 bg-black/30 transition-all group"
@@ -262,7 +278,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                   )}
                 </button>
 
-                {/* Enhanced Dropdown */}
+                {/* Desktop Dropdown */}
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-[9998]" onClick={() => setMenuOpen(false)} />
@@ -325,7 +341,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2">
                 <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">Log In</Link>
                 <Link href="/register" className="px-4 py-1.5 text-sm font-bold text-black bg-cyan-500 hover:bg-cyan-400 rounded transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                   JOIN_PARALLAX &gt;
@@ -334,6 +350,81 @@ function Header({ librarySearch }: HeaderProps = {}) {
             )}
           </div>
         </div>
+
+        {/* Mobile Overlay Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-zinc-950/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 mx-4 flex flex-col z-50 overflow-hidden">
+            {/* Decorative Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
+
+            {user ? (
+              <div className="relative z-10 space-y-4">
+                {/* Compact Profile Header */}
+                <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+                  {user.user_metadata?.avatar_url ? (
+                    <Image src={user.user_metadata.avatar_url} alt="User" width={36} height={36} className="rounded-full" />
+                  ) : (
+                    <div className="h-9 w-9 rounded-full bg-cyan-900/40 flex items-center justify-center font-bold text-cyan-500">
+                      {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="font-bold text-zinc-100">{user.user_metadata?.username || user.email?.split("@")[0]}</div>
+                    <div className="text-xs text-zinc-500">{user.email}</div>
+                  </div>
+                </div>
+
+                {/* Main Nav Links */}
+                <div className="grid grid-cols-2 gap-2 pb-4 border-b border-white/10">
+                  {[
+                    { name: 'Library', path: '/library', icon: '📚' },
+                    { name: 'Courses', path: '/courses', icon: '🎓' },
+                    { name: 'Journal', path: '/journal', icon: '📝' },
+                    { name: 'Graph', path: '/graph', icon: '🕸️' },
+                  ].map(item => (
+                    <Link key={item.path} href={item.path} onClick={() => setMobileMenuOpen(false)} className={`p-3 rounded-lg flex flex-col items-center justify-center text-center gap-1 ${isActive(item.path) ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400' : 'bg-black/30 border border-white/5 text-zinc-300 hover:bg-white/5'}`}>
+                      <span className="text-xl">{item.icon}</span>
+                      <span className="text-xs font-semibold">{item.name}</span>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Extras */}
+                <div className="space-y-1 pb-4 border-b border-white/10">
+                  <div className="px-2 text-[10px] font-mono text-cyan-500/70 uppercase tracking-widest mb-2">Extras</div>
+                  <Link href="/ritual-machine" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">📜 Ritual Library</Link>
+                  <Link href="/extras/tarot" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">🔮 The Oracle</Link>
+                  <Link href="/workbench" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">🛠️ Workbench</Link>
+                </div>
+
+                {/* Personal / Account */}
+                <div className="space-y-1 pb-4 border-b border-white/10">
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">📊 Dashboard</Link>
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">👤 Profile Tools</Link>
+                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">⚙️ Settings</Link>
+                </div>
+
+                {/* Admin */}
+                {isAdmin && (
+                  <div className="space-y-1 pb-4 border-b border-white/10">
+                    <div className="px-2 text-[10px] font-mono text-red-400/70 uppercase tracking-widest mb-2">Admin</div>
+                    <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">🔐 Admin Panel</Link>
+                  </div>
+                )}
+
+                <button onClick={() => { setMobileMenuOpen(false); handleSignOut(); }} className="w-full py-3 text-sm font-bold text-red-400 bg-red-900/10 hover:bg-red-900/20 rounded-lg transition-colors border border-red-900/30">
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <div className="relative z-10 flex flex-col gap-3 py-4">
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-zinc-300 border border-white/20 rounded-lg hover:bg-white/5">Log In</Link>
+                <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-black bg-cyan-500 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400">JOIN_PARALLAX</Link>
+              </div>
+            )}
+          </div>
+        )}
+
       </nav>
       <FeedbackModal isOpen={feedbackModalOpen} onClose={() => setFeedbackModalOpen(false)} />
     </header>

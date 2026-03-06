@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     // We can add the relationship later if needed, but for now prioritize reliability
     let query = supabase
       .from("convergence_concepts")
-      .select("*, tradition_ref:convergence_traditions(id, slug, label, color, icon)")
+      .select("id, slug, name, tradition, tradition_id, era, short_definition, primary_sources, tags, created_at, tradition_ref:convergence_traditions(id, slug, label, color, icon)")
       .order("created_at", { ascending: false })
       .limit(limit * 2); // Get more results to sort by relevance
 

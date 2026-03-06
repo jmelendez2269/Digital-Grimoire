@@ -28,7 +28,7 @@ export default function DashboardView() {
                 {/* Welcome Section */}
                 <div className="mb-12 text-center">
                     <div className="min-h-[60px] md:min-h-[72px] flex items-center justify-center">
-                        <h1 className="text-4xl md:text-5xl font-bold text-zinc-100">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-100">
                             {loading ? (
                                 "Welcome!"
                             ) : username ? (

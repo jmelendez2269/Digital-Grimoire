@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from("correspondences")
-      .select("*, type:correspondence_entity_types(id, slug, label, color, icon)")
+      .select("id, slug, name, category, aliases, description, lenses, created_at, updated_at, type:correspondence_entity_types(id, slug, label, color, icon)")
       .limit(limit);
 
     if (category) query = query.eq("category", category);
@@ -39,15 +39,15 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await query;
     if (error) throw error;
-    
+
     const response = NextResponse.json({ items: data || [] });
-    
+
     // Add cache headers for public, read-only data (15 minutes)
     response.headers.set(
       'Cache-Control',
       'public, s-maxage=900, stale-while-revalidate=1800'
     );
-    
+
     return response;
   } catch (err: any) {
     return NextResponse.json(
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
         .select("id, name, slug, category")
         .ilike("name", name.trim())
         .maybeSingle();
-      
+
       // Only use if it's an exact match (case-insensitive)
       if (nameMatch && nameMatch.name.toLowerCase().trim() === name.toLowerCase().trim()) {
         existingEntity = nameMatch;
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     // If entity already exists, return error with existing entity info
     if (existingEntity) {
       return NextResponse.json(
-        { 
+        {
           error: "Entity already exists",
           existingEntity: {
             id: existingEntity.id,
