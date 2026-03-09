@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { AlertCircle } from "lucide-react";
-import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import dynamic from "next/dynamic";
 import AppLoader from "@/components/ui/AppLoader";
 import ParallaxLoader from "@/components/ui/ParallaxLoader";
@@ -14,9 +13,16 @@ import ParallaxLoader from "@/components/ui/ParallaxLoader";
 import KnowledgeGraphHeader from "@/components/admin/knowledge/KnowledgeGraphHeader";
 import CorrespondenceControls from "@/components/admin/knowledge/CorrespondenceControls";
 import GraphControls from "@/components/admin/knowledge/GraphControls";
+
+// Parallax-specific components
 import SimilarityControls from "@/components/parallax/SimilarityControls";
+import TraditionLegend from "@/components/parallax/TraditionLegend";
 import EntityNode from "@/components/PublicEntityCard";
 import ComparativeTable from "@/components/parallax/ComparativeTable";
+
+// Modals
+import EntityDetailModal from "@/components/admin/EntityDetailModal";
+import ConceptDetailModal from "@/components/parallax/ConceptDetailModal";
 
 // Types
 import { ParallaxConcept, CorrespondenceEntity, GraphType } from "@/lib/types";
@@ -26,6 +32,11 @@ const GraphVisualization = dynamic(
   () => import("@/components/parallax/ParallaxGraph"),
   { ssr: false, loading: () => <ParallaxLoader /> }
 );
+
+const FloatingAISearch = dynamic(() => import("@/components/FloatingAISearch"), {
+  ssr: false,
+  loading: () => null,
+});
 
 function GraphPageContent() {
   const router = useRouter();
@@ -37,8 +48,10 @@ function GraphPageContent() {
   const [entities, setEntities] = useState<(ParallaxConcept | CorrespondenceEntity)[]>([]);
   const [relationships, setRelationships] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEntity, setSelectedEntity] = useState<ParallaxConcept | CorrespondenceEntity | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Selected entity — typed separately so we can use the right modal
+  const [selectedParallaxConcept, setSelectedParallaxConcept] = useState<ParallaxConcept | null>(null);
+  const [selectedCorrespondenceEntity, setSelectedCorrespondenceEntity] = useState<CorrespondenceEntity | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,15 +59,15 @@ function GraphPageContent() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [minSimilarity, setMinSimilarity] = useState(0);
 
-  // Initial Data Fetch
+  // Initial Data Fetch — minSimilarity triggers a re-fetch in parallax mode (same as /parallax-graph)
   useEffect(() => {
     const fetchEntities = async () => {
       setLoading(true);
       try {
         if (graphType === "parallax") {
           const [entitiesRes, relationshipsRes] = await Promise.all([
-            fetch("/api/concepts?limit=100"),
-            fetch("/api/concepts/relationships?limit=400")
+            fetch("/api/concepts?limit=200"),
+            fetch(`/api/concepts/relationships?limit=400&minSimilarity=${minSimilarity}`)
           ]);
 
           const entitiesData = await entitiesRes.json();
@@ -88,7 +101,7 @@ function GraphPageContent() {
     };
 
     fetchEntities();
-  }, [graphType]);
+  }, [graphType, minSimilarity]);
 
   // Derived Data for Filters
   const traditions = graphType === "parallax"
@@ -144,6 +157,7 @@ function GraphPageContent() {
     setSearchQuery("");
     setSelectedCategory(null);
     setSelectedTradition(null);
+    setMinSimilarity(0);
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     router.replace(`/graph?${params.toString()}`, { scroll: false });
@@ -152,6 +166,16 @@ function GraphPageContent() {
   const handleViewChange = (mode: "cards" | "graph" | "table") => {
     setViewMode(mode);
   };
+
+  const handleSelectEntity = (entity: ParallaxConcept | CorrespondenceEntity) => {
+    if (graphType === "parallax") {
+      setSelectedParallaxConcept(entity as ParallaxConcept);
+    } else {
+      setSelectedCorrespondenceEntity(entity as CorrespondenceEntity);
+    }
+  };
+
+  const isParallaxGraphView = graphType === "parallax" && viewMode === "graph";
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-900/30">
@@ -236,10 +260,7 @@ function GraphPageContent() {
                   entity={entity}
                   graphType={graphType}
                   relationships={relationships}
-                  onSelect={() => {
-                    setSelectedEntity(entity);
-                    setShowDetailModal(true);
-                  }}
+                  onSelect={() => handleSelectEntity(entity)}
                 />
               ))}
               {filteredEntities.length === 0 && (
@@ -260,36 +281,64 @@ function GraphPageContent() {
             <ComparativeTable
               concepts={filteredEntities as ParallaxConcept[]}
               relationships={relationships}
-              onSelectConcept={(entity) => {
-                setSelectedEntity(entity);
-                setShowDetailModal(true);
-              }}
+              onSelectConcept={(entity) => handleSelectEntity(entity)}
             />
           ) : (
-            <div className="h-[700px] bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl">
-              <GraphVisualization
-                concepts={filteredEntities as any} // Cast to any to avoid type errors if filteredEntities are mixed
-                relationships={relationships}
-                onSelectConcept={(entity: any) => {
-                  setSelectedEntity(entity);
-                  setShowDetailModal(true);
-                }}
-                minSimilarity={minSimilarity}
-              />
+            /* Graph view — parallax mode gets the TraditionLegend sidebar */
+            <div className={`grid gap-6 ${isParallaxGraphView ? "grid-cols-1 lg:grid-cols-4" : "grid-cols-1"}`}>
+              {/* Main Graph Canvas */}
+              <div className={isParallaxGraphView ? "lg:col-span-3" : "col-span-1"}>
+                <div className="h-[700px] bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl">
+                  <GraphVisualization
+                    concepts={filteredEntities as any}
+                    relationships={relationships}
+                    onSelectConcept={(entity: any) => handleSelectEntity(entity)}
+                    minSimilarity={minSimilarity}
+                  />
+                </div>
+              </div>
+
+              {/* Parallax TraditionLegend sidebar */}
+              {isParallaxGraphView && (
+                <div className="lg:col-span-1">
+                  <div className="bg-zinc-900/50 border border-amber-900/20 rounded-2xl p-4 shadow-2xl h-fit">
+                    <TraditionLegend
+                      traditions={traditions}
+                      concepts={entities as ParallaxConcept[]}
+                      selectedTradition={selectedTradition}
+                      onSelectTradition={setSelectedTradition}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Detail Modal */}
-        {showDetailModal && selectedEntity && (
+        {/* Parallax Concept Detail Modal */}
+        {selectedParallaxConcept && (
+          <ConceptDetailModal
+            concept={selectedParallaxConcept}
+            relationships={relationships}
+            concepts={entities as ParallaxConcept[]}
+            onClose={() => setSelectedParallaxConcept(null)}
+          />
+        )}
+
+        {/* Correspondence Entity Detail Modal */}
+        {selectedCorrespondenceEntity && (
           <EntityDetailModal
-            entity={selectedEntity}
+            entity={selectedCorrespondenceEntity}
             graphType={graphType}
-            onClose={() => setShowDetailModal(false)}
+            onClose={() => setSelectedCorrespondenceEntity(null)}
             readOnly={true}
           />
         )}
       </main>
+
+      {/* Floating AI Search (parallax mode only) */}
+      {graphType === "parallax" && <FloatingAISearch defaultCollapsed={true} />}
+
       <Footer />
     </div>
   );
