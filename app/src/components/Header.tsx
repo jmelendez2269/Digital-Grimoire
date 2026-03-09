@@ -80,6 +80,8 @@ function Header({ librarySearch }: HeaderProps = {}) {
     { label: "Knowledge Graph", icon: "🕸️", href: "/admin/knowledge-graph" },
     { label: "Embeddings", icon: "🔮", href: "/admin/embeddings" },
     { label: "Feedback", icon: "💬", href: "/admin/feedback" },
+    { label: "Technical Wiki", icon: "📖", href: "/admin/wiki" },
+    { label: "Blog", icon: "📝", href: "/admin/blog" },
   ];
 
   return (

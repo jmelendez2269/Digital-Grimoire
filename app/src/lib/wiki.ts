@@ -51,3 +51,61 @@ export async function getUserDoc(slug: string[]) {
 export async function getTechnicalDoc(slug: string[]) {
     return getDocContent('technical', slug);
 }
+
+export async function getAllTechnicalDocs(): Promise<WikiDoc[]> {
+    try {
+        const technicalDir = path.join(CONTENT_DIR, 'technical');
+        // Check if directory exists
+        try {
+            await fs.access(technicalDir);
+        } catch {
+            return [];
+        }
+
+        const files = await fs.readdir(technicalDir);
+        const mdFiles = files.filter(f => f.endsWith('.md'));
+
+        const docs = await Promise.all(
+            mdFiles.map(async (file) => {
+                const slug = file.replace(/\.md$/, '');
+                const doc = await getDocContent('technical', [slug]);
+                return doc;
+            })
+        );
+
+        // Filter out nulls and type cast
+        return docs.filter((d): d is WikiDoc => d !== null);
+    } catch (error) {
+        console.error(`Error getting all technical docs: ${error}`);
+        return [];
+    }
+}
+
+export async function getAllUserDocs(): Promise<WikiDoc[]> {
+    try {
+        const userDir = path.join(CONTENT_DIR, 'user');
+        // Check if directory exists
+        try {
+            await fs.access(userDir);
+        } catch {
+            return [];
+        }
+
+        const files = await fs.readdir(userDir);
+        const mdFiles = files.filter(f => f.endsWith('.md'));
+
+        const docs = await Promise.all(
+            mdFiles.map(async (file) => {
+                const slug = file.replace(/\.md$/, '');
+                const doc = await getDocContent('user', [slug]);
+                return doc;
+            })
+        );
+
+        // Filter out nulls and type cast
+        return docs.filter((d): d is WikiDoc => d !== null);
+    } catch (error) {
+        console.error(`Error getting all user docs: ${error}`);
+        return [];
+    }
+}

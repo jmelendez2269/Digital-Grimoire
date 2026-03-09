@@ -4,32 +4,24 @@ Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     integrations: [
         Sentry.replayIntegration({
-            // Additional Replay configuration goes in here, for example:
             maskAllText: true,
             blockAllMedia: true,
         }),
     ],
 
-    // Adjust this value in production, or use tracesSampler for greater control
     tracesSampleRate: 1,
-
-    // Setting this option to true will print useful information to the console while you're setting up Sentry.
     debug: false,
-
     replaysOnErrorSampleRate: 1.0,
-
-    // This sets the sample rate to be 10% for session-based replays
     replaysSessionSampleRate: 0.1,
-
-    // Routes HTTP requests through "Monitoring" to circumvent ad-blockers
     tunnel: "/monitoring",
 
-    // Filter out sensitive data or events in development
     beforeSend(event) {
-        // Don't send events in development
         if (process.env.NODE_ENV === "development") {
             return null;
         }
         return event;
     },
 });
+
+// Required by @sentry/nextjs to instrument router transitions
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

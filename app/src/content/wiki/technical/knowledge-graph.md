@@ -8,13 +8,54 @@ description: Guide for seeding initial concepts and relationships into the Paral
 
 # Parallax Graph - Data Seeding Guide
 
-**Last Updated:** December 2024  
-**Status:** Ready for initial data seeding
+**Last Updated:** March 2026  
+**Status:** Stable — Sigma.js WebGL rendering
 
 ---
 
 > [!NOTE]
 > The database currently uses legacy table names `convergence_concepts` and `convergence_relationships`. These will be migrated to `parallax_*` in a future update.
+
+---
+
+## Rendering Architecture
+
+The Knowledge Graph is rendered using **Sigma.js v3** (WebGL 2D) with **Graphology** as the underlying graph data structure. This replaces the previous SVG/D3 force simulation.
+
+### Stack
+
+| Layer | Library | Purpose |
+|---|---|---|
+| Graph data structure | `graphology` | Holds nodes + edges with typed attributes |
+| Graph layout | `graphology-layout-forceatlas2` | ForceAtlas2 physics (same algorithm as Obsidian) |
+| Renderer | `sigma` | WebGL 2D rendering engine |
+
+### Key Files
+
+```
+app/src/
+├── lib/graph/
+│   └── graphology-adapter.ts      # Converts Supabase API data → Graphology MultiGraph
+├── components/graph/
+│   ├── SigmaGraph.tsx             # Core WebGL graph component
+│   └── GraphView.tsx              # Thin wrapper (preserves old prop interface)
+└── components/parallax/
+    └── ParallaxGraph.tsx          # Thin wrapper (preserves old prop interface)
+```
+
+### How it works
+
+1. Page fetches entities + edges from Supabase API routes (unchanged)
+2. `buildGraphologyGraph()` in `graphology-adapter.ts` converts the raw arrays into a Graphology `Graph` object with node attributes (`label`, `x`, `y`, `size`, `color`) and edge attributes (`size`)
+3. `forceAtlas2.assign()` runs 100 iterations synchronously to settle the layout
+4. Sigma.js mounts the WebGL canvas and handles all rendering, zoom, pan, hover highlighting, and click events
+
+### Why WebGL over SVG/D3
+
+- **SVG/D3** injects a DOM node per node and edge — performance degrades sharply above ~500 nodes
+- **Sigma.js WebGL** draws pixels directly to the GPU — handles 10,000–100,000 nodes at 60fps with smart label culling built-in
+
+---
 
 ## Overview
 
@@ -348,11 +389,12 @@ Once you've added concepts and relationships:
 - Check that concepts exist in the database
 - Verify your API routes are working: `/api/concepts`
 
-**Graph not rendering:**
+**"Graph not rendering" / blank canvas:**
 
-- Check browser console for errors
-- Ensure D3.js is installed: `pnpm add d3 @types/d3`
-- Verify concepts and relationships are loaded (check Network tab)
+- Check the browser console for errors
+- Ensure `sigma` and `graphology` are installed: `pnpm add sigma graphology graphology-layout-forceatlas2`
+- Verify concepts and relationships are loading (check Network tab for `/api/graph/entities` and `/api/graph/edges`)
+- Confirm the graph container `div` has a non-zero height — the `height` prop on `SigmaGraph` controls this
 
 **API returns 403 Forbidden:**
 

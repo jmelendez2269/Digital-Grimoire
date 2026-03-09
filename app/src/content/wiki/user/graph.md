@@ -1,39 +1,47 @@
-# User Guide: The Parallax Graph
+# User Guide: The Knowledge Graph
 
 ## Overview
 
-The **Parallax Graph** is a 3D visualization tool that maps the hidden connections between every document, author, concept, and tradition in Project Parallax. It transforms the library from a list of books into a living network of ideas.
+The **Knowledge Graph** is an interactive map that visualizes the hidden connections between concepts, traditions, and correspondences across the Grimoire. It transforms the library from a list of entries into a living, explorable network of ideas — showing you how Buddhist emptiness relates to Taoist Wu, or how alchemical symbols echo through Hermetic and Kabbalistic traditions.
 
 ## Navigation Controls
 
-* **Rotate**: Click and drag the background to rotate the view around the center.
-* **Zoom**: Use your mouse wheel or pinch gestures to zoom in and out.
-* **Pan**: Right-click and drag (or two-finger drag) to move the view laterally.
-* **Select**: Click on any node (dot) to view its details.
+- **Zoom In/Out**: Use your mouse scroll wheel or pinch gesture on a trackpad.
+- **Pan**: Click and drag the background to move around the graph.
+- **Select a Node**: Click on any node (dot) to open a detail panel with full information about that concept or entity.
 
 ## Understanding the Nodes
 
-* **Books**: Represented by specific colored nodes.
-* **Authors**: Larger nodes that connect to all their written works.
-* **Concepts**: Central hubs that link books discussing the same topic (e.g., "Alchemy", "Consciousness").
-* **Traditions**: Broad categories connecting related works and concepts.
+Each colored dot represents a concept or entity. The color indicates its **Tradition** or **Category**:
 
-## Interactions
+| Color | Tradition / Category |
+|---|---|
+| 🟡 Gold | Buddhist |
+| 🔵 Cyan | Christian |
+| 🟢 Emerald | Taoist |
+| 🟠 Orange | Hindu |
+| 🔴 Red | Islamic |
+| 🟣 Indigo/Purple | Jewish / Quantum |
+| 🩷 Pink | Philosophy |
+| 🟡 Amber | Hermetic |
 
-1. **Click a Node**: This will center the camera on that node and highlight all its direct connections. A sidebar will open with details about the book, author, or concept.
-2. **Follow the Lines**: The lines (edges) represent relationships.
-    * *Green Line*: Positive reference or agreement.
-    * *Red Line*: Critique or disagreement.
-    * *Grey Line*: General connection or citation.
-3. **Search**: Use the search bar within the Graph interface to instantly fly to a specific node.
+The **lines (edges)** connecting nodes represent relationships. Thicker, brighter lines indicate a stronger connection between the two concepts.
 
-## Discovery Mode
+## Filters & Controls
 
-The Graph is the best way to find "unknown knowns"—books you didn't know you needed.
+Use the controls above the graph to narrow your view:
 
-* Start with a book you love.
-* Look at what *other* books it connects to.
-* Follow the path to an Author you've never heard of.
-* See what *other* traditions that Author has influenced.
+- **Tradition / Category Dropdown**: Show only concepts from a specific tradition or category.
+- **Similarity Slider** *(Parallax Graph)*: Raise this threshold to show only the strongest cross-tradition connections.
+- **Search Bar**: Search for a specific concept by name. Matching nodes will be highlighted.
 
-In this way, you can trace the lineage of an idea across centuries and cultures.
+## Tips for Exploration
+
+- **Hover over a node** to highlight only its direct connections — everything else will fade.
+- **Start with a tradition you know** and follow the edges to discover adjacent and parallel concepts in other traditions.
+- **Zoom in** to read concept labels clearly — labels appear and sharpen as you zoom in.
+- Switch between **Graph View**, **Cards View**, and **Table View** using the buttons at the top to explore the same data in different formats.
+
+---
+
+*Last Updated: March 2026*
