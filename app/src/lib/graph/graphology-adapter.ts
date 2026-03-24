@@ -87,10 +87,10 @@ export function buildGraphologyGraph(
 
         graph.addNode(entity.id, {
             label: entity.name,
-            // Random initial positions — ForceAtlas2 will settle them
-            x: Math.random() * 1000,
-            y: Math.random() * 1000,
-            size: 6,
+            // We'll calculate positions and sizes after adding all nodes/edges
+            x: 0,
+            y: 0,
+            size: 4,
             color: resolveNodeColor(entity),
             // Carry the original data for click handlers / modals
             originalData: entity,
@@ -117,11 +117,31 @@ export function buildGraphologyGraph(
         if (graph.hasEdge(edge.source_id, edge.target_id)) return;
 
         graph.addEdge(edge.source_id, edge.target_id, {
-            size: 0.5 + weight * 2,
-            color: "#4B5563",
+            size: 1 + weight * 2,
+            color: "#374151", // Darker subtle edges
             originalData: edge,
         });
     });
+
+    // ── 3. Post-Process: Sizes by Degree & Circular Layout ─────────────────────
+    if (graph.order > 0) {
+        // Calculate degree for each node and scale it
+        graph.forEachNode((node) => {
+            const degree = graph.degree(node);
+            // Scale size between 4 and 12 based on degree
+            const size = 4 + Math.min(degree, 10) * 0.8;
+            graph.updateNodeAttribute(node, "size", () => size);
+        });
+
+        // Simple circular layout manually to avoid extra dependencies
+        const radius = 500;
+        const nodes = graph.nodes();
+        nodes.forEach((node, i) => {
+            const angle = (i * 2 * Math.PI) / nodes.length;
+            graph.setNodeAttribute(node, "x", radius * Math.cos(angle));
+            graph.setNodeAttribute(node, "y", radius * Math.sin(angle));
+        });
+    }
 
     return graph;
 }

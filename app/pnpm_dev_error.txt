@@ -1,0 +1,20 @@
+
+> app@0.1.0 dev C:\Projects\Digital-Grimoire\app
+> next dev --webpack
+
+ ⚠ Port 3000 is in use by process 57792, using available port 3001 instead.
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   ▲ Next.js 16.0.10 (webpack)
+   - Local:         http://localhost:3001
+   - Network:       http://100.98.40.41:3001
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · clientTraceMetadata
+     · optimizePackageImports
+
+ ✓ Starting...
+ ⨯ Unable to acquire lock at C:\Projects\Digital-Grimoire\app\.next\dev\lock, is another instance of next dev running?
+   Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[?25h
+ ELIFECYCLE  Command failed with exit code 1.

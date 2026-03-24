@@ -1,0 +1,49 @@
+ta\Roaming\npm\pnpm.ps1
+:24 char:5
++     & "node$exe"  "$b
+asedir/node_modules/pnp
+m/bin/pnpm.cjs" $args
++     ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([baseline-bro   
+ ws...ping@latest -    
+D`:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+   Γû▓ Next.js 16.0.10 (webpack)
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ┬╖ clientTraceMetadata
+     ┬╖ optimizePackageImports
+
+ ΓÜá The "middleware" 
+file convention is 
+deprecated. Please use 
+"proxy" instead. Learn 
+more: https://nextjs.or
+g/docs/messages/middlew
+are-to-proxy
+   Creating an optimized production build ...
+[@sentry/nextjs] 
+DEPRECATION WARNING: 
+It is recommended 
+renaming your `sentry.c
+lient.config.ts` file, 
+or moving its content 
+to `instrumentation-cli
+ent.ts`. When using 
+Turbopack `sentry.clien
+t.config.ts` will no 
+longer work. Read more 
+about the `instrumentat
+ion-client.ts` file: ht
+tps://nextjs.org/docs/a
+pp/api-reference/file-c
+onventions/instrumentat
+ion-client

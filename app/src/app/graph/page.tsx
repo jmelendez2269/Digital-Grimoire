@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -104,53 +104,59 @@ function GraphPageContent() {
   }, [graphType, minSimilarity]);
 
   // Derived Data for Filters
-  const traditions = graphType === "parallax"
-    ? Array.from(new Set((entities as ParallaxConcept[]).map((c) => c.tradition || c.tradition_ref?.label).filter(Boolean) as string[])).sort()
-    : [];
+  const traditions = useMemo(() => {
+    return graphType === "parallax"
+      ? Array.from(new Set((entities as ParallaxConcept[]).map((c) => c.tradition || c.tradition_ref?.label).filter(Boolean) as string[])).sort()
+      : [];
+  }, [graphType, entities]);
 
-  const categories = graphType === "correspondences"
-    ? Array.from(new Set((entities as CorrespondenceEntity[]).map((e) => e.category || e.type?.label).filter(Boolean) as string[])).sort()
-    : [];
+  const categories = useMemo(() => {
+    return graphType === "correspondences"
+      ? Array.from(new Set((entities as CorrespondenceEntity[]).map((e) => e.category || e.type?.label).filter(Boolean) as string[])).sort()
+      : [];
+  }, [graphType, entities]);
 
-  const filteredEntities = entities.filter((entity) => {
-    const query = searchQuery.toLowerCase();
+  const filteredEntities = useMemo(() => {
+    return entities.filter((entity) => {
+      const query = searchQuery.toLowerCase();
 
-    // Parallax Tradition Filter
-    if (graphType === "parallax" && selectedTradition) {
-      const e = entity as ParallaxConcept;
-      const traditionLabel = e.tradition || e.tradition_ref?.label;
-      if (traditionLabel !== selectedTradition) return false;
-    }
+      // Parallax Tradition Filter
+      if (graphType === "parallax" && selectedTradition) {
+        const e = entity as ParallaxConcept;
+        const traditionLabel = e.tradition || e.tradition_ref?.label;
+        if (traditionLabel !== selectedTradition) return false;
+      }
 
-    // Correspondence Category Filter
-    if (graphType === "correspondences" && selectedCategory) {
-      const e = entity as CorrespondenceEntity;
-      const categoryLabel = e.category || e.type?.label;
-      if (categoryLabel !== selectedCategory) return false;
-    }
+      // Correspondence Category Filter
+      if (graphType === "correspondences" && selectedCategory) {
+        const e = entity as CorrespondenceEntity;
+        const categoryLabel = e.category || e.type?.label;
+        if (categoryLabel !== selectedCategory) return false;
+      }
 
-    if (!searchQuery) return true;
+      if (!searchQuery) return true;
 
-    if (graphType === "correspondences") {
-      const e = entity as CorrespondenceEntity;
-      return (
-        e.name.toLowerCase().includes(query) ||
-        (e.category && e.category.toLowerCase().includes(query)) ||
-        (e.type?.label && e.type.label.toLowerCase().includes(query)) ||
-        e.aliases?.some((a) => a.toLowerCase().includes(query)) ||
-        e.description?.toLowerCase().includes(query)
-      );
-    } else {
-      const e = entity as ParallaxConcept;
-      return (
-        e.name.toLowerCase().includes(query) ||
-        (e.tradition && e.tradition.toLowerCase().includes(query)) ||
-        (e.tradition_ref && e.tradition_ref.label.toLowerCase().includes(query)) ||
-        e.tags?.some((t) => t.toLowerCase().includes(query)) ||
-        e.short_definition?.toLowerCase().includes(query)
-      );
-    }
-  });
+      if (graphType === "correspondences") {
+        const e = entity as CorrespondenceEntity;
+        return (
+          e.name.toLowerCase().includes(query) ||
+          (e.category && e.category.toLowerCase().includes(query)) ||
+          (e.type?.label && e.type.label.toLowerCase().includes(query)) ||
+          e.aliases?.some((a) => a.toLowerCase().includes(query)) ||
+          e.description?.toLowerCase().includes(query)
+        );
+      } else {
+        const e = entity as ParallaxConcept;
+        return (
+          e.name.toLowerCase().includes(query) ||
+          (e.tradition && e.tradition.toLowerCase().includes(query)) ||
+          (e.tradition_ref && e.tradition_ref.label.toLowerCase().includes(query)) ||
+          e.tags?.some((t) => t.toLowerCase().includes(query)) ||
+          e.short_definition?.toLowerCase().includes(query)
+        );
+      }
+    });
+  }, [entities, graphType, selectedTradition, selectedCategory, searchQuery]);
 
   const handleTypeChange = (type: GraphType) => {
     setGraphType(type);

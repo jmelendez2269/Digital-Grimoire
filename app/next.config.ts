@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
   },
+  serverExternalPackages: ['canvas', 'encoding'],
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],

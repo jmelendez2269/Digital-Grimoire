@@ -4,6 +4,8 @@ import SigmaGraph from "@/components/graph/SigmaGraph";
 import { ParallaxConcept, ParallaxRelationship, CorrespondenceEntity } from "@/lib/types";
 import { GraphEntity, GraphEdge } from "@/lib/graph/graphology-adapter";
 
+console.log("[GraphDebug] ParallaxGraph.tsx module loaded");
+
 interface ParallaxGraphProps {
   concepts: (ParallaxConcept | CorrespondenceEntity)[];
   relationships: ParallaxRelationship[];
