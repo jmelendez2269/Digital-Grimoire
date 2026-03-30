@@ -76,48 +76,41 @@ export default function ImportSacredTextPage() {
     }
 
     // Reset progress
-    setProgress(0);
     setProgressStage('Validating URL...');
 
-    // Stage 1: Validating (0-10%)
-    const stage1 = setTimeout(() => {
-      setProgress(10);
-      setProgressStage('Parsing web content...');
-    }, 300);
+    const stages = [
+      { p: 5, t: 500, s: 'Validating URL and checking compatibility...' },
+      { p: 15, t: 2000, s: 'Crawling website index... (Searching for chapters)' },
+      { p: 25, t: 5000, s: 'Initializing headless browser... (To handle bot protection)' },
+      { p: 40, t: 15000, s: 'Downloading chapters... (Politeness delay: 2s between requests)' },
+      { p: 55, t: 30000, s: 'Downloading chapters... (Still fetching, being patient...)' },
+      { p: 70, t: 45000, s: 'Processing text... (Structuring content and removing ads)' },
+      { p: 85, t: 60000, s: `AI Analysis... (Extracting ${useAI ? 'enhanced' : 'basic'} metadata and tags)` },
+      { p: 92, t: 80000, s: 'Saving to database... (Indexing searchable content)' },
+      { p: 97, t: 95000, s: 'Finalizing text record... (Almost there!)' }
+    ];
 
-    // Stage 2: Parsing (10-40%)
-    const stage2 = setTimeout(() => {
-      setProgress(40);
-      setProgressStage('Extracting chapters...');
-    }, 1500);
+    const timeouts = stages.map(stage => 
+      setTimeout(() => {
+        setProgress(stage.p);
+        setProgressStage(stage.s);
+      }, stage.t)
+    );
 
-    // Stage 3: Extracting (40-60%)
-    const stage3 = setTimeout(() => {
-      setProgress(60);
-      if (useAI) {
-        setProgressStage('Analyzing with AI...');
-      } else {
-        setProgressStage('Preparing metadata...');
-      }
-    }, 2500);
-
-    // Stage 4: AI Analysis or Metadata (60-90%)
-    const stage4 = setTimeout(() => {
-      setProgress(90);
-      setProgressStage('Saving to database...');
-    }, useAI ? 6000 : 3500);
-
-    // Stage 5: Finalizing (90-95%, will complete when API returns)
-    const stage5 = setTimeout(() => {
-      setProgress(95);
-    }, useAI ? 8000 : 4000);
+    // Progress "creep" - slowly increment progress between stages
+    const creepInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 98) return prev;
+        // Faster creep at the beginning, slower at the end
+        const increment = prev < 50 ? 0.2 : 0.05;
+        const nextValue = Math.round((prev + increment) * 100) / 100;
+        return Math.min(98.5, nextValue);
+      });
+    }, 1000);
 
     return () => {
-      clearTimeout(stage1);
-      clearTimeout(stage2);
-      clearTimeout(stage3);
-      clearTimeout(stage4);
-      clearTimeout(stage5);
+      timeouts.forEach(t => clearTimeout(t));
+      clearInterval(creepInterval);
     };
   }, [status, useAI]);
 
@@ -232,12 +225,8 @@ export default function ImportSacredTextPage() {
       });
 
     } catch (err) {
-      console.error('[Import] Error details:', {
-        error: err,
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-        url: url,
-      });
+      console.warn(`[Import] Handled error during import:`, err instanceof Error ? err.message : String(err));
+      
       setProgress(0);
       setProgressStage('');
       setStatus('error');
@@ -247,9 +236,17 @@ export default function ImportSacredTextPage() {
       if (err instanceof Error) {
         errorMessage = err.message;
         
-        // Enhance generic error messages
+        // Enhance generic network error messages
         if (errorMessage === 'Failed to fetch' || errorMessage.includes('Failed to fetch')) {
-          errorMessage = 'Failed to connect to the server. Please ensure the development server is running and try again.';
+          // If the error message is simply "Failed to fetch", it's almost certainly a network error
+          // between the browser and the local server.
+          if (errorMessage === 'Failed to fetch') {
+            errorMessage = 'Failed to connect to the server. Please ensure the development server is running and try again.';
+          } else {
+            // If it contains "Failed to fetch" but has more detail, it's likely a server-side error
+            // from fetching an external URL, so we keep the detailed message.
+            errorMessage = `Import failed: ${errorMessage}`;
+          }
         }
       }
       

@@ -21,7 +21,9 @@ export async function extractMetadata(
   ocrText: string,
   filename: string = 'document',
   userId?: string,
-  documentId?: string
+  documentId?: string,
+  knownTitle?: string,
+  knownAuthor?: string
 ): Promise<{ metadata: DocumentMetadata; rawOutput: string }> {
   const apiKey = process.env.OPENAI_API_KEY;
 
@@ -58,8 +60,12 @@ Always respond with valid JSON only.`
       },
       {
         role: 'user',
-        content: `Extract metadata from this OCR text and return JSON with:
-- title (string, required): Full title of the document
+        content: `Extract metadata from this OCR text and return JSON.
+${knownTitle ? `\nIMPORTANT: Use this known title instead of guessing from text: "${knownTitle}"` : ''}
+${knownAuthor ? `\nIMPORTANT: Use this known author instead of guessing from text: "${knownAuthor}"` : ''}
+
+With:
+- title (string, required): Full title of the document (use the known title if provided)
 - standardizedId (string, required): Generate a unique ID in format: type_shortname_author_year
   * Use the document type (e.g., book_esoteric)
   * Add shortened document name (2-3 key words from title, no articles)
@@ -67,7 +73,7 @@ Always respond with valid JSON only.`
   * Add year if available
   * All lowercase, separated by underscores
   * Example: "book_esoteric_secret_doctrine_blavatsky_1888"
-- author (string, optional)
+- author (string, optional) (use the known author if provided)
 - year (number, optional)
 - publisher (string, optional)
 - type (one of the 20 types above, required)

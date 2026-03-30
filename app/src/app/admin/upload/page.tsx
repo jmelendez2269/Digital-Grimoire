@@ -253,10 +253,10 @@ export default function AdminUploadPage() {
         // Warning for large images
         let warning: string | undefined = undefined;
         if (isImage && file.size > ocrRecommendedSize) {
-          warning = 'Image file exceeds 8MB. OCR processing may fail due to Azure\'s 4MB limit for images. Consider compressing the image before uploading.';
+          warning = 'Image file exceeds 8MB. Large images may fail primary OCR, but local fallback extraction will be attempted. Consider compressing the image before uploading.';
         } else if (isPDF && shouldCompressPDF(file)) {
           // Warning for large PDFs
-          warning = 'Large PDF detected. OCR may fail due to Azure\'s 4MB per-page limit. Consider compressing the PDF before uploading.';
+          warning = 'Large PDF detected. If the document is mostly scanned images, it may fail primary OCR, but local fallback extraction will be attempted. Consider compressing the PDF before uploading.';
         }
         
         // Create preview URL for PDFs and images
@@ -463,7 +463,7 @@ export default function AdminUploadPage() {
               compressionRatio: undefined,
               previewUrl: newPreviewUrl,
               warning: shouldCompressPDF(uploadFile.originalFile!)
-                ? 'Large PDF detected. OCR may fail due to Azure\'s 4MB per-page limit. Consider compressing the PDF before uploading.'
+                ? 'Large PDF detected. If the document is mostly scanned images, it may fail primary OCR, but local fallback extraction will be attempted. Consider compressing the PDF before uploading.'
                 : undefined,
             }
           : f

@@ -223,10 +223,10 @@ export default function DiagnosticsPage() {
           <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
           <Link
-            href="/dashboard"
+            href="/admin"
             className="text-sm text-amber-400 hover:text-amber-300 mb-4 inline-block"
           >
-            ← Back to Dashboard
+            ← Back to Admin
           </Link>
           <h1 className="text-3xl font-bold text-amber-100 mb-2">
             System Diagnostics

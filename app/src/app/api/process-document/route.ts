@@ -8,6 +8,8 @@ import { generateBookCover } from '@/lib/getimg-cover';
 import { logStorageUpload, logUserActivity, logOcrUsage } from '@/lib/usage-tracker';
 import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/similarity-check';
 import { generateTextEmbeddings } from '@/lib/parallax/embeddings';
+import { extractPdfTextLocally, isTextSubstantial } from '@/lib/utils/server-pdf-extractor';
+import { performLocalImageOCR } from '@/lib/utils/local-ocr';
 
 // Initialize R2 client for cleanup on error
 const s3Client = getR2Client();
@@ -80,6 +82,43 @@ export async function POST(request: NextRequest) {
 
     const fileResponse = await s3Client.send(getCommand);
     const mimeType = fileResponse.ContentType || 'application/octet-stream';
+    const fileSize = fileResponse.ContentLength || 0;
+
+    if (!fileResponse.Body) {
+      throw new Error('No file body returned from R2');
+    }
+
+    console.log('Reading file stream into memory...');
+    const chunks: Uint8Array[] = [];
+    const body = fileResponse.Body;
+
+    try {
+      if (body instanceof ReadableStream) {
+        const reader = body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) chunks.push(value);
+        }
+      } else if (body && typeof (body as any).on === 'function') {
+        for await (const chunk of body as any) {
+          chunks.push(chunk);
+        }
+      } else if (body instanceof Uint8Array) {
+        chunks.push(body);
+      } else {
+        const stream = body as any;
+        for await (const chunk of stream) {
+          chunks.push(chunk);
+        }
+      }
+    } catch (readError) {
+      console.error('Error reading stream:', readError);
+      throw new Error(`Failed to read file stream: ${readError instanceof Error ? readError.message : 'Unknown error'}`);
+    }
+
+    const fileBuffer = Buffer.concat(chunks);
+    console.log(`File buffer size: ${fileBuffer.length} bytes`);
 
     // Determine if it's HTML based on MIME type AND extension (both must match)
     const isHtmlByExtension = fileExtension === 'html' || fileExtension === 'htm';
@@ -96,7 +135,11 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ File has .html extension but MIME type is PDF. Treating as PDF and using OCR.');
     }
 
-    let ocrResult;
+    let ocrResult = {
+      text: '',
+      lineCount: 0,
+      pageCount: 0
+    };
     let extractedText = '';
 
     if (isHtmlFile) {
@@ -104,14 +147,8 @@ export async function POST(request: NextRequest) {
       console.log('Step 1: Extracting text from HTML file...');
 
       try {
-        // Fetch HTML file from R2
-        const getCommand = new GetObjectCommand({
-          Bucket: process.env.R2_BUCKET_NAME || 'convergence-library',
-          Key: key,
-        });
-
-        const response = await s3Client.send(getCommand);
-        const htmlContent = await response.Body?.transformToString() || '';
+        // Use the buffer we've already loaded
+        const htmlContent = fileBuffer.toString('utf-8');
 
         // Extract plain text from HTML (improved extraction)
         // Remove script and style content first
@@ -190,29 +227,78 @@ export async function POST(request: NextRequest) {
         };
         console.log('OCR skipped - document will be uploaded without text extraction');
       } else {
-        console.log('Step 1: Running Azure OCR...');
-        const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
-
-        // Check file size - Document Intelligence supports up to 50MB for PDFs
-        const fileSize = fileResponse.ContentLength || 0;
-        const fileSizeMB = fileSize / (1024 * 1024);
+        console.log('Step 1: Attempting text extraction/OCR...');
+        const fileSizeMB = fileBuffer.length / (1024 * 1024);
         const isPDF = mimeType === 'application/pdf';
-
-        if (isPDF && fileSizeMB > 50) {
-          throw new Error(
-            `File size (${fileSizeMB.toFixed(2)}MB) exceeds Azure Document Intelligence limit of 50MB for PDFs. ` +
-            `Please compress the file or split it into smaller parts, or use "Skip OCR" option.`
-          );
+        
+        let localPdfSucceeded = false;
+        
+        // 1. Try local PDF parsing (bypasses Azure completely for digital PDFs)
+        if (isPDF) {
+          try {
+            const localResult = await extractPdfTextLocally(fileBuffer);
+            if (isTextSubstantial(localResult.text, localResult.pageCount)) {
+              ocrResult = {
+                text: localResult.text,
+                lineCount: localResult.text.split('\n').length,
+                pageCount: localResult.pageCount
+              };
+              localPdfSucceeded = true;
+              console.log('✅ Used local PDF extraction successfully. Bypassing Azure OCR.');
+            } else {
+              console.log('⚠️ Local PDF extraction returned insufficient text (likely a scanned PDF). Falling back to Azure OCR.');
+            }
+          } catch (e) {
+            console.error('⚠️ Local PDF extraction failed. Falling back to Azure OCR:', e);
+          }
         }
+        
+        if (!localPdfSucceeded) {
+          const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
 
-        console.log(`File size: ${fileSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`);
+          if (isPDF && fileSizeMB > 50) {
+            throw new Error(
+              `File size (${fileSizeMB.toFixed(2)}MB) exceeds Azure Document Intelligence limit of 50MB for PDFs. ` +
+              `Please compress the file or split it into smaller parts, or use "Skip OCR" option.`
+            );
+          }
 
-        try {
-          ocrResult = await performOCR(fileUrl, userId);
-          console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
-        } catch (ocrError) {
-          console.error('OCR failed:', ocrError);
-          throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+          console.log(`File size: ${fileSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`);
+
+          // 2. Try Azure OCR
+          try {
+            console.log('Step 1.5: Running Azure OCR...');
+            ocrResult = await performOCR(fileUrl, userId);
+            console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
+          } catch (ocrError) {
+            console.error('⚠️ Azure OCR failed:', ocrError);
+            
+            // 3. Fallback to Tesseract.js for Images
+            const isImage = mimeType.startsWith('image/');
+            if (isImage) {
+               console.log('Step 1.6: Attempting Tesseract local OCR fallback for image...');
+               try {
+                   const localImageResult = await performLocalImageOCR(fileBuffer);
+                   ocrResult = {
+                       text: localImageResult.text,
+                       lineCount: localImageResult.text.split('\n').length,
+                       pageCount: 1
+                   };
+                   console.log('✅ Tesseract local OCR fallback successful.');
+               } catch (localOcrError) {
+                   console.error('Tesseract local OCR failed:', localOcrError);
+                   throw new Error(`Azure OCR and local Tesseract fallback both failed. Azure Error: ${ocrError instanceof Error ? ocrError.message : 'Unknown'}, Local Error: ${localOcrError instanceof Error ? localOcrError.message : 'Unknown'}`);
+               }
+               // Cannot use tesseract fallback for PDFs easily without canvas/ghostscript
+               console.error(`OCR processing failed and local fallback is not supported for PDFs. Error: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
+               console.log('⚠️ Gracefully skipping OCR text extraction for this PDF so the upload can continue.');
+               ocrResult = {
+                 text: '',
+                 lineCount: 0,
+                 pageCount: 0
+               };
+            }
+          }
         }
       }
     }
@@ -368,62 +454,7 @@ export async function POST(request: NextRequest) {
     try {
       const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
 
-      console.log(`Getting file from R2: ${bucketName}/${key}`);
-
-      // For Cloudflare R2, use GetObject + PutObject instead of CopyObject to avoid signature issues
-      // First, get the file content
-      const getCommand = new GetObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-      });
-
-      let getResponse;
-      try {
-        getResponse = await s3Client.send(getCommand);
-      } catch (getError) {
-        console.error('GetObjectCommand failed:', getError);
-        throw new Error(`Failed to retrieve file from R2: ${getError instanceof Error ? getError.message : 'Unknown error'}`);
-      }
-
-      if (!getResponse.Body) {
-        throw new Error('No file body returned from R2');
-      }
-
-      console.log('Reading file stream...');
-      // Convert stream to buffer for R2 compatibility
-      const chunks: Uint8Array[] = [];
-      const body = getResponse.Body;
-
-      // Handle different body types (ReadableStream, Readable, etc.)
-      try {
-        if (body instanceof ReadableStream) {
-          const reader = body.getReader();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (value) chunks.push(value);
-          }
-        } else if (body && typeof (body as any).on === 'function') {
-          // Node.js Readable stream
-          for await (const chunk of body as any) {
-            chunks.push(chunk);
-          }
-        } else if (body instanceof Uint8Array) {
-          chunks.push(body);
-        } else {
-          // Fallback: try to read as stream
-          const stream = body as any;
-          for await (const chunk of stream) {
-            chunks.push(chunk);
-          }
-        }
-      } catch (readError) {
-        console.error('Error reading stream:', readError);
-        throw new Error(`Failed to read file stream: ${readError instanceof Error ? readError.message : 'Unknown error'}`);
-      }
-
-      const fileBuffer = Buffer.concat(chunks);
-      console.log(`File buffer size: ${fileBuffer.length} bytes`);
+      // We already loaded the file in `fileBuffer` earlier!
 
       // Prepare metadata - R2 requires lowercase keys and may have restrictions
       // HTTP headers cannot contain control characters, newlines, or certain special characters
@@ -476,7 +507,7 @@ export async function POST(request: NextRequest) {
         Bucket: bucketName,
         Key: desiredNewKey,
         Body: fileBuffer,
-        ContentType: getResponse.ContentType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+        ContentType: mimeType || (isHtmlFile ? 'text/html' : 'application/pdf'),
         Metadata: r2Metadata,
       });
 
@@ -498,7 +529,7 @@ export async function POST(request: NextRequest) {
               Bucket: bucketName,
               Key: desiredNewKey,
               Body: fileBuffer,
-              ContentType: getResponse.ContentType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+              ContentType: mimeType || (isHtmlFile ? 'text/html' : 'application/pdf'),
               // No Metadata field
             });
             await s3Client.send(putCommandWithoutMetadata);

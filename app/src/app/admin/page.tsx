@@ -55,10 +55,10 @@ export default function AdminDashboardHub() {
 
   const adminTools = [
     {
-      title: "System Tracking & Monitoring",
+      title: "System Tracking & Diagnostics",
       description: "View API usage metrics, costs, and system health status.",
       icon: <BarChart3 className="w-8 h-8 text-amber-400" />,
-      href: "/admin/monitoring",
+      href: "/admin/diagnostics",
       color: "amber"
     },
     {

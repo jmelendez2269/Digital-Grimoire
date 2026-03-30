@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 import { JSDOM } from 'jsdom';
 import DOMPurify from 'dompurify';
+import puppeteer from 'puppeteer';
 
 export interface Chapter {
   id: string;
@@ -30,6 +31,20 @@ interface ChapterLink {
   href: string;
   title: string;
 }
+
+const COMMON_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Cache-Control': 'max-age=0',
+  'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+  'Sec-Ch-Ua-Mobile': '?0',
+  'Sec-Ch-Ua-Platform': '"Windows"',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-User': '?1',
+  'Upgrade-Insecure-Requests': '1',
+};
 
 /**
  * Retry a function with exponential backoff
@@ -123,15 +138,27 @@ export async function parseSacredText(
     
     let chapters: Chapter[];
     let metadata: ParsedTextMetadata;
+    let requiresPuppeteer = false;
 
     if (isIndexPage) {
       // Multi-chapter book
-      const chapterLinks = await fetchChapterList(url);
+      let chapterLinks: ChapterLink[] = [];
+      try {
+        chapterLinks = await fetchChapterList(url, false);
+      } catch (err: any) {
+        if (err.message.includes('HTTP 403') || err.message.includes('Forbidden') || err.message.includes('Puppeteer')) {
+          console.warn('[parseSacredText] Index returned 403, falling back to Puppeteer');
+          requiresPuppeteer = true;
+          chapterLinks = await fetchChapterList(url, true);
+        } else {
+          throw err;
+        }
+      }
       
       // Add delay before fetching metadata to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
       
-      metadata = await extractMetadata(url);
+      metadata = await extractMetadata(url, requiresPuppeteer);
       
       // Fetch chapters sequentially with delays to avoid rate limiting
       chapters = [];
@@ -146,7 +173,7 @@ export async function parseSacredText(
         }
         
         try {
-          const content = await fetchChapterContent(absoluteUrl, format);
+          const content = await fetchChapterContent(absoluteUrl, format, requiresPuppeteer);
           chapters.push({
             id: `chapter-${index + 1}`,
             title: link.title || `Chapter ${index + 1}`,
@@ -168,8 +195,17 @@ export async function parseSacredText(
       }
     } else {
       // Single page text
-      metadata = await extractMetadata(url);
-      const content = await fetchChapterContent(url, format);
+      try {
+        metadata = await extractMetadata(url, false);
+      } catch (err: any) {
+        if (err.message.includes('HTTP 403')) {
+          requiresPuppeteer = true;
+          metadata = await extractMetadata(url, true);
+        } else {
+          throw err;
+        }
+      }
+      const content = await fetchChapterContent(url, format, requiresPuppeteer);
       
       console.log(`[parseSacredText] Single page - extracted content length: ${content.length}`);
       console.log(`[parseSacredText] First 200 chars: ${content.substring(0, 200)}`);
@@ -225,17 +261,75 @@ export async function parseSacredText(
 }
 
 /**
+ * Fetch a page using Puppeteer to bypass Cloudflare
+ */
+async function fetchWithPuppeteer(url: string): Promise<string> {
+  console.log(`[fetchWithPuppeteer] Launching headless browser for ${url}`);
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent(COMMON_HEADERS['User-Agent']);
+    await page.setExtraHTTPHeaders({
+      'Accept': COMMON_HEADERS['Accept'],
+      'Accept-Language': COMMON_HEADERS['Accept-Language'],
+    });
+
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    
+    if (response && !response.ok()) {
+      throw new Error(`Puppeteer failed to fetch (HTTP ${response.status()})`);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const content = await page.content();
+    return content;
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+}
+
+/**
  * Fetch and parse the chapter list from an index page
  */
-export async function fetchChapterList(indexUrl: string): Promise<ChapterLink[]> {
+export async function fetchChapterList(indexUrl: string, forcePuppeteer: boolean = false): Promise<ChapterLink[]> {
   return retryWithBackoff(async () => {
+    if (forcePuppeteer) {
+      const html = await fetchWithPuppeteer(indexUrl);
+      const $ = cheerio.load(html);
+      
+      const links: ChapterLink[] = [];
+      $('a').each((_, el) => {
+        const $el = $(el);
+        const href = $el.attr('href');
+        const title = $el.text().trim();
+        
+        if (href && !href.startsWith('http') && !href.startsWith('/') && !href.startsWith('#') && href.endsWith('.htm')) {
+          if (!href.includes('index.htm') && !title.toLowerCase().includes('index')) {
+            links.push({ href, title });
+          }
+        }
+      });
+      return links;
+    }
+
     const response = await fetch(indexUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        ...COMMON_HEADERS,
+        'Sec-Fetch-Site': 'none',
       }
     });
     
     if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error(`Failed to fetch index page (HTTP 403): Forbidden`);
+      }
       if (response.status === 429) {
         throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
       }
@@ -294,23 +388,35 @@ export async function fetchChapterList(indexUrl: string): Promise<ChapterLink[]>
  */
 export async function fetchChapterContent(
   chapterUrl: string,
-  format: 'html' | 'markdown' | 'plaintext'
+  format: 'html' | 'markdown' | 'plaintext',
+  forcePuppeteer: boolean = false
 ): Promise<string> {
   try {
-    const response = await fetch(chapterUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    const baseUrl = new URL(chapterUrl).origin;
+    let html: string;
     
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
+    if (forcePuppeteer) {
+      html = await fetchWithPuppeteer(chapterUrl);
+    } else {
+      const response = await fetch(chapterUrl, {
+        headers: {
+          ...COMMON_HEADERS,
+          'Referer': baseUrl,
+          'Sec-Fetch-Site': 'same-origin',
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 403 || response.status === 429) {
+          console.warn(`[fetchChapterContent] Server blocked fetch (HTTP ${response.status}). Falling back to Puppeteer.`);
+          html = await fetchWithPuppeteer(chapterUrl);
+        } else {
+          throw new Error(`Failed to fetch chapter (HTTP ${response.status}): ${response.statusText}`);
+        }
+      } else {
+        html = await response.text();
       }
-      throw new Error(`Failed to fetch chapter (HTTP ${response.status}): ${response.statusText}`);
     }
-
-    const html = await response.text();
     const $ = cheerio.load(html);
 
     // Remove unwanted elements (navigation, ads, etc.)
@@ -461,22 +567,31 @@ export async function fetchChapterContent(
 /**
  * Extract metadata from the index or main page
  */
-export async function extractMetadata(url: string): Promise<ParsedTextMetadata> {
+export async function extractMetadata(url: string, forcePuppeteer: boolean = false): Promise<ParsedTextMetadata> {
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    let html: string;
     
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
+    if (forcePuppeteer) {
+      html = await fetchWithPuppeteer(url);
+    } else {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 403) {
+           throw new Error(`Failed to fetch index page (HTTP 403): Forbidden`);
+        }
+        if (response.status === 429) {
+          throw new Error(`Rate limited by server (HTTP 429). Please wait a few minutes before trying again. The website may be blocking too many requests.`);
+        }
+        throw new Error(`Failed to fetch page (HTTP ${response.status}): ${response.statusText}`);
       }
-      throw new Error(`Failed to fetch page (HTTP ${response.status}): ${response.statusText}`);
+      html = await response.text();
     }
 
-    const html = await response.text();
     const $ = cheerio.load(html);
 
     // Extract title
@@ -819,7 +934,8 @@ export async function parseGenericWebPage(
     try {
       response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          ...COMMON_HEADERS,
+          'Sec-Fetch-Site': 'none',
         }
       });
     } catch (fetchError) {

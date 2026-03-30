@@ -57,6 +57,7 @@ export default function EditDocumentPage() {
   const [generatingCuratorNote, setGeneratingCuratorNote] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState(false);
   const [generatingDomain, setGeneratingDomain] = useState(false);
+  const [scanningAll, setScanningAll] = useState(false);
   const [coverProvider, setCoverProvider] = useState('replicate');
 
   const availableLenses = [
@@ -250,6 +251,68 @@ export default function EditDocumentPage() {
       setError(errorMessage);
     } finally {
       setScrapingCover(false);
+    }
+  };
+
+  const handleRescanAllWithAI = async () => {
+    if (!title.trim()) {
+      setError('Title is required to rescan with AI');
+      return;
+    }
+
+    if (!confirm('This will use AI to completely regenerate the brief summary, curator note, domain, tags, and lenses based on the current title and author. It will overwrite the existing fields. Are you sure you want to proceed?')) {
+      return;
+    }
+
+    try {
+      setScanningAll(true);
+      setError(null);
+
+      const response = await fetch('/api/documents/rescan-all-metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          textId: documentId,
+          title: title.trim(),
+          author: author.trim() || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to rescan metadata');
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.metadata) {
+        const md = result.metadata;
+        setShortSummary(md.shortSummary || shortSummary);
+        setCuratorNote(md.curatorNote || curatorNote);
+        setDomain(md.domain || domain);
+        setTags(md.tags || tags);
+        setLenses(md.lenses || lenses);
+
+        // Also update local document object
+        if (document) {
+          setDocument({
+            ...document,
+            short_summary: md.shortSummary || document.short_summary,
+            curator_note: md.curatorNote || document.curator_note,
+            domain: md.domain || document.domain,
+            tags: md.tags || document.tags,
+            lenses: md.lenses || document.lenses,
+          });
+        }
+
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error('Error rescanning with AI:', err);
+      setError(err instanceof Error ? err.message : 'Failed to rescan metadata');
+    } finally {
+      setScanningAll(false);
     }
   };
 
@@ -590,15 +653,32 @@ export default function EditDocumentPage() {
                     <BookOpen className="w-5 h-5 text-amber-600" />
                     <h3 className="text-lg font-semibold text-amber-100">Document Information</h3>
                   </div>
-                  {!isEditingInfo && (
-                    <button
-                      onClick={handleStartEditInfo}
-                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-amber-900/30 hover:border-amber-600/50 rounded-lg text-amber-100 transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                      <span className="text-sm">Edit</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!isEditingInfo && (
+                      <>
+                        <button
+                          onClick={handleRescanAllWithAI}
+                          disabled={scanningAll}
+                          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 border border-purple-500/30 rounded-lg text-white transition-colors"
+                          title="Regenerate all metadata from the document based on the current title and author"
+                        >
+                          {scanningAll ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-4 h-4" />
+                          )}
+                          <span className="text-sm">Rescan All with AI</span>
+                        </button>
+                        <button
+                          onClick={handleStartEditInfo}
+                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-amber-900/30 hover:border-amber-600/50 rounded-lg text-amber-100 transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span className="text-sm">Edit</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {isEditingInfo ? (
