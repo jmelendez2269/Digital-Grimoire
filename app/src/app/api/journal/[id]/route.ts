@@ -72,7 +72,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { title, content, icon, is_archived } = body;
+    const { title, content, icon, is_archived, tags, is_pinned } = body;
 
     // Build update data
     const updateData: any = {};
@@ -97,6 +97,14 @@ export async function PUT(
     
     if (is_archived !== undefined) {
       updateData.is_archived = is_archived;
+    }
+
+    if (tags !== undefined) {
+      updateData.tags = tags;
+    }
+
+    if (is_pinned !== undefined) {
+      updateData.is_pinned = is_pinned;
     }
 
     // Check if there's anything to update

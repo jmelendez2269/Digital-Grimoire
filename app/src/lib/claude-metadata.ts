@@ -60,12 +60,17 @@ Always respond with valid JSON only.`
       },
       {
         role: 'user',
-        content: `Extract metadata from this OCR text and return JSON.
-${knownTitle ? `\nIMPORTANT: Use this known title instead of guessing from text: "${knownTitle}"` : ''}
-${knownAuthor ? `\nIMPORTANT: Use this known author instead of guessing from text: "${knownAuthor}"` : ''}
+        content: `Extract metadata and return JSON for the following document.
+${knownTitle ? `\nKNOWN TITLE (Priority): "${knownTitle}"` : ''}
+${knownAuthor ? `\nKNOWN AUTHOR (Priority): "${knownAuthor}"` : ''}
 
-With:
-- title (string, required): Full title of the document (use the known title if provided)
+INSTRUCTIONS:
+1. Use the provided KNOWN TITLE and KNOWN AUTHOR as the ground truth if they are present.
+2. If the OCR Text provided below is empty or insufficient, use your internal knowledge about this book/document to populate the metadata fields (summary, tags, lenses, domain, etc.). 
+3. Ensure the return format is valid JSON.
+
+FIELDS TO EXTRACT:
+- title (string, required): Full title of the document (use provided known title)
 - standardizedId (string, required): Generate a unique ID in format: type_shortname_author_year
   * Use the document type (e.g., book_esoteric)
   * Add shortened document name (2-3 key words from title, no articles)
@@ -73,7 +78,7 @@ With:
   * Add year if available
   * All lowercase, separated by underscores
   * Example: "book_esoteric_secret_doctrine_blavatsky_1888"
-- author (string, optional) (use the known author if provided)
+- author (string, optional): Full name of the author (use provided known author)
 - year (number, optional)
 - publisher (string, optional)
 - type (one of the 20 types above, required)
@@ -82,18 +87,12 @@ With:
 - lenses (array of strings, required): Which of the 7 Parallax Lenses apply to this document?
   * Choose from: scientific, psychological, philosophical, religious_spiritual, historical_anthropological, symbolic_occult, mathematical
   * Most documents should have 2-4 lenses
-  * Select based on the document's primary perspectives and approaches
-  * Examples:
-    - A book on alchemy: ["symbolic_occult", "philosophical", "historical_anthropological"]
-    - A psychology text on archetypes: ["psychological", "philosophical", "symbolic_occult"]
-    - A sacred geometry guide: ["mathematical", "symbolic_occult", "philosophical"]
 - confidence (string: "established", "interpretive", "speculative", or "tradition", required)
-- shortSummary (string, required): A concise 2-3 sentence description of what this document is about
-- longSummary (string, required): A detailed 1-2 paragraph summary covering the document's main themes, content, and significance
-- curatorNote (string, optional): A brief explanation of why this document is significant and why it belongs in the Project Parallax collection. Should explain its value, uniqueness, or contribution to knowledge synthesis. 1-2 sentences.
+- shortSummary (string, required): A concise 2-3 sentence description
+- longSummary (string, required): A detailed 1-2 paragraph summary
+- curatorNote (string, optional): Why this document belongs in the project. 1-2 sentences.
 
-OCR Text (first 3000 chars):
-${ocrText.substring(0, 3000)}
+${ocrText ? `OCR Text (first 3000 chars):\n${ocrText.substring(0, 3000)}` : 'NOTE: No OCR text available. Please generate metadata based on the title and author and your own knowledge.'}
 
 Respond with valid JSON only, no markdown code blocks.`
       }

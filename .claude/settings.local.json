@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Projects/Digital-Grimoire/app/src/lib -type f -name *.ts -o -name *.tsx)",
+      "Bash(ls -la /c/Projects/Digital-Grimoire/app/src/app/courses/[slug]/)"
+    ]
+  }
+}

@@ -61,24 +61,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get content for analysis
+    // Get content for analysis (sample chapters or full OCR text)
     let contentToAnalyze = '';
+    const hasStructuredChapters = document.metadata?.isStructuredText && document.metadata?.chapters && document.metadata.chapters.length > 0;
 
-    // For structured text, use chapter content
-    if (document.metadata?.isStructuredText && document.metadata?.chapters) {
+    if (hasStructuredChapters) {
       const chapters = document.metadata.chapters;
-      // Use first 3 chapters or all if fewer
+      // Use first 3 chapters or all if fewer to provide context
       const sampleChapters = chapters.slice(0, 3);
       contentToAnalyze = sampleChapters
         .map((ch: any) => `${ch.title}\n\n${ch.content}`)
         .join('\n\n---\n\n')
         .substring(0, 10000);
     } else if (document.content) {
-      // Use OCR content
-      contentToAnalyze = document.content;
-    } else {
+      // Use full OCR content if limited, or first 10k chars
+      contentToAnalyze = document.content.substring(0, 10000);
+    }
+
+    if (!contentToAnalyze && !title) {
       return NextResponse.json(
-        { error: 'No content available for analysis' },
+        { error: 'Neither content nor title is available for analysis' },
         { status: 400 }
       );
     }

@@ -1,0 +1,353 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prismatic Learning Course Template",
+  "description": "Production schema for Project Parallax courses. Version 1.0.",
+  "type": "object",
+  "required": [
+    "course_id",
+    "title",
+    "core_question",
+    "arc",
+    "arc_position",
+    "length_weeks",
+    "level",
+    "orientation",
+    "mode",
+    "premise",
+    "key_tensions",
+    "learning_outcomes",
+    "tone_safety",
+    "completion_pathways",
+    "weeks"
+  ],
+  "properties": {
+    "course_id": {
+      "type": "string",
+      "pattern": "^C\\d{2}$",
+      "description": "Unique course identifier (e.g., C01, C12)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Course name"
+    },
+    "core_question": {
+      "type": "string",
+      "description": "The engine of the course — always a question, never a topic"
+    },
+    "arc": {
+      "type": "string",
+      "enum": [
+        "Foundational Synthesis",
+        "Transformation & Inner Work",
+        "Convergence & Modern Application"
+      ]
+    },
+    "arc_position": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Position within the arc"
+    },
+    "length_weeks": {
+      "type": "integer",
+      "minimum": 6,
+      "maximum": 8
+    },
+    "level": {
+      "type": "string",
+      "description": "Difficulty / prerequisite level"
+    },
+    "orientation": {
+      "type": "string",
+      "description": "Positioning between rigor and insight"
+    },
+    "mode": {
+      "type": "string",
+      "description": "Experiential tone"
+    },
+    "premise": {
+      "type": "string",
+      "description": "2-4 sentences. Why this course exists. Platform voice."
+    },
+    "key_tensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["side_a", "side_b"],
+        "properties": {
+          "side_a": { "type": "string" },
+          "side_b": { "type": "string" }
+        }
+      },
+      "minItems": 3,
+      "maxItems": 6,
+      "description": "Named tensions that run through the course. Format: A vs B."
+    },
+    "learning_outcomes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 4,
+      "maxItems": 6,
+      "description": "What the seeker can DO or SEE differently. Active verbs."
+    },
+    "tone_safety": {
+      "type": "string",
+      "description": "What this course does NOT do. Grounds expectations."
+    },
+    "completion_pathways": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "course_id": { "type": "string" },
+          "title": { "type": "string" }
+        }
+      },
+      "description": "Courses this prepares the seeker for"
+    },
+    "weeks": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/standard_week" },
+          { "$ref": "#/$defs/capstone_week" }
+        ]
+      },
+      "minItems": 6,
+      "maxItems": 8
+    }
+  },
+  "$defs": {
+    "reading_tier": {
+      "type": "object",
+      "required": ["reference", "description"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "description": "Chapter, section, verse, or page range"
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of what this passage contains"
+        }
+      }
+    },
+    "reading": {
+      "type": "object",
+      "required": [
+        "text_title",
+        "selection_rationale",
+        "keystone",
+        "passage",
+        "full_text"
+      ],
+      "properties": {
+        "text_title": {
+          "type": "string",
+          "description": "Name of the source work"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or tradition"
+        },
+        "selection_rationale": {
+          "type": "string",
+          "description": "1-2 sentences: why chosen, what tension it introduces"
+        },
+        "keystone": {
+          "$ref": "#/$defs/reading_tier",
+          "description": "The essential fragment. If the seeker reads nothing else, read this."
+        },
+        "passage": {
+          "$ref": "#/$defs/reading_tier",
+          "description": "The working reading. Enough context for the week's lens work."
+        },
+        "full_text": {
+          "$ref": "#/$defs/reading_tier",
+          "description": "The complete chapter or section. For deep reference."
+        }
+      }
+    },
+    "lens_exercise": {
+      "type": "object",
+      "required": ["prompt"],
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "description": "The exercise instruction — specific and actionable"
+        },
+        "instructions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Step-by-step guidance (optional, for complex exercises)"
+        }
+      }
+    },
+    "synthesis_prompt": {
+      "type": "object",
+      "required": ["prompt", "expansion"],
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "description": "The synthesis question — integration, not summary"
+        },
+        "expansion": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "maxItems": 4,
+          "description": "Guiding sub-questions, sentence stems, or starting approaches"
+        }
+      }
+    },
+    "micro_artifact": {
+      "type": "object",
+      "required": ["name", "description", "purpose", "capstone_connection"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "What it's called (e.g., 'Truth Inventory')"
+        },
+        "description": {
+          "type": "string",
+          "description": "What it is — format, scope, length"
+        },
+        "purpose": {
+          "type": "string",
+          "description": "How it supports synthesis"
+        },
+        "capstone_connection": {
+          "type": "string",
+          "description": "How it feeds into the final capstone artifact"
+        }
+      }
+    },
+    "standard_week": {
+      "type": "object",
+      "required": [
+        "week_number",
+        "title",
+        "type",
+        "core_question",
+        "key_tension",
+        "lens_focus",
+        "readings",
+        "lens_exercise",
+        "synthesis_prompt",
+        "micro_artifact"
+      ],
+      "properties": {
+        "week_number": { "type": "integer" },
+        "title": { "type": "string" },
+        "type": {
+          "type": "string",
+          "const": "standard"
+        },
+        "core_question": {
+          "type": "string",
+          "description": "A single question — never a topic"
+        },
+        "key_tension": {
+          "type": "object",
+          "required": ["side_a", "side_b"],
+          "properties": {
+            "side_a": { "type": "string" },
+            "side_b": { "type": "string" },
+            "description": {
+              "type": "string",
+              "description": "Optional elaboration of the tension"
+            }
+          }
+        },
+        "lens_focus": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Scientific",
+              "Psychological",
+              "Philosophical",
+              "Religious/Spiritual",
+              "Historical/Anthropological",
+              "Symbolic/Occult",
+              "Mathematical"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 3,
+          "description": "Which lenses are primary this week"
+        },
+        "readings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reading" },
+          "minItems": 2,
+          "maxItems": 4
+        },
+        "lens_exercise": { "$ref": "#/$defs/lens_exercise" },
+        "synthesis_prompt": { "$ref": "#/$defs/synthesis_prompt" },
+        "micro_artifact": { "$ref": "#/$defs/micro_artifact" }
+      }
+    },
+    "capstone_week": {
+      "type": "object",
+      "required": [
+        "week_number",
+        "title",
+        "type",
+        "core_question",
+        "capstone_artifact",
+        "final_reflection",
+        "completion_pathways"
+      ],
+      "properties": {
+        "week_number": { "type": "integer" },
+        "title": { "type": "string" },
+        "type": {
+          "type": "string",
+          "const": "capstone"
+        },
+        "core_question": {
+          "type": "string",
+          "description": "The integrative question pulling all weeks together"
+        },
+        "capstone_artifact": {
+          "type": "object",
+          "required": ["name", "description", "components", "purpose"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "What the capstone is called"
+            },
+            "description": {
+              "type": "string",
+              "description": "What it contains, its structure"
+            },
+            "components": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Which micro-artifacts from prior weeks feed into it"
+            },
+            "purpose": {
+              "type": "string",
+              "description": "What building it teaches the seeker"
+            }
+          }
+        },
+        "final_reflection": {
+          "type": "string",
+          "description": "A closing question or prompt. Not a summary — a door forward."
+        },
+        "completion_pathways": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "course_id": { "type": "string" },
+              "title": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

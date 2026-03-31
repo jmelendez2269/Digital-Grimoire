@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { BookOpen, Tablet, Network, GraduationCap, Sparkles } from "lucide-react";
+import InsightCard from '@/components/InsightCard';
+import FeatureOnboardingModal from '@/components/FeatureOnboardingModal';
 
 const DashboardSearchHub = dynamic(() => import("@/components/DashboardSearchHub"), {
     loading: () => <div className="h-[500px] animate-pulse bg-zinc-900/10 rounded-xl mb-12" />,
@@ -23,6 +25,8 @@ export default function DashboardView() {
     const username = user?.user_metadata?.username || null;
 
     return (
+        <>
+        <FeatureOnboardingModal />
         <div className="flex flex-1 flex-col px-6 py-10">
             <div className="mx-auto w-full max-w-7xl">
                 {/* Welcome Section */}
@@ -42,6 +46,9 @@ export default function DashboardView() {
                         What will you uncover today?
                     </p>
                 </div>
+
+                {/* Daily Insight */}
+                <InsightCard />
 
                 {/* Integrated Search Hub - Primary Focus */}
                 <div className="mb-20">
@@ -244,5 +251,6 @@ export default function DashboardView() {
                 </div>
             </div>
         </div>
+        </>
     );
 }

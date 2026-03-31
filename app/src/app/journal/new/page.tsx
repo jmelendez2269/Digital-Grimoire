@@ -196,6 +196,10 @@ function NewJournalPageContent() {
           title: pageTitle,
           content: initialContent,
           icon: '🎯',
+          course_id: courseId,
+          week_number: weekNumber,
+          entry_type: 'synthesis',
+          artifact_name: week?.micro_artifact?.name || null,
         }),
       });
 

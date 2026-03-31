@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Trash2, Archive } from 'lucide-react';
+import { ArrowLeft, Trash2, Archive, Tag, Pin } from 'lucide-react';
 import Link from 'next/link';
 // JournalEditor imported dynamically below
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -41,6 +41,8 @@ interface JournalPage {
   content: any;
   icon: string;
   is_archived: boolean;
+  is_pinned?: boolean;
+  tags?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -101,6 +103,7 @@ export default function JournalPageEditor() {
   const [aiAction, setAIAction] = useState<'summarize' | 'suggest' | 'draft' | null>(null);
   const [aiLoading, setAILoading] = useState(false);
   const [aiResult, setAIResult] = useState<string>('');
+  const [tagInput, setTagInput] = useState('');
 
   const {
     activeLink,
@@ -442,6 +445,62 @@ export default function JournalPageEditor() {
     }
   }
 
+  async function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      if (!page || (page.tags && page.tags.includes(newTag))) {
+        setTagInput('');
+        return;
+      }
+      const newTags = [...(page.tags || []), newTag];
+      setTagInput('');
+      setPage({ ...page, tags: newTags });
+      await updateTags(newTags);
+    }
+  }
+
+  async function handleRemoveTag(tagToRemove: string) {
+    if (!page || !page.tags) return;
+    const newTags = page.tags.filter((t) => t !== tagToRemove);
+    setPage({ ...page, tags: newTags });
+    await updateTags(newTags);
+  }
+
+  async function updateTags(newTags: string[]) {
+    try {
+      const response = await fetch(`/api/journal/${pageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: newTags }),
+      });
+      if (!response.ok) throw new Error('Failed to update tags');
+    } catch (err) {
+      console.error('Error updating tags:', err);
+    }
+  }
+
+  async function togglePin() {
+    if (!page) return;
+
+    try {
+      const response = await fetch(`/api/journal/${pageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_pinned: !page.is_pinned }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update page');
+      }
+
+      setPage({ ...page, is_pinned: !page.is_pinned });
+    } catch (err) {
+      console.error('Error updating page:', err);
+      alert('Failed to pin/unpin page');
+    }
+  }
+
   async function toggleArchive() {
     if (!page) return;
 
@@ -534,6 +593,17 @@ export default function JournalPageEditor() {
                     {isSaving ? 'Saving...' : isDirty ? 'Save Changes' : 'Saved'}
                   </button>
                   <button
+                    onClick={togglePin}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                      page.is_pinned 
+                        ? 'border-amber-500 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
+                        : 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                    }`}
+                  >
+                    <Pin className={`w-4 h-4 ${page.is_pinned ? 'fill-current' : ''}`} />
+                    {page.is_pinned ? 'Pinned' : 'Pin'}
+                  </button>
+                  <button
                     onClick={toggleArchive}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
                   >
@@ -590,6 +660,30 @@ export default function JournalPageEditor() {
                   onBlur={(e) => updateTitle(e.target.value)}
                   className="flex-1 text-4xl font-bold bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600"
                   placeholder="Untitled Page"
+                />
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <Tag className="w-4 h-4 text-zinc-500" />
+                {page.tags?.map((tag) => (
+                  <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-zinc-800 rounded-md text-xs text-zinc-300">
+                    {tag}
+                    <button 
+                      onClick={() => handleRemoveTag(tag)}
+                      className="text-zinc-500 hover:text-red-400"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  placeholder="Add a tag..."
+                  className="bg-transparent border-none outline-none text-sm text-zinc-400 placeholder:text-zinc-600 w-32"
                 />
               </div>
 
