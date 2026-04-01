@@ -58,8 +58,22 @@ export default function AudioPlayer({
   const [rate, setRate] = useState(1.0);
   const [volume, setVolume] = useState(1.0);
   const [selectedVoice, setSelectedVoice] = useState<string | undefined>();
-  const [azureKey, setAzureKey] = useState<string | undefined>();
-  const [azureRegion, setAzureRegion] = useState<string | undefined>();
+  const [ttsCapExceeded, setTtsCapExceeded] = useState(false);
+
+  // Check TTS cap when azure engine is active; fall back to web-speech if exceeded
+  useEffect(() => {
+    if (engine !== 'azure') return;
+    fetch('/api/tts/check')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.allowed) {
+          setTtsCapExceeded(true);
+          setEngine('web-speech');
+          setSelectedVoice(undefined);
+        }
+      })
+      .catch(() => {});
+  }, [engine]);
 
   // Load preferences from localStorage
   useEffect(() => {
@@ -77,17 +91,6 @@ export default function AudioPlayer({
       }
     }
 
-    // Load Azure credentials from localStorage (global)
-    const azurePrefs = localStorage.getItem('tts-azure-credentials');
-    if (azurePrefs) {
-      try {
-        const parsed = JSON.parse(azurePrefs);
-        setAzureKey(parsed.key);
-        setAzureRegion(parsed.region);
-      } catch (err) {
-        console.error('Error loading Azure credentials:', err);
-      }
-    }
   }, [documentId]);
 
   // Save preferences to localStorage
@@ -124,8 +127,6 @@ export default function AudioPlayer({
     rate,
     volume,
     voice: selectedVoice,
-    azureKey,
-    azureRegion,
     onBoundary: (charIndex, charLength) => {
       onHighlight?.(charIndex, charLength);
       // Update position in localStorage for bookmarking
@@ -515,6 +516,12 @@ export default function AudioPlayer({
               <div className="mt-2 text-xs text-amber-100/60 text-center">
                 {isInitializing && 'Initializing text-to-speech...'}
                 {extractingPdf && 'Extracting text from PDF...'}
+              </div>
+            )}
+
+            {ttsCapExceeded && (
+              <div className="mt-2 text-xs text-amber-400/80 text-center">
+                Monthly premium TTS limit reached — switched to free voices.
               </div>
             )}
 

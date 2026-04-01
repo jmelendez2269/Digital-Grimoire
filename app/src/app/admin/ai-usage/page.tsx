@@ -69,6 +69,7 @@ interface UsageData {
 
 const SERVICE_LABELS: Record<string, string> = {
   azure_ocr: "Azure OCR",
+  azure_tts: "Azure TTS",
   openai_metadata: "OpenAI Metadata",
   parallax_query: "Parallax Query",
   r2_storage: "R2 Storage",
@@ -80,6 +81,7 @@ const SERVICE_LABELS: Record<string, string> = {
 
 const SERVICE_COLORS: Record<string, string> = {
   azure_ocr: "text-blue-400",
+  azure_tts: "text-sky-400",
   openai_metadata: "text-green-400",
   parallax_query: "text-amber-400",
   r2_storage: "text-purple-400",
@@ -91,6 +93,7 @@ const SERVICE_COLORS: Record<string, string> = {
 
 const SERVICE_BAR_COLORS: Record<string, string> = {
   azure_ocr: "bg-blue-500",
+  azure_tts: "bg-sky-500",
   openai_metadata: "bg-green-500",
   parallax_query: "bg-amber-500",
   r2_storage: "bg-purple-500",
@@ -485,10 +488,82 @@ export default function AiUsageDashboard() {
                 </section>
               )}
 
+              {/* Feature metrics — cache hit rate + percentile placeholders */}
+              <section>
+                <h2 className="text-lg font-semibold text-zinc-300 mb-4 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-amber-400" />
+                  Feature Metrics
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+                    <div className="flex items-center gap-2 mb-2 text-zinc-400 text-sm">
+                      <BarChart3 className="w-4 h-4" /> Concept Search Cache Hit
+                    </div>
+                    <p className="text-2xl font-bold text-zinc-500">—</p>
+                    <p className="text-xs text-zinc-600 mt-1">Cache tracking not yet enabled</p>
+                  </div>
+                  {["P50", "P90", "P99"].map((label) => (
+                    <div key={label} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+                      <div className="flex items-center gap-2 mb-2 text-zinc-400 text-sm">
+                        <TrendingUp className="w-4 h-4" /> {label} Usage / User
+                      </div>
+                      <p className="text-2xl font-bold text-zinc-500">—</p>
+                      <p className="text-xs text-zinc-600 mt-1">Percentile tracking not yet enabled</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Top users by activity */}
+              {data.topUsers && data.topUsers.length > 0 && (
+                <section>
+                  <h2 className="text-lg font-semibold text-zinc-300 mb-4 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-amber-400" />
+                    Top Users by Activity
+                    <span className="text-xs text-zinc-500 font-normal">(last {timeRange} days)</span>
+                  </h2>
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wider">
+                          <th className="px-5 py-3 text-left">#</th>
+                          <th className="px-5 py-3 text-left">User</th>
+                          {Object.keys(data.topUsers[0] || {})
+                            .filter((k) => k !== "user_id" && k !== "email" && k !== "username")
+                            .map((k) => (
+                              <th key={k} className="px-5 py-3 text-right capitalize">
+                                {k.replace(/_/g, " ")}
+                              </th>
+                            ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.topUsers.map((u: any, i: number) => (
+                          <tr key={u.user_id ?? i} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors">
+                            <td className="px-5 py-3 text-zinc-500 font-mono text-xs">{i + 1}</td>
+                            <td className="px-5 py-3 text-zinc-300 font-medium">
+                              {u.username ?? u.email ?? u.user_id ?? `User ${i + 1}`}
+                            </td>
+                            {Object.entries(u)
+                              .filter(([k]) => k !== "user_id" && k !== "email" && k !== "username")
+                              .map(([k, v]) => (
+                                <td key={k} className="px-5 py-3 text-right font-mono text-amber-200">
+                                  {typeof v === "number" ? v.toLocaleString() : String(v ?? "—")}
+                                </td>
+                              ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+
               {/* Recent errors */}
               {data.recentErrors.length > 0 && (
                 <section>
                   <button
+                    type="button"
                     onClick={() => setExpandedErrors((v) => !v)}
                     className="w-full text-left"
                   >

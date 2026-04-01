@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { LensWeights } from './lens-orchestrator';
+import { getTrialStatus } from './trial';
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -80,6 +81,23 @@ export function getTierLimit(tier: SubscriptionTier): number {
  */
 export async function checkRateLimit(userId: string): Promise<RateLimitResult> {
   const supabase = await createClient();
+
+  // Trial users get scholar-level access
+  const trial = await getTrialStatus(userId);
+  if (trial.isInTrial) {
+    const trialLimit = SCHOLAR_TIER_LIMIT;
+    const periodStart = trial.trialStartedAt!;
+    const periodEnd = trial.trialEndsAt!;
+    const { data: queries } = await supabase
+      .from('convergence_queries')
+      .select('id')
+      .eq('user_id', userId)
+      .gte('created_at', periodStart.toISOString())
+      .lt('created_at', periodEnd.toISOString());
+    const queryCount = queries?.length || 0;
+    const remaining = Math.max(0, trialLimit - queryCount);
+    return { allowed: queryCount < trialLimit, remaining, limit: trialLimit, resetDate: periodEnd };
+  }
 
   // Get user's subscription tier
   const tier = await getSubscriptionTier(userId);

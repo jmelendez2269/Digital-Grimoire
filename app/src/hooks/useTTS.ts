@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * React Hook for Text-to-Speech functionality
  */
@@ -143,6 +145,8 @@ export function useTTS(options: UseTTSOptions = {}) {
 
       try {
         await service.speak(text, startPosition);
+        // Usage tracking for azure is handled server-side in /api/tts/synthesize.
+        // No client-side tracking needed.
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to speak';
         setError(errorMessage);

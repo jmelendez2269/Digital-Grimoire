@@ -16,6 +16,8 @@ import {
   LogOut,
   FileText,
   Stethoscope,
+  TrendingUp,
+  Cpu,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -150,6 +152,22 @@ export default function AdminDashboardHub() {
       icon: <Sparkles className="w-8 h-8 text-amber-400" />,
       href: "/admin/insights",
       color: "amber",
+      available: true,
+    },
+    {
+      title: "Growth & Revenue",
+      description: "Conversion funnel, retention, churn, and revenue health metrics. Billing metrics activate when payment tiers are live.",
+      icon: <TrendingUp className="w-8 h-8 text-emerald-400" />,
+      href: "/admin/growth",
+      color: "emerald",
+      available: true,
+    },
+    {
+      title: "AI Model Monitor",
+      description: "Weekly automated checks for model deprecations, price changes, and upgrade opportunities. Never be caught on an outdated model.",
+      icon: <Cpu className="w-8 h-8 text-teal-400" />,
+      href: "/admin/model-monitor",
+      color: "teal",
       available: true,
     },
   ];

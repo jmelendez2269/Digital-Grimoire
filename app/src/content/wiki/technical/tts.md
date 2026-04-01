@@ -49,8 +49,8 @@ The Project Parallax now includes a comprehensive text-to-speech feature that al
 - ✅ 400+ natural-sounding neural voices
 - ✅ 140+ languages and dialects
 - ✅ Incredibly natural pronunciation and intonation
-- ✅ First 5 million characters FREE per month (~3-4 complete books)
-- ✅ Then just $1 per million characters
+- ✅ First 500,000 characters FREE per month (shared platform free tier)
+- ✅ Then $16 per million characters
 
 **Best for**: Long reading sessions, audiobook-quality experience, professional use
 

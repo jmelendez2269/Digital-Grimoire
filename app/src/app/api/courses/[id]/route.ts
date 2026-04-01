@@ -21,11 +21,10 @@ export async function GET(request: NextRequest, { params }: Params) {
     const { id } = await params;
     const supabase = await createClient();
 
-    const { data: course, error } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('id', id)
-        .single();
+    // Try by UUID first, fall back to slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const query = supabase.from('courses').select('*');
+    const { data: course, error } = await (isUUID ? query.eq('id', id) : query.eq('slug', id)).single();
 
     if (error || !course) {
         return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 });

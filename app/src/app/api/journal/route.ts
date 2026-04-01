@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getSubscriptionTier } from '@/lib/parallax/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,6 +96,24 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized' },
         { status: 401 }
       );
+    }
+
+    // Enforce 50-entry cap for free-tier users
+    const tier = await getSubscriptionTier(user.id);
+    if (tier === 'free') {
+      const JOURNAL_CAP = 50;
+      const { count, error: countError } = await supabase
+        .from('journal_pages')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_archived', false);
+
+      if (!countError && (count ?? 0) >= JOURNAL_CAP) {
+        return NextResponse.json(
+          { error: 'Journal limit reached', message: `Free accounts are limited to ${JOURNAL_CAP} journal entries. Upgrade to create unlimited entries.` },
+          { status: 403 }
+        );
+      }
     }
 
     // Parse request body

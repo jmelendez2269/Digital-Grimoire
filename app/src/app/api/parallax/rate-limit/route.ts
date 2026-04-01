@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, getSubscriptionTier } from '@/lib/parallax/rate-limit';
+import { getTrialStatus } from '@/lib/parallax/trial';
 
 /**
  * GET /api/parallax/rate-limit
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
         const tier = await getSubscriptionTier(user.id);
         const isPremium = tier !== 'free';
         const rateLimit = await checkRateLimit(user.id);
+        const trial = await getTrialStatus(user.id);
 
         return new Response(
             JSON.stringify({
@@ -36,6 +38,12 @@ export async function GET(request: NextRequest) {
                 resetDate: rateLimit.resetDate.toISOString(),
                 isPremium,
                 tier,
+                trial: {
+                    isInTrial: trial.isInTrial,
+                    trialExpired: trial.trialExpired,
+                    daysRemaining: trial.daysRemaining,
+                    trialEndsAt: trial.trialEndsAt?.toISOString() ?? null,
+                },
             }),
             { status: 200, headers: { 'Content-Type': 'application/json' } }
         );

@@ -120,8 +120,8 @@ export async function createTTSService(config: TTSConfig): Promise<TTSService> {
   let service: TTSService;
 
   if (config.engine === 'azure') {
-    const { AzureSpeechTTS } = await import('./azure-speech-tts');
-    service = new AzureSpeechTTS(config);
+    const { ServerProxyTTS } = await import('./server-proxy-tts');
+    service = new ServerProxyTTS(config);
   } else {
     const { WebSpeechTTS } = await import('./web-speech-tts');
     service = new WebSpeechTTS(config);

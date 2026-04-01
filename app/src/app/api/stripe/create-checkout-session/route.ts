@@ -54,11 +54,26 @@ export async function POST(request: NextRequest) {
 
     // Get request body
     const body = await request.json();
-    const { priceId, mode = 'subscription' } = body;
+    const { mode = 'subscription' } = body;
+    let { priceId } = body;
+
+    // If a tier name is provided, resolve the price ID from env vars (preferred/secure)
+    const tierPriceMap: Record<string, string | undefined> = {
+      student: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT,
+      scholar: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR,
+      adept: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT,
+    };
+    if (body.tier && tierPriceMap[body.tier]) {
+      priceId = tierPriceMap[body.tier];
+    }
 
     if (!priceId) {
+      const missingTier = body.tier ? ` for tier "${body.tier}"` : '';
       return NextResponse.json(
-        { error: 'Price ID is required', message: 'Price ID is required to create a checkout session' },
+        {
+          error: 'Price ID is required',
+          message: `Price ID is required${missingTier}. Ensure the corresponding NEXT_PUBLIC_STRIPE_PRICE_ID_* env var is set.`,
+        },
         { status: 400 }
       );
     }

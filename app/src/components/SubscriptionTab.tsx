@@ -407,36 +407,11 @@ export default function SubscriptionTab() {
 
     setProcessing(tier);
     try {
-      // Get the price ID for the selected tier
-      const priceIdMap: Record<string, string | undefined> = {
-        student: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT,
-        scholar: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR,
-        adept: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT,
-      };
-
-      const priceId = priceIdMap[tier];
-
-      if (!priceId) {
-        toast.error(`${tier} subscription pricing not configured. Please contact support.`);
-        setProcessing(null);
-        return;
-      }
-
-      // Log price ID for debugging (only partial for security)
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Attempting to create checkout for ${tier} tier with price ID: ${priceId.substring(0, 20)}...`);
-      }
-
-      // Create checkout session
+      // Send tier name — server resolves price ID from env vars
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId,
-          mode: 'subscription',
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier, mode: 'subscription' }),
       });
 
       let data: any = {};

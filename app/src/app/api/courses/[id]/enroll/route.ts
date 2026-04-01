@@ -3,26 +3,30 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+async function resolveCourseId(supabase: Awaited<ReturnType<typeof createClient>>, idOrSlug: string) {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+    const { data: course } = await supabase
+        .from('courses')
+        .select('id, title')
+        .eq(isUUID ? 'id' : 'slug', idOrSlug)
+        .single();
+    return course;
+}
+
 export async function GET(
     _request: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { slug } = await params;
+        const { id: idOrSlug } = await params;
         const supabase = await createClient();
 
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
-            // Not logged in — return unenrolled state, not an error
             return NextResponse.json({ success: true, enrolled: false, enrollment: null });
         }
 
-        const { data: course } = await supabase
-            .from('courses')
-            .select('id')
-            .eq('slug', slug)
-            .single();
-
+        const course = await resolveCourseId(supabase, idOrSlug);
         if (!course) {
             return NextResponse.json({ error: 'Course not found' }, { status: 404 });
         }
@@ -42,19 +46,16 @@ export async function GET(
 
     } catch (error) {
         console.error('Unexpected error in enroll GET:', error);
-        return NextResponse.json(
-            { success: false, error: 'Internal server error' },
-            { status: 500 }
-        );
+        return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
 }
 
 export async function POST(
     _request: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { slug } = await params;
+        const { id: idOrSlug } = await params;
         const supabase = await createClient();
 
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -62,17 +63,11 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { data: course } = await supabase
-            .from('courses')
-            .select('id, title')
-            .eq('slug', slug)
-            .single();
-
+        const course = await resolveCourseId(supabase, idOrSlug);
         if (!course) {
             return NextResponse.json({ error: 'Course not found' }, { status: 404 });
         }
 
-        // Check if already enrolled first (upsert with ignoreDuplicates won't return existing row)
         const { data: existing } = await supabase
             .from('course_enrollments')
             .select('*')
@@ -81,11 +76,9 @@ export async function POST(
             .maybeSingle();
 
         if (existing) {
-            // Already enrolled — return existing enrollment without resetting progress
             return NextResponse.json({ success: true, enrollment: existing });
         }
 
-        // Create new enrollment
         const { data: enrollment, error } = await supabase
             .from('course_enrollments')
             .insert({
@@ -106,9 +99,6 @@ export async function POST(
 
     } catch (error) {
         console.error('Unexpected error in enroll POST:', error);
-        return NextResponse.json(
-            { success: false, error: 'Internal server error' },
-            { status: 500 }
-        );
+        return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
 }
