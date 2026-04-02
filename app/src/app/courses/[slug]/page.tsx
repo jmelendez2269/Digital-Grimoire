@@ -22,6 +22,20 @@ const PROSE_CLASSES = `prose prose-invert prose-amber max-w-none
   prose-ol:text-zinc-400 prose-ol:list-decimal prose-ol:pl-4
   prose-li:marker:text-amber-500/50`;
 
+interface Text {
+  id: string;
+  title: string;
+  author: string | null;
+  cover_image_url: string | null;
+}
+
+interface CourseText {
+  id: string;
+  text_id: string;
+  is_required: boolean;
+  texts: Text | null;
+}
+
 interface Course {
   id: string;
   title: string;
@@ -36,6 +50,7 @@ interface Course {
   is_published: boolean;
   created_at: string;
   updated_at: string;
+  course_texts?: CourseText[];
 }
 
 interface Enrollment {
@@ -281,6 +296,49 @@ function CourseDetailContent() {
                     <div>
                       <h2 className="text-lg font-bold text-amber-500 mb-4">Module Overview</h2>
                       {renderRichText(course.description)}
+                    </div>
+                  )}
+
+                  {/* Core Texts Section */}
+                  {course.course_texts && course.course_texts.length > 0 && (
+                    <div className="pt-8 border-t border-white/5">
+                      <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-6">Core Texts</h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {course.course_texts.map((ct) => (
+                          <Link
+                            key={ct.id}
+                            href={`/library/${ct.text_id}`}
+                            className="group flex gap-4 p-3 bg-zinc-900/30 border border-white/5 rounded-xl hover:border-amber-500/30 transition-all"
+                          >
+                            <div className="w-16 h-24 flex-shrink-0 bg-zinc-800 rounded-lg overflow-hidden border border-white/10 shadow-lg group-hover:scale-105 transition-transform">
+                              {ct.texts?.cover_image_url ? (
+                                <img
+                                  src={ct.texts.cover_image_url}
+                                  alt={ct.texts.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <BookOpen className="w-6 h-6 text-zinc-700" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col justify-center py-1">
+                              <h3 className="text-sm font-bold text-zinc-200 line-clamp-2 group-hover:text-amber-400 transition-colors">
+                                {ct.texts?.title}
+                              </h3>
+                              <p className="text-xs text-zinc-500 font-mono mt-1">
+                                {ct.texts?.author || 'Unknown Author'}
+                              </p>
+                              {ct.is_required && (
+                                <span className="text-[9px] font-mono text-amber-500 uppercase tracking-widest mt-2 border border-amber-500/20 px-1.5 w-fit rounded bg-amber-500/5">
+                                  Required
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
 

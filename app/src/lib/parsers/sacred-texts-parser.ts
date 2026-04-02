@@ -930,28 +930,37 @@ export async function parseGenericWebPage(
     console.log('[parseGenericWebPage] Parsing:', url);
     
     // Fetch the page
-    let response;
+    let html: string = '';
+    let usedPuppeteer = false;
+    
     try {
-      response = await fetch(url, {
+      const response = await fetch(url, {
         headers: {
           ...COMMON_HEADERS,
           'Sec-Fetch-Site': 'none',
         }
       });
+      
+      if (!response.ok) {
+        if (response.status === 403 || response.status === 429 || response.status === 401) {
+          console.warn(`[parseGenericWebPage] Fetch blocked (HTTP ${response.status}), falling back to Puppeteer`);
+          html = await fetchWithPuppeteer(url);
+          usedPuppeteer = true;
+        } else {
+          throw new Error(`Failed to fetch page (HTTP ${response.status}): ${response.statusText}`);
+        }
+      } else {
+        html = await response.text();
+      }
     } catch (fetchError) {
-      console.error('[parseGenericWebPage] Fetch error:', fetchError);
-      throw new Error(`Failed to fetch page from ${url}: ${fetchError instanceof Error ? fetchError.message : 'Network error'}`);
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch page (HTTP ${response.status}): ${response.statusText}`);
-    }
-
-    let html: string;
-    try {
-      html = await response.text();
-    } catch (textError) {
-      throw new Error(`Failed to read page content: ${textError instanceof Error ? textError.message : 'Unknown error'}`);
+      console.error('[parseGenericWebPage] Fetch error, attempting Puppeteer fallback:', fetchError);
+      try {
+        html = await fetchWithPuppeteer(url);
+        usedPuppeteer = true;
+      } catch (puppeteerError) {
+        console.error('[parseGenericWebPage] Puppeteer fallback also failed:', puppeteerError);
+        throw new Error(`Failed to fetch page from ${url}: ${fetchError instanceof Error ? fetchError.message : 'Network error'}`);
+      }
     }
     
     if (!html || html.trim().length === 0) {

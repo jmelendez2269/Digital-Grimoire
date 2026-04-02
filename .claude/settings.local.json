@@ -9,7 +9,8 @@
       "Bash(where codex:*)",
       "Bash(npm list:*)",
       "Bash(node:)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(grep -r \"structured data\\\\|application/ld\\\\+json\\\\|JsonLd\\\\|json-ld\\\\|Schema.org\" /c/Projects/Digital-Grimoire/app/src --include=*.tsx --include=*.ts -l)"
     ]
   }
 }

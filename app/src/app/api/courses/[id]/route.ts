@@ -23,7 +23,22 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     // Try by UUID first, fall back to slug
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    const query = supabase.from('courses').select('*');
+    const query = supabase
+        .from('courses')
+        .select(`
+            *,
+            course_texts(
+                id,
+                text_id,
+                is_required,
+                texts(
+                    id,
+                    title,
+                    author,
+                    cover_image_url
+                )
+            )
+        `);
     const { data: course, error } = await (isUUID ? query.eq('id', id) : query.eq('slug', id)).single();
 
     if (error || !course) {
@@ -34,11 +49,21 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-    const { id } = await params;
+    const { id: paramId } = await params;
     const { supabase, forbidden } = await getAdminUser();
 
     if (forbidden) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Resolve UUID if slug was provided
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paramId);
+    let resolvedId = paramId;
+
+    if (!isUUID) {
+        const { data: found } = await supabase.from('courses').select('id').eq('slug', paramId).single();
+        if (!found) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+        resolvedId = found.id;
     }
 
     const body = await request.json();
@@ -53,6 +78,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         duration_weeks,
         content,
         is_published,
+        sort_order,
     } = body;
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -66,12 +92,59 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (duration_weeks !== undefined) updates.duration_weeks = duration_weeks;
     if (content !== undefined) updates.content = content;
     if (is_published !== undefined) updates.is_published = is_published;
+    if (sort_order !== undefined) updates.sort_order = sort_order;
+
+    // Handle course_texts sync if provided
+    const { course_texts } = body;
+    if (course_texts !== undefined) {
+        // Simple sync: delete all and re-insert
+        // In a production app, you might want to do a more surgical diff
+        const { error: deleteError } = await supabase
+            .from('course_texts')
+            .delete()
+            .eq('course_id', resolvedId);
+
+        if (deleteError) {
+            console.error('Error clearing old course texts:', deleteError);
+            return NextResponse.json({ success: false, error: 'Failed to sync course texts' }, { status: 500 });
+        }
+
+        if (Array.isArray(course_texts) && course_texts.length > 0) {
+            const toInsert = course_texts.map((ct: any) => ({
+                course_id: resolvedId,
+                text_id: ct.text_id,
+                is_required: ct.is_required ?? true
+            }));
+
+            const { error: insertError } = await supabase
+                .from('course_texts')
+                .insert(toInsert);
+
+            if (insertError) {
+                console.error('Error inserting new course texts:', insertError);
+                return NextResponse.json({ success: false, error: 'Failed to link new course texts' }, { status: 500 });
+            }
+        }
+    }
 
     const { data: course, error } = await supabase
         .from('courses')
         .update(updates)
-        .eq('id', id)
-        .select()
+        .eq('id', resolvedId)
+        .select(`
+            *,
+            course_texts(
+                id,
+                text_id,
+                is_required,
+                texts(
+                    id,
+                    title,
+                    author,
+                    cover_image_url
+                )
+            )
+        `)
         .single();
 
     if (error) {
@@ -86,14 +159,24 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
-    const { id } = await params;
+    const { id: paramId } = await params;
     const { supabase, forbidden } = await getAdminUser();
 
     if (forbidden) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { error } = await supabase.from('courses').delete().eq('id', id);
+    // Resolve UUID if slug was provided
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paramId);
+    let resolvedId = paramId;
+
+    if (!isUUID) {
+        const { data: found } = await supabase.from('courses').select('id').eq('slug', paramId).single();
+        if (!found) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+        resolvedId = found.id;
+    }
+
+    const { error } = await supabase.from('courses').delete().eq('id', resolvedId);
 
     if (error) {
         console.error('Error deleting course:', error);

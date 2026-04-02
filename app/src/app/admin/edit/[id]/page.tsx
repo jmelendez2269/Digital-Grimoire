@@ -260,7 +260,7 @@ export default function EditDocumentPage() {
       return;
     }
 
-    if (!confirm('This will use AI to completely regenerate the brief summary, curator note, domain, tags, and lenses based on the current title and author. It will overwrite the existing fields. Are you sure you want to proceed?')) {
+    if (!confirm('This will re-extract text from the original PDF (using OCR if needed) and use AI to regenerate all metadata fields. This overwrites existing fields. Proceed?')) {
       return;
     }
 
@@ -275,6 +275,7 @@ export default function EditDocumentPage() {
           textId: documentId,
           title: title.trim(),
           author: author.trim() || undefined,
+          reExtractText: true,
         }),
       });
 

@@ -141,6 +141,11 @@ function mapCourseType(arc: string): 'foundational' | 'theme' | 'rotation' {
   return 'foundational';
 }
 
+/** Strip markdown italics markers */
+function stripItalics(text: string): string {
+  return text.replace(/\*/g, '').trim();
+}
+
 /**
  * Split the markdown document into named H2 sections.
  * Returns a map of { sectionHeading: sectionBody }.
@@ -363,32 +368,52 @@ function parseReadingTitle(headerLine: string): {
 
   // Match: "N. Title – Section (Author)" or "N. Title – Author, Section" etc.
   const numMatch = clean.match(/^(\d+)\.\s+(.+)$/);
-  if (!numMatch) return { sort_order: 0, title: clean };
+  if (!numMatch) return { sort_order: 0, title: stripItalics(clean) };
 
   const sortOrder = parseInt(numMatch[1]);
-  let rest = numMatch[2];
+  let rest = numMatch[2].trim();
 
-  // Try to extract author in parentheses: "Title – Section (Author)" or just "Title (Author)"
-  let author: string | undefined;
-  const parenAuthorMatch = rest.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-  if (parenAuthorMatch) {
-    rest = parenAuthorMatch[1].trim();
-    author = parenAuthorMatch[2].trim();
+  // Try to extract content in parentheses at the very end
+  let extra: string | undefined;
+  const parenMatch = rest.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (parenMatch) {
+    rest = parenMatch[1].trim();
+    extra = parenMatch[2].trim();
   }
 
-  // Try to split on dash: "Title – Author, Section" or "Title – Section"
-  const dashParts = rest.split(/\s*[—–]\s*/);
-  let title = dashParts[0].trim();
+  // Handle various dash types: em-dash (—), en-dash (–), and plain hyphen (-)
+  const dashParts = rest.split(/\s*[—–-]\s*/);
+  let partA = stripItalics(dashParts[0] || '').trim();
+  let partB = stripItalics(dashParts[1] || '').trim();
+
+  let title = partA;
+  let author: string | undefined;
   let section: string | undefined;
 
   if (dashParts.length > 1) {
-    const afterDash = dashParts.slice(1).join(' – ').trim();
-    // Heuristic: if it looks like an author name (short, no numbers), treat as author
-    // Otherwise treat as section reference
-    if (!author && afterDash.length < 40 && !/chapter|book|part|verse|\d/i.test(afterDash)) {
-      author = afterDash;
+    // Heuristic: If partA is very short (likely author) or partB contains keywords (likely title/section)
+    const partBIsSection = /book|chapter|part|verse|section|tractate|\d/i.test(partB);
+    const partAIsKnownAuthor = /plato|lao tzu|marcus aurelius|descartes|bacon|rumi|eckhart/i.test(partA);
+
+    if (partAIsKnownAuthor && !partBIsSection) {
+        author = partA;
+        title = partB;
+    } else if (partBIsSection) {
+        title = partA;
+        section = partB;
     } else {
-      section = afterDash;
+        // Default to Title — Author
+        title = partA;
+        author = partB;
+    }
+  }
+
+  // If we found something in parentheses, decide if it's author or section
+  if (extra) {
+    if (!author && extra.length < 30) {
+      author = extra;
+    } else if (!section) {
+      section = extra;
     }
   }
 

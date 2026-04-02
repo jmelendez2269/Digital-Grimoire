@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Plus, BookOpen, Edit, Trash2, Loader2, Search } from "lucide-react";
+import { Plus, BookOpen, Edit, Loader2, Search, ChevronUp, ChevronDown } from "lucide-react";
 
 interface Course {
     id: string;
@@ -14,6 +14,7 @@ interface Course {
     course_type: string;
     level: string;
     is_published: boolean;
+    sort_order: number;
     created_at: string;
 }
 
@@ -23,6 +24,7 @@ export default function AdminCoursesPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [creating, setCreating] = useState(false);
+    const [reordering, setReordering] = useState<string | null>(null);
 
     useEffect(() => {
         fetchCourses();
@@ -59,7 +61,8 @@ export default function AdminCoursesPage() {
                     description: "Draft course description",
                     course_type: "foundational",
                     level: "foundational",
-                    is_published: false
+                    is_published: false,
+                    sort_order: courses.length,
                 })
             });
 
@@ -71,6 +74,47 @@ export default function AdminCoursesPage() {
             console.error("Failed to create course", error);
         } finally {
             setCreating(false);
+        }
+    };
+
+    const moveOrder = async (index: number, direction: "up" | "down") => {
+        const swapIndex = direction === "up" ? index - 1 : index + 1;
+        if (swapIndex < 0 || swapIndex >= courses.length) return;
+
+        const updated = [...courses];
+        const aOrder = updated[index].sort_order;
+        const bOrder = updated[swapIndex].sort_order;
+
+        // Swap sort_order values (or use position if both equal)
+        const newAOrder = aOrder !== bOrder ? bOrder : (direction === "up" ? aOrder - 1 : aOrder + 1);
+        const newBOrder = aOrder !== bOrder ? aOrder : (direction === "up" ? bOrder + 1 : bOrder - 1);
+
+        updated[index] = { ...updated[index], sort_order: newAOrder };
+        updated[swapIndex] = { ...updated[swapIndex], sort_order: newBOrder };
+
+        // Re-sort locally so display updates immediately
+        updated.sort((a, b) => a.sort_order - b.sort_order || a.title.localeCompare(b.title));
+        setCourses(updated);
+
+        setReordering(updated[index].id);
+        try {
+            await Promise.all([
+                fetch(`/api/courses/${courses[index].id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sort_order: newAOrder }),
+                }),
+                fetch(`/api/courses/${courses[swapIndex].id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sort_order: newBOrder }),
+                }),
+            ]);
+        } catch (error) {
+            console.error("Failed to reorder courses", error);
+            fetchCourses(); // Revert on error
+        } finally {
+            setReordering(null);
         }
     };
 
@@ -88,6 +132,7 @@ export default function AdminCoursesPage() {
                     </div>
 
                     <button
+                        type="button"
                         onClick={handleCreate}
                         disabled={creating}
                         className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white px-4 py-2 rounded-lg hover:from-cyan-500 hover:to-teal-500 transition-all font-medium disabled:opacity-50"
@@ -121,35 +166,75 @@ export default function AdminCoursesPage() {
                         <p className="text-zinc-500 mt-1">Get started by creating a new course.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {courses.map(course => (
+                    <div className="space-y-3">
+                        {!search && (
+                            <p className="text-xs text-zinc-500 mb-4">
+                                Courses are displayed in this order to users. Use the arrows to reorder, or set a precise number in each course&apos;s &quot;Display Order&quot; field.
+                            </p>
+                        )}
+                        {courses.map((course, index) => (
                             <div
                                 key={course.id}
-                                className="group bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:border-cyan-500/30 hover:bg-zinc-900/80 transition-all duration-300"
+                                className="group flex items-center gap-4 bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-4 hover:border-cyan-500/30 hover:bg-zinc-900/80 transition-all duration-200"
                             >
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium border ${course.is_published
-                                            ? 'bg-emerald-950/30 border-emerald-900/50 text-emerald-400'
-                                            : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400'
-                                        }`}>
-                                        {course.is_published ? 'Published' : 'Draft'}
+                                {/* Order controls — hidden when searching */}
+                                {!search && (
+                                    <div className="flex flex-col gap-0.5 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => moveOrder(index, "up")}
+                                            disabled={index === 0 || reordering !== null}
+                                            aria-label={`Move "${course.title}" up`}
+                                            className="p-0.5 text-zinc-600 hover:text-zinc-300 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronUp className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => moveOrder(index, "down")}
+                                            disabled={index === courses.length - 1 || reordering !== null}
+                                            aria-label={`Move "${course.title}" down`}
+                                            className="p-0.5 text-zinc-600 hover:text-zinc-300 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronDown className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Position badge */}
+                                {!search && (
+                                    <span className="text-xs font-mono text-zinc-600 w-5 text-center shrink-0">
+                                        {index + 1}
                                     </span>
-                                    <span className="text-xs text-zinc-500 uppercase tracking-wider">{course.level}</span>
+                                )}
+
+                                {/* Course info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <h3 className="font-semibold text-zinc-100 truncate group-hover:text-cyan-400 transition-colors">
+                                            {course.title}
+                                        </h3>
+                                        <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium border ${
+                                            course.is_published
+                                                ? 'bg-emerald-950/30 border-emerald-900/50 text-emerald-400'
+                                                : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400'
+                                        }`}>
+                                            {course.is_published ? 'Published' : 'Draft'}
+                                        </span>
+                                        <span className="shrink-0 text-xs text-zinc-500 uppercase tracking-wider">{course.level}</span>
+                                    </div>
+                                    <p className="text-zinc-500 text-sm truncate">
+                                        {course.description || 'No description provided.'}
+                                    </p>
                                 </div>
 
-                                <h3 className="text-xl font-bold text-zinc-100 mb-2 line-clamp-1 group-hover:text-cyan-400 transition-colors">
-                                    {course.title}
-                                </h3>
-                                <p className="text-zinc-400 text-sm line-clamp-2 mb-6 h-10">
-                                    {course.description || 'No description provided.'}
-                                </p>
-
-                                <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-                                    <span className="text-xs text-zinc-500 font-mono">
+                                {/* Actions */}
+                                <div className="flex items-center gap-4 shrink-0">
+                                    <span className="text-xs text-zinc-600 font-mono hidden sm:block">
                                         {new Date(course.created_at).toLocaleDateString()}
                                     </span>
-
                                     <button
+                                        type="button"
                                         onClick={() => router.push(`/admin/courses/${course.id}`)}
                                         className="flex items-center gap-1.5 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
                                     >
@@ -161,7 +246,6 @@ export default function AdminCoursesPage() {
                         ))}
                     </div>
                 )}
-
             </main>
             <Footer />
         </div>

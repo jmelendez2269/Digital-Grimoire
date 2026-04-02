@@ -15,7 +15,21 @@ export async function GET(request: NextRequest) {
         // Build query — include content so catalog can read arc, core_question, key_tensions etc.
         let query = supabase
             .from('courses')
-            .select('id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, content, created_at, updated_at')
+            .select(`
+                id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, content, sort_order, created_at, updated_at,
+                course_texts(
+                    id,
+                    text_id,
+                    is_required,
+                    texts(
+                        id,
+                        title,
+                        author,
+                        cover_image_url
+                    )
+                )
+            `)
+            .order('sort_order', { ascending: true })
             .order('title', { ascending: true });
 
         // Apply filters

@@ -1,5 +1,5 @@
-# robots.txt for Convergence Library
-# https://convergencelibrary.com
+# robots.txt for Project Parallax
+# https://projectparallax.xyz
 
 User-agent: *
 Allow: /
@@ -10,5 +10,5 @@ Disallow: /_next/
 Disallow: /pdf-worker/
 
 # Sitemap location
-Sitemap: https://www.convergencelibrary.com/sitemap.xml
+Sitemap: https://projectparallax.xyz/sitemap.xml
 

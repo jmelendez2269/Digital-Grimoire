@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, Clock, ChevronRight } from 'lucide-react';
+import { Search, Filter, Clock, ChevronRight, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -21,6 +21,20 @@ interface CourseContent {
   weeks?: unknown[];
 }
 
+interface Text {
+  id: string;
+  title: string;
+  author: string | null;
+  cover_image_url: string | null;
+}
+
+interface CourseText {
+  id: string;
+  text_id: string;
+  is_required: boolean;
+  texts: Text | null;
+}
+
 interface Course {
   id: string;
   title: string;
@@ -34,6 +48,7 @@ interface Course {
   content: CourseContent | null;
   is_published: boolean;
   created_at: string;
+  course_texts?: CourseText[];
 }
 
 interface EnrolledCourse extends Course {
@@ -239,12 +254,54 @@ function CourseCard({
               <span className="uppercase">{course.level}</span>
             </div>
           )}
+          {course.course_texts && course.course_texts.length > 0 && (
+            <div className="flex items-center gap-1 ml-auto">
+              <BookOpen className="w-3 h-3" />
+              <span>{course.course_texts.length} TEXT{course.course_texts.length !== 1 ? 'S' : ''}</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Hover overlay: key tensions + CTA */}
       <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-20">
         <div className="p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/98 to-transparent">
+          {/* Books Preview */}
+          {course.course_texts && course.course_texts.length > 0 && (
+            <div className="mb-4">
+              <div className="text-[9px] uppercase tracking-widest font-mono text-zinc-500 mb-2">Core Reading</div>
+              <div className="flex -space-x-2 overflow-hidden mb-2">
+                {course.course_texts.slice(0, 4).map((ct, idx) => (
+                  <div
+                    key={ct.id}
+                    className="relative w-8 h-12 rounded bg-zinc-800 border border-white/10 overflow-hidden shadow-lg"
+                    style={{ zIndex: 10 - idx }}
+                  >
+                    {ct.texts?.cover_image_url ? (
+                      <img
+                        src={ct.texts.cover_image_url}
+                        alt={ct.texts.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                        <BookOpen className="w-3 h-3 text-zinc-600" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {course.course_texts.length > 4 && (
+                  <div className="relative w-8 h-12 rounded bg-zinc-900 border border-white/10 flex items-center justify-center text-[10px] text-zinc-500 font-mono" style={{ zIndex: 0 }}>
+                    +{course.course_texts.length - 4}
+                  </div>
+                )}
+              </div>
+              <div className="text-[10px] text-zinc-400 font-mono line-clamp-1 italic">
+                {course.course_texts.map(ct => ct.texts?.title).filter(Boolean).slice(0, 2).join(', ')}
+                {course.course_texts.length > 2 ? '...' : ''}
+              </div>
+            </div>
+          )}
           {tensions.length > 0 && (
             <div className="space-y-1 mb-3">
               {tensions.map((t) => (

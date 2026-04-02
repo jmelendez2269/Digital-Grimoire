@@ -60,7 +60,7 @@ export default function AdminDashboardHub() {
   const adminTools = [
     {
       title: "AI Usage Dashboard",
-      description: "View API costs, token usage, service breakdown, and cost alert thresholds.",
+      description: "Monitor AI API costs, service usage, top user activity, and cost alert thresholds.",
       icon: <BarChart3 className="w-8 h-8 text-amber-400" />,
       href: "/admin/ai-usage",
       color: "amber",

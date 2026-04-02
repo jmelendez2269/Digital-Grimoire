@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { extractMetadata } from '@/lib/claude-metadata';
+import { getR2Client, GetObjectCommand } from '@/lib/storage/r2-client';
+import { performOCR } from '@/lib/azure-ocr';
+import { extractPdfTextLocally, isTextSubstantial } from '@/lib/utils/server-pdf-extractor';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { textId, title, author } = body;
+    const { textId, title, author, reExtractText } = body;
 
     if (!textId || !title) {
       return NextResponse.json(
@@ -65,17 +68,75 @@ export async function POST(request: NextRequest) {
     let contentToAnalyze = '';
     const hasStructuredChapters = document.metadata?.isStructuredText && document.metadata?.chapters && document.metadata.chapters.length > 0;
 
-    if (hasStructuredChapters) {
-      const chapters = document.metadata.chapters;
-      // Use first 3 chapters or all if fewer to provide context
-      const sampleChapters = chapters.slice(0, 3);
-      contentToAnalyze = sampleChapters
-        .map((ch: any) => `${ch.title}\n\n${ch.content}`)
-        .join('\n\n---\n\n')
-        .substring(0, 10000);
-    } else if (document.content) {
-      // Use full OCR content if limited, or first 10k chars
-      contentToAnalyze = document.content.substring(0, 10000);
+    // If reExtractText is requested, re-download the PDF from R2 and re-run OCR
+    if (reExtractText && document.s3_key) {
+      console.log(`[Rescan] Re-extracting text from R2: ${document.s3_key}`);
+      try {
+        const s3Client = getR2Client();
+        const bucketName = process.env.R2_BUCKET_NAME || 'convergence-library';
+        const getCommand = new GetObjectCommand({ Bucket: bucketName, Key: document.s3_key });
+        const fileResponse = await s3Client.send(getCommand);
+
+        if (fileResponse.Body) {
+          const chunks: Uint8Array[] = [];
+          for await (const chunk of fileResponse.Body as any) {
+            chunks.push(chunk);
+          }
+          const fileBuffer = Buffer.concat(chunks);
+          const mimeType = fileResponse.ContentType || 'application/pdf';
+          const isPDF = mimeType === 'application/pdf';
+
+          let reExtractedText = '';
+
+          if (isPDF) {
+            try {
+              const localResult = await extractPdfTextLocally(fileBuffer);
+              if (isTextSubstantial(localResult.text, localResult.pageCount)) {
+                reExtractedText = localResult.text;
+                console.log('[Rescan] ✅ Local PDF extraction succeeded');
+              } else {
+                console.log('[Rescan] Local PDF text insufficient, falling back to Azure OCR...');
+              }
+            } catch (e) {
+              console.log('[Rescan] Local PDF extraction failed, falling back to Azure OCR...');
+            }
+          }
+
+          if (!reExtractedText) {
+            const fileUrl = `${process.env.R2_PUBLIC_URL}/${document.s3_key}`;
+            try {
+              const ocrResult = await performOCR(fileUrl, session.user.id);
+              reExtractedText = ocrResult.text;
+              console.log(`[Rescan] ✅ Azure OCR succeeded: ${ocrResult.lineCount} lines`);
+            } catch (ocrError) {
+              console.error('[Rescan] Azure OCR failed:', ocrError);
+            }
+          }
+
+          if (reExtractedText) {
+            contentToAnalyze = reExtractedText.substring(0, 10000);
+            // Update stored content so future rescans use the good text
+            await supabase.from('texts').update({ content: reExtractedText }).eq('id', textId);
+            console.log('[Rescan] ✅ Stored re-extracted text to database');
+          }
+        }
+      } catch (reExtractError) {
+        console.error('[Rescan] Re-extraction failed (falling back to stored content):', reExtractError);
+      }
+    }
+
+    if (!contentToAnalyze) {
+      if (hasStructuredChapters) {
+        const chapters = document.metadata.chapters;
+        const sampleChapters = chapters.slice(0, 3);
+        contentToAnalyze = sampleChapters
+          .map((ch: any) => `${ch.title}\n\n${ch.content}`)
+          .join('\n\n---\n\n')
+          .substring(0, 10000);
+      } else if (document.content) {
+        // Use full OCR content if limited, or first 10k chars
+        contentToAnalyze = document.content.substring(0, 10000);
+      }
     }
 
     if (!contentToAnalyze && !title) {
