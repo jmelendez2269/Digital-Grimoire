@@ -194,33 +194,29 @@
 - AWS Textract encountered permission issues requiring paid support ($29-100/month)
 - Cloudflare R2 offers better bootstrap economics (no egress fees)
 - S3-compatible API means minimal code changes
-- Automated OCR deferred to Phase 2 (start with manual metadata)
-
-#### Tasks (Revised)
-
-**File Upload UI**
-- [ ] P0: Create `/admin/upload` page
-- [ ] P0: Build drag-and-drop upload component (react-dropzone)
-- [ ] P0: Add file validation (PDF, DOCX, size limits: 50MB)
-- [ ] P0: Show upload progress bar
-- [ ] P1: Support batch uploads (multiple files)
-- [ ] P1: Add upload queue with status
+- Automated OCR deferred to Phase 2 (start with**File Upload UI**
+- [x] P0: Create `/admin/upload` page
+- [x] P0: Build drag-and-drop upload component (react-dropzone)
+- [x] P0: Add file validation (PDF, DOCX, size limits: 50MB)
+- [x] P0: Show upload progress bar
+- [x] P1: Support batch uploads (multiple files)
+- [x] P1: Add upload queue with status
 - [ ] P2: Implement resume for failed uploads
 
 **Cloudflare R2 Upload Pipeline** (NEW)
-- [ ] P0: Set up Cloudflare account and R2 bucket: `convergence-library`
-- [ ] P0: Generate R2 API tokens (read/write)
-- [ ] P0: Configure CORS for web uploads
-- [ ] P0: Create API route: `POST /api/upload/presigned`
-- [ ] P0: Generate presigned R2 URLs (S3-compatible)
-- [ ] P0: Upload files to R2 from browser
-- [ ] P0: Store file metadata and R2 URL in `texts` table
-- [ ] P1: Generate thumbnails for PDFs (client-side or Worker)
-- [ ] P1: Add file versioning
+- [x] P0: Set up Cloudflare account and R2 bucket: `convergence-library`
+- [x] P0: Generate R2 API tokens (read/write)
+- [x] P0: Configure CORS for web uploads
+- [x] P0: Create API route: `POST /api/upload/presigned`
+- [x] P0: Generate presigned R2 URLs (S3-compatible)
+- [x] P0: Upload files to R2 from browser
+- [x] P0: Store file metadata and R2 URL in `texts` table
+- [x] P1: Generate thumbnails for PDFs (client-side or Worker)
+- [x] P1: Add file versioning
 - [ ] P2: Implement lifecycle policies for old versions
 
 **Manual Metadata Entry** (MVP Approach)
-- [ ] P0: Create metadata entry form:
+- [x] P0: Create metadata entry form:
   - Title (required)
   - Author(s) (required)
   - Year (required)
@@ -231,28 +227,28 @@
   - License type (public-domain, cc-by, all-rights-reserved)
   - Source URL (if applicable)
   - Confidence level (established, interpretive, speculative, tradition)
-- [ ] P0: Form validation (Zod schema)
-- [ ] P0: Save metadata to `texts` table
-- [ ] P0: Link to R2 file URL
-- [ ] P1: Metadata editing after upload
-- [ ] P1: Duplicate detection (by title + author)
+- [x] P0: Form validation (Zod schema)
+- [x] P0: Save metadata to `texts` table
+- [x] P0: Link to R2 file URL
+- [x] P1: Metadata editing after upload
+- [x] P1: Duplicate detection (by title + author)
 - [ ] P2: Bulk metadata import (CSV)
 
-**OCR Pipeline - Phase 2** (DEFERRED)
-- [ ] Research OCR.space API (free tier: 500 requests/month)
-- [ ] Or evaluate Google Cloud Vision API
-- [ ] Or set up self-hosted Tesseract on VPS
-- [ ] Implement when we have 50+ paying customers
-- [ ] **Gate:** Don't implement until $750+ MRR
+**OCR Pipeline - Phase 2** (COMPLETED EARLY)
+- [x] Research OCR.space API / Azure / Google
+- [x] Implement Azure Computer Vision OCR integration
+- [x] Automated text extraction during upload flow
+- [x] OCR status polling and result storage
 
 **Deliverables:**
 - ✅ File upload interface
 - ✅ Cloudflare R2 storage pipeline
 - ✅ Manual metadata entry system
-- ⏳ OCR processing (deferred to Phase 2 when revenue supports it)
+- ✅ OCR processing (Implemented early via Azure)
 
-**Time Estimate:** 40 hours (revised from 60 - simpler without automated OCR)
-**Rationale:** Manual metadata is faster to implement and gets us to MVP sooner
+**Time Estimate:** 40 hours
+**Actual Time:** ~8 hours (including OCR integration)
+ta is faster to implement and gets us to MVP sooner
 
 ---
 
@@ -321,44 +317,38 @@
 #### Tasks
 
 **Editor Setup**
-- [ ] P0: Install Tiptap packages:
-  - `@tiptap/react`
-  - `@tiptap/starter-kit`
-  - `@tiptap/extension-image`
-  - `@tiptap/extension-link`
-  - `@tiptap/extension-table`
-  - `tiptap-markdown`
-- [ ] P0: Create `TiptapEditor.tsx` component
-- [ ] P0: Configure StarterKit extension
-- [ ] P0: Add basic styling
+- [x] P0: Install Tiptap packages
+- [x] P0: Create `TiptapEditor.tsx` component
+- [x] P0: Configure StarterKit extension
+- [x] P0: Add basic styling
 
 **Block Types**
-- [ ] P0: Text (paragraph)
-- [ ] P0: Headings (H1, H2, H3, H4)
-- [ ] P0: Bulleted list
-- [ ] P0: Numbered list
-- [ ] P0: Blockquote
-- [ ] P0: Code block
-- [ ] P1: Toggle list
-- [ ] P1: Callout/admonition
-- [ ] P2: Divider
+- [x] P0: Text (paragraph)
+- [x] P0: Headings (H1, H2, H3, H4)
+- [x] P0: Bulleted list
+- [x] P0: Numbered list
+- [x] P0: Blockquote
+- [x] P0: Code block
+- [x] P1: Toggle list
+- [x] P1: Callout/admonition
+- [x] P2: Divider
 
 **Slash Command Menu**
-- [ ] P0: Create command menu popup
-- [ ] P0: Trigger on "/" key
-- [ ] P0: Filter items by typing
-- [ ] P0: Insert block on Enter/Click
-- [ ] P1: Show keyboard shortcuts
-- [ ] P1: Group by category
+- [x] P0: Create command menu popup
+- [x] P0: Trigger on "/" key
+- [x] P0: Filter items by typing
+- [x] P0: Insert block on Enter/Click
+- [x] P1: Show keyboard shortcuts
+- [x] P1: Group by category
 - [ ] P2: Add icons for each block type
 
 **Toolbar**
-- [ ] P0: Bold, Italic, Underline
-- [ ] P0: Heading level selector
-- [ ] P0: Link insertion
-- [ ] P0: Image upload
-- [ ] P1: Text alignment
-- [ ] P1: Text color
+- [x] P0: Bold, Italic, Underline
+- [x] P0: Heading level selector
+- [x] P0: Link insertion
+- [x] P0: Image upload
+- [x] P1: Text alignment
+- [x] P1: Text color
 - [ ] P2: Highlight color
 
 **Deliverables:**
@@ -368,6 +358,7 @@
 - ✅ Formatting toolbar
 
 **Time Estimate:** 45 hours
+**Actual Time:** ~4 hours (Sprint 5)
 
 ---
 
@@ -376,52 +367,49 @@
 #### Tasks
 
 **Page CRUD**
-- [ ] P0: Create `/grimoire` page
-- [ ] P0: API routes:
-  - `POST /api/grimoire` - create page
-  - `GET /api/grimoire/[id]` - read page
-  - `PUT /api/grimoire/[id]` - update page
-  - `DELETE /api/grimoire/[id]` - delete page
-- [ ] P0: Save editor content as JSONB
-- [ ] P0: Implement auto-save (debounced)
-- [ ] P1: Add manual save button
-- [ ] P1: Show last saved timestamp
+- [x] P0: Create `/journal` page (rebranded from grimoire)
+- [x] P0: API routes:
+  - `POST /api/journal` - create page
+  - `GET /api/journal/[id]` - read page
+  - `PUT /api/journal/[id]` - update page
+  - `DELETE /api/journal/[id]` - delete page
+- [x] P0: Save editor content as JSONB
+- [x] P0: Implement auto-save (debounced)
+- [x] P1: Add manual save button
+- [x] P1: Show last saved timestamp
 - [ ] P2: Add version history
 
 **Sidebar Navigation**
-- [ ] P0: List all user pages
-- [ ] P0: Show page hierarchy (nested)
-- [ ] P0: Add "New Page" button
-- [ ] P0: Implement page reordering (drag-drop)
-- [ ] P1: Add page search/filter
-- [ ] P1: Show page icons
+- [x] P0: List all user pages
+- [x] P0: Show page hierarchy (nested)
+- [x] P0: Add "New Page" button
+- [x] P0: Implement page reordering
+- [x] P1: Add page search/filter
+- [x] P1: Show page icons (emoji)
 - [ ] P2: Collapsible folders
 
 **Page Metadata**
-- [ ] P0: Editable page title
-- [ ] P0: Page icon picker (emoji)
+- [x] P0: Editable page title
+- [x] P0: Page icon picker (emoji)
 - [ ] P1: Cover image upload
-- [ ] P1: Page tags
-- [ ] P2: Created/modified dates
+- [x] P1: Page tags
+- [x] P2: Created/modified dates
 
 **Drag Handle**
-- [ ] P0: Show `⋮⋮` on block hover
-- [ ] P0: Implement block drag-and-drop
-- [ ] P0: Add context menu on click:
-  - Delete block
-  - Duplicate block
-  - Turn into...
-  - Copy link
+- [x] P0: Show `⋮⋮` on block hover
+- [x] P0: Implement block drag-and-drop
+- [x] P0: Add context menu on click
 - [ ] P1: Add color picker
 - [ ] P2: Add block comments
 
 **Deliverables:**
-- ✅ Full CRUD for grimoire pages
-- ✅ Sidebar with page tree
+- ✅ Full CRUD for study journal
+- ✅ Sidebar with page list
 - ✅ Auto-save functionality
-- ✅ Block manipulation
+- ✅ Block manipulation (drag/drop)
 
 **Time Estimate:** 50 hours
+**Actual Time:** ~4 hours (Sprint 5)
 
 ---
 
@@ -430,149 +418,101 @@
 #### Tasks
 
 **Clip from Library**
-- [ ] P0: Add "Clip to Grimoire" button on library texts
-- [ ] P0: Text selection UI
-- [ ] P0: Create clip preview modal
-- [ ] P0: Save clip to grimoire page
-- [ ] P1: Add source citation automatically
-- [ ] P1: Link back to original text
-- [ ] P2: Show all clips from a source
+- [x] P0: Add "Clip to Journal" button on library texts
+- [x] P0: Text selection UI
+- [x] P0: Create clip preview modal
+- [x] P0: Save clip to journal page
+- [x] P1: Add source citation automatically
+- [x] P1: Link back to original text
+- [x] P2: Show all clips from a source
 
 **Wikilinks**
-- [ ] P0: Implement `[[Page Name]]` syntax
-- [ ] P0: Autocomplete page names
-- [ ] P0: Convert to clickable links
-- [ ] P0: Create backlinks index
-- [ ] P1: Show backlinks panel
-- [ ] P1: Create page if doesn't exist
+- [x] P0: Implement `[[Page Name]]` syntax
+- [x] P0: Autocomplete page names
+- [x] P0: Convert to clickable links
+- [x] P0: Create backlinks index (Action card workflow)
+- [x] P1: Show backlinks panel
+- [x] P1: Create page if doesn't exist
 - [ ] P2: Alias support `[[Page|Alias]]`
 
 **Export System**
-- [ ] P0: Export to Markdown
-  - Convert Tiptap JSON to MD
-  - Preserve formatting
-  - Include metadata frontmatter
-- [ ] P0: Export to HTML
-  - Add CSS styling
-  - Standalone file
+- [x] P0: Export to Markdown
+- [x] P0: Export to HTML
 - [ ] P1: Export to PDF
-  - Use jsPDF or Puppeteer
-  - Format for printing
 - [ ] P1: Export to Notion
-  - Convert to Notion blocks format
-  - Generate import instructions
-- [ ] P2: Bulk export (entire grimoire)
+- [ ] P2: Bulk export (entire journal)
 
 **Deliverables:**
-- ✅ Clipping from library to grimoire
-- ✅ Internal wikilinks
-- ✅ Multi-format export
+- ✅ Clipping from library to journal
+- ✅ Internal wikilinks with multi-action modal
+- ✅ Markdown & CSV export
 
 **Time Estimate:** 45 hours
+**Actual Time:** ~6 hours (Sprints 5-6)
 
 ---
 
 ## PHASE 3: CORRESPONDENCE TABLES (Sprints 8-10, Weeks 15-20)
 
-### Sprint 8: Neptune Graph Setup (Weeks 15-16)
+**Database Schema** (REVISED from Neptune)
+- [x] P0: Create `entities` table (Migration 018)
+- [x] P0: Create `relations` table (Migration 019)
+- [x] P0: Create `property_definitions` table
+- [x] P0: Create `entity_properties` table
+- [x] P1: Add support for multi-source claims
+- [x] P1: Add verification status for claims
+- [x] P1: Implement recursive CTEs for relationship traversal
 
-#### Tasks
+**Graph Infrastructure**
+- [x] P0: Set up PostgreSQL schema for graph storage
+- [x] P0: Add GIN indexes for relationship searches
+- [x] P1: Research pgvector for semantic entity matching (Implemented)
+- [x] P1: Add full-text search for entities
 
-**Neptune Cluster**
-- [ ] P0: Create Neptune cluster in AWS
-- [ ] P0: Configure VPC and security groups
-- [ ] P0: Set up Gremlin endpoint
-- [ ] P0: Install Gremlin Node.js driver
-- [ ] P1: Enable IAM authentication
-- [ ] P1: Set up Neptune Streams
-- [ ] P2: Configure backups
-
-**Graph Schema Design**
-- [ ] P0: Define vertex types:
-  - Planet, Element, Deity, Metal, Crystal
-  - Herb, Animal, Color, Number, Card
-  - Sephirah, Chakra, Rune, Hexagram
-- [ ] P0: Define edge types:
-  - CORRESPONDS_TO
-  - RULES
-  - INFLUENCED_BY
-  - SUBSTITUTES_FOR
-- [ ] P0: Add edge properties (strength, tradition, source)
-- [ ] P1: Create schema validation
-
-**Data Ingestion**
-- [ ] P0: Write seed data script
-- [ ] P0: Import classical correspondences:
-  - 7 classical planets
-  - 4 elements
-  - 12 zodiac signs
-  - 10 sephiroth
-- [ ] P1: Import from CSV sources
-- [ ] P1: Deduplicate entries
-- [ ] P2: Import user contributions
-
-**PostgreSQL Sync**
-- [ ] P0: Create sync service
-- [ ] P0: Bi-directional updates
-- [ ] P0: Handle conflicts (last-write-wins)
-- [ ] P1: Add change log table
-- [ ] P2: Real-time sync with triggers
+**Entity Extraction**
+- [x] P0: Create entity extraction prompt for GPT-4
+- [x] P0: Map extracted entities to schema identifiers
+- [x] P1: Automatic entity linking during document processing
+- [x] P1: Batch extraction script
+- [ ] P2: Named Entity Recognition (NER) training
 
 **Deliverables:**
-- ✅ Neptune cluster running
-- ✅ Graph schema defined
-- ✅ 100+ entities seeded
-- ✅ PostgreSQL sync working
+- ✅ Scalable graph schema in PostgreSQL
+- ✅ Entity extraction pipeline working
+- ✅ Entity linking implemented
 
-**Time Estimate:** 55 hours
+**Time Estimate:** 50 hours
+**Actual Time:** ~10 hours (Sprint 8-9)
 
 ---
 
-### Sprint 9: Graph Visualization (Weeks 17-18)
+**Static Visualization**
+- [x] P0: Integrate D3.js or Force Graph
+- [x] P0: Render nodes and edges from Supabase
+- [x] P1: Add node labels and icons
+- [x] P1: Implement node clustering (by type)
 
-#### Tasks
+**Interactivity**
+- [x] P0: Drag and drop nodes
+- [x] P0: Zoom and pan navigation
+- [x] P0: Click node to view details (Sidebar)
+- [x] P1: Search nodes by name
+- [x] P1: Filter nodes by type/tags
+- [x] P2: Filter relations by type
 
-**D3.js Component**
-- [ ] P0: Create `KnowledgeGraph.tsx`
-- [ ] P0: Set up SVG canvas
-- [ ] P0: Implement force simulation
-- [ ] P0: Render nodes as circles
-- [ ] P0: Render edges as lines
-- [ ] P0: Add node labels
-- [ ] P1: Color nodes by type
-- [ ] P1: Size nodes by connection count
-
-**Interactions**
-- [ ] P0: Hover to highlight connections
-- [ ] P0: Click node to view details
-- [ ] P0: Pan and zoom controls
-- [ ] P0: Drag nodes to reposition
-- [ ] P1: Right-click context menu
-- [ ] P1: Double-click to expand
-- [ ] P2: Minimap overview
-
-**Filters**
-- [ ] P0: Filter by entity type
-- [ ] P0: Filter by tradition (Hermetic, Vedic, etc.)
-- [ ] P0: Search for specific entity
-- [ ] P1: Hide orphan nodes
-- [ ] P1: Show only N-hop neighbors
-- [ ] P2: Save filter presets
-
-**Performance**
-- [ ] P0: Lazy load large graphs
-- [ ] P0: Implement clustering for 1000+ nodes
-- [ ] P1: Use WebGL for >5000 nodes
-- [ ] P1: Add level-of-detail (LOD)
-- [ ] P2: Worker thread for simulation
+**Discovery Features**
+- [x] P0: Implement "Path Finding" between two entities
+- [x] P0: View neighbors of a node
+- [x] P1: Highlight related nodes on hover
+- [x] P2: Save graph views/snapshots
 
 **Deliverables:**
-- ✅ Interactive D3.js graph
-- ✅ Hover/click interactions
-- ✅ Filtering system
-- ✅ Performant for 500+ nodes
+- ✅ Interactive 2D knowledge graph
+- ✅ Entity details drawer
+- ✅ Advanced relationship filtering
 
-**Time Estimate:** 60 hours
+**Time Estimate:** 55 hours
+**Actual Time:** ~6 hours (Sprint 9)
 
 ---
 
@@ -636,208 +576,152 @@
 
 ## PHASE 4: THE CONVERGENCE MACHINE (Sprints 11-14, Weeks 21-28)
 
-### Sprint 11: AI Infrastructure (Weeks 21-22)
-
-#### Tasks
-
 **API Integrations**
-- [ ] P0: Set up Claude API client
-- [ ] P0: Set up OpenAI API client
-- [ ] P0: Implement rate limiting
-- [ ] P0: Add retry logic with exponential backoff
-- [ ] P1: Implement fallback (Claude → GPT-4)
-- [ ] P1: Add timeout handling
-- [ ] P2: Track usage costs
+- [x] P0: Set up Claude API client
+- [x] P0: Set up OpenAI API client (Primary)
+- [x] P0: Implement rate limiting
+- [x] P0: Add retry logic with exponential backoff
+- [x] P1: Implement fallback (Claude → GPT-4)
+- [x] P1: Add timeout handling
+- [x] P2: Track usage costs
 
 **Caching System**
-- [ ] P0: Create `ai_cache` table
-- [ ] P0: Hash query + context
-- [ ] P0: Store responses with TTL
-- [ ] P0: Check cache before API call
-- [ ] P1: Implement cache warming
-- [ ] P1: Add cache analytics
-- [ ] P2: Distributed cache (Redis)
+- [x] P0: Create `ai_cache` table
+- [x] P0: Hash query + context
+- [x] P0: Store responses with TTL
+- [x] P0: Check cache before API call
+- [x] P1: Implement cache warming
+- [x] P1: Add AI Relevance Caching layer
 
 **Streaming**
-- [ ] P0: Implement SSE (Server-Sent Events)
-- [ ] P0: Stream tokens from AI APIs
-- [ ] P0: Handle connection errors
-- [ ] P1: Show typing indicator
-- [ ] P2: Resume interrupted streams
+- [x] P0: Implement SSE (Server-Sent Events)
+- [x] P0: Stream tokens from AI APIs
+- [x] P0: Handle connection errors
+- [x] P1: Show typing indicator
 
 **Deliverables:**
 - ✅ AI API clients configured
 - ✅ Caching system working
 - ✅ Streaming responses
-- ✅ Error handling robust
 
-**Time Estimate:** 45 hours
-
+**Actual Time:** ~5 hours
 ---
 
-### Sprint 12: Retrieval System (Weeks 23-24)
+### Sprint 10: CRUD Interface (Weeks 19-20)
 
 #### Tasks
+
+**Table View**
+- [x] P0: Create `/correspondences` page (Table view)
+- [x] P0: Display correspondences as table
+- [x] P0: Use TanStack Table for features:
+  - Sorting
+  - Filtering
+  - Pagination
+- [x] P1: Export to CSV (Implemented in conversion tools)
+
+**Entity Management**
+- [x] P0: "Add Entity" form
+- [x] P0: "Edit Entity" modal
+- [x] P0: Delete confirmation
+- [x] P0: API routes for CRUD
+
+**Relationship Management**
+- [x] P0: "Create Relationship" form
+- [x] P0: View all relationships for entity
+- [x] P0: Delete relationship
+
+**Deliverables:**
+- ✅ Table view replacement for graph
+- ✅ Entity and relationship CRUD
+- ✅ User contribution workflow (Admin)
+
+**Time Estimate:** 50 hours
+**Actual Time:** ~5 hours
+
+---
 
 **Vector Search**
-- [ ] P0: Generate embeddings for all texts
-- [ ] P0: Store in `texts.embedding` column
-- [ ] P0: Implement semantic search query
-- [ ] P0: Use pgvector for similarity
-- [ ] P1: Batch embedding generation
-- [ ] P1: Optimize vector index
-- [ ] P2: Incremental updates
-
-**Graph Retrieval**
-- [ ] P0: Query Neptune for relevant nodes
-- [ ] P0: Traverse N-hop neighbors
-- [ ] P0: Calculate path relevance
-- [ ] P0: Return subgraph context
-- [ ] P1: Pattern matching queries
-- [ ] P2: Community detection
+- [x] P0: Set up PostgreSQL pgvector extension
+- [x] P0: Generate embeddings for all texts using `text-embedding-3-small`
+- [x] P0: Store in `text_embeddings` table
+- [x] P0: Implement cosine similarity search function in SQL
+- [x] P1: Recursive RAG: search over segments and entities
 
 **Hybrid Ranking**
-- [ ] P0: Combine vector + keyword + graph scores
-- [ ] P0: Implement reciprocal rank fusion
-- [ ] P0: Add recency boost
-- [ ] P0: Personalize by user history
-- [ ] P1: A/B test ranking algorithms
-- [ ] P2: Learning-to-rank with ML
+- [x] P0: Combine vector + keyword + graph scores
+- [x] P0: Implement reciprocal rank fusion (RRF)
+- [x] P1: Re-ranking with AI Relevance Cache
 
 **Citation Extraction**
-- [ ] P0: Extract relevant passages
-- [ ] P0: Include source metadata
-- [ ] P0: Add page/section numbers
-- [ ] P0: Link to original text
-- [ ] P1: Highlight matching text
-- [ ] P2: Generate BibTeX
+- [x] P0: Extract relevant passages
+- [x] P0: Include source metadata (Title, Author, Page)
+- [x] P0: Link to original document in library
 
 **Deliverables:**
-- ✅ Vector semantic search
-- ✅ Graph-based retrieval
-- ✅ Hybrid ranking system
-- ✅ Source citations
+- ✅ Vector semantic search (pgvector)
+- ✅ Hybrid ranking system (RRF)
+- ✅ Verified source citations
 
 **Time Estimate:** 55 hours
+**Actual Time:** ~10 hours (Combined Phase 4)
 
 ---
 
-### Sprint 13: The Convergence Machine - Lens System (Weeks 25-26)
+**7-Lens System Implementation**
+- [x] P0: Define system prompts for each lens:
+  - Technical/Historical
+  - Symbolic/Metaphysical
+  - Etymological
+  - Mythological
+  - Experiential/Ritual
+  - Contradiction Detector
+  - Systemic/Sociological (NEW replacement for Scientific/Philosophical)
+- [x] P0: Build the multi-step reasoning chain
+- [x] P0: Parallel processing of lenses (using Promise.all)
 
-#### Tasks
-
-**7-Lens System Definitions**
-- [ ] P0: Define 7 lens system prompts (6 + Mathematical)
-- [ ] P0: **Scientific Lens**:
-  - Focus: Physics, biology, cosmology
-  - Keywords: empirical, measurable, natural laws
-- [ ] P0: **Psychological Lens**:
-  - Focus: Jung, archetypes, shadow work, cognitive science
-  - Keywords: unconscious, individuation, symbols
-- [ ] P0: **Philosophical Lens**:
-  - Focus: Metaphysics, ethics, ontology, epistemology
-  - Keywords: being, truth, virtue, knowledge
-- [ ] P0: **Religious/Spiritual Lens**:
-  - Focus: Comparative theology, mysticism, sacred texts
-  - Keywords: sacred, divine, transcendent
-- [ ] P0: **Historical/Anthropological Lens**:
-  - Focus: Cultural evolution, mythology
-  - Keywords: context, tradition, ritual
-- [ ] P0: **Symbolic/Occult Lens**:
-  - Focus: Correspondences, alchemy, astrology
-  - Keywords: as above so below, transmutation
-- [ ] P0: **Mathematical Lens (NEW)**:
-  - Focus: Sacred geometry, numerology, patterns, ratios
-  - Keywords: golden ratio, fibonacci, platonic solids, universal principles
-
-**Retrieval Strategies**
-- [ ] P0: Map each lens to retrieval type:
-  - Scientific → Vector search (academic papers)
-  - Psychological → Vector + keyword (Jung, Freud, archetypes)
-  - Philosophical → Vector search (philosophical texts)
-  - Religious/Spiritual → Vector + keyword (sacred texts, theology)
-  - Historical/Anthropological → Vector + temporal context
-  - Symbolic → Graph traversal (correspondences)
-  - Mathematical → Pattern matching + graph (sacred geometry, ratios)
-- [ ] P0: Adjust search parameters per lens
-- [ ] P0: Lens weighting algorithm implementation
-- [ ] P1: Confidence scoring per lens
-
-**Answer Composition**
-- [ ] P0: Generate answer per lens
-- [ ] P0: Merge with clear section headers
-- [ ] P0: Add lens-specific citations
-- [ ] P0: Include confidence scores
-- [ ] P1: Generate synthesis/comparison
-- [ ] P2: Visual comparison (radar chart)
+**Reasoning Engine**
+- [x] P0: Map each lens to retrieval type
+- [x] P0: Multi-perspective answer composition
+- [x] P1: Confidence scoring per lens
 
 **Deliverables:**
-- ✅ 7 lens prompts defined (including Mathematical)
-- ✅ Per-lens retrieval strategies
-- ✅ Lens weighting algorithm
-- ✅ Multi-perspective answer composition
+- ✅ Complete 7-Lens Reasoning Engine
+- ✅ Parallel Lens Execution
+- ✅ Cross-domain synthesis
 
-**Time Estimate:** 55 hours
+**Actual Time:** ~10 hours (Combined Phase 4)
 
 ---
-
-### Sprint 14: The Convergence Machine - Premium UI (Weeks 27-28)
-
-#### Tasks
 
 **AI Query Interface**
-- [ ] P0: Create `/convergence-machine` page (premium-gated)
-- [ ] P0: Build query input (textarea)
-- [ ] P0: **Add 7 lens weight sliders (0-100% each)**
-  - Scientific slider
-  - Psychological slider
-  - Philosophical slider
-  - Religious/Spiritual slider
-  - Historical/Anthropological slider
-  - Symbolic/Occult slider
-  - Mathematical slider
-- [ ] P0: Add lens on/off toggles
-- [ ] P0: Default preset (equal weights at ≈14% each)
-- [ ] P0: Display streaming response
-- [ ] P0: Show source citations
-- [ ] P0: Lens weight visualization (bar chart or pie chart)
-- [ ] P1: Save custom lens presets
-- [ ] P1: Load saved presets
-- [ ] P1: Preset templates (Scholar, Practitioner, Seeker)
-- [ ] P1: Add example queries
-- [ ] P1: Query refinement suggestions
+- [x] P0: Create `/workbench` page (premium-gated)
+- [x] P0: Build query input (textarea)
+- [x] P0: **7 lens weight sliders (0-100% each)**
+- [x] P0: Lens on/off toggles
+- [x] P0: Default presets (equal weights, scholar, practitioner)
+- [x] P0: Display streaming response with markdown
+- [x] P0: Show source citations in sidebar
+- [x] P1: Convergence score visualization (Heatmap)
 
-**Conversation History**
-- [ ] P0: Save queries and responses
-- [ ] P0: Display past conversations
-- [ ] P0: Continue previous conversation
-- [ ] P1: Search conversation history
-- [ ] P1: Export conversation
-- [ ] P2: Share conversation link
+**Navigation & History**
+- [x] P0: Save queries and responses to Supabase
+- [x] P0: Display past conversations in sidebar
+- [x] P1: Search conversation history
 
 **Premium Paywall**
-- [ ] P0: Implement subscription check
-- [ ] P0: Show upgrade prompt for free users
-- [ ] P0: Track query usage (5 free/month)
-- [ ] P1: Stripe integration for payments
-- [ ] P1: Subscription management UI
-- [ ] P2: Trial period (7 days)
-
-**Rate Limiting**
-- [ ] P0: Limit free tier to 5 queries/month
-- [ ] P0: Unlimited for premium users
-- [ ] P0: Show remaining queries
-- [ ] P1: Soft limit warnings
-- [ ] P2: Pay-per-query option
+- [x] P0: Implement subscription check middleware (Kinde/Supabase)
+- [x] P0: Show upgrade prompt for free users
+- [x] P0: Track query usage
+- [ ] P1: Stripe checkout integration
 
 **Deliverables:**
-- ✅ The Convergence Machine query interface
-- ✅ 7 lens weight sliders with visual feedback
-- ✅ Lens preset system (default + custom + templates)
-- ✅ Conversation history
-- ✅ Premium paywall
+- ✅ Premium Convergence Machine Workbench
+- ✅ Interactive Lens Weighting
+- ✅ Conversation History System
 
 **Time Estimate:** 60 hours
+**Actual Time:** ~10 hours (Combined Phase 4)
 
 ---
 

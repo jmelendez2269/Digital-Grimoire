@@ -77,7 +77,8 @@ FIELDS TO EXTRACT:
   * Add author's last name if available
   * Add year if available
   * All lowercase, separated by underscores
-  * Example: "book_esoteric_secret_doctrine_blavatsky_1888"
+  * Example format: "book_esoteric_[short_title]_[author_lastname]_[year]" (e.g. "book_esoteric_kybalion_three_initiates_1908")
+  * IMPORTANT: Generate the ID from the ACTUAL document being processed, not from any example.
 - author (string, optional): Full name of the author (use provided known author)
 - year (number, optional)
 - publisher (string, optional)
@@ -92,7 +93,7 @@ FIELDS TO EXTRACT:
 - longSummary (string, required): A detailed 1-2 paragraph summary
 - curatorNote (string, optional): Why this document belongs in the project. 1-2 sentences.
 
-${ocrText ? `OCR Text (first 3000 chars):\n${ocrText.substring(0, 3000)}` : 'NOTE: No OCR text available. Please generate metadata based on the title and author and your own knowledge.'}
+${ocrText ? `OCR Text (first 3000 chars):\n${ocrText.substring(0, 3000)}` : `NOTE: No OCR text available. Generate metadata based ONLY on the filename "${filename}"${knownTitle ? ` and the known title "${knownTitle}"` : ''}${knownAuthor ? ` and the known author "${knownAuthor}"` : ''}. Do NOT invent or assume the document is any specific well-known work.`}
 
 Respond with valid JSON only, no markdown code blocks.`
       }

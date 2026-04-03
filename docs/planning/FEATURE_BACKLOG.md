@@ -345,25 +345,25 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | **Consensus vs Sources view** | **P0** | **M** | **Latest** | **✅ Complete** | **EntityDetailModal with tabbed interface** |
 | **CSV auto-import script** | **P0** | **L** | **Latest** | **✅ Complete** | **6 schema types, field mapping, BOM handling** |
 | **AI text rewrite/generate** | **P1** | **S** | **Latest** | **✅ Complete** | **Sparkles buttons in admin forms** |
-| **Basic API routes** | **P1** | **M** | **5** | **🔄 Partial** | **entities/edges endpoints exist (Sprint 5)** |
-| **GraphView component** | **P1** | **M** | **5** | **🔄 Placeholder** | **Basic rendering, needs D3 (Sprint 5)** |
+| **Basic API routes** | **P1** | **M** | **5** | **✅ Complete** | **entities/edges endpoints exist (Sprint 5)** |
+| **GraphView component** | **P1** | **M** | **5** | **✅ Complete** | **D3-based knowledge graph (Sprint 9)** |
 | Neptune cluster setup | P0 | L | 8 | ⬜ Deferred | Graph database (optional for Phase 3) |
-| Graph schema definition | P0 | M | 8 | ✅ Complete | PostgreSQL schema in place |
-| Seed data (100+ entities) | P0 | M | 8 | ⬜ Planned | Classical correspondences data |
-| D3.js visualization | P0 | L | 9 | ⬜ Planned | Force-directed |
-| Node hover highlights | P0 | S | 9 | ⬜ Planned | Show connections |
-| Click to view details | P0 | M | 9 | ⬜ Planned | Modal popup |
-| Pan and zoom controls | P0 | S | 9 | ⬜ Planned | D3 behaviors |
-| Add entity form | P0 | M | 10 | ⬜ Planned | Create vertices |
-| Create relationship | P0 | M | 10 | ⬜ Planned | Add edges |
-| Table view of entities | P0 | M | 10 | ⬜ Planned | TanStack Table |
-| Filter by type | P0 | S | 9 | ⬜ Planned | Show/hide types |
-| 5 preset lenses | P0 | M | 10 | ⬜ Planned | Astro, Elemental, etc. |
-| PostgreSQL sync | P1 | L | 8 | ⬜ Planned | Bi-directional |
-| Search entities | P1 | S | 10 | ⬜ Planned | Name search |
-| Edit entity/relationship | P1 | M | 10 | ⬜ Planned | Update props |
-| Delete entity/relationship | P1 | M | 10 | ⬜ Planned | With confirmation |
-| Drag to reposition nodes | P1 | M | 9 | ⬜ Planned | Manual layout |
+| **Graph schema definition** | **P0** | **M** | **8** | **✅ Complete** | **PostgreSQL schema in place** |
+| **Seed data (100+ entities)** | **P0** | **M** | **8** | **✅ Complete** | **Classical correspondences data** |
+| **D3.js visualization** | **P0** | **L** | **9** | **✅ Complete** | **Force-directed graph (Sprint 9)** |
+| **Node hover highlights** | **P0** | **S** | **9** | **✅ Complete** | **Show connections** |
+| **Click to view details** | **P0** | **M** | **9** | **✅ Complete** | **Modal popup** |
+| **Pan and zoom controls** | **P0** | **S** | **9** | **✅ Complete** | **D3 behaviors** |
+| **Add entity form** | **P0** | **M** | **10** | **✅ Complete** | **Create vertices** |
+| **Create relationship** | **P0** | **M** | **10** | **✅ Complete** | **Add edges** |
+| **Table view of entities** | **P0** | **M** | **10** | **✅ Complete** | **TanStack Table** |
+| **Filter by type** | **P0** | **S** | **9** | **✅ Complete** | **Show/hide types** |
+| **5 preset lenses** | **P0** | **M** | **10** | **✅ Complete** | **Astro, Elemental, etc.** |
+| **PostgreSQL sync** | **P1** | **L** | **8** | **✅ Complete** | **Bi-directional** |
+| **Search entities** | **P1** | **S** | **10** | **✅ Complete** | **Name search** |
+| **Edit entity/relationship** | **P1** | **M** | **10** | **✅ Complete** | **Update props** |
+| **Delete entity/relationship** | **P1** | **M** | **10** | **✅ Complete** | **With confirmation** |
+| **Drag to reposition nodes** | **P1** | **M** | **9** | **✅ Complete** | **Manual layout** |
 | Export graph as JSON | P1 | S | Post | ⬜ Planned | Backup |
 | Global graph view | P2 | L | Post | ⬜ Planned | All entities |
 | 3D graph (Three.js) | P2 | XL | Post | ⬜ Planned | Immersive viz |
@@ -383,8 +383,8 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | **Concept detail modal** | **P0** | **M** | **Current** | **✅ Complete** | **Full concept info + related concepts** |
 | **Similarity controls** | **P0** | **S** | **Current** | **✅ Complete** | **Search, threshold slider, tradition filter** |
 | **Tradition legend** | **P0** | **S** | **Current** | **✅ Complete** | **Color-coded tradition sidebar** |
-| Seed cross-tradition concepts | P0 | M | Current | ⬜ Next | 30+ concepts (Emptiness, Unity, etc.) |
-| Seed relationships | P0 | M | Current | ⬜ Next | 40+ cross-tradition connections |
+| **Seed cross-tradition concepts** | **P0** | **M** | **Current** | **✅ Complete** | **30+ concepts (Emptiness, Unity, etc.)** |
+| **Seed relationships** | **P0** | **M** | **Current** | **✅ Complete** | **40+ cross-tradition connections** |
 | Source citations | P0 | S | Current | ✅ Complete | Citation field in relationships |
 | Export to CSV/Markdown | P1 | S | Post | ⬜ Planned | Export functionality |
 | Path finding algorithm | P1 | M | Post | ⬜ Planned | Shortest path between concepts |
@@ -471,13 +471,13 @@ See `sprint_summaries/SPRINT_3_AWS_MIGRATION_SESSION.md` for full details.
 | Export conversation | P1 | S | Post | ⬜ Planned | Markdown export |
 | Lens comparison view | P1 | M | Post | ⬜ Planned | Side-by-side answers |
 | Continue conversation | P1 | M | Post | ⬜ Planned | Context-aware follow-ups |
-| **Epistemic inline labeling** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **Established/Contested/Speculative/Metaphor/Devotional tags in responses** |
-| **Structured answer framing** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **"What we know / What's debated / Where analogies are speculative" structure** |
-| **Discovery ethos system preface** | **P1** | **S** | **Post-MVP** | **⬜ Planned** | **Curiosity, humility, pluralism, rigor principles in all queries** |
-| **Enhanced UI controls** | **P1** | **L** | **Post-MVP** | **⬜ Planned** | **Comparative toggle, Breadth/Depth slider, Include physics/psychology, Speculative analogies switch, Scholars disagree button** |
-| **Physics metadata schema** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **discipline, subfield, evidence_type, math_level fields** |
-| **Physics metadata extraction** | **P1** | **M** | **Post-MVP** | **⬜ Planned** | **AI extraction of new physics metadata fields** |
-| **Physics metadata filtering** | **P1** | **S** | **Post-MVP** | **⬜ Planned** | **Library filters for discipline, evidence_type, math_level** |
+| **Epistemic inline labeling** | **P1** | **M** | **Latest** | **✅ Complete** | **Established/Contested/Speculative/Metaphor/Devotional tags in responses** |
+| **Structured answer framing** | **P1** | **M** | **Latest** | **✅ Complete** | **"What we know / What's debated / Where analogies are speculative" structure** |
+| **Discovery ethos system preface** | **P1** | **S** | **Latest** | **✅ Complete** | **Curiosity, humility, pluralism, rigor principles in all queries** |
+| **Enhanced UI controls** | **P1** | **L** | **Latest** | **✅ Complete** | **Comparative toggle, Breadth/Depth slider, Include physics/psychology, Speculative analogies switch, Scholars disagree button** |
+| **Physics metadata schema** | **P1** | **M** | **Latest** | **✅ Complete** | **discipline, subfield, evidence_type, math_level fields** |
+| **Physics metadata extraction** | **P1** | **M** | **Latest** | **✅ Complete** | **AI extraction of new physics metadata fields** |
+| **Physics metadata filtering** | **P1** | **S** | **Latest** | **✅ Complete** | **Library filters for discipline, evidence_type, math_level** |
 | Token-level streaming | P2 | L | Post | ⬜ Planned | Real-time token display |
 | Image generation | P2 | L | Post | ⬜ Planned | DALL-E/Midjourney |
 | Voice input | P2 | M | Post | ⬜ Planned | Whisper API |
