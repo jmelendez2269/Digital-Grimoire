@@ -121,6 +121,10 @@ h6 {
   box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
 }
 
+.courses-sigil {
+  transition: transform 4s ease, color 0.5s ease;
+}
+
 /* ===== TipTap Editor Styles (Akashic Update) ===== */
 .ProseMirror {
   outline: none;
@@ -207,4 +211,20 @@ h6 {
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* Course hover card entrance animation */
+@keyframes hoverCardIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.hover-card-animate {
+  animation: hoverCardIn 0.18s ease-out forwards;
 }

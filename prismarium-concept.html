@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prismarium — Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ruby:    #ff3a5c;
+    --amber:   #ff8c2a;
+    --gold:    #f5d020;
+    --emerald: #2affa0;
+    --cyan:    #20e0f5;
+    --sapphire:#3a7fff;
+    --violet:  #b03aff;
+    --bg:      #04040f;
+    --dome-edge: #0a0a2a;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    overflow-x: hidden;
+    font-family: 'Cormorant Garamond', serif;
+    color: #e8e0d0;
+  }
+
+  /* ── CANVAS LAYER ───────────────────────────── */
+  #canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── GRAIN OVERLAY ──────────────────────────── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.35;
+    mix-blend-mode: overlay;
+  }
+
+  /* ── FIRMAMENT DOME ─────────────────────────── */
+  .scene {
+    position: relative;
+    z-index: 2;
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dome-wrapper {
+    position: relative;
+    width: min(900px, 95vw);
+    aspect-ratio: 1 / 0.72;
+    margin: 0 auto;
+  }
+
+  /* Dome arc — SVG drawn via clip-path */
+  .dome-shell {
+    position: absolute;
+    inset: 0;
+    border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+    background: radial-gradient(ellipse 80% 70% at 50% 0%,
+      rgba(14,10,40,0.95) 0%,
+      rgba(6,4,20,0.98) 60%,
+      rgba(2,2,10,1) 100%
+    );
+    border: 1px solid rgba(120,100,255,0.12);
+    box-shadow:
+      inset 0 0 120px rgba(60,30,120,0.3),
+      inset 0 0 40px rgba(100,60,200,0.15),
+      0 0 80px rgba(80,40,180,0.2),
+      0 0 200px rgba(40,20,100,0.15);
+    overflow: hidden;
+  }
+
+  /* Star field inside dome */
+  .stars {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 12%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 55% 8%, rgba(255,255,255,0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 72% 18%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 10%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 45%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 50%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 55%, rgba(255,255,255,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 25%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.2) 0%, transparent 100%);
+  }
+
+  /* ── PRISM ──────────────────────────────────── */
+  .prism-wrap {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    filter: drop-shadow(0 0 24px rgba(160,100,255,0.8))
+            drop-shadow(0 0 60px rgba(100,60,200,0.4));
+  }
+
+  .prism-svg {
+    width: 72px;
+    animation: prism-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes prism-pulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(200,160,255,0.6)); }
+    50%       { filter: drop-shadow(0 0 20px rgba(200,160,255,1)) drop-shadow(0 0 40px rgba(140,80,255,0.6)); }
+  }
+
+  /* ── LIGHT RAYS ─────────────────────────────── */
+  .rays-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* ── FEATURE NODES ──────────────────────────── */
+  .node {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    animation: float var(--dur, 6s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
+  .node:hover { transform: scale(1.15); }
+  .node:hover .node-label { opacity: 1; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  .node-orb {
+    width: var(--size, 52px);
+    height: var(--size, 52px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), var(--color) 50%, rgba(0,0,0,0.4));
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow:
+      0 0 20px var(--glow),
+      0 0 40px var(--glow2),
+      inset 0 0 12px rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    position: relative;
+  }
+
+  .node-orb::after {
+    content: '';
+    position: absolute;
+    top: 15%; left: 20%;
+    width: 30%; height: 20%;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    filter: blur(3px);
+  }
+
+  .node-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(230,220,255,0.85);
+    text-align: center;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+    text-shadow: 0 0 10px var(--color);
+    white-space: nowrap;
+  }
+
+  /* ── GROUND PLANE ───────────────────────────── */
+  .ground {
+    position: relative;
+    z-index: 2;
+    width: min(900px, 95vw);
+    margin: 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(100,80,200,0.3) 20%,
+      rgba(160,120,255,0.6) 50%,
+      rgba(100,80,200,0.3) 80%,
+      transparent 100%
+    );
+    box-shadow: 0 0 20px rgba(120,80,255,0.3);
+  }
+
+  /* ── HERO TEXT ──────────────────────────────── */
+  .hero {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 52px 20px 60px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(180,140,255,0.7);
+    margin-bottom: 18px;
+    animation: fadein 1.2s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(48px, 9vw, 110px);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 0.9;
+    background: linear-gradient(135deg,
+      #ff3a5c 0%,
+      #ff8c2a 16%,
+      #f5d020 32%,
+      #2affa0 48%,
+      #20e0f5 64%,
+      #3a7fff 80%,
+      #b03aff 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(140,80,255,0.4));
+    animation: fadein 1s ease 0.2s both;
+  }
+
+  .hero-tagline {
+    margin-top: 20px;
+    font-size: clamp(16px, 2vw, 22px);
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(210,200,240,0.75);
+    letter-spacing: 0.03em;
+    animation: fadein 1s ease 0.6s both;
+  }
+
+  .hero-cta {
+    margin-top: 36px;
+    display: inline-flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadein 1s ease 0.9s both;
+  }
+
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 14px 32px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #8030d0, #3a7fff);
+    color: white;
+    border: none;
+    box-shadow: 0 0 30px rgba(100,60,200,0.4), 0 0 60px rgba(60,120,255,0.2);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 50px rgba(120,80,255,0.7), 0 0 100px rgba(60,120,255,0.4);
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: rgba(200,180,255,0.8);
+    border: 1px solid rgba(140,100,255,0.35);
+  }
+  .btn-ghost:hover {
+    border-color: rgba(180,140,255,0.7);
+    color: white;
+    background: rgba(100,60,200,0.1);
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLL HINT ────────────────────────────── */
+  .scroll-hint {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding-bottom: 40px;
+    animation: bob 2.5s ease-in-out infinite;
+    opacity: 0.4;
+  }
+  .scroll-hint::before {
+    content: '↓';
+    font-size: 20px;
+    color: rgba(180,140,255,0.8);
+  }
+  @keyframes bob {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="scene">
+
+  <!-- DOME -->
+  <div class="dome-wrapper" id="dome">
+    <div class="dome-shell">
+      <div class="stars"></div>
+
+      <!-- Light rays rendered on canvas, but we add SVG fallback rays too -->
+      <svg class="rays-svg" viewBox="0 0 900 650" preserveAspectRatio="none" id="rays-svg">
+        <defs>
+          <linearGradient id="ray-ruby" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ff3a5c" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#ff3a5c" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="ray-amber" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ff8c2a" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#ff8c2a" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="ray-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f5d020" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#f5d020" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="ray-emerald" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2affa0" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#2affa0" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="ray-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#20e0f5" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#20e0f5" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="ray-sapphire" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#3a7fff" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#3a7fff" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="ray-violet" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#b03aff" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#b03aff" stop-opacity="0"/>
+          </linearGradient>
+          <filter id="blur-ray">
+            <feGaussianBlur stdDeviation="3"/>
+          </filter>
+        </defs>
+
+        <!-- 7 spectral rays from apex (450, 0) -->
+        <!-- Ruby — far left -->
+        <polygon points="450,2 340,650 390,650" fill="url(#ray-ruby)" opacity="0.55" filter="url(#blur-ray)"/>
+        <!-- Amber -->
+        <polygon points="450,2 380,650 415,650" fill="url(#ray-amber)" opacity="0.5" filter="url(#blur-ray)"/>
+        <!-- Gold — slight left of center -->
+        <polygon points="450,2 420,650 445,650" fill="url(#ray-gold)" opacity="0.55" filter="url(#blur-ray)"/>
+        <!-- Emerald — center -->
+        <polygon points="450,2 440,650 460,650" fill="url(#ray-emerald)" opacity="0.5" filter="url(#blur-ray)"/>
+        <!-- Cyan — slight right -->
+        <polygon points="450,2 455,650 480,650" fill="url(#ray-cyan)" opacity="0.55" filter="url(#blur-ray)"/>
+        <!-- Sapphire -->
+        <polygon points="450,2 485,650 520,650" fill="url(#ray-sapphire)" opacity="0.5" filter="url(#blur-ray)"/>
+        <!-- Violet — far right -->
+        <polygon points="450,2 510,650 560,650" fill="url(#ray-violet)" opacity="0.55" filter="url(#blur-ray)"/>
+
+        <!-- Secondary ambient glow at apex -->
+        <circle cx="450" cy="8" r="60" fill="rgba(200,160,255,0.12)" filter="url(#blur-ray)"/>
+        <circle cx="450" cy="8" r="30" fill="rgba(220,180,255,0.2)" filter="url(#blur-ray)"/>
+      </svg>
+    </div>
+
+    <!-- PRISM (sits at dome apex) -->
+    <div class="prism-wrap">
+      <svg class="prism-svg" viewBox="0 0 72 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="face-l" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+            <stop offset="40%" stop-color="#c0a0ff" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#6040c0" stop-opacity="0.5"/>
+          </linearGradient>
+          <linearGradient id="face-r" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#a0c8ff" stop-opacity="0.85"/>
+            <stop offset="50%" stop-color="#4080e0" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#2040a0" stop-opacity="0.4"/>
+          </linearGradient>
+          <linearGradient id="face-center" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+            <stop offset="30%" stop-color="#e0d0ff" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#8060c0" stop-opacity="0.5"/>
+          </linearGradient>
+          <linearGradient id="base-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ff3a5c" stop-opacity="0.8"/>
+            <stop offset="25%" stop-color="#f5d020" stop-opacity="0.8"/>
+            <stop offset="50%" stop-color="#2affa0" stop-opacity="0.8"/>
+            <stop offset="75%" stop-color="#3a7fff" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#b03aff" stop-opacity="0.8"/>
+          </linearGradient>
+        </defs>
+        <!-- Prism faces — equilateral triangle viewed from slight angle -->
+        <!-- Left face -->
+        <polygon points="36,4 8,64 36,72" fill="url(#face-l)" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+        <!-- Right face -->
+        <polygon points="36,4 64,64 36,72" fill="url(#face-r)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+        <!-- Center (front) face -->
+        <polygon points="36,4 8,64 64,64" fill="url(#face-center)" stroke="rgba(255,255,255,0.4)" stroke-width="0.5" opacity="0.7"/>
+        <!-- Rainbow base edge -->
+        <line x1="8" y1="64" x2="64" y2="64" stroke="url(#base-grad)" stroke-width="3" stroke-linecap="round"/>
+        <!-- Apex highlight -->
+        <circle cx="36" cy="5" r="3" fill="white" opacity="0.9"/>
+        <circle cx="36" cy="5" r="6" fill="white" opacity="0.2"/>
+      </svg>
+    </div>
+
+    <!-- FEATURE NODES — positioned inside dome -->
+
+    <!-- Ruby — Library (left far) -->
+    <div class="node" style="--color:#ff3a5c;--glow:rgba(255,58,92,0.5);--glow2:rgba(255,58,92,0.2);--size:56px;--dur:7s;--delay:0s; left:8%; top:52%;">
+      <div class="node-orb">📚</div>
+      <span class="node-label">Sacred Library</span>
+    </div>
+
+    <!-- Amber — Ritual Machine -->
+    <div class="node" style="--color:#ff8c2a;--glow:rgba(255,140,42,0.5);--glow2:rgba(255,140,42,0.2);--size:48px;--dur:8s;--delay:-1s; left:18%; top:28%;">
+      <div class="node-orb">🜂</div>
+      <span class="node-label">Ritual Machine</span>
+    </div>
+
+    <!-- Gold — Courses -->
+    <div class="node" style="--color:#f5d020;--glow:rgba(245,208,32,0.5);--glow2:rgba(245,208,32,0.2);--size:50px;--dur:6.5s;--delay:-2s; left:30%; top:62%;">
+      <div class="node-orb">✦</div>
+      <span class="node-label">Courses</span>
+    </div>
+
+    <!-- Gold-green — Knowledge Graph -->
+    <div class="node" style="--color:#a0e040;--glow:rgba(160,224,64,0.5);--glow2:rgba(160,224,64,0.2);--size:60px;--dur:9s;--delay:-0.5s; left:37%; top:35%;">
+      <div class="node-orb">◈</div>
+      <span class="node-label">Knowledge Graph</span>
+    </div>
+
+    <!-- Emerald — Journal -->
+    <div class="node" style="--color:#2affa0;--glow:rgba(42,255,160,0.5);--glow2:rgba(42,255,160,0.2);--size:46px;--dur:7.5s;--delay:-3s; left:50%; top:68%;">
+      <div class="node-orb">✎</div>
+      <span class="node-label">Journal</span>
+    </div>
+
+    <!-- Cyan — AI Features -->
+    <div class="node" style="--color:#20e0f5;--glow:rgba(32,224,245,0.5);--glow2:rgba(32,224,245,0.2);--size:58px;--dur:8.5s;--delay:-1.5s; left:57%; top:30%;">
+      <div class="node-orb">⬡</div>
+      <span class="node-label">AI Oracle</span>
+    </div>
+
+    <!-- Sapphire — Workbench -->
+    <div class="node" style="--color:#3a7fff;--glow:rgba(58,127,255,0.5);--glow2:rgba(58,127,255,0.2);--size:50px;--dur:7s;--delay:-2.5s; left:68%; top:58%;">
+      <div class="node-orb">⚗</div>
+      <span class="node-label">Workbench</span>
+    </div>
+
+    <!-- Violet — Community -->
+    <div class="node" style="--color:#b03aff;--glow:rgba(176,58,255,0.5);--glow2:rgba(176,58,255,0.2);--size:52px;--dur:6s;--delay:-4s; left:80%; top:38%;">
+      <div class="node-orb">⬟</div>
+      <span class="node-label">Community</span>
+    </div>
+
+    <!-- Deep violet — Text to Speech -->
+    <div class="node" style="--color:#e03aff;--glow:rgba(224,58,255,0.4);--glow2:rgba(224,58,255,0.15);--size:44px;--dur:9.5s;--delay:-3.5s; left:88%; top:62%;">
+      <div class="node-orb">♫</div>
+      <span class="node-label">Voice</span>
+    </div>
+
+  </div><!-- /dome-wrapper -->
+
+  <div class="ground"></div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-eyebrow">The Living Library of Esoteric Wisdom</p>
+    <h1 class="hero-title">Prismarium</h1>
+    <p class="hero-tagline">Where ancient knowledge refracts into a thousand living facets</p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-primary">Enter the Prismarium</a>
+      <a href="#" class="btn btn-ghost">Explore the Ecosystem</a>
+    </div>
+  </div>
+
+  <div class="scroll-hint"></div>
+
+</div>
+
+<script>
+// Animated shimmer on rays — subtle breathing
+const svg = document.getElementById('rays-svg');
+const polygons = svg.querySelectorAll('polygon');
+
+let t = 0;
+function animateRays() {
+  t += 0.008;
+  polygons.forEach((p, i) => {
+    const base = 0.45 + i * 0.02;
+    const pulse = base + Math.sin(t + i * 0.9) * 0.12;
+    p.style.opacity = Math.max(0.2, Math.min(0.7, pulse));
+  });
+  requestAnimationFrame(animateRays);
+}
+animateRays();
+
+// Dome ambient glow that slowly shifts
+const dome = document.querySelector('.dome-shell');
+let gt = 0;
+function animateDome() {
+  gt += 0.004;
+  const h = 240 + Math.sin(gt) * 30;
+  const s = 50 + Math.sin(gt * 0.7) * 10;
+  dome.style.boxShadow = `
+    inset 0 0 120px rgba(${Math.floor(40 + Math.sin(gt)*20)},${Math.floor(20 + Math.sin(gt*0.8)*10)},${Math.floor(100 + Math.sin(gt*0.6)*30)},0.35),
+    inset 0 0 40px rgba(100,60,200,0.15),
+    0 0 80px rgba(80,40,180,0.2),
+    0 0 200px rgba(40,20,100,0.15)
+  `;
+  requestAnimationFrame(animateDome);
+}
+animateDome();
+</script>
+</body>
+</html>

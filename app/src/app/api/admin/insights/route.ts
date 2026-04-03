@@ -27,32 +27,44 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/insights — create one insight, or seed from library with ?action=seed
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  if (!await requireAdmin(supabase)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  try {
+    const supabase = await createClient();
+
+    const action = request.nextUrl.searchParams.get('action');
+
+    // Allow internal seed calls via secret header (no user session needed)
+    const internalSecret = process.env.INTERNAL_SEED_SECRET;
+    const isInternalSeed = action === 'seed'
+      && internalSecret
+      && request.headers.get('x-internal-seed') === internalSecret;
+
+    if (!isInternalSeed && !await requireAdmin(supabase)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (action === 'seed') {
+      return seedFromLibrary(supabase);
+    }
+
+    const body = await request.json();
+    const { title, hook, source_type, source_id, concept_search_terms, blog_slug, library_text_id, display_order } = body;
+
+    if (!title || !hook) {
+      return NextResponse.json({ error: 'title and hook are required' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('daily_insights')
+      .insert({ title, hook, source_type, source_id, concept_search_terms, blog_slug, library_text_id, display_order: display_order ?? 0 })
+      .select()
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ insight: data }, { status: 201 });
+  } catch (err: any) {
+    console.error('POST /api/admin/insights threw:', err);
+    return NextResponse.json({ error: err?.message ?? 'Unexpected error' }, { status: 500 });
   }
-
-  const action = request.nextUrl.searchParams.get('action');
-
-  if (action === 'seed') {
-    return seedFromLibrary(supabase);
-  }
-
-  const body = await request.json();
-  const { title, hook, source_type, source_id, concept_search_terms, blog_slug, library_text_id, display_order } = body;
-
-  if (!title || !hook) {
-    return NextResponse.json({ error: 'title and hook are required' }, { status: 400 });
-  }
-
-  const { data, error } = await supabase
-    .from('daily_insights')
-    .insert({ title, hook, source_type, source_id, concept_search_terms, blog_slug, library_text_id, display_order: display_order ?? 0 })
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ insight: data }, { status: 201 });
 }
 
 // PATCH /api/admin/insights — update fields (including toggling is_active)
@@ -103,7 +115,7 @@ async function seedFromLibrary(supabase: Awaited<ReturnType<typeof createClient>
   const { data: chunks, error } = await supabase
     .from('text_chunks')
     .select('id, text_id, content, chunk_index')
-    .gte('content' as any, '') // ensure not null
+    .not('content', 'is', null)
     .limit(500);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -111,14 +123,20 @@ async function seedFromLibrary(supabase: Awaited<ReturnType<typeof createClient>
     return NextResponse.json({ error: 'No text chunks found in the library' }, { status: 404 });
   }
 
-  // Filter: keep chunks whose content is 80–400 chars (quote-worthy length)
-  const candidates = chunks.filter((c) => {
+  // Filter: keep chunks whose content is 80–800 chars (quote-worthy length)
+  // Fall back to a wider range if the library uses longer chunks
+  let candidates = chunks.filter((c) => {
     const len = c.content?.trim().length ?? 0;
-    return len >= 80 && len <= 400;
+    return len >= 80 && len <= 800;
   });
 
   if (candidates.length === 0) {
-    return NextResponse.json({ error: 'No suitable passages found (need 80–400 char chunks)' }, { status: 404 });
+    // Wider fallback: any chunk with at least 60 chars
+    candidates = chunks.filter((c) => (c.content?.trim().length ?? 0) >= 60);
+  }
+
+  if (candidates.length === 0) {
+    return NextResponse.json({ error: 'No suitable passages found in the library' }, { status: 404 });
   }
 
   // Fetch titles for the source texts

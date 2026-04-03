@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { BookOpen, Tablet, Network, GraduationCap, Sparkles } from "lucide-react";
+import { BookOpen, Tablet, Network, Sparkles } from "lucide-react";
 import InsightCard from '@/components/InsightCard';
 import FeatureOnboardingModal from '@/components/FeatureOnboardingModal';
 
@@ -50,6 +50,88 @@ export default function DashboardView() {
                 {/* Daily Insight */}
                 <InsightCard />
 
+                {/* Featured: Courses — Star of the Show */}
+                <div className="mb-12">
+                    <Link
+                        href="/courses"
+                        onClick={async () => {
+                            try {
+                                await fetch('/api/track/courses-click', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ source: 'featured-banner' })
+                                });
+                            } catch {
+                                // Silently fail
+                            }
+                        }}
+                        className="group relative flex flex-col md:flex-row items-center md:items-stretch gap-6 md:gap-0 rounded-2xl overflow-hidden border border-amber-500/20 hover:border-amber-400/40 transition-all duration-500 shadow-[0_0_40px_-10px_rgba(180,143,74,0.15)] hover:shadow-[0_0_60px_-5px_rgba(180,143,74,0.25)]"
+                    >
+                        {/* Background layers */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-amber-950/10 to-zinc-950 pointer-events-none" />
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_50%,rgba(180,143,74,0.07),transparent)] pointer-events-none" />
+                        {/* Shimmer line */}
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/10 to-transparent" />
+
+                        {/* Left accent bar */}
+                        <div className="hidden md:block absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-amber-500/60 to-transparent" />
+
+                        {/* Content */}
+                        <div className="relative flex flex-col md:flex-row items-center md:items-center gap-8 w-full px-8 py-10 md:pl-12 md:pr-10">
+                            {/* Arcane sigil decoration */}
+                            <div className="flex-shrink-0 relative">
+                                <div className="relative w-20 h-20 md:w-24 md:h-24">
+                                    {/* Outer ring */}
+                                    <svg viewBox="0 0 96 96" className="courses-sigil absolute inset-0 w-full h-full text-amber-500/20 group-hover:text-amber-500/35 group-hover:rotate-[30deg]">
+                                        <circle cx="48" cy="48" r="44" stroke="currentColor" strokeWidth="0.8" fill="none" strokeDasharray="4 3" />
+                                        <circle cx="48" cy="48" r="36" stroke="currentColor" strokeWidth="0.5" fill="none" />
+                                        {/* Hexagram lines */}
+                                        <polygon points="48,8 84,68 12,68" stroke="currentColor" strokeWidth="0.6" fill="none" />
+                                        <polygon points="48,88 12,28 84,28" stroke="currentColor" strokeWidth="0.6" fill="none" />
+                                    </svg>
+                                    {/* Center glyph */}
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-full border border-amber-500/40 bg-amber-500/10 flex items-center justify-center group-hover:border-amber-400/60 group-hover:bg-amber-500/20 transition-all duration-500">
+                                            <svg viewBox="0 0 24 24" className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Text content */}
+                            <div className="flex-1 text-center md:text-left">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400/80 text-[10px] font-mono font-bold uppercase tracking-[0.25em] mb-3">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                    Featured Learning Path
+                                </div>
+                                <h2 className="font-serif text-3xl md:text-4xl font-bold text-amber-100 group-hover:text-amber-50 transition-colors duration-300 mb-2 leading-tight">
+                                    Courses & Learning Paths
+                                </h2>
+                                <p className="text-zinc-400 text-sm md:text-base leading-relaxed max-w-lg group-hover:text-zinc-300 transition-colors duration-300">
+                                    Navigate the depths of esoteric wisdom through structured courses. Hermetic philosophy, Kabbalah, sacred geometry — guided paths through ancient knowledge.
+                                </p>
+                            </div>
+
+                            {/* CTA */}
+                            <div className="flex-shrink-0">
+                                <div className="relative inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider text-black bg-amber-500 group-hover:bg-amber-400 transition-all duration-300 shadow-[0_0_20px_rgba(180,143,74,0.3)] group-hover:shadow-[0_0_35px_rgba(180,143,74,0.5)]">
+                                    {/* Button shimmer */}
+                                    <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+                                        <div className="absolute -inset-full top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] translate-x-[-150%] group-hover:translate-x-[350%] transition-transform duration-700 ease-in-out" />
+                                    </div>
+                                    Begin Your Path
+                                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+
                 {/* Integrated Search Hub - Primary Focus */}
                 <div className="mb-20">
                     <Suspense fallback={<div className="w-full h-64 bg-zinc-900/30 rounded-xl animate-pulse" />}>
@@ -64,7 +146,7 @@ export default function DashboardView() {
                     </h2>
 
                     {/* Primary Tools Grid */}
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-16">
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4 mb-16">
                         {/* Library Card */}
                         <Link
                             href="/library"
@@ -119,36 +201,6 @@ export default function DashboardView() {
                             </div>
                             <p className="text-sm text-zinc-400">
                                 Explore connections between concepts, traditions, and ideas through an interactive knowledge graph.
-                            </p>
-                        </Link>
-
-                        {/* Courses Card */}
-                        <Link
-                            href="/courses"
-                            onClick={async (e) => {
-                                try {
-                                    await fetch('/api/track/courses-click', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ source: 'card' })
-                                    });
-                                } catch (err) {
-                                    // Silently fail - tracking shouldn't block navigation
-                                }
-                            }}
-                            className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-blue-500/50 hover:bg-zinc-900 overflow-visible"
-                        >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/15 to-blue-600/15 rounded-lg blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                            <div className="mb-4 flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/20">
-                                    <GraduationCap className="w-6 h-6 text-blue-400" />
-                                </div>
-                                <h3 className="text-xl font-bold text-blue-100 group-hover:text-blue-400">
-                                    Courses
-                                </h3>
-                            </div>
-                            <p className="text-sm text-zinc-400">
-                                Structured learning paths through esoteric wisdom traditions.
                             </p>
                         </Link>
 

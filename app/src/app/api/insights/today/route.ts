@@ -25,10 +25,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (!insights || insights.length === 0) {
-      // Fallback if no insights exist
-      return NextResponse.json(
-        { insight: null }
-      );
+      // Auto-seed from library when table is empty — fire and forget
+      fetch(`${request.nextUrl.origin}/api/admin/insights?action=seed`, {
+        method: 'POST',
+        headers: { 'x-internal-seed': process.env.INTERNAL_SEED_SECRET ?? '' },
+      }).catch(() => {/* non-critical */});
+      return NextResponse.json({ insight: null });
     }
 
     // Pick a random insight from the set
