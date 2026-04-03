@@ -16,7 +16,6 @@ import LensPresets from '@/components/parallax/LensPresets';
 import ResponseLengthSlider from '@/components/parallax/ResponseLengthSlider';
 import RateLimitDisplay from '@/components/parallax/RateLimitDisplay';
 import PremiumGate from '@/components/parallax/PremiumGate';
-import TrialExpiredScreen from '@/components/parallax/TrialExpiredScreen';
 import ConversationHistory from '@/components/parallax/ConversationHistory';
 import { getAllLenses } from '@/lib/parallax/lenses';
 import { LensWeights, ResponseLength } from '@/lib/parallax/lens-orchestrator';
@@ -473,10 +472,6 @@ function ParallaxEngineContent() {
           </div>
         )}
 
-        {/* Show trial-expired screen instead of regular gate when trial has ended */}
-        {rateLimit?.trial?.trialExpired && !rateLimit.isPremium ? (
-          <TrialExpiredScreen queriesUsed={(rateLimit.limit ?? 0) - (rateLimit.remaining ?? 0)} />
-        ) : (
         <PremiumGate
           isPremium={rateLimit?.isPremium || false}
           rateLimitRemaining={rateLimitLoading ? 1 : (rateLimit?.remaining || 0)}
@@ -617,7 +612,6 @@ function ParallaxEngineContent() {
             </div>
           </div>
         </PremiumGate>
-        )}
       </main>
 
       <Footer />

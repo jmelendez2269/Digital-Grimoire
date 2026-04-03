@@ -10,11 +10,7 @@ import {
   getCachedScores,
   cacheScores,
 } from "@/lib/concepts/ai-relevance";
-import {
-  buildConceptCacheKey,
-  getCachedConceptSearch,
-  setCachedConceptSearch,
-} from "@/lib/parallax/search-cache";
+
 import { checkRateLimit, recordRateLimit } from "@/lib/rate-limit";
 import { getSubscriptionTier } from "@/lib/parallax/rate-limit";
 
@@ -65,15 +61,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Check server-side cache before hitting the database
-    const cacheKey = buildConceptCacheKey({ q, tradition, traditionId, tag, limit });
-    const cached = await getCachedConceptSearch(cacheKey);
-    if (cached) {
-      const response = NextResponse.json({ items: cached });
-      response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=7200');
-      response.headers.set('X-Cache', 'HIT');
-      return response;
-    }
 
     // Build query - start simple without relationship to avoid errors
     // We can add the relationship later if needed, but for now prioritize reliability
@@ -174,8 +161,6 @@ export async function GET(req: NextRequest) {
     }
 
     console.log(`[API] GET / api / concepts - Returning ${sortedData.length} concepts after sorting / filtering`);
-
-    setCachedConceptSearch(cacheKey, sortedData);
 
     const response = NextResponse.json({ items: sortedData });
 

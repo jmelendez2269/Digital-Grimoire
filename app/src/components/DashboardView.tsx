@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { BookOpen, Tablet, Network, Sparkles } from "lucide-react";
-import InsightCard from '@/components/InsightCard';
 import FeatureOnboardingModal from '@/components/FeatureOnboardingModal';
 
 const DashboardSearchHub = dynamic(() => import("@/components/DashboardSearchHub"), {
@@ -46,9 +45,6 @@ export default function DashboardView() {
                         What will you uncover today?
                     </p>
                 </div>
-
-                {/* Daily Insight */}
-                <InsightCard />
 
                 {/* Featured: Courses — Star of the Show */}
                 <div className="mb-12">

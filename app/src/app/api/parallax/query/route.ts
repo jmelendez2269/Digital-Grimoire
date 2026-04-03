@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
-import { maybeStartTrial } from '@/lib/parallax/trial';
 import { createSSEStream } from '@/lib/parallax/streaming';
 import { LensWeights, ResponseLength } from '@/lib/parallax/lens-orchestrator';
 
@@ -63,9 +62,6 @@ export async function POST(request: NextRequest) {
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-
-    // Start 7-day trial on first lens click for free users (no-op if already started/paid)
-    await maybeStartTrial(user.id);
 
     // Check rate limit
     const rateLimit = await checkRateLimit(user.id);

@@ -1,0 +1,30 @@
+
+> app@0.1.0 lint
+> eslint
+
+[BABEL] Note: The code generator has deoptimised the styling of C:\Projects\Digital-Grimoire\app\public\pdf-worker\pdf.worker.min.js as it exceeds the max of 500KB.
+
+
+#
+# Fatal process out of memory: Zone
+#
+----- Native stack trace -----
+
+ 1: 00007FF63DA6A397 node::SetCppgcReference+18119
+ 2: 00007FF63D93B8BF node::TriggerNodeReport+71503
+ 3: 00007FF63EC384D6 v8::base::FatalOOM+54
+ 4: 00007FF63E5BEF21 v8::Function::Experimental_IsNopFunction+2801
+ 5: 00007FF63E0A192B v8::SnapshotCreator::GetIsolate+50059
+ 6: 00007FF63EDC96DA v8::internal::compiler::CompilationDependencies::TransitionDependencyOffTheRecord+344442
+ 7: 00007FF63EDC97DE v8::internal::compiler::CompilationDependencies::TransitionDependencyOffTheRecord+344702
+ 8: 00007FF63ED5BC42 v8::internal::compiler::CompilationDependencies::~CompilationDependencies+812306
+ 9: 00007FF63ED57BD5 v8::internal::compiler::CompilationDependencies::~CompilationDependencies+795813
+10: 00007FF63ED5290A v8::internal::compiler::CompilationDependencies::~CompilationDependencies+774618
+11: 00007FF63E53C254 v8::SharedValueConveyor::SharedValueConveyor+30324
+12: 00007FF63E502E32 v8::Private::Name+42834
+13: 00007FF63E7C3D86 v8::PropertyDescriptor::writable+1996790
+14: 00007FF63D93E660 X509_STORE_get_cleanup+784
+15: 00007FF63DAC9223 uv_poll_stop+371
+16: 00007FF63F350B0B inflateValidate+186203
+17: 00007FF872E5E8D7 BaseThreadInitThunk+23
+18: 00007FF87440C40C RtlUserThreadStart+44

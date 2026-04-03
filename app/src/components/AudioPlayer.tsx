@@ -548,8 +548,6 @@ export default function AudioPlayer({
           currentEngine={engine}
           onEngineChange={setEngine}
           onAzureCredentials={(key: string, region: string) => {
-            setAzureKey(key);
-            setAzureRegion(region);
             // Save to localStorage
             localStorage.setItem('tts-azure-credentials', JSON.stringify({ key, region }));
           }}

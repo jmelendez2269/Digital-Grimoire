@@ -1,0 +1,15 @@
+.next/dev/types/app/admin/insights/page.ts(2,24): error TS2307: Cannot find module '../../../../../../src/app/admin/insights/page.js' or its corresponding type declarations.
+.next/dev/types/app/admin/insights/page.ts(7,29): error TS2307: Cannot find module '../../../../../../src/app/admin/insights/page.js' or its corresponding type declarations.
+.next/dev/types/app/api/admin/insights/route.ts(2,24): error TS2307: Cannot find module '../../../../../../../src/app/api/admin/insights/route.js' or its corresponding type declarations.
+.next/dev/types/app/api/admin/insights/route.ts(7,29): error TS2307: Cannot find module '../../../../../../../src/app/api/admin/insights/route.js' or its corresponding type declarations.
+.next/dev/types/app/api/insights/today/route.ts(2,24): error TS2307: Cannot find module '../../../../../../../src/app/api/insights/today/route.js' or its corresponding type declarations.
+.next/dev/types/app/api/insights/today/route.ts(7,29): error TS2307: Cannot find module '../../../../../../../src/app/api/insights/today/route.js' or its corresponding type declarations.
+src/app/api/concepts/route.ts(17,8): error TS2307: Cannot find module '@/lib/parallax/search-cache' or its corresponding type declarations.
+src/app/api/parallax/query/route.ts(4,33): error TS2307: Cannot find module '@/lib/parallax/trial' or its corresponding type declarations.
+src/app/api/parallax/rate-limit/route.ts(4,32): error TS2307: Cannot find module '@/lib/parallax/trial' or its corresponding type declarations.
+src/app/parallax-engine/page.tsx(19,32): error TS2307: Cannot find module '@/components/parallax/TrialExpiredScreen' or its corresponding type declarations.
+src/components/AudioPlayer.tsx(551,13): error TS2304: Cannot find name 'setAzureKey'.
+src/components/AudioPlayer.tsx(552,13): error TS2304: Cannot find name 'setAzureRegion'.
+src/components/DashboardView.tsx(8,25): error TS2307: Cannot find module '@/components/InsightCard' or its corresponding type declarations.
+src/lib/parallax/rate-limit.ts(3,32): error TS2307: Cannot find module './trial' or its corresponding type declarations.
+src/lib/services/tts-service.ts(123,45): error TS2307: Cannot find module './server-proxy-tts' or its corresponding type declarations.
