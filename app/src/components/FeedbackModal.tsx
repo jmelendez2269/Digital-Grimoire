@@ -229,7 +229,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                     disabled={isSubmitting}
                     placeholder={
                       feedbackType === "book_request"
-                        ? "Please include the book title, author, and why you'd like to see it in the Project Parallax Library..."
+                        ? "Please include the book title, author, and why you'd like to see it in the Prismarium Library..."
                         : "Please provide as much detail as possible..."
                     }
                     rows={6}

@@ -32,33 +32,33 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: "Project Parallax | Multi-Lens Library & Knowledge Network",
-  description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+  title: "Prismarium | Multi-Lens Library & Knowledge Network",
+  description: "Prismarium is a multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses — multiple perspectives, one inquiry.",
   metadataBase: new URL("https://projectparallax.xyz"),
-  keywords: ["esoteric texts", "sacred writings", "wisdom traditions", "knowledge network", "digital library", "hermeticism", "spiritual texts", "AI analysis"],
-  authors: [{ name: "Project Parallax" }],
-  creator: "Project Parallax",
-  publisher: "Project Parallax",
+  keywords: ["esoteric texts", "sacred writings", "wisdom traditions", "knowledge network", "digital library", "hermeticism", "spiritual texts", "AI analysis", "Prismarium"],
+  authors: [{ name: "Prismarium" }],
+  creator: "Prismarium",
+  publisher: "Prismarium",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://projectparallax.xyz",
-    siteName: "Project Parallax",
-    title: "Project Parallax | Multi-Lens Library & Knowledge Network",
-    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+    siteName: "Prismarium",
+    title: "Prismarium | Multi-Lens Library & Knowledge Network",
+    description: "Prismarium is a multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses.",
     images: [
       {
         url: "https://projectparallax.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Project Parallax - Multi-Lens Library & Knowledge Network",
+        alt: "Prismarium - Multi-Lens Library & Knowledge Network",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Project Parallax | Multi-Lens Library & Knowledge Network",
-    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity.",
+    title: "Prismarium | Multi-Lens Library & Knowledge Network",
+    description: "Explore wisdom traditions through multiple lenses. Prismarium — a knowledge network for curious minds.",
     images: ["https://projectparallax.xyz/og-image.png"],
   },
   robots: {
@@ -86,10 +86,10 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Project Parallax",
+    name: "Prismarium",
     url: "https://projectparallax.xyz",
     description:
-      "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+      "Prismarium is a multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses.",
     potentialAction: {
       "@type": "SearchAction",
       target: {

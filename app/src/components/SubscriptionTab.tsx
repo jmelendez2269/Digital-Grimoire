@@ -1007,7 +1007,7 @@ export default function SubscriptionTab() {
           <div className="text-sm text-amber-100/80">
             <p className="font-semibold mb-1">About Subscriptions</p>
             <p className="text-amber-100/60">
-              Subscriptions support the development and maintenance of Project Parallax.
+              Subscriptions support the development and maintenance of Prismarium.
               Your subscription helps us continue building amazing features for the esoteric community.
               All tiers include full access to the library and correspondence graph - we never gate knowledge.
             </p>

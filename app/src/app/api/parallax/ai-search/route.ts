@@ -103,7 +103,7 @@ Source Index: ${index}
 `).join('\n---\n');
 
         // 3. Construct Prompt
-        const systemPrompt = `You are the Parallax Engine, an advanced AI designed to synthesize esoteric, philosophical, and scientific knowledge.
+        const systemPrompt = `you are the Seven Lenses engine, an advanced AI designed to synthesize esoteric, philosophical, and scientific knowledge.
 Your goal is to provide a "Deep Search" result that gives a conceptual summary, analyzes relevant library books, and suggests external readings.
 
 Output MUST be a valid JSON object matching this TypeScript interface:

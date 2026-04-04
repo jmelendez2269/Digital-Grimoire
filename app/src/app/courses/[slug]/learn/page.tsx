@@ -670,7 +670,7 @@ function LensExerciseSection({
                         className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-lg text-purple-200 text-sm font-medium transition-all hover:scale-[1.02]"
                     >
                         <Compass className="w-4 h-4" />
-                        Run in Parallax Engine
+                        Run in Seven Lenses
                         <ExternalLink className="w-3.5 h-3.5 opacity-50" />
                     </Link>
                 </div>

@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: 'Blog | Project Parallax',
+  title: 'Blog | Prismarium',
   robots: { index: false, follow: false },
 };
 

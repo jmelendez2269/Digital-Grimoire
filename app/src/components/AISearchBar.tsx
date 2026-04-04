@@ -53,7 +53,7 @@ const MODEL_CONFIGS: ModelConfig[] = [
   {
     id: 'parallax',
     label: '⚡ Parallax',
-    description: 'The "Parallax Engine". Analyzes deep mystical patterns and connections across the library. Best for esoteric research.'
+    description: 'The "Seven Lenses". Analyzes deep mystical patterns and connections across the library. Best for esoteric research.'
   }
 ];
 

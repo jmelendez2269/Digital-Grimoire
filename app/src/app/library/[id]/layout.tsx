@@ -44,13 +44,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             const author = document.author ? ` by ${document.author}` : '';
             const description = document.summary ||
               document.curator_note ||
-              `Explore ${title}${author} in the Project Parallax - a curated collection of esoteric texts and wisdom traditions.`;
+              `Explore ${title}${author} in the Prismarium - a curated collection of esoteric texts and wisdom traditions.`;
 
             return {
-              title: `${title}${author} | Project Parallax`,
+              title: `${title}${author} | Prismarium`,
               description,
               openGraph: {
-                title: `${title}${author} | Project Parallax`,
+                title: `${title}${author} | Prismarium`,
                 description,
                 type: "website",
                 url: `${baseUrl}/library/${id}`,
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
               },
               twitter: {
                 card: "summary_large_image",
-                title: `${title}${author} | Project Parallax`,
+                title: `${title}${author} | Prismarium`,
                 description,
                 images: ["https://projectparallax.xyz/og-image.png"],
               },
@@ -88,11 +88,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     // Fallback metadata
     return {
-      title: "Document | Project Parallax",
-      description: "Explore this document in the Project Parallax - a curated collection of esoteric texts and wisdom traditions.",
+      title: "Document | Prismarium",
+      description: "Explore this document in the Prismarium - a curated collection of esoteric texts and wisdom traditions.",
       openGraph: {
-        title: "Document | Project Parallax",
-        description: "Explore this document in the Project Parallax.",
+        title: "Document | Prismarium",
+        description: "Explore this document in the Prismarium.",
         type: "website",
         url: `${baseUrl}/library/${id}`,
         images: [
@@ -100,14 +100,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             url: "https://projectparallax.xyz/og-image.png",
             width: 1200,
             height: 630,
-            alt: "Project Parallax Document",
+            alt: "Prismarium Document",
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
-        title: "Document | Project Parallax",
-        description: "Explore this document in the Project Parallax.",
+        title: "Document | Prismarium",
+        description: "Explore this document in the Prismarium.",
         images: ["https://projectparallax.xyz/og-image.png"],
       },
       robots: {

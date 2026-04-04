@@ -2,27 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Project Parallax",
-  description: "Terms of Service for Project Parallax - Rules and guidelines for using our platform",
+  title: "Terms of Service | Prismarium",
+  description: "Terms of Service for Prismarium - Rules and guidelines for using our platform",
   openGraph: {
-    title: "Terms of Service | Project Parallax",
-    description: "Terms of Service for Project Parallax - Rules and guidelines for using our platform",
+    title: "Terms of Service | Prismarium",
+    description: "Terms of Service for Prismarium - Rules and guidelines for using our platform",
     type: "website",
     url: "https://projectparallax.xyz/terms",
-    siteName: "Project Parallax",
+    siteName: "Prismarium",
     images: [
       {
         url: "https://projectparallax.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Project Parallax Terms of Service",
+        alt: "Prismarium Terms of Service",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Terms of Service | Project Parallax",
-    description: "Terms of Service for Project Parallax - Rules and guidelines for using our platform",
+    title: "Terms of Service | Prismarium",
+    description: "Terms of Service for Prismarium - Rules and guidelines for using our platform",
     images: ["https://www.projectparallax.xyz/og-image.png"],
   },
 };
@@ -48,7 +48,7 @@ export default function TermsOfServicePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">1. Introduction & Acceptance</h2>
             <p className="text-zinc-300">
-              Welcome to Project Parallax ("we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of
+              Welcome to Prismarium ("we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of
               our digital library platform (the "Service"). By accessing or using our Service, you agree to be bound by these Terms.
             </p>
             <p className="text-zinc-300 mt-2">
@@ -159,7 +159,7 @@ export default function TermsOfServicePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.3 Our Content</h3>
             <p className="text-zinc-300">
-              Content created by Project Parallax (including the user interface, AI-generated syntheses, and original writing) is
+              Content created by Prismarium (including the user interface, AI-generated syntheses, and original writing) is
               protected by copyright and other intellectual property laws. You may not copy, modify, distribute, or create
               derivative works from our content without our written permission.
             </p>
@@ -189,13 +189,13 @@ export default function TermsOfServicePage() {
             <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 my-4">
               <p className="text-amber-200 font-semibold mb-2">⚠️ Important Disclaimer</p>
               <p className="text-zinc-300">
-                <strong>All content on Project Parallax is presented for educational and exploratory purposes only.</strong>
+                <strong>All content on Prismarium is presented for educational and exploratory purposes only.</strong>
               </p>
             </div>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.1 Educational Purpose Statement</h3>
             <p className="text-zinc-300">
-              Project Parallax is a platform for learning, research, personal exploration, and intellectual inquiry. We aggregate and
+              Prismarium is a platform for learning, research, personal exploration, and intellectual inquiry. We aggregate and
               synthesize knowledge from diverse traditions and systems to facilitate understanding and cross-cultural synthesis.
             </p>
             <p className="text-zinc-300 mt-2">
@@ -205,7 +205,7 @@ export default function TermsOfServicePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.2 Non-Endorsement Policy</h3>
             <p className="text-zinc-300 mb-2">
-              <strong>The inclusion of content, systems, or traditions on Project Parallax does not constitute endorsement, validation,
+              <strong>The inclusion of content, systems, or traditions on Prismarium does not constitute endorsement, validation,
                 verification, or scientific confirmation.</strong>
             </p>
             <p className="text-zinc-300 mt-2">
@@ -225,18 +225,18 @@ export default function TermsOfServicePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.3 Not an Academic Institution</h3>
             <p className="text-zinc-300">
-              Project Parallax is not an academic institution, research university, or scholarly authority. We are a technology platform
+              Prismarium is not an academic institution, research university, or scholarly authority. We are a technology platform
               that aggregates knowledge, provides tools for exploration, and facilitates connections across traditions. We do not
               claim to be the arbiter of truth or a substitute for formal academic education.
             </p>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.4 User Responsibility</h3>
             <p className="text-zinc-300 mb-2">
-              <strong>Users are solely responsible for how they interpret, evaluate, and apply knowledge found on Project Parallax.</strong>
+              <strong>Users are solely responsible for how they interpret, evaluate, and apply knowledge found on Prismarium.</strong>
             </p>
             <p className="text-zinc-300 mt-2">
               We encourage users to cross-reference information, consult qualified experts, verify claims through their own research,
-              and think critically about all content. Project Parallax is not a substitute for professional advice in matters requiring
+              and think critically about all content. Prismarium is not a substitute for professional advice in matters requiring
               medical, legal, financial, or other expert guidance.
             </p>
           </section>
@@ -249,7 +249,7 @@ export default function TermsOfServicePage() {
               <strong>AI-generated responses are computational syntheses, not authoritative truth.</strong>
             </p>
             <p className="text-zinc-300 mt-2">
-              Our AI system (The Parallax Engine) analyzes content through multiple perspectives, synthesizes information from
+              Our AI system (The Seven Lenses) analyzes content through multiple perspectives, synthesizes information from
               our database, and provides citations to source material. However, AI responses may contain errors, omissions, or biases.
             </p>
             <p className="text-zinc-300 mt-2">
@@ -321,7 +321,7 @@ export default function TermsOfServicePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">8.1 Not Medical or Mental Health Advice</h3>
             <p className="text-zinc-300 mb-2">
-              <strong>Nothing on Project Parallax constitutes medical advice, diagnosis, or treatment.</strong>
+              <strong>Nothing on Prismarium constitutes medical advice, diagnosis, or treatment.</strong>
             </p>
             <p className="text-zinc-300 mt-2">
               Some content may discuss traditional healing practices, spiritual approaches to wellness, psychological concepts, or
@@ -336,7 +336,7 @@ export default function TermsOfServicePage() {
               health status, potential risks, the importance of proper guidance, and local laws and regulations.
             </p>
             <p className="text-zinc-300 mt-4">
-              <strong>Project Parallax is not responsible for consequences of practices undertaken based on information found on the platform.</strong>
+              <strong>Prismarium is not responsible for consequences of practices undertaken based on information found on the platform.</strong>
             </p>
           </section>
 
@@ -350,7 +350,7 @@ export default function TermsOfServicePage() {
               </p>
             </div>
 
-            <p className="text-zinc-300 mb-2">Project Parallax and its operators, employees, and contributors shall not be liable for:</p>
+            <p className="text-zinc-300 mb-2">Prismarium and its operators, employees, and contributors shall not be liable for:</p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
               <li>Decisions made based on information found on the platform</li>
               <li>Harm resulting from practices or teachings described on the platform</li>
@@ -361,7 +361,7 @@ export default function TermsOfServicePage() {
               <li>Loss of profits, data, use, goodwill, or other intangible losses</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              <strong>Your use of Project Parallax is at your own risk.</strong> The Service is provided "as is" and "as available"
+              <strong>Your use of Prismarium is at your own risk.</strong> The Service is provided "as is" and "as available"
               without warranties of any kind, either express or implied.
             </p>
             <p className="text-zinc-300 mt-2">
@@ -419,7 +419,7 @@ export default function TermsOfServicePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">12.1 Governing Law</h3>
             <p className="text-zinc-300">
-              These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Project Parallax
+              These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Prismarium
               operates, without regard to its conflict of law provisions.
             </p>
 
@@ -470,7 +470,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">15. Entire Agreement</h2>
             <p className="text-zinc-300">
               These Terms, together with our Privacy Policy and Cookie Policy, constitute the entire agreement between you and
-              Project Parallax regarding your use of the Service and supersede all prior agreements and understandings.
+              Prismarium regarding your use of the Service and supersede all prior agreements and understandings.
             </p>
           </section>
 
@@ -481,7 +481,7 @@ export default function TermsOfServicePage() {
             </p>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">
-                <strong>Service:</strong> Project Parallax<br />
+                <strong>Service:</strong> Prismarium<br />
                 <strong>Contact:</strong>{" "}
                 <a href="mailto:legal@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
                   legal@projectparallax.xyz
@@ -497,7 +497,7 @@ export default function TermsOfServicePage() {
 
           <div className="mt-12 pt-8 border-t border-zinc-800">
             <p className="text-zinc-400 text-sm">
-              This Terms of Service is effective as of {currentDate} and applies to all users of the Project Parallax platform.
+              This Terms of Service is effective as of {currentDate} and applies to all users of the Prismarium platform.
             </p>
             <div className="mt-4 flex flex-wrap gap-4">
               <Link

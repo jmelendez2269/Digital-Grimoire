@@ -118,6 +118,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Route redirects for rebrand
+  async redirects() {
+    return [
+      {
+        source: '/parallax-engine',
+        destination: '/seven-lenses',
+        permanent: true,
+      },
+      {
+        source: '/parallax-graph',
+        destination: '/concept-map',
+        permanent: true,
+      },
+    ];
+  },
   // Compress output
   compress: true,
   // Production source maps disabled for smaller bundle

@@ -432,7 +432,7 @@ function ParallaxEngineContent() {
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-8 h-8 text-cyan-400" />
             <h1 className="text-4xl font-bold text-amber-100">
-              Parallax Engine
+              Seven Lenses
             </h1>
             <div className="ml-auto flex items-center gap-3">
               <Link
@@ -446,7 +446,7 @@ function ParallaxEngineContent() {
             </div>
           </div>
           <p className="text-amber-100/70 text-lg">
-            Explore questions through seven unique analytical lenses, synthesizing insights from multiple perspectives with Project Parallax.
+            Explore questions through seven unique analytical lenses, synthesizing insights from multiple perspectives with Prismarium.
           </p>
           <div className="mt-4 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg">
             <p className="text-sm text-amber-200/80">
@@ -562,7 +562,7 @@ function ParallaxEngineContent() {
                     disabled={isStreaming}
                     rows={4}
                     className="w-full px-4 py-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
-                    placeholder="Ask a question about any topic... The Parallax Engine will analyze it through multiple perspectives."
+                    placeholder="Ask a question about any topic... The Seven Lenses will analyze it through multiple perspectives."
                   />
                 </div>
 

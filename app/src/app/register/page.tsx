@@ -132,7 +132,7 @@ export default function RegisterPage() {
         <div className="mb-12 text-center">
           <Link href="/" className="inline-block mb-8 group">
             <h1 className="text-4xl font-bold tracking-tight text-white group-hover:text-amber-500 transition-colors">
-              Project Parallax
+              Prismarium
             </h1>
           </Link>
           <h2 className="text-2xl font-semibold text-zinc-200">

@@ -105,9 +105,8 @@ function Header({ librarySearch }: HeaderProps = {}) {
             </svg>
           </div>
 
-          <div className="flex flex-col leading-none font-sans uppercase">
-            <span className="text-[0.6rem] font-bold tracking-[0.2em] text-zinc-400 group-hover:text-cyan-500/70 transition-colors ml-[2px]">Project</span>
-            <span className="text-xl font-bold tracking-widest text-zinc-100 group-hover:text-cyan-400 transition-colors">Parallax</span>
+          <div className="flex flex-col leading-none font-sans">
+            <span className="text-xl font-bold tracking-widest text-zinc-100 group-hover:text-cyan-400 transition-colors uppercase">Prismarium</span>
           </div>
         </Link>
 
@@ -213,9 +212,9 @@ function Header({ librarySearch }: HeaderProps = {}) {
                       <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-500 group-hover:bg-cyan-500/20 transition-colors">
                         <Sparkles className="w-5 h-5" />
                       </div>
-                      <span className="text-lg font-bold text-zinc-100 group-hover:text-cyan-400 transition-colors">Parallax Engine</span>
+                      <span className="text-lg font-bold text-zinc-100 group-hover:text-cyan-400 transition-colors">Seven Lenses</span>
                     </div>
-                    <p className="text-xs text-zinc-400 ml-10 leading-relaxed group-hover:text-zinc-300 transition-colors">Synthesize insights across analytical lenses and knowledge bases.</p>
+                    <p className="text-xs text-zinc-400 ml-10 leading-relaxed group-hover:text-zinc-300 transition-colors">Synthesize insights across seven analytical lenses and knowledge bases.</p>
                   </Link>
 
                   <Link
@@ -346,7 +345,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
               <div className="hidden md:flex items-center gap-2">
                 <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">Log In</Link>
                 <Link href="/register" className="px-4 py-1.5 text-sm font-bold text-black bg-cyan-500 hover:bg-cyan-400 rounded transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                  JOIN_PARALLAX &gt;
+                  JOIN PRISMARIUM &gt;
                 </Link>
               </div>
             )}
@@ -421,7 +420,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
             ) : (
               <div className="relative z-10 flex flex-col gap-3 py-4">
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-zinc-300 border border-white/20 rounded-lg hover:bg-white/5">Log In</Link>
-                <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-black bg-cyan-500 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400">JOIN_PARALLAX</Link>
+                <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-black bg-cyan-500 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400">JOIN PRISMARIUM</Link>
               </div>
             )}
           </div>

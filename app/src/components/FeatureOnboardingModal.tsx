@@ -96,7 +96,7 @@ const FEATURES = [
         badge: "Recommended starting point",
         badgeColor: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
         description:
-            "Courses are the heart of the platform. Each one is built around a core question — not a topic — and guides you through multiple lenses of inquiry. Your course assigns readings from the Library, suggests concepts to run through the Parallax Engine, and your Journal is where you capture it all.",
+            "Courses are the heart of the platform. Each one is built around a core question — not a topic — and guides you through multiple lenses of inquiry. Your course assigns readings from the Library, suggests concepts to run through the Seven Lenses, and your Journal is where you capture it all.",
         bullets: [
             "Structured around a central question, not a syllabus",
             "Each week focuses on a specific lens",
@@ -127,7 +127,7 @@ const FEATURES = [
     {
         id: "parallax",
         Icon: Zap,
-        label: "Parallax Engine",
+        label: "Seven Lenses",
         href: "/parallax-engine",
         wikiHref: "/wiki/parallax-engine",
         accentColor: "text-amber-400",
@@ -156,7 +156,7 @@ const FEATURES = [
         badge: null,
         badgeColor: "",
         description:
-            "Your private research space. Clip passages from library texts, take notes during courses, save Parallax Engine outputs, and build an interconnected knowledge network with wiki-style links. Over time it becomes a personal knowledge base that belongs only to you.",
+            "Your private research space. Clip passages from library texts, take notes during courses, save Seven Lenses outputs, and build an interconnected knowledge network with wiki-style links. Over time it becomes a personal knowledge base that belongs only to you.",
         bullets: [
             "Rich text editor with wiki-links between entries",
             "Clip passages directly from library texts",
@@ -267,7 +267,7 @@ const WORKFLOW_STEPS = [
     },
     {
         Icon: Zap,
-        label: "Parallax Engine",
+        label: "Seven Lenses",
         href: "/parallax-engine",
         color: "text-amber-400",
         bg: "bg-amber-500/10",
@@ -295,7 +295,7 @@ function StepWelcome() {
                     <BookOpen className="w-8 h-8 text-amber-400" />
                 </div>
                 <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70">
-                    Project Parallax
+                    Prismarium
                 </p>
                 <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 leading-tight max-w-lg">
                     A curated body of wisdom, a method for understanding it, and tools that make that method accessible to anyone.
@@ -564,7 +564,7 @@ function StepWorkflow() {
                     {
                         step: "03",
                         color: "text-amber-400",
-                        heading: "Run the Parallax Engine",
+                        heading: "Run the Seven Lenses",
                         body: "Encounter a concept you want to examine more deeply? Put it in the Engine. See it through all seven lenses at once. Save the output to your Journal.",
                     },
                     {
@@ -721,7 +721,7 @@ export default function FeatureOnboardingModal({ onClose }: FeatureOnboardingMod
             <div
                 className="bg-zinc-950/98 border border-amber-500/20 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col relative overflow-hidden animate-in fade-in zoom-in-95 duration-300"
                 role="dialog"
-                aria-label="Welcome to Project Parallax"
+                aria-label="Welcome to Prismarium"
             >
                 {/* Decorative grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
@@ -796,7 +796,7 @@ export default function FeatureOnboardingModal({ onClose }: FeatureOnboardingMod
                         onClick={handleNext}
                         className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors shadow-lg shadow-amber-900/20"
                     >
-                        {isLastStep ? "Enter Project Parallax" : "Continue"}
+                        {isLastStep ? "Enter Prismarium" : "Continue"}
                         {!isLastStep && <ChevronRight className="w-4 h-4" />}
                     </button>
                 </div>

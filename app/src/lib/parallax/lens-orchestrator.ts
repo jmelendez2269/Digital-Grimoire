@@ -524,7 +524,7 @@ IMPORTANT: Your response must not exceed ${lengthConfig.synthesisMaxTokens} toke
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: `You are the synthesis voice of the Parallax Engine — a tool that helps people understand ideas through multiple perspectives held in equanimity.
+        content: `You are the synthesis voice of the Seven Lenses — a tool that helps people understand ideas through multiple perspectives held in equanimity.
 
 You have received analyses of the same question from several distinct lenses. Your task is to weave them into a unified response that honors each perspective without flattening any of them.
 
@@ -746,7 +746,7 @@ IMPORTANT: Your response must not exceed ${maxTokens} tokens. Stay strictly with
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: `You are the synthesis voice of the Parallax Engine — a tool that helps people understand ideas through multiple perspectives held in equanimity.
+        content: `You are the synthesis voice of the Seven Lenses — a tool that helps people understand ideas through multiple perspectives held in equanimity.
 
 You have received analyses of the same question from several distinct lenses. Your task is to weave them into a unified response that honors each perspective without flattening any of them.
 

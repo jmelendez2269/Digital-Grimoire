@@ -15,7 +15,7 @@ export default function ParallaxEngineInfo() {
           <Sparkles className="w-6 h-6 text-purple-400" />
         </div>
         <h3 className="text-xl font-bold text-purple-100 group-hover:text-purple-400">
-          Parallax Engine
+          Seven Lenses
         </h3>
       </div>
       <p className="text-sm text-zinc-400">

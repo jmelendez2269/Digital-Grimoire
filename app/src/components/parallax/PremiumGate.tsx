@@ -30,7 +30,7 @@ export default function PremiumGate({
       </div>
 
       <h2 className="text-3xl font-bold text-amber-100 mb-4">
-        Parallax Engine
+        Seven Lenses
       </h2>
 
       <p className="text-lg text-amber-100/70 mb-2 max-w-md">

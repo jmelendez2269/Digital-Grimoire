@@ -37,7 +37,7 @@ export default function DashboardView() {
                             ) : username ? (
                                 `Welcome, ${username}!`
                             ) : (
-                                "Welcome to Project Parallax"
+                                "Welcome to Prismarium"
                             )}
                         </h1>
                     </div>
@@ -200,7 +200,7 @@ export default function DashboardView() {
                             </p>
                         </Link>
 
-                        {/* Parallax Engine Card */}
+                        {/* Seven Lenses Card */}
                         <ParallaxEngineInfo />
                     </div>
 

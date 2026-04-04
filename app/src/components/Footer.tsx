@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
 
-          {/* Column 1: Parallax */}
+          {/* Column 1: Prismarium */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="relative flex items-center justify-center w-6 h-6 rounded-full border border-amber-500/30 bg-black/50 group-hover:border-amber-500/70 transition-colors">
@@ -24,11 +24,11 @@ export default function Footer() {
                 </svg>
               </div>
               <span className="text-sm font-bold tracking-tight text-zinc-100 group-hover:text-white uppercase">
-                Project Parallax
+                Prismarium
               </span>
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed font-mono uppercase tracking-tight">
-              A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore sacred writings and wisdom traditions.
+              A multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses.
             </p>
             <div className="flex items-center gap-4 mt-2">
               <a href="https://github.com/jmelendez2269/Digital-Grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
@@ -50,7 +50,7 @@ export default function Footer() {
               <Link href="/library" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Library</Link>
               <Link href="/search" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Global Search</Link>
               <Link href="/courses" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Wisdom Courses</Link>
-              <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Parallax Graph</Link>
+              <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Concept Map</Link>
             </div>
           </div>
 
@@ -60,7 +60,7 @@ export default function Footer() {
             <div className="flex flex-col gap-2">
               <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Digital Grimoire</Link>
               <Link href="/ritual-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Ritual Machine</Link>
-              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Parallax Engine</Link>
+              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Seven Lenses</Link>
               <Link href="/wiki" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
                 Documentation
@@ -88,7 +88,7 @@ export default function Footer() {
         {/* Bottom Bar: Copyright & Disclosures */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">
-            © {currentYear} PROJECT PARALLAX // ALL RIGHTS RESERVED
+            © {currentYear} PRISMARIUM // A PROJECT PARALLAX PRODUCT // ALL RIGHTS RESERVED
           </p>
 
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
