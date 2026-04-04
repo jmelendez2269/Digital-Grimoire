@@ -26,9 +26,9 @@
   --color-cyan-400: #67E8F9;
 
   /* Font families */
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-cormorant);
-  --font-mono: var(--font-fira-mono);
+  --font-sans: var(--font-dm-sans), var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), var(--font-cormorant), Georgia, serif;
+  --font-mono: var(--font-jetbrains), var(--font-fira-mono), monospace;
 
   /* Animations */
   --animate-scanline: scanline 8s linear infinite;
@@ -36,18 +36,71 @@
 }
 
 :root {
-  --background: #0A1212;
-  --foreground: #F1F5F9;
+  --background: #111318;
+  --foreground: #F0EDE8;
 
-  /* Brand Colors */
+  /* Prismarium Brand Colors */
+  --brand: #1D487B;
+  --brand-50: #EBF2FA;
+  --brand-100: #C8DDF2;
+  --brand-200: #9DC1E7;
+  --brand-300: #6DA3D9;
+  --brand-400: #3D82C7;
+  --brand-500: #1D487B;
+  --accent-brand: #F68A23;
+  --accent-brand-50: #FEF3E7;
+  --accent-brand-100: #FCDAB0;
+  --accent-brand-200: #F9BC72;
+  --accent-brand-300: #F79D47;
+
+  /* Seven Lens Colors */
+  --lens-scientific: #4A9EBF;
+  --lens-psychological: #9B6BB5;
+  --lens-philosophical: #5A8A5E;
+  --lens-spiritual: #C4956A;
+  --lens-historical: #B5734A;
+  --lens-symbolic: #4A6E9B;
+  --lens-mathematical: #7A9E6B;
+
+  /* Semantic Status */
+  --status-success: #4A9E6B;
+  --status-success-bg: rgba(74, 158, 107, 0.12);
+  --status-warning: #E5A020;
+  --status-warning-bg: rgba(229, 160, 32, 0.12);
+  --status-error: #C44B4B;
+  --status-error-bg: rgba(196, 75, 75, 0.12);
+  --status-info: #4A7EC4;
+  --status-info-bg: rgba(74, 126, 196, 0.12);
+
+  /* Motion */
+  --duration-micro: 150ms;
+  --duration-standard: 350ms;
+  --duration-expressive: 600ms;
+  --duration-stagger: 80ms;
+
+  /* Legacy Brand Colors (preserved for existing components) */
   --brand-cyan: #22D3EE;
   --brand-gold: #B48F4A;
   --brand-burgundy: #8B2E2E;
 
   /* Glassmorphism Variables */
-  --glass-bg: rgba(10, 18, 18, 0.7);
+  --glass-bg: rgba(17, 19, 24, 0.7);
   --glass-backdrop: blur(12px);
-  --glass-border-color: rgba(180, 143, 74, 0.08);
+  --glass-border-color: rgba(240, 237, 232, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-micro: 0ms;
+    --duration-standard: 0ms;
+    --duration-expressive: 0ms;
+    --duration-stagger: 0ms;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 

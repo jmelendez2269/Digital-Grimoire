@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cormorant_Garamond, Fira_Code } from "next/font/google";
+import { Inter, Cormorant_Garamond, Fira_Code, DM_Sans, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
@@ -29,6 +29,25 @@ const firaCode = Fira_Code({
   variable: "--font-fira-mono",
   display: "swap",
   preload: true,
+});
+
+// Prismarium brand fonts
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -103,7 +122,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cormorant.variable} ${firaCode.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${cormorant.variable} ${firaCode.variable} ${dmSans.variable} ${playfair.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground`}
       >
         <script
           type="application/ld+json"
