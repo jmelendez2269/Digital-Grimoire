@@ -80,7 +80,7 @@ export default function AIDisclaimerPage() {
               <li><strong>Multiple perspectives</strong> - Prismarium's lenses can surface different viewpoints</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              AI responses should be treated as <strong>starting points for inquiry, not final answers</strong>. They are
+              AI responses can be approached as <strong>starting points for inquiry, not final answers</strong>. They are
               computational syntheses that may contain errors, biases, or incomplete information. Your critical thinking is
               the most important tool you have.
             </p>
@@ -97,7 +97,7 @@ export default function AIDisclaimerPage() {
               unique perspective on your inquiry.
             </p>
 
-            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">The Seven Lenses</h3>
+            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Prismarium Lens</h3>
             <p className="text-zinc-300 mb-4">
               Each lens has specific instructions that guide how the AI analyzes questions. Here are the system instructions
               for each lens:
@@ -128,7 +128,7 @@ export default function AIDisclaimerPage() {
             </ol>
             <p className="text-zinc-300 mt-4">
               This multi-perspective approach is designed to help you see questions from multiple angles, but remember:
-              <strong className="text-amber-300"> even synthesized responses are AI-generated and should be verified.</strong>
+              <strong className="text-amber-300"> even synthesized responses are AI-generated and can be verified against trusted sources.</strong>
             </p>
           </section>
 
@@ -137,7 +137,7 @@ export default function AIDisclaimerPage() {
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">How Large Language Models (LLMs) Work</h2>
 
             <p className="text-zinc-300">
-              Understanding how LLMs actually work is crucial for using them wisely. Here's what you need to know:
+              A practical understanding of how LLMs work can support thoughtful use. Here is context that may be helpful:
             </p>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Statistical Pattern Matching, Not True Understanding</h3>
