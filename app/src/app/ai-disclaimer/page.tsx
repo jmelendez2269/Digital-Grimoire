@@ -3,27 +3,27 @@ import Link from "next/link";
 import { getAllLenses } from "@/lib/parallax/lenses";
 
 export const metadata: Metadata = {
-  title: "AI Disclaimer & Discernment Guide | Convergence",
-  description: "Understanding how AI works, the importance of discernment, and mental health resources when using Convergence's AI features",
+  title: "AI Disclaimer & Discernment Guide | Prismarium",
+  description: "Understanding how AI works, the importance of discernment, and mental health resources when using Prismarium's AI features",
   openGraph: {
-    title: "AI Disclaimer & Discernment Guide | Convergence",
-    description: "Understanding how AI works, the importance of discernment, and mental health resources when using Convergence's AI features",
+    title: "AI Disclaimer & Discernment Guide | Prismarium",
+    description: "Understanding how AI works, the importance of discernment, and mental health resources when using Prismarium's AI features",
     type: "website",
-    url: "https://projectparallax.xyz/ai-disclaimer",
+    url: "https://prismarium.xyz/ai-disclaimer",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "https://prismarium.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence AI Disclaimer & Discernment Guide",
+        alt: "Prismarium AI Disclaimer & Discernment Guide",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Disclaimer & Discernment Guide | Convergence",
-    description: "Understanding how AI works, the importance of discernment, and mental health resources when using Convergence's AI features",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    title: "AI Disclaimer & Discernment Guide | Prismarium",
+    description: "Understanding how AI works, the importance of discernment, and mental health resources when using Prismarium's AI features",
+    images: ["https://prismarium.xyz/og-image.png"],
   },
 };
 
@@ -51,13 +51,13 @@ export default function AIDisclaimerPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">Introduction</h2>
             <p className="text-zinc-300">
-              Welcome to Convergence's AI Disclaimer and Discernment Guide. This page is designed to help you understand
-              how our AI systems work, why critical thinking is essential when using them, and how to stay grounded while
-              exploring complex ideas. We believe in transparency, and we want you to use our AI tools safely and wisely.
+              Welcome to Prismarium's AI Disclaimer and Discernment Guide. This page explains
+              how our AI systems work, why critical thinking matters when using them, and ways to stay grounded while
+              exploring complex ideas. We value transparency and aim to support careful, informed use of these tools.
             </p>
             <p className="text-zinc-300 mt-2">
               <strong className="text-amber-300">AI is a tool, not a source of absolute truth.</strong> This principle
-              guides everything we do, and we hope it will guide your use of our platform as well.
+              guides our design and may be useful as context for your own exploration.
             </p>
           </section>
 
@@ -66,18 +66,18 @@ export default function AIDisclaimerPage() {
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">The Importance of Discernment</h2>
             <p className="text-zinc-300">
               Discernment—the ability to judge well—is crucial when engaging with AI-generated content. AI systems,
-              including the Convergence Machine, generate responses based on patterns in their training data, not on
+              including the Prismarium lens engine, generate responses based on patterns in their training data, not on
               genuine understanding or direct experience of truth.
             </p>
             <p className="text-zinc-300 mt-2">
-              When you use AI tools on Convergence, we encourage you to:
+              When using AI tools on Prismarium, many people find these practices helpful:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-2 mt-2">
-              <li><strong>Question everything</strong> - Including AI responses, your own assumptions, and our presentations</li>
-              <li><strong>Verify important claims</strong> - Cross-reference AI responses with original sources and expert knowledge</li>
-              <li><strong>Maintain intellectual humility</strong> - Recognize that all knowledge systems have limitations</li>
-              <li><strong>Trust your judgment</strong> - You are the final arbiter of what resonates with you</li>
-              <li><strong>Seek multiple perspectives</strong> - Use the Convergence Machine's seven lenses to see different viewpoints</li>
+              <li><strong>A questioning stance</strong> - toward AI responses, personal assumptions, and our presentations</li>
+              <li><strong>Verification of important claims</strong> - by comparing responses with original sources and expert knowledge</li>
+              <li><strong>Intellectual humility</strong> - recognizing that all knowledge systems have limitations</li>
+              <li><strong>Personal judgment</strong> - users remain the final arbiters of what resonates for them</li>
+              <li><strong>Multiple perspectives</strong> - Prismarium's lenses can surface different viewpoints</li>
             </ul>
             <p className="text-zinc-300 mt-4">
               AI responses should be treated as <strong>starting points for inquiry, not final answers</strong>. They are
@@ -86,13 +86,13 @@ export default function AIDisclaimerPage() {
             </p>
           </section>
 
-          {/* How the Convergence Machine Works */}
+          {/* How the Prismarium Lens Engine Works */}
           <section className="mt-8">
-            <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">How the Convergence Machine Works</h2>
+            <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">How the Prismarium Lens Engine Works</h2>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Model Information</h3>
             <p className="text-zinc-300">
-              The Convergence Machine is powered by <strong>GPT-4o (GPT-4 Omni)</strong>, a large language model developed
+              The Prismarium lens engine is powered by <strong>GPT-4o (GPT-4 Omni)</strong>, a large language model developed
               by OpenAI. This model analyzes your questions through seven distinct analytical lenses, each providing a
               unique perspective on your inquiry.
             </p>
@@ -117,7 +117,7 @@ export default function AIDisclaimerPage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Response Generation Process</h3>
             <p className="text-zinc-300">
-              When you submit a question to the Convergence Machine:
+              When you submit a question to the Prismarium lens engine:
             </p>
             <ol className="list-decimal pl-6 text-zinc-300 space-y-2 mt-2">
               <li>Your query is analyzed through each active lens (based on your weight settings)</li>
@@ -187,7 +187,7 @@ export default function AIDisclaimerPage() {
                 current, verified facts. It cannot access the internet or verify information in real-time.</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              <strong className="text-amber-300">This is why verification is essential.</strong> Always cross-reference
+              <strong className="text-amber-300">This is why verification is essential.</strong> It is often useful to cross-reference
               important claims from AI responses with reliable sources, especially for:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1 mt-2">
@@ -213,7 +213,7 @@ export default function AIDisclaimerPage() {
             </ul>
             <p className="text-zinc-300 mt-4">
               This doesn't mean AI isn't useful—it can be an excellent tool for exploration, synthesis, and generating ideas.
-              But it means you must always be the final judge of what to believe and how to act.
+              But it means you are invited to stay the final judge of what to believe and how to act.
             </p>
           </section>
 
@@ -225,9 +225,10 @@ export default function AIDisclaimerPage() {
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-2 mt-2">
               <li><strong>Fine-tuning with library content</strong> - We plan to fine-tune a model (to be determined) using
-                the curated texts in the Convergence library. This will help the AI better understand and synthesize the specific
+                the curated texts in the Prismarium library. This will help the AI better understand and synthesize the specific
                 knowledge traditions we curate.</li>
-              <li><strong>Fine-tuning with convergence graph data</strong> - As we build the convergence graph (a knowledge
+              <li><strong>Fine-tuning with Prismarium graph data</strong> - As we build the Prismarium knowledge
+                graph (a knowledge
                 network showing connections between concepts across traditions), we plan to incorporate this structured knowledge
                 into model training to improve accuracy and reduce hallucinations.</li>
               <li><strong>Ongoing improvements</strong> - We will continue to refine our system prompts, retrieval methods,
@@ -250,34 +251,34 @@ export default function AIDisclaimerPage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Reality Checks</h3>
             <ul className="list-disc pl-6 text-zinc-300 space-y-2 mt-2">
-              <li><strong>Verify claims with original sources</strong> - Don't take AI responses at face value. Check citations,
-                read original texts, and consult authoritative sources.</li>
-              <li><strong>Test ideas against observable reality</strong> - If an idea makes claims about the physical world,
-                consider how you could verify it through observation or experiment.</li>
-              <li><strong>Compare multiple sources</strong> - See how different traditions, scholars, or sources address the
-                same question. Look for consensus and areas of disagreement.</li>
-              <li><strong>Question extraordinary claims</strong> - Extraordinary claims require extraordinary evidence. Be
-                especially skeptical of claims that seem too good to be true or that contradict well-established knowledge.</li>
+              <li><strong>Source verification</strong> - AI responses can be cross-checked through citations,
+                original texts, and trusted expert sources.</li>
+              <li><strong>Reality testing</strong> - Claims about the physical world are strongest when they can be examined
+                through observation or experiment.</li>
+              <li><strong>Multiple-source comparison</strong> - Different traditions, scholars, and sources often illuminate
+                the same question in complementary or conflicting ways.</li>
+              <li><strong>Care with extraordinary claims</strong> - Extraordinary claims generally call for stronger evidence,
+                especially when they conflict with well-established knowledge.</li>
             </ul>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Community and Connection</h3>
             <ul className="list-disc pl-6 text-zinc-300 space-y-2 mt-2">
-              <li><strong>Discuss ideas with others</strong> - Share your insights and questions with trusted friends,
-                mentors, or community members. Other perspectives can help you stay grounded.</li>
-              <li><strong>Engage with real-world activities</strong> - Balance your intellectual exploration with physical
-                activities, social connections, and practical responsibilities.</li>
-              <li><strong>Maintain relationships</strong> - Don't let AI interactions replace human connection. Real
-                relationships provide essential grounding and perspective.</li>
+              <li><strong>Dialogue with trusted people</strong> - Friends, mentors, and community members can offer perspective
+                that supports grounded reflection.</li>
+              <li><strong>Real-world balance</strong> - Physical activity, social connection, and practical responsibilities
+                can complement intellectual exploration.</li>
+              <li><strong>Sustained human connection</strong> - Relationships provide grounding and perspective that AI
+                interactions cannot replace.</li>
             </ul>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Professional Support</h3>
             <ul className="list-disc pl-6 text-zinc-300 space-y-2 mt-2">
-              <li><strong>Seek professional help when needed</strong> - If you're struggling with mental health, confusion,
-                or feeling disconnected from reality, professional mental health support is available and valuable.</li>
-              <li><strong>Consult subject matter experts</strong> - For important questions, consider consulting qualified
-                experts in relevant fields rather than relying solely on AI responses.</li>
-              <li><strong>Know when to step back</strong> - If AI interactions are causing distress, confusion, or unhealthy
-                obsessions, take a break and seek support.</li>
+              <li><strong>Professional support when helpful</strong> - When there is mental health strain, confusion,
+                or disconnection from reality, qualified care can be beneficial.</li>
+              <li><strong>Expert consultation for high-stakes topics</strong> - Qualified professionals can add rigor
+                beyond AI-generated responses.</li>
+              <li><strong>Room to step back</strong> - Pausing AI use may help when interactions create distress, confusion,
+                or unhealthy fixation.</li>
             </ul>
           </section>
 
@@ -313,8 +314,7 @@ export default function AIDisclaimerPage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Signs to Watch For</h3>
             <p className="text-zinc-300">
-              If you notice any of the following, please consider taking a break from AI interactions and seeking professional
-              support:
+              If any of the following appear, a pause from AI interactions and support from a qualified professional may help:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-2 mt-2">
               <li>Feeling that the AI has special knowledge or is communicating directly with you in a way that feels real</li>
@@ -374,7 +374,7 @@ export default function AIDisclaimerPage() {
                 If you have questions, concerns, or suggestions about our AI systems or this disclaimer, please reach out:
               </p>
               <p className="text-zinc-300 mt-2">
-                <strong>Email:</strong> <a href="mailto:info@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">info@projectparallax.xyz</a>
+                <strong>Email:</strong> <a href="mailto:info@prismarium.xyz" className="text-amber-400 hover:text-amber-300">info@prismarium.xyz</a>
               </p>
               <p className="text-sm text-zinc-400 mt-2">
                 We're learning together, and your feedback helps us improve. If you have suggestions for how we can make our
@@ -395,7 +395,7 @@ export default function AIDisclaimerPage() {
             </div>
 
             <p className="text-zinc-300 mb-2">
-              Convergence and its operators, employees, and contributors shall not be liable for:
+              Prismarium and its operators, employees, and contributors shall not be liable for:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
               <li>Decisions made based on AI-generated information or responses</li>
@@ -409,7 +409,7 @@ export default function AIDisclaimerPage() {
             </ul>
 
             <p className="text-zinc-300 mt-4">
-              <strong>Your use of Convergence's AI features is at your own risk.</strong> The AI systems are provided "as is"
+              <strong>Your use of Prismarium's AI features is at your own risk.</strong> The AI systems are provided "as is"
               and "as available" without warranties of any kind, either express or implied. We make no guarantees about:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1 mt-2">
@@ -433,12 +433,12 @@ export default function AIDisclaimerPage() {
 
             <p className="text-zinc-300 mt-4">
               Some jurisdictions do not allow the exclusion of certain warranties or limitations of liability, so some of the
-              above limitations may not apply to you. However, to the maximum extent permitted by law, you agree that Convergence
+              above limitations may not apply to you. However, to the maximum extent permitted by law, you agree that Prismarium
               shall not be liable for any harm resulting from your use of AI features.
             </p>
 
             <p className="text-zinc-300 mt-4">
-              By using Convergence's AI features, you acknowledge that you have read and understood these disclaimers and agree
+              By using Prismarium's AI features, you acknowledge that you have read and understood these disclaimers and agree
               to use AI tools responsibly, with appropriate discernment, and at your own risk.
             </p>
           </section>
@@ -458,9 +458,9 @@ export default function AIDisclaimerPage() {
             </ul>
             <p className="text-zinc-300 mt-4">
               If you have suggestions, concerns, or feedback about our AI systems, this disclaimer, or how we can better
-              support safe and meaningful exploration, please reach out to us at{" "}
-              <a href="mailto:info@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                info@convergencelibrary.com
+              support safe and meaningful exploration, you can reach us at{" "}
+              <a href="mailto:info@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                info@prismarium.xyz
               </a>.
             </p>
             <p className="text-zinc-300 mt-2">
@@ -498,4 +498,3 @@ export default function AIDisclaimerPage() {
     </div>
   );
 }
-

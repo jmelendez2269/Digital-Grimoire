@@ -28,16 +28,16 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed font-mono uppercase tracking-tight">
-              A multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses.
+              Explore esoteric texts, sacred writings, and wisdom traditions through multiple perspectives in Prismarium.
             </p>
             <div className="flex items-center gap-4 mt-2">
-              <a href="https://github.com/jmelendez2269/Digital-Grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
+              <a href="https://github.com/jmelendez2269" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
                 <Github size={18} />
               </a>
-              <a href="https://twitter.com/digital-grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-cyan-400 transition-colors" title="Twitter">
+              <a href="https://projectparallax.xyz" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-cyan-400 transition-colors" title="Project Parallax">
                 <Twitter size={18} />
               </a>
-              <a href="https://discord.gg/digital-grimoire" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-indigo-400 transition-colors" title="Discord">
+              <a href="https://prismarium.xyz" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-indigo-400 transition-colors" title="Prismarium">
                 <MessageSquare size={18} />
               </a>
             </div>
@@ -58,9 +58,9 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <h3 className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest">Tools</h3>
             <div className="flex flex-col gap-2">
-              <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Digital Grimoire</Link>
+              <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Study Journal</Link>
               <Link href="/ritual-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Ritual Machine</Link>
-              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Seven Lenses</Link>
+              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Prismarium Lens</Link>
               <Link href="/wiki" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
                 Documentation

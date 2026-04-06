@@ -4,19 +4,19 @@ import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Dashboard | Prismarium",
-  description: "Your Prismarium dashboard - Access your personal library, digital grimoire, and explore esoteric texts through AI-powered analysis.",
+  description: "Your Prismarium dashboard - Access your personal library, study journal, and explore esoteric texts through AI-powered analysis.",
   robots: {
     index: false,
     follow: false,
   },
   openGraph: {
     title: "Dashboard | Prismarium",
-    description: "Your Prismarium dashboard - Access your personal library and digital grimoire.",
+    description: "Your Prismarium dashboard - Access your personal library and study journal.",
     type: "website",
-    url: "https://projectparallax.xyz/dashboard",
+    url: "https://prismarium.xyz/dashboard",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "https://prismarium.xyz/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Dashboard",
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Dashboard | Prismarium",
-    description: "Your Prismarium dashboard - Access your personal library and digital grimoire.",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    description: "Your Prismarium dashboard - Access your personal library and study journal.",
+    images: ["https://prismarium.xyz/og-image.png"],
   },
 };
 
@@ -44,4 +44,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-

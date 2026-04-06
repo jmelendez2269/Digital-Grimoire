@@ -2,27 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy | Convergence",
-  description: "Cookie Policy for Convergence - Learn about how we use cookies",
+  title: "Cookie Policy | Prismarium",
+  description: "Cookie Policy for Prismarium - Learn about how we use cookies",
   openGraph: {
-    title: "Cookie Policy | Convergence",
-    description: "Cookie Policy for Convergence - Learn about how we use cookies",
+    title: "Cookie Policy | Prismarium",
+    description: "Cookie Policy for Prismarium - Learn about how we use cookies",
     type: "website",
-    url: "https://projectparallax.xyz/cookies",
+    url: "https://prismarium.xyz/cookies",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "https://prismarium.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence Cookie Policy",
+        alt: "Prismarium Cookie Policy",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cookie Policy | Convergence",
-    description: "Cookie Policy for Convergence - Learn about how we use cookies",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    title: "Cookie Policy | Prismarium",
+    description: "Cookie Policy for Prismarium - Learn about how we use cookies",
+    images: ["https://prismarium.xyz/og-image.png"],
   },
 };
 
@@ -55,7 +55,7 @@ export default function CookiePolicyPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">2. How We Use Cookies</h2>
             <p className="text-zinc-300">
-              Convergence uses cookies to enhance your experience, analyze site usage, and assist in
+              Prismarium uses cookies to enhance your experience, analyze site usage, and assist in
               our marketing efforts. We use both session cookies (which expire when you close your browser)
               and persistent cookies (which stay on your device until they expire or are deleted).
             </p>
@@ -172,10 +172,10 @@ export default function CookiePolicyPage() {
             </p>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">
-                <strong>Service:</strong> Convergence<br />
+                <strong>Service:</strong> Prismarium<br />
                 <strong>Contact:</strong>{" "}
-                <a href="mailto:privacy@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                  privacy@projectparallax.xyz
+                <a href="mailto:privacy@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                  privacy@prismarium.xyz
                 </a>
               </p>
             </div>
@@ -183,7 +183,7 @@ export default function CookiePolicyPage() {
 
           <div className="mt-12 pt-8 border-t border-zinc-800">
             <p className="text-zinc-400 text-sm">
-              This Cookie Policy is effective as of {currentDate} and applies to all users of the Convergence platform.
+              This Cookie Policy is effective as of {currentDate} and applies to all users of the Prismarium platform.
             </p>
             <div className="mt-4">
               <Link
@@ -199,4 +199,3 @@ export default function CookiePolicyPage() {
     </div>
   );
 }
-

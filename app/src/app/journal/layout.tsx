@@ -1,31 +1,31 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Digital Grimoire | Prismarium",
-  description: "Your personal digital grimoire - Create, organize, and explore your notes, annotations, and insights from esoteric texts and wisdom traditions.",
+  title: "Study Journal | Prismarium",
+  description: "Your personal study journal in Prismarium - Create, organize, and explore your notes, annotations, and insights from esoteric texts and wisdom traditions.",
   robots: {
     index: false,
     follow: false,
   },
   openGraph: {
-    title: "Digital Grimoire | Prismarium",
-    description: "Your personal digital grimoire - Create, organize, and explore your notes, annotations, and insights from esoteric texts and wisdom traditions.",
+    title: "Study Journal | Prismarium",
+    description: "Your personal study journal in Prismarium - Create, organize, and explore your notes, annotations, and insights from esoteric texts and wisdom traditions.",
     type: "website",
-    url: "https://projectparallax.xyz/journal",
+    url: "https://prismarium.xyz/journal",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "https://prismarium.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Prismarium Digital Grimoire",
+        alt: "Prismarium Study Journal",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Digital Grimoire | Prismarium",
-    description: "Your personal digital grimoire - Create, organize, and explore your notes and insights.",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    title: "Study Journal | Prismarium",
+    description: "Your personal study journal in Prismarium - Create, organize, and explore your notes and insights.",
+    images: ["https://prismarium.xyz/og-image.png"],
   },
 };
 
@@ -36,4 +36,3 @@ export default function JournalLayout({
 }) {
   return <>{children}</>;
 }
-

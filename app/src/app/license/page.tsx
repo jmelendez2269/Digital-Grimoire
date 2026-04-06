@@ -2,27 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "License | Convergence",
-  description: "License information for Convergence - Software, documentation, and content licensing",
+  title: "License | Prismarium",
+  description: "License information for Prismarium - Software, documentation, and content licensing",
   openGraph: {
-    title: "License | Convergence",
-    description: "License information for Convergence - Software, documentation, and content licensing",
+    title: "License | Prismarium",
+    description: "License information for Prismarium - Software, documentation, and content licensing",
     type: "website",
-    url: "https://projectparallax.xyz/license",
+    url: "https://prismarium.xyz/license",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "https://prismarium.xyz/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Convergence License",
+        alt: "Prismarium License",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "License | Convergence",
-    description: "License information for Convergence - Software, documentation, and content licensing",
-    images: ["https://www.convergencelibrary.com/og-image.png"],
+    title: "License | Prismarium",
+    description: "License information for Prismarium - Software, documentation, and content licensing",
+    images: ["https://prismarium.xyz/og-image.png"],
   },
 };
 
@@ -46,8 +46,8 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">1. Overview</h2>
             <p className="text-zinc-300">
-              This page outlines the licensing terms for different components of the Convergence platform,
-              including software code, documentation, and content. Different parts of Convergence are
+              This page outlines the licensing terms for different components of the Prismarium platform,
+              including software code, documentation, and content. Different parts of Prismarium are
               licensed under different terms.
             </p>
           </section>
@@ -57,13 +57,13 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">2.1 Source Code</h3>
             <p className="text-zinc-300 mb-4">
-              The Convergence platform source code is licensed under the <strong>MIT License</strong>.
+              The Prismarium platform source code is licensed under the <strong>MIT License</strong>.
             </p>
 
             <div className="bg-zinc-800/50 rounded-lg p-6 border border-zinc-700 my-4">
               <h4 className="text-lg font-semibold text-amber-200 mb-3">MIT License</h4>
               <p className="text-zinc-300 text-sm mb-2">
-                Copyright (c) {new Date().getFullYear()} Convergence
+                Copyright (c) {new Date().getFullYear()} Prismarium
               </p>
               <p className="text-zinc-300 text-sm mb-4">
                 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -140,8 +140,8 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.1 User-Generated Content</h3>
             <p className="text-zinc-300 mb-2">
-              Content you create and upload to Convergence (documents, annotations, notes, journal entries)
-              remains your intellectual property. By uploading content, you grant Convergence:
+              Content you create and upload to Prismarium (documents, annotations, notes, journal entries)
+              remains your intellectual property. By uploading content, you grant Prismarium:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
               <li>A non-exclusive, worldwide, royalty-free license to store, display, and process your content to provide the Service</li>
@@ -155,7 +155,7 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.2 Third-Party Content</h3>
             <p className="text-zinc-300 mb-2">
-              Convergence hosts content from various sources, each with its own licensing terms:
+              Prismarium hosts content from various sources, each with its own licensing terms:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
               <li><strong>Public Domain Works:</strong> No copyright restrictions - free to use</li>
@@ -166,17 +166,17 @@ export default function LicensePage() {
             <p className="text-zinc-300 mt-4">
               Each document in the library should indicate its license status. If you believe content
               infringes your intellectual property rights, please contact us at{" "}
-              <a href="mailto:legal@convergencelibrary.com" className="text-amber-400 hover:text-amber-300">
-                legal@convergencelibrary.com
+              <a href="mailto:legal@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                legal@prismarium.xyz
               </a>.
             </p>
 
-            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.3 Convergence-Generated Content</h3>
+            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.3 Prismarium-Generated Content</h3>
             <p className="text-zinc-300 mb-2">
-              Content created by Convergence (AI-generated metadata, synthesized responses, UI text) is:
+              Content created by Prismarium (AI-generated metadata, synthesized responses, UI text) is:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>© Convergence {new Date().getFullYear()}</li>
+              <li>© Prismarium {new Date().getFullYear()}</li>
               <li>Licensed under CC BY-SA 4.0 for documentation and educational content</li>
               <li>Subject to MIT License for code-related content</li>
             </ul>
@@ -187,7 +187,7 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.1 Open Source Dependencies</h3>
             <p className="text-zinc-300 mb-4">
-              Convergence uses many open-source libraries and frameworks. Each has its own license,
+              Prismarium uses many open-source libraries and frameworks. Each has its own license,
               which we respect and comply with. Major dependencies include:
             </p>
 
@@ -243,7 +243,7 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.2 Attribution Requirements</h3>
             <p className="text-zinc-300">
-              When using Convergence code, you should maintain attribution to third-party libraries
+              When using Prismarium code, you should maintain attribution to third-party libraries
               as required by their respective licenses. Most MIT and Apache 2.0 licenses require
               including the original copyright notice and license text.
             </p>
@@ -252,8 +252,8 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">6. Trademarks and Branding</h2>
             <p className="text-zinc-300 mb-4">
-              "Convergence" and the Convergence logo are trademarks. While the code is open source,
-              the Convergence name and branding are protected. You may:
+              "Prismarium" and the Prismarium logo are trademarks. While the code is open source,
+              the Prismarium name and branding are protected. You may:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
               <li>Use the code for your own projects</li>
@@ -262,25 +262,25 @@ export default function LicensePage() {
             </ul>
             <p className="text-zinc-300 mb-2 mt-4">You may not:</p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>Use the "Convergence" name or logo for your own products without permission</li>
-              <li>Imply endorsement or affiliation with Convergence</li>
-              <li>Use Convergence branding in a way that causes confusion</li>
+              <li>Use the "Prismarium" name or logo for your own products without permission</li>
+              <li>Imply endorsement or affiliation with Prismarium</li>
+              <li>Use Prismarium branding in a way that causes confusion</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              If you fork or modify Convergence, please use a different name and branding to avoid confusion.
+              If you fork or modify Prismarium, please use a different name and branding to avoid confusion.
             </p>
           </section>
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">7. Contributing</h2>
             <p className="text-zinc-300 mb-4">
-              We welcome contributions to Convergence! By contributing code, documentation, or content,
+              We welcome contributions to Prismarium! By contributing code, documentation, or content,
               you agree that your contributions will be licensed under the same terms as the project:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
               <li><strong>Code contributions:</strong> MIT License</li>
               <li><strong>Documentation contributions:</strong> CC BY-SA 4.0</li>
-              <li><strong>Content contributions:</strong> You retain ownership, but grant Convergence the rights needed to use and display your content</li>
+              <li><strong>Content contributions:</strong> You retain ownership, but grant Prismarium the rights needed to use and display your content</li>
             </ul>
             <p className="text-zinc-300 mt-4">
               For more information about contributing, see our{" "}
@@ -294,9 +294,9 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">8. Disclaimer</h2>
             <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 my-4">
-              <p className="text-amber-200 font-semibold mb-2">⚠️ Important:</p>
+              <p className="text-amber-200 font-semibold mb-2">Important:</p>
               <p className="text-zinc-300">
-                The software is provided "as is", without warranty of any kind. Convergence and its
+                The software is provided "as is", without warranty of any kind. Prismarium and its
                 contributors are not liable for any damages arising from the use of this software.
                 See the full MIT License text above for complete disclaimer language.
               </p>
@@ -306,15 +306,15 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">9. Questions About Licensing</h2>
             <p className="text-zinc-300 mb-4">
-              If you have questions about licensing, want to use Convergence code in a way not covered
+              If you have questions about licensing, want to use Prismarium code in a way not covered
               by these licenses, or need clarification on any licensing terms, please contact us:
             </p>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">
-                <strong>Service:</strong> Convergence<br />
+                <strong>Service:</strong> Prismarium<br />
                 <strong>Contact:</strong>{" "}
-                <a href="mailto:legal@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                  legal@projectparallax.xyz
+                <a href="mailto:legal@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                  legal@prismarium.xyz
                 </a>
                 <br />
                 <strong>Operated by:</strong> Jeanine Melendez
@@ -327,20 +327,20 @@ export default function LicensePage() {
 
           <div className="mt-12 pt-8 border-t border-zinc-800">
             <p className="text-zinc-400 text-sm">
-              This License page is effective as of {currentDate} and applies to all users of the Convergence platform.
+              This License page is effective as of {currentDate} and applies to all users of the Prismarium platform.
             </p>
             <div className="mt-4 flex gap-4">
               <Link
                 href="/privacy"
                 className="text-amber-400 hover:text-amber-300 underline"
               >
-                ← Privacy Policy
+                Back to Privacy Policy
               </Link>
               <Link
                 href="/cookies"
                 className="text-amber-400 hover:text-amber-300 underline"
               >
-                Cookie Policy →
+                Cookie Policy
               </Link>
             </div>
           </div>
@@ -349,4 +349,3 @@ export default function LicensePage() {
     </div>
   );
 }
-
