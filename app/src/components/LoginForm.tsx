@@ -14,6 +14,22 @@ export function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isLocalSupabase =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("127.0.0.1:54321") ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("localhost:54321");
+
+  const getLoginErrorMessage = (message: string) => {
+    if (message.includes("Invalid login credentials")) {
+      if (isLocalSupabase) {
+        return "No local account matched that email/password. This dev environment uses a separate local Supabase auth store. Sign up again locally or use Forgot password if the account already exists in this local project.";
+      }
+
+      return "The email or password is incorrect.";
+    }
+
+    return message;
+  };
+
   useEffect(() => {
     // Check for error in URL params (e.g., verification failed)
     const urlError = searchParams.get("error");
@@ -53,7 +69,12 @@ export function LoginForm() {
       });
 
       if (signInError) {
-        console.error("❌ Login error:", signInError);
+        if (signInError.message.includes("Invalid login credentials")) {
+          console.warn("[LoginForm] Invalid login credentials for:", email);
+        } else {
+          console.error("❌ Login error:", signInError);
+        }
+
         // Check if error is related to email confirmation
         if (signInError.message.includes("Email not confirmed")) {
           console.log("⚠️ Email not confirmed, redirecting to verification page");
@@ -61,7 +82,7 @@ export function LoginForm() {
           router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
           return;
         }
-        setError(signInError.message);
+        setError(getLoginErrorMessage(signInError.message));
         setLoading(false);
         return;
       }

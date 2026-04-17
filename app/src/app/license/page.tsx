@@ -46,8 +46,8 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">1. Overview</h2>
             <p className="text-zinc-300">
-              This page outlines the licensing terms for different components of the Prismarium platform,
-              including software code, documentation, and content. Different parts of Prismarium are
+              This page outlines the licensing terms for different components of Prismarium, a Project Parallax product,
+              including software code, documentation, and content. Different parts of the Prismarium service are
               licensed under different terms.
             </p>
           </section>
@@ -252,7 +252,7 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">6. Trademarks and Branding</h2>
             <p className="text-zinc-300 mb-4">
-              "Prismarium" and the Prismarium logo are trademarks. While the code is open source,
+              "Prismarium" and the Prismarium logo are product marks used in connection with the Prismarium service. While the code is open source,
               the Prismarium name and branding are protected. You may:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
@@ -311,7 +311,7 @@ export default function LicensePage() {
             </p>
             <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
               <p className="text-zinc-300">
-                <strong>Service:</strong> Prismarium<br />
+                <strong>Service:</strong> Prismarium, a Project Parallax product<br />
                 <strong>Contact:</strong>{" "}
                 <a href="mailto:legal@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
                   legal@prismarium.xyz

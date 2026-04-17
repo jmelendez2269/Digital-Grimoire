@@ -3,7 +3,7 @@ title: Branding & Design Guidelines
 type: specification
 status: stable
 audience: design
-description: Comprehensive brand guidelines, color palettes, and typography for Project Parallax.
+description: Brand guidelines for Prismarium, the Project Parallax brand house, and legacy Parallax technical naming.
 ---
 
 # Branding & Design Guidelines
@@ -11,6 +11,10 @@ description: Comprehensive brand guidelines, color palettes, and typography for 
 ## BRAND IDENTITY
 
 ### Official Name
+
+**Prismarium**
+
+### Brand House
 
 **Project Parallax**
 
@@ -34,25 +38,31 @@ description: Comprehensive brand guidelines, color palettes, and typography for 
 
 ### Core Mission
 
-**Project Parallax makes hidden wisdom accessible through a synthesis of curated perspectives.** We bridge esoteric traditions, religious texts, philosophical works, and consciousness-exploring sciences to reveal how all wisdom paths converge toward understanding ourselves, our world, and our universe.
+**Prismarium makes hidden wisdom accessible through a synthesis of curated perspectives.** Project Parallax is the brand house behind the product. Together they bridge esoteric traditions, religious texts, philosophical works, and consciousness-exploring sciences to reveal how all wisdom paths converge toward understanding ourselves, our world, and our universe.
 
 ### What We Are
 
-**Project Parallax is an exploration platform, not an authority.** Based on the principle that "Knowing Is Plural," we provide the tools (The Parallax Engine) to view complex ideas through distinct epistemological lenses. We are a home for the independent seeker, the researcher, and the practitioner.
+**Prismarium is an exploration platform, not an authority.** Based on the principle that "Knowing Is Plural," we provide the tools to view complex ideas through distinct epistemological lenses. `Project Parallax` should be used when referring to the brand house, while `Parallax` remains in some routes and internal technical namespaces.
+
+### Naming Note
+
+- Use `Prismarium` for product UX, public docs, and service references.
+- Use `Project Parallax` for the parent brand or brand-house layer.
+- Keep legacy `Parallax` names for internal routes, APIs, and technical namespaces unless a later refactor explicitly changes them.
 
 ### The Five Core Pillars
 
-1. **Parallax School (Learning Software):** Systematic guidance through wisdom traditions with structured 8-week foundational courses and rotating thematic explorations.
+1. **Prismarium Courses:** Systematic guidance through wisdom traditions with structured 8-week foundational courses and rotating thematic explorations.
 2. **The Study Journal:** A private research workspace for documentation, passage clipping, and building interconnected knowledge networks using wiki-links.
-3. **The Parallax Library (Curated Collection):** A filtered synthesis of foundational texts that bridge multiple perspectives, rather than an unfiltered archive.
+3. **The Prismarium Library:** A filtered synthesis of foundational texts that bridge multiple perspectives, rather than an unfiltered archive.
 4. **The Ritual Machine:** A practice-oriented toolset for ritual inventory, correspondence planning, and documenting personal craft.
-5. **The Parallax Engine:** A 7-lens AI reasoning system that maintains coherence in the presence of contradiction.
+5. **The Prismarium Lens Engine:** A 7-lens AI reasoning system that maintains coherence in the presence of contradiction.
 
 ---
 
 ## THE SEVEN LENSES
 
-Every text and concept in Project Parallax is analyzed through these seven distinct instruments of knowing:
+Every text and concept in Prismarium is analyzed through these seven distinct instruments of knowing:
 
 1. **Scientific** - Physics, biology, cosmology, empirical evidence.
 2. **Psychological** - Jungian archetypes, cognitive science, depth psychology.
@@ -114,13 +124,13 @@ Evokes intellectual depth, quiet contemplation, and mystery. Dark Academia aesth
 
 | Component | Public Brand Name | Internal Route |
 |-----------|-------------------|----------------|
-| The Library | The Parallax Library | `/library` |
+| The Library | Prismarium Library | `/library` |
 | Study Journal | The Journal | `/journal` |
 | Correspondence Tables | Correspondences | `/correspondences` |
-| The Convergence Graph | The Parallax Graph | `/parallax-graph` |
+| The Convergence Graph | Prismarium Graph | `/parallax-graph` |
 | *Atmospheric Subtitle* | Neural Interface | (Visual Identity) |
-| The Convergence Machine | The Parallax Engine | `/parallax-engine` |
-| Convergence School | Parallax School | `/school` |
+| The Convergence Machine | Prismarium Lens Engine | `/parallax-engine` |
+| Convergence School | Prismarium Courses | `/school` |
 
 ---
 

@@ -60,7 +60,7 @@ export default function Footer() {
             <div className="flex flex-col gap-2">
               <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Study Journal</Link>
               <Link href="/ritual-machine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Ritual Machine</Link>
-              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Prismarium Lens</Link>
+              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Prismarium Lens Engine</Link>
               <Link href="/wiki" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
                 Documentation

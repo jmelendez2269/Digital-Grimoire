@@ -19,8 +19,8 @@ const ParallaxEngineInfo = dynamic(() => import("@/components/ParallaxEngineInfo
 export default function DashboardView() {
     const { user, loading } = useAuth();
 
-    // Get custom journal name or default to "Digital Grimoire"
-    const journalName = user?.user_metadata?.journal_name || "Digital Grimoire";
+    // Get custom journal name or default to the product-aligned journal label
+    const journalName = user?.user_metadata?.journal_name || "Study Journal";
     const username = user?.user_metadata?.username || null;
 
     return (
@@ -162,7 +162,7 @@ export default function DashboardView() {
                             </p>
                         </Link>
 
-                        {/* Digital Grimoire Card */}
+                        {/* Study Journal Card */}
                         <Link
                             href="/journal"
                             className="group relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 transition-all hover:border-indigo-500/50 hover:bg-zinc-900 overflow-visible"

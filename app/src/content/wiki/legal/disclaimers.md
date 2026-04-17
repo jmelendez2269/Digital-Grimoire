@@ -6,7 +6,7 @@ audience: user
 description: Essential legal disclaimers regarding educational purpose, non-endorsement, and medical/professional advice.
 ---
 
-# PROJECT PARALLAX - LEGAL DISCLAIMERS
+# PRISMARIUM - LEGAL DISCLAIMERS
 
 **Effective Date:** October 25, 2025
 **Last Updated:** October 25, 2025
@@ -16,9 +16,9 @@ description: Essential legal disclaimers regarding educational purpose, non-endo
 
 ## EDUCATIONAL PURPOSE STATEMENT
 
-**All content on Project Parallax is presented for educational and exploratory purposes only.**
+**All content on Prismarium is presented for educational and exploratory purposes only.**
 
-Project Parallax is a platform for learning, research, personal exploration, and intellectual inquiry. We aggregate and synthesize knowledge from diverse traditions and systems to facilitate understanding and cross-cultural synthesis.
+Prismarium is a platform for learning, research, personal exploration, and intellectual inquiry. We aggregate and synthesize knowledge from diverse traditions and systems to facilitate understanding and cross-cultural synthesis.
 
 **We do not claim that any particular tradition, system, teaching, or practice represents objective, absolute, or universal truth.**
 
@@ -28,7 +28,7 @@ Project Parallax is a platform for learning, research, personal exploration, and
 
 ### Inclusion ≠ Endorsement
 
-**The inclusion of content, systems, or traditions on Project Parallax does not constitute endorsement, validation, verification, or scientific confirmation.**
+**The inclusion of content, systems, or traditions on Prismarium does not constitute endorsement, validation, verification, or scientific confirmation.**
 
 We include a wide range of knowledge systems based on one criterion: **if it has been meaningful to human beings in their quest to understand themselves, their world, and their universe, it belongs in our library.**
 
@@ -45,7 +45,7 @@ This includes, but is not limited to:
 
 ### Scientific Validation Not Required
 
-**Scientific validation is not a prerequisite for inclusion in the Project Parallax Library.**
+**Scientific validation is not a prerequisite for inclusion in the Prismarium Library.**
 
 Many systems we include (such as astrology, human design, and certain spiritual practices) have not been validated by contemporary scientific methods. **We include them anyway** because:
 
@@ -62,7 +62,7 @@ Users should understand that inclusion does not imply we believe these systems a
 
 ### Our Role
 
-**Project Parallax is not an academic institution, research university, or scholarly authority.**
+**Prismarium is not an academic institution, research university, or scholarly authority.**
 
 We are a technology platform that:
 
@@ -95,7 +95,7 @@ While we strive to maintain **scholarly presentation standards** (proper citatio
 
 ### Personal Interpretation
 
-**Users are solely responsible for how they interpret, evaluate, and apply knowledge found on Project Parallax.**
+**Users are solely responsible for how they interpret, evaluate, and apply knowledge found on Prismarium.**
 
 The platform provides information, perspectives, and synthesis tools. **Wisdom, discernment, and application are the responsibility of the user.**
 
@@ -111,7 +111,7 @@ We actively encourage users to:
 
 ### Professional Advice
 
-**Project Parallax is not a substitute for professional advice.**
+**Prismarium is not a substitute for professional advice.**
 
 Content on our platform should not be used as a substitute for:
 
@@ -129,7 +129,7 @@ Content on our platform should not be used as a substitute for:
 
 ### Our Commitment
 
-**Project Parallax actively encourages critical thinking, questioning, and intellectual independence.**
+**Prismarium actively encourages critical thinking, questioning, and intellectual independence.**
 
 We want users to:
 
@@ -139,7 +139,7 @@ We want users to:
 - **Maintain uncertainty** - Intellectual humility is a strength, not a weakness
 - **Form their own conclusions** - We provide tools; you provide judgment
 
-### The Project Parallax Approach
+### The Prismarium Approach
 
 We explicitly **do not** want users to:
 
@@ -150,7 +150,7 @@ We explicitly **do not** want users to:
 
 ### Contradictions Are Features, Not Bugs
 
-**You will find contradictory information on Project Parallax.** This is intentional.
+**You will find contradictory information on Prismarium.** This is intentional.
 
 Different traditions have different answers to the same questions. This doesn't mean one is "right" and others are "wrong." It means:
 
@@ -195,7 +195,7 @@ We welcome corrections and clarifications. If you find an error:
 
 ### Not Medical or Mental Health Advice
 
-**Nothing on Project Parallax constitutes medical advice, diagnosis, or treatment.**
+**Nothing on Prismarium constitutes medical advice, diagnosis, or treatment.**
 
 Some content may discuss:
 
@@ -227,7 +227,7 @@ Some spiritual or esoteric practices may involve:
 - The importance of proper guidance from experienced practitioners
 - Local laws and regulations
 
-**Project Parallax is not responsible for consequences of practices undertaken based on information found on the platform.**
+**Prismarium is not responsible for consequences of practices undertaken based on information found on the platform.**
 
 ---
 
@@ -235,7 +235,7 @@ Some spiritual or esoteric practices may involve:
 
 ### Religious Neutrality
 
-**Project Parallax does not favor any particular religious or spiritual tradition.**
+**Prismarium does not favor any particular religious or spiritual tradition.**
 
 Our inclusion of diverse religious and spiritual content does not constitute:
 
@@ -258,7 +258,7 @@ We strive to present all traditions respectfully and in context. However:
 
 **Your spiritual or religious path is your own.**
 
-Project Parallax provides information and perspectives. What you do with them - whether you:
+Prismarium provides information and perspectives. What you do with them - whether you:
 
 - Explore traditions outside your own
 - Deepen understanding of your own tradition
@@ -273,7 +273,7 @@ Project Parallax provides information and perspectives. What you do with them - 
 
 ### Our Content
 
-Content created by Project Parallax (synthesized AI responses, user interface, original writing) is © Project Parallax 2025. All rights reserved.
+Content created by Prismarium (synthesized AI responses, user interface, original writing) is © Prismarium 2025. All rights reserved.
 
 ### Third-Party Content
 
@@ -283,9 +283,9 @@ We strive to include only:
 - **Licensed content** (with proper permissions)
 - **Fair use** (properly attributed excerpts for educational purposes)
 
-If you believe content on Project Parallax infringes your intellectual property rights:
+If you believe content on Prismarium infringes your intellectual property rights:
 
-- Contact us at [legal@projectparallax.xyz]
+- Contact us at [legal@prismarium.xyz]
 - Provide specific information about the allegedly infringing content
 - We will investigate and respond promptly
 
@@ -307,7 +307,7 @@ Users who upload or contribute content represent and warrant that:
 
 **AI-generated responses are computational syntheses, not authoritative truth.**
 
-Our AI system (The Parallax Engine):
+Our AI system (the Prismarium Lens Engine):
 
 - Analyzes content through seven perspectives
 - Synthesizes information from our database
@@ -328,7 +328,7 @@ We strive for high availability, but:
 
 ### Third-Party Services
 
-Project Parallax integrates with third-party services (payment processors, cloud storage, etc.). We are not responsible for:
+Prismarium integrates with third-party services (payment processors, cloud storage, etc.). We are not responsible for:
 
 - Third-party service outages or failures
 - Third-party data practices
@@ -340,7 +340,7 @@ Project Parallax integrates with third-party services (payment processors, cloud
 
 **TO THE MAXIMUM EXTENT PERMITTED BY LAW:**
 
-Project Parallax and its operators, employees, and contributors shall not be liable for:
+Prismarium and its operators, employees, and contributors shall not be liable for:
 
 - Decisions made based on information found on the platform
 - Harm resulting from practices or teachings described on the platform
@@ -348,7 +348,7 @@ Project Parallax and its operators, employees, and contributors shall not be lia
 - Technical failures, data loss, or service interruptions
 - Actions taken by third parties based on content from the platform
 
-**Your use of Project Parallax is at your own risk.**
+**Your use of Prismarium is at your own risk.**
 
 ---
 
@@ -356,7 +356,7 @@ Project Parallax and its operators, employees, and contributors shall not be lia
 
 ### Respectful Engagement
 
-Users engaging with the Project Parallax community agree to:
+Users engaging with the Prismarium community agree to:
 
 - Respect all traditions and perspectives
 - Engage in good faith dialogue
@@ -374,7 +374,7 @@ User contributions must:
 - Respect intellectual property
 - Follow community guidelines
 
-**Project Parallax reserves the right to moderate or remove content that violates these standards.**
+**Prismarium reserves the right to moderate or remove content that violates these standards.**
 
 ---
 
@@ -388,7 +388,7 @@ Changes will:
 - Include an updated "Last Updated" date
 - Take effect immediately upon posting
 
-**Continued use of Project Parallax after changes constitutes acceptance of the updated disclaimers.**
+**Continued use of Prismarium after changes constitutes acceptance of the updated disclaimers.**
 
 ---
 
@@ -396,7 +396,7 @@ Changes will:
 
 For questions, concerns, or feedback regarding these disclaimers:
 
-**Email:** <legal@projectparallax.xyz>
+**Email:** <legal@prismarium.xyz>
 **Mailing Address:** [To be determined]
 **Community Forum:** [Link to forum]
 
@@ -404,7 +404,7 @@ For questions, concerns, or feedback regarding these disclaimers:
 
 ## FINAL NOTE
 
-**Project Parallax is a tool for exploration, not a replacement for wisdom.**
+**Prismarium is a tool for exploration, not a replacement for wisdom.**
 
 We provide:
 
@@ -425,4 +425,4 @@ We do not provide:
 
 **Effective Date:** October 25, 2025
 **Version:** 1.0
-**Project Parallax Platform**
+**Prismarium, a Project Parallax product**

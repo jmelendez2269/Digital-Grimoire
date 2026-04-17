@@ -1,6 +1,6 @@
-# Project Parallax Wiki
+# Prismarium Wiki
 
-Welcome to the documentation hub for Project Parallax.
+Welcome to the documentation hub for Prismarium, a Project Parallax product.
 
 ---
 
@@ -14,7 +14,7 @@ Welcome to the documentation hub for Project Parallax.
 * [**Courses**](/wiki/courses)
 * [**Journal**](/wiki/journal)
 * [**Knowledge Graph**](/wiki/graph)
-* [**Parallax Engine**](/wiki/parallax-engine)
+* [**Prismarium Lens Engine**](/wiki/parallax-engine)
 
 ### Extras & Practice Tools
 
@@ -34,7 +34,7 @@ Welcome to the documentation hub for Project Parallax.
 * [**Branding & Design**](/admin/wiki/branding)
 * [**Journal System**](/admin/wiki/journal)
 * [**Knowledge Graph**](/admin/wiki/knowledge-graph)
-* [**Parallax Lenses**](/admin/wiki/lenses)
+* [**Prismarium Lenses**](/admin/wiki/lenses)
 * [**Library Search Bar**](/admin/wiki/library-search-bar)
 * [**Library Features**](/admin/wiki/library-features)
 * [**Subscriptions & Payments**](/admin/wiki/subscriptions)
