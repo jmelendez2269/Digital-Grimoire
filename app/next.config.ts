@@ -1,17 +1,16 @@
 import type { NextConfig } from "next";
 
-// Bundle analyzer for performance monitoring
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
-
 
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   /* config options here */
   // Set workspace root to prevent multiple lockfile warnings
-  outputFileTracingRoot: require('path').join(__dirname),
+  outputFileTracingRoot: process.cwd(),
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
   },
@@ -261,9 +260,11 @@ const nextConfig: NextConfig = {
 
     // Ensure proper module resolution for TypeScript path aliases
     if (!isServer) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const path = require('path');
       config.resolve.modules = [
         ...(config.resolve.modules || []),
-        require('path').join(__dirname, 'src'),
+        path.join(__dirname, 'src'),
       ];
     }
 
