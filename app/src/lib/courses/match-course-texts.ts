@@ -27,13 +27,7 @@ export interface MatchedCourseText {
 }
 
 interface QueryableClient {
-  from: (table: string) => {
-    select: (columns: string) => {
-      ilike: (column: string, pattern: string) => {
-        limit: (count: number) => Promise<{ data: TextMatch[] | null; error: unknown }>;
-      };
-    };
-  };
+  from: (table: string) => any;
 }
 
 function escapeLikePattern(value: string): string {
