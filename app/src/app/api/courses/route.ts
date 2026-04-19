@@ -1,19 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
+import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient();
         const searchParams = request.nextUrl.searchParams;
 
-        // Extract query parameters
-        const search = searchParams.get('search');
-        const type = searchParams.get('type');
-        const level = searchParams.get('level');
-        const published = searchParams.get('published');
+        const filters = {
+            search: searchParams.get('search'),
+            type: searchParams.get('type'),
+            level: searchParams.get('level'),
+            published: searchParams.get('published'),
+        };
 
-        // Build query — include content so catalog can read arc, core_question, key_tensions etc.
-        let query = supabase
+        let courses = null;
+        let error = null;
+
+        let primaryQuery = supabase
             .from('courses')
             .select(`
                 id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, content, sort_order, created_at, updated_at,
@@ -32,24 +39,54 @@ export async function GET(request: NextRequest) {
             .order('sort_order', { ascending: true })
             .order('title', { ascending: true });
 
-        // Apply filters
-        if (search) {
-            query = query.ilike('title', `%${search}%`);
+        if (filters.search) {
+            primaryQuery = primaryQuery.ilike('title', `%${filters.search}%`);
         }
 
-        if (type && type !== 'all') {
-            query = query.eq('course_type', type);
+        if (filters.type && filters.type !== 'all') {
+            primaryQuery = primaryQuery.eq('course_type', filters.type);
         }
 
-        if (level && level !== 'all') {
-            query = query.eq('level', level);
+        if (filters.level && filters.level !== 'all') {
+            primaryQuery = primaryQuery.eq('level', filters.level);
         }
 
-        if (published === 'true') {
-            query = query.eq('is_published', true);
+        if (filters.published === 'true') {
+            primaryQuery = primaryQuery.eq('is_published', true);
         }
 
-        const { data: courses, error } = await query;
+        ({ data: courses, error } = await primaryQuery);
+
+        if (error) {
+            console.warn('[courses GET] Primary query failed, attempting fallback:', error);
+
+            let fallbackQuery = supabase
+                .from('courses')
+                .select(`
+                    id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, content, created_at, updated_at
+                `)
+                .order('title', { ascending: true });
+
+            if (filters.search) {
+                fallbackQuery = fallbackQuery.ilike('title', `%${filters.search}%`);
+            }
+
+            if (filters.type && filters.type !== 'all') {
+                fallbackQuery = fallbackQuery.eq('course_type', filters.type);
+            }
+
+            if (filters.level && filters.level !== 'all') {
+                fallbackQuery = fallbackQuery.eq('level', filters.level);
+            }
+
+            if (filters.published === 'true') {
+                fallbackQuery = fallbackQuery.eq('is_published', true);
+            }
+
+            const fallbackResult = await fallbackQuery;
+            courses = fallbackResult.data;
+            error = fallbackResult.error;
+        }
 
         if (error) {
             console.error('Error fetching courses:', error);
@@ -59,10 +96,35 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            courses: courses || []
-        });
+        const serviceSupabase = createServiceClient();
+        const enrichedCourses = await Promise.all(
+            (courses || []).map(async (course: Record<string, unknown>) => {
+                const existingCourseTexts = Array.isArray(course.course_texts) ? course.course_texts : [];
+                if (existingCourseTexts.length > 0) return course;
+
+                const fallbackCourseTexts = await matchCourseTextsFromContent(
+                    serviceSupabase,
+                    (course.content as Record<string, unknown> | null) ?? null
+                );
+
+                return {
+                    ...course,
+                    course_texts: fallbackCourseTexts,
+                };
+            })
+        );
+
+        return NextResponse.json(
+            {
+                success: true,
+                courses: enrichedCourses
+            },
+            {
+                headers: {
+                    'Cache-Control': 'no-store, max-age=0, must-revalidate',
+                },
+            }
+        );
 
     } catch (error) {
         console.error('Unexpected error in courses API:', error);
@@ -77,13 +139,11 @@ export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient();
 
-        // Auth check
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Admin check
         const { data: profile } = await supabase
             .from('users')
             .select('role')
@@ -115,7 +175,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { data: course, error } = await supabase
+        const serviceSupabase = createServiceClient();
+
+        const { data: course, error } = await serviceSupabase
             .from('courses')
             .insert({
                 title,

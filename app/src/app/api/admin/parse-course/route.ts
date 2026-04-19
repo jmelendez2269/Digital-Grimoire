@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseCourseMarkdown } from '@/lib/parsers/course-markdown-parser';
+import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,58 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allReadingTitles = new Set<string>();
-    result.course.content.weeks.forEach((week) => {
-      week.readings?.forEach((reading) => {
-        if (reading.title) allReadingTitles.add(reading.title);
-      });
-    });
-
-    const titles = Array.from(allReadingTitles);
-    let matchedCourseTexts: Array<{
-      id: string;
-      text_id: string;
-      is_required: boolean;
-      texts: {
-        id: string;
-        title: string;
-        author: string | null;
-        cover_image_url: string | null;
-      };
-    }> = [];
-
-    if (titles.length > 0) {
-      const allPossibleMatches: Array<{
-        id: string;
-        title: string;
-        author: string | null;
-        cover_image_url: string | null;
-      }> = [];
-
-      for (const title of titles) {
-        const { data: matches } = await supabase
-          .from('texts')
-          .select('id, title, author, cover_image_url')
-          .or(`title.ilike.%${title}%,author.ilike.%${title}%`)
-          .limit(3);
-
-        if (matches) allPossibleMatches.push(...matches);
-      }
-
-      const uniqueMatches = Array.from(new Map(allPossibleMatches.map((match) => [match.id, match])).values());
-
-      matchedCourseTexts = uniqueMatches.map((text) => ({
-        id: `matched-${text.id}`,
-        text_id: text.id,
-        is_required: true,
-        texts: {
-          id: text.id,
-          title: text.title,
-          author: text.author,
-          cover_image_url: text.cover_image_url,
-        },
-      }));
-    }
+    const matchedCourseTexts = await matchCourseTextsFromContent(supabase, result.course.content);
 
     return NextResponse.json({
       success: true,

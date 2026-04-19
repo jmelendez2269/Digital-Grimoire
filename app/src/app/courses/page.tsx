@@ -297,9 +297,6 @@ function CourseHoverCard({
                       {ct.texts?.author && (
                         <p className="text-xs text-zinc-600 font-mono truncate">{ct.texts.author}</p>
                       )}
-                      {ct.is_required && (
-                        <span className="text-[10px] font-mono text-amber-500/60">required</span>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -580,7 +577,7 @@ function CoursesPageContent() {
         if (filterLevel !== 'all') params.append('level', filterLevel);
         params.append('published', 'true');
 
-        const res = await fetch(`/api/courses?${params}`);
+        const res = await fetch(`/api/courses?${params}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.success) setCourses(data.courses || []);
       } catch (err) {

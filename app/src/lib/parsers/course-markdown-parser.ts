@@ -30,6 +30,13 @@ export interface LensExercise {
   instructions: string[];
 }
 
+export interface FeatureExercise {
+  feature: 'deep_search' | 'lens_engine' | 'knowledge_graph';
+  prompt: string;
+  instructions: string[];
+  documentation: string;
+}
+
 export interface SynthesisPrompt {
   prompt: string;
   expansion: string[];
@@ -58,6 +65,7 @@ export interface CourseWeek {
   lens_focus: string[];
   readings: CourseReading[];
   lens_exercise?: LensExercise;
+  feature_exercises?: FeatureExercise[];
   synthesis_prompt?: SynthesisPrompt;
   micro_artifact?: MicroArtifact;
   capstone_artifact?: CapstoneArtifact;
@@ -209,6 +217,69 @@ function parseMetadataTable(section: string): Record<string, string> {
   return result;
 }
 
+function extractCourseTitle(
+  markdown: string,
+  metadata: Record<string, string>
+): { courseIdTag: string; courseTitle: string } | null {
+  const firstHeading = markdown
+    .split('\n')
+    .find((line) => /^#\s+/.test(line))
+    ?.replace(/^#\s+/, '')
+    .trim();
+
+  if (firstHeading) {
+    const normalizedHeading = normalizeDashes(firstHeading);
+
+    const primaryMatch = normalizedHeading.match(/^Course\s+([A-Za-z]\d+)\s*[-:]\s*(.+)$/i);
+    if (primaryMatch) {
+      return {
+        courseIdTag: primaryMatch[1].trim().toUpperCase(),
+        courseTitle: primaryMatch[2].trim(),
+      };
+    }
+
+    const directMatch = normalizedHeading.match(/^([A-Za-z]\d+)\s*[-:]\s*(.+)$/);
+    if (directMatch) {
+      return {
+        courseIdTag: directMatch[1].trim().toUpperCase(),
+        courseTitle: directMatch[2].trim(),
+      };
+    }
+
+    const fallbackMatch = normalizedHeading.match(/\b([A-Za-z]\d+)\b\s*[-:]\s*(.+)$/);
+    if (fallbackMatch) {
+      return {
+        courseIdTag: fallbackMatch[1].trim().toUpperCase(),
+        courseTitle: fallbackMatch[2].trim(),
+      };
+    }
+  }
+
+  const metadataCourseId = (metadata.course_id || metadata.course || metadata.course_code || '').trim();
+  const metadataTitle = (metadata.title || '').trim();
+
+  if (metadataCourseId && metadataTitle) {
+    return {
+      courseIdTag: metadataCourseId.toUpperCase(),
+      courseTitle: metadataTitle,
+    };
+  }
+
+  return null;
+}
+
+function getSection(sections: Record<string, string>, ...names: string[]): string {
+  const normalizedNames = names.map((name) => name.trim().toLowerCase());
+
+  for (const [heading, body] of Object.entries(sections)) {
+    if (normalizedNames.includes(heading.trim().toLowerCase())) {
+      return body;
+    }
+  }
+
+  return '';
+}
+
 function extractAfterH3(sectionBody: string, heading: string): string {
   const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(
@@ -342,6 +413,12 @@ function parseReadingTitle(headerLine: string): {
     if (partAIsKnownAuthor && !partBIsSection) {
       author = partA;
       title = partB;
+    } else if (partAIsKnownAuthor && partB.includes(',')) {
+      const [titlePart, ...sectionParts] = partB.split(',');
+      author = partA;
+      title = titlePart.trim();
+      const derivedSection = sectionParts.join(',').trim();
+      if (derivedSection) section = derivedSection;
     } else if (partBIsSection) {
       title = partA;
       section = partB;
@@ -417,6 +494,49 @@ function parseLensExercise(text: string): LensExercise | undefined {
   return { prompt, instructions };
 }
 
+function parseFeatureExercise(
+  text: string,
+  feature: FeatureExercise['feature']
+): FeatureExercise | undefined {
+  if (!text.trim()) return undefined;
+
+  const validFeatures: FeatureExercise['feature'][] = ['deep_search', 'lens_engine', 'knowledge_graph'];
+  if (!validFeatures.includes(feature)) return undefined;
+
+  const normalized = text.trim();
+
+  const promptMatch = normalized.match(
+    /^\s*\*\*[^*\n]+:\*\*\s*([\s\S]*?)(?=\n\s*\*\*[^*\n]+:\*\*|\n\s*\d+\.\s+|$)/i
+  );
+  const prompt = promptMatch ? promptMatch[1].replace(/\n/g, ' ').trim() : '';
+
+  const instructions: string[] = [];
+  const instructionsBlockMatch = normalized.match(
+    /\*\*What to do:\*\*\s*([\s\S]*?)(?=\n\s*\*\*[^*\n]+:\*\*|$)/i
+  );
+  if (instructionsBlockMatch) {
+    const lines = instructionsBlockMatch[1].split('\n');
+    for (const line of lines) {
+      const match = line.match(/^\s*\d+\.\s+(.+)$/);
+      if (match) instructions.push(match[1].trim());
+    }
+  }
+
+  const documentationMatch = normalized.match(
+    /\*\*What to document:\*\*\s*([\s\S]*?)(?=\n\s*\*\*[^*\n]+:\*\*|$)/i
+  );
+  const documentation = documentationMatch
+    ? documentationMatch[1].replace(/\n/g, ' ').trim()
+    : '';
+
+  return {
+    feature,
+    prompt,
+    instructions,
+    documentation,
+  };
+}
+
 function parseSynthesisPrompt(text: string): SynthesisPrompt | undefined {
   const promptMatch = text.match(/\*\*Prompt:\*\*\s*([\s\S]+?)(?=\n\n|\*\*Expansion|$)/);
   if (!promptMatch) return undefined;
@@ -487,7 +607,12 @@ function parseMicroArtifact(text: string): MicroArtifact | undefined {
   };
 }
 
-function parseWeek(weekNumber: number, weekTitle: string, weekBody: string): CourseWeek {
+function parseWeek(
+  weekNumber: number,
+  weekTitle: string,
+  weekBody: string
+): { week: CourseWeek; warnings: string[] } {
+  const warnings: string[] = [];
   const isCapstone = /capstone|integration|building your/i.test(weekTitle);
 
   const coreQuestionText = extractAfterH3(weekBody, 'Core Question');
@@ -495,6 +620,9 @@ function parseWeek(weekNumber: number, weekTitle: string, weekBody: string): Cou
   const lensFocusText = extractAfterH3(weekBody, 'Lens Focus');
   const readingsText = extractAfterH3(weekBody, 'Readings (Selections)');
   const lensExerciseText = extractAfterH3(weekBody, 'Lens Exercise');
+  const deepSearchText = extractAfterH3(weekBody, 'Deep Search Practice');
+  const lensEngineAnalysisText = extractAfterH3(weekBody, 'Lens Engine Analysis');
+  const graphExplorationText = extractAfterH3(weekBody, 'Graph Exploration');
   const synthesisText = extractAfterH3(weekBody, 'Synthesis Prompt');
   const artifactText = extractAfterH3(weekBody, 'Convergence Micro-Artifact');
 
@@ -511,6 +639,11 @@ function parseWeek(weekNumber: number, weekTitle: string, weekBody: string): Cou
   const lens_focus = parseLensFocus(lensFocusText.split('\n').find((line) => line.trim()) || '');
   const readings = parseReadings(readingsText);
   const lens_exercise = parseLensExercise(lensExerciseText) || undefined;
+  const feature_exercises = [
+    parseFeatureExercise(deepSearchText, 'deep_search'),
+    parseFeatureExercise(lensEngineAnalysisText, 'lens_engine'),
+    parseFeatureExercise(graphExplorationText, 'knowledge_graph'),
+  ].filter((exercise): exercise is FeatureExercise => Boolean(exercise));
   const synthesis_prompt = parseSynthesisPrompt(synthesisText) || undefined;
   const micro_artifact = parseMicroArtifact(artifactText) || undefined;
 
@@ -525,15 +658,31 @@ function parseWeek(weekNumber: number, weekTitle: string, weekBody: string): Cou
   };
 
   if (lens_exercise) week.lens_exercise = lens_exercise;
+  if (feature_exercises.length > 0) week.feature_exercises = feature_exercises;
   if (synthesis_prompt) week.synthesis_prompt = synthesis_prompt;
   if (micro_artifact) week.micro_artifact = micro_artifact;
+
+  if (!isCapstone) {
+    if (feature_exercises.length < 3) {
+      warnings.push(`Week ${weekNumber} ("${weekTitle}") has fewer than 3 feature exercises`);
+    }
+
+    for (const exercise of feature_exercises) {
+      if (!['deep_search', 'lens_engine', 'knowledge_graph'].includes(exercise.feature)) {
+        warnings.push(`Week ${weekNumber} ("${weekTitle}") references an unrecognized feature type: ${exercise.feature}`);
+      }
+      if (!exercise.prompt || exercise.instructions.length === 0 || !exercise.documentation) {
+        warnings.push(`Week ${weekNumber} ("${weekTitle}") has an incomplete feature exercise for ${exercise.feature}`);
+      }
+    }
+  }
 
   if (isCapstone) {
     const reflectionText = extractAfterH3(weekBody, 'Final Reflection');
     if (reflectionText) week.final_reflection = reflectionText.trim();
   }
 
-  return week;
+  return { week, warnings };
 }
 
 export function parseCourseMarkdown(markdown: string): ParseResult {
@@ -543,13 +692,22 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     const sections = splitIntoSections(markdown);
 
     const titleMatch = markdown.match(/^#\s+Course\s+(\w+)\s*[—–-]\s*(.+)$/m);
+    let courseIdTag = titleMatch?.[1]?.trim() || '';
+    let courseTitle = titleMatch?.[2]?.trim() || '';
     if (!titleMatch) {
-      return { success: false, error: 'Could not find course title (expected: # Course CXX - Title)', warnings };
+      const metadataFallback = extractCourseTitle(markdown, parseMetadataTable(getSection(sections, 'COURSE METADATA', 'Course Metadata')));
+      if (!metadataFallback) {
+        return {
+          success: false,
+          error: 'Could not find course title (expected something like: # Course CXX - Title, # Course CXX: Title, # CXX - Title, or metadata with course_id + title)',
+          warnings
+        };
+      }
+      courseIdTag = metadataFallback.courseIdTag;
+      courseTitle = metadataFallback.courseTitle;
     }
-    const courseIdTag = titleMatch[1].trim();
-    const courseTitle = titleMatch[2].trim();
 
-    const metadataSection = sections['COURSE METADATA'] || '';
+    const metadataSection = getSection(sections, 'COURSE METADATA', 'Course Metadata');
     const metadata = parseMetadataTable(metadataSection);
 
     if (!metadata.arc) {
@@ -559,7 +717,7 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
 
     const arc = metadata.arc || 'Foundational Synthesis';
     const arcPosition = parseInt(metadata.arc_position || '1', 10) || 1;
-    const durationWeeks = parseInt((metadata.length || '8').match(/\d+/)?.[0] || '8', 10);
+    const durationWeeks = parseInt((metadata.length || metadata.length_weeks || '8').match(/\d+/)?.[0] || '8', 10);
     const levelStr = metadata.level || 'foundational';
     const level = mapLevel(levelStr);
     const courseType = mapCourseType(arc);
@@ -567,11 +725,11 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     const orientation = metadata.orientation;
     const mode = metadata.mode;
 
-    const premiseSection = sections['COURSE PREMISE'] || '';
+    const premiseSection = getSection(sections, 'COURSE PREMISE', 'Course Premise');
     const premise = premiseSection.trim();
     if (!premise) warnings.push('No COURSE PREMISE section found');
 
-    const outcomesSection = sections['LEARNING OUTCOMES'] || '';
+    const outcomesSection = getSection(sections, 'LEARNING OUTCOMES', 'Learning Outcomes');
     const learning_outcomes = parseLearningOutcomes(outcomesSection);
     if (learning_outcomes.length === 0) warnings.push('No learning outcomes found');
 
@@ -604,8 +762,9 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
       const weekNumber = parseInt(weekMatch[1], 10);
       const weekTitle = weekMatch[2].trim();
 
-      const week = parseWeek(weekNumber, weekTitle, body);
+      const { week, warnings: weekWarnings } = parseWeek(weekNumber, weekTitle, body);
       weeks.push(week);
+      warnings.push(...weekWarnings);
 
       if (week.readings.length === 0 && week.week_type !== 'capstone') {
         warnings.push(`Week ${weekNumber} ("${weekTitle}") has no readings parsed`);

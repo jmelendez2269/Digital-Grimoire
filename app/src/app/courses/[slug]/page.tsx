@@ -330,11 +330,6 @@ function CourseDetailContent() {
                               <p className="text-xs text-zinc-500 font-mono mt-1">
                                 {ct.texts?.author || 'Unknown Author'}
                               </p>
-                              {ct.is_required && (
-                                <span className="text-[9px] font-mono text-amber-500 uppercase tracking-widest mt-2 border border-amber-500/20 px-1.5 w-fit rounded bg-amber-500/5">
-                                  Required
-                                </span>
-                              )}
                             </div>
                           </Link>
                         ))}

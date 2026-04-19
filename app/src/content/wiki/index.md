@@ -41,6 +41,7 @@ Welcome to the documentation hub for Prismarium, a Project Parallax product.
 * [**Text-to-Speech**](/admin/wiki/tts)
 * [**Concept Search**](/admin/wiki/concept-search)
 * [**WikiLinks**](/admin/wiki/wikilinks)
+* [**Course Uploader**](/admin/wiki/course-uploader)
 * [**Performance**](/admin/wiki/performance)
 * [**Security**](/admin/wiki/security)
 * [**Workflows**](/admin/wiki/workflow)

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { parseCourseMarkdown } from '@/lib/parsers/course-markdown-parser';
+import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
 
 export const maxDuration = 60;
 
@@ -48,7 +50,9 @@ export async function POST(request: NextRequest) {
 
     const { course, warnings } = parseResult;
 
-    const { data: existing } = await supabase
+    const serviceSupabase = createServiceClient();
+
+    const { data: existing } = await serviceSupabase
       .from('courses')
       .select('id, slug')
       .eq('slug', course.slug)
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: inserted, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await serviceSupabase
       .from('courses')
       .insert({
         title: course.title,
@@ -92,6 +96,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const matchedCourseTexts = await matchCourseTextsFromContent(serviceSupabase, course.content);
+
+    if (matchedCourseTexts.length > 0) {
+      const { error: courseTextsError } = await serviceSupabase.from('course_texts').insert(
+        matchedCourseTexts.map((text) => ({
+          course_id: inserted.id,
+          text_id: text.text_id,
+          is_required: text.is_required,
+        }))
+      );
+
+      if (courseTextsError) {
+        console.error('[Import Course] Failed to link course texts:', courseTextsError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       courseId: inserted.id,
@@ -99,6 +119,7 @@ export async function POST(request: NextRequest) {
       title: inserted.title,
       weekCount: course.content.weeks.length,
       readingCount: course.content.weeks.reduce((acc, week) => acc + week.readings.length, 0),
+      matchedTextCount: matchedCourseTexts.length,
       isPublished: publishImmediately,
       warnings,
     });

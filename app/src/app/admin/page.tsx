@@ -124,7 +124,7 @@ export default function AdminDashboardHub() {
     },
     {
       title: "Courses Management",
-      description: "Create, edit, and manage course content, modules, and lessons.",
+      description: "Create blank courses, edit imported ones, reorder the catalog, publish drafts, and delete retired courses.",
       icon: <BookOpen className="w-8 h-8 text-purple-400" />,
       href: "/admin/courses",
       color: "purple",
