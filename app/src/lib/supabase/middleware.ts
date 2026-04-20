@@ -1,5 +1,33 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  getLegacySupabaseCookiePrefixes,
+  getSupabaseCookieOptions,
+} from "./auth-config";
+
+function clearSupabaseAuthCookies(
+  request: NextRequest,
+  response: NextResponse,
+  supabaseUrl?: string,
+) {
+  const expiredDate = new Date(0);
+  const cookiePrefixes = getLegacySupabaseCookiePrefixes(supabaseUrl);
+  const cookieOptions = getSupabaseCookieOptions();
+
+  request.cookies
+    .getAll()
+    .filter(({ name }) =>
+      cookiePrefixes.some(
+        (prefix) => name === prefix || name.startsWith(`${prefix}.`),
+      ),
+    )
+    .forEach(({ name }) => {
+      response.cookies.set(name, "", {
+        ...cookieOptions,
+        expires: expiredDate,
+      });
+    });
+}
 
 export async function updateSession(request: NextRequest) {
   // MAINTENANCE MODE CHECK - Check at the beginning
@@ -29,6 +57,7 @@ export async function updateSession(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
+        cookieOptions: getSupabaseCookieOptions(),
         cookies: {
           getAll() {
             return request.cookies.getAll();
@@ -85,6 +114,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: getSupabaseCookieOptions(),
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -123,10 +153,11 @@ export async function updateSession(request: NextRequest) {
 
       if (isRefreshTokenError) {
         console.warn('[Middleware] Invalid refresh token detected, clearing session:', authError.message);
-        // Clear auth cookies by setting them to empty with past expiration
-        const expiredDate = new Date(0);
-        supabaseResponse.cookies.set('sb-access-token', '', { expires: expiredDate, path: '/' });
-        supabaseResponse.cookies.set('sb-refresh-token', '', { expires: expiredDate, path: '/' });
+        clearSupabaseAuthCookies(
+          request,
+          supabaseResponse,
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+        );
         // Continue without user - will redirect to login if needed
       } else if (isFetchError) {
         // Suppress noisy fetch errors in middleware, assume offline/unreachable

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cormorant_Garamond, Fira_Code, DM_Sans, Playfair_Display, JetBrains_Mono } from "next/font/google";
+import { Inter, Cormorant_Garamond, Fira_Code, DM_Sans, Playfair_Display, JetBrains_Mono, Cinzel } from "next/font/google";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
@@ -47,6 +47,13 @@ const playfair = Playfair_Display({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains",
+  display: "swap",
+});
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  variable: "--font-cinzel",
+  weight: ["400", "600"],
   display: "swap",
 });
 
@@ -122,7 +129,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cormorant.variable} ${firaCode.variable} ${dmSans.variable} ${playfair.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${cormorant.variable} ${firaCode.variable} ${dmSans.variable} ${playfair.variable} ${jetbrainsMono.variable} ${cinzel.variable} antialiased bg-background text-foreground`}
       >
         <script
           type="application/ld+json"

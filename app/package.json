@@ -18,6 +18,13 @@
     "scrape:covers": "node scripts/scrape-covers.js",
     "seed:correspondences": "tsx scripts/seed-correspondences.ts",
     "seed:convergence": "tsx scripts/seed-convergence.ts",
+    "seed:music-charts": "tsx scripts/seed-music-charts.ts",
+    "seed:graph": "powershell -ExecutionPolicy Bypass -File scripts/seed-graph.ps1",
+    "seed:graph:staging": "powershell -ExecutionPolicy Bypass -File scripts/seed-graph.ps1 -Profile staging",
+    "seed:graph:local": "powershell -ExecutionPolicy Bypass -File scripts/seed-graph.ps1 -Profile local-supabase",
+    "graph:export": "powershell -ExecutionPolicy Bypass -File scripts/export-graph.ps1",
+    "graph:export:staging": "powershell -ExecutionPolicy Bypass -File scripts/export-graph.ps1 -Profile staging",
+    "graph:import": "powershell -ExecutionPolicy Bypass -File scripts/import-graph.ps1",
     "summary": "tsx scripts/generate-session-summary.ts",
     "verify:stripe": "tsx scripts/verify-stripe-prices.ts"
   },

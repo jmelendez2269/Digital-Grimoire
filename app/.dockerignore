@@ -1,0 +1,14 @@
+.git
+.next
+node_modules
+coverage
+dist
+build
+*.log
+.env.local
+.env.local.staging
+.env.local.local-supabase
+.env.sentry-build-plugin
+.cursor
+test-results
+playwright-report

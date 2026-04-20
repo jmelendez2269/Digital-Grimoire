@@ -2,10 +2,27 @@
 # This script ensures a clean start by handling OneDrive file locks
 
 param(
-    [switch]$Force
+    [switch]$Force,
+    [ValidateSet("current", "staging", "local-supabase")]
+    [string]$Profile = "current"
 )
 
 Write-Host "=== Starting Next.js Dev Server ===" -ForegroundColor Cyan
+
+$appDir = $PSScriptRoot
+Set-Location -LiteralPath $appDir
+
+if ($Profile -ne "current") {
+    $switchScript = Join-Path $appDir "scripts\switch-env.ps1"
+    if (Test-Path $switchScript) {
+        Write-Host "`n[0/5] Switching environment profile to '$Profile'..." -ForegroundColor Yellow
+        & $switchScript -Profile $Profile
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  Failed to switch environment profile." -ForegroundColor Red
+            exit 1
+        }
+    }
+}
 
 # Step 1: Kill all Node processes
 Write-Host "`n[1/5] Stopping all Node processes..." -ForegroundColor Yellow
@@ -16,9 +33,9 @@ if ($nodeProcesses) {
         Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
     }
     Start-Sleep -Seconds 3
-    Write-Host "  ✓ Stopped Node processes" -ForegroundColor Green
+    Write-Host "  OK Stopped Node processes" -ForegroundColor Green
 } else {
-    Write-Host "  ✓ No Node processes found" -ForegroundColor Green
+    Write-Host "  OK No Node processes found" -ForegroundColor Green
 }
 
 # Step 2: Free port 3000 and 3001
@@ -30,54 +47,52 @@ Write-Host "`n[2/5] Checking ports..." -ForegroundColor Yellow
         Write-Host "  Port $port is in use by PID: $($connection.OwningProcess)" -ForegroundColor Red
         Stop-Process -Id $connection.OwningProcess -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 1
-        Write-Host "  ✓ Freed port $port" -ForegroundColor Green
+        Write-Host "  OK Freed port $port" -ForegroundColor Green
     }
 }
 
-# Step 3: Remove .next directory with retry logic (OneDrive can cause issues)
+# Step 3: Remove .next directory with retry logic
 Write-Host "`n[3/5] Removing .next directory..." -ForegroundColor Yellow
-if (Test-Path .next) {
+if (Test-Path ".next") {
     $maxRetries = 5
     $retryCount = 0
     $removed = $false
-    
+
     while ($retryCount -lt $maxRetries -and -not $removed) {
         try {
-            # Try to remove lock file first if it exists
             if (Test-Path ".next\dev\lock") {
-                Remove-Item -Force ".next\dev\lock" -ErrorAction Stop
+                Remove-Item -LiteralPath ".next\dev\lock" -Force -ErrorAction Stop
                 Start-Sleep -Milliseconds 500
             }
-            
-            # Remove entire directory
-            Remove-Item -Recurse -Force .next -ErrorAction Stop
+
+            Remove-Item -LiteralPath ".next" -Recurse -Force -ErrorAction Stop
             $removed = $true
-            Write-Host "  ✓ Removed .next directory (attempt $($retryCount + 1))" -ForegroundColor Green
+            Write-Host "  OK Removed .next directory (attempt $($retryCount + 1))" -ForegroundColor Green
         } catch {
             $retryCount++
             if ($retryCount -lt $maxRetries) {
-                Write-Host "  Retry $retryCount/$maxRetries - OneDrive may be syncing, waiting..." -ForegroundColor Yellow
+                Write-Host "  Retry $retryCount/$maxRetries - waiting for file locks to clear..." -ForegroundColor Yellow
                 Start-Sleep -Seconds 2
             } else {
-                Write-Host "  ⚠ Could not remove .next directory after $maxRetries attempts" -ForegroundColor Red
+                Write-Host "  Could not remove .next directory after $maxRetries attempts" -ForegroundColor Red
                 Write-Host "  This may be due to OneDrive sync. Try pausing OneDrive sync temporarily." -ForegroundColor Yellow
                 if (-not $Force) {
-                    Write-Host "  Use -Force flag to continue anyway" -ForegroundColor Yellow
+                    Write-Host "  Use -Force to continue anyway" -ForegroundColor Yellow
                     exit 1
                 }
             }
         }
     }
 } else {
-    Write-Host "  ✓ No .next directory found" -ForegroundColor Green
+    Write-Host "  OK No .next directory found" -ForegroundColor Green
 }
 
 # Step 4: Verify no lock files remain
 Write-Host "`n[4/5] Verifying cleanup..." -ForegroundColor Yellow
 if (Test-Path ".next") {
-    Write-Host "  ⚠ .next directory still exists" -ForegroundColor Red
+    Write-Host "  Warning: .next directory still exists" -ForegroundColor Red
 } else {
-    Write-Host "  ✓ Cleanup verified" -ForegroundColor Green
+    Write-Host "  OK Cleanup verified" -ForegroundColor Green
 }
 
 # Step 5: Start dev server
@@ -85,10 +100,11 @@ Write-Host "`n[5/5] Starting dev server..." -ForegroundColor Yellow
 Write-Host "`n=== Starting Next.js ===" -ForegroundColor Cyan
 Write-Host ""
 
-# Start in background and capture output
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; pnpm dev" -WindowStyle Normal
+# Launch through cmd.exe so we avoid PowerShell execution-policy and quoting issues
+# in the child window as well.
+$command = "/k cd /d `"$appDir`" && pnpm.cmd dev"
+Start-Process -FilePath "cmd.exe" -ArgumentList $command -WindowStyle Normal
 
-Write-Host "`n✓ Dev server starting in new window" -ForegroundColor Green
+Write-Host "`nOK Dev server starting in new window" -ForegroundColor Green
 Write-Host "`nTIP: If you continue to see lock file errors, pause OneDrive sync temporarily" -ForegroundColor Yellow
 Write-Host "     or exclude the .next folder from OneDrive sync." -ForegroundColor Yellow
-
