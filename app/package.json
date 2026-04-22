@@ -22,9 +22,13 @@
     "seed:graph": "powershell -ExecutionPolicy Bypass -File scripts/seed-graph.ps1",
     "seed:graph:staging": "powershell -ExecutionPolicy Bypass -File scripts/seed-graph.ps1 -Profile staging",
     "seed:graph:local": "powershell -ExecutionPolicy Bypass -File scripts/seed-graph.ps1 -Profile local-supabase",
+    "graph:build:chakras": "tsx scripts/build-chakra-csv-bundle.ts",
     "graph:export": "powershell -ExecutionPolicy Bypass -File scripts/export-graph.ps1",
     "graph:export:staging": "powershell -ExecutionPolicy Bypass -File scripts/export-graph.ps1 -Profile staging",
+    "graph:preview": "tsx scripts/preview-graph-import.ts",
     "graph:import": "powershell -ExecutionPolicy Bypass -File scripts/import-graph.ps1",
+    "book:extract-section": "node scripts/export-book-section.js",
+    "book:build-bundle": "node scripts/build-book-section-bundle.js",
     "summary": "tsx scripts/generate-session-summary.ts",
     "verify:stripe": "tsx scripts/verify-stripe-prices.ts"
   },

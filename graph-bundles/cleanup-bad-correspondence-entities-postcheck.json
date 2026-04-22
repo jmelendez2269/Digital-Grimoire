@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-04-21T20:02:26.079Z",
+  "filters": {
+    "category": "archetype",
+    "slugsFile": null,
+    "execute": false
+  },
+  "candidates": {
+    "count": 0,
+    "byCategory": {},
+    "sample": []
+  },
+  "relationships": {
+    "affectedCount": 0,
+    "sample": []
+  }
+}

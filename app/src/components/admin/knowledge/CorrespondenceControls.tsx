@@ -6,6 +6,9 @@ interface CorrespondenceControlsProps {
     selectedCategory: string | null;
     onCategoryChange: (value: string | null) => void;
     categories: string[];
+    graphScope?: "focused" | "full";
+    onGraphScopeChange?: (value: "focused" | "full") => void;
+    showGraphScopeControls?: boolean;
 }
 
 export default function CorrespondenceControls({
@@ -14,6 +17,9 @@ export default function CorrespondenceControls({
     selectedCategory,
     onCategoryChange,
     categories,
+    graphScope = "full",
+    onGraphScopeChange,
+    showGraphScopeControls = false,
 }: CorrespondenceControlsProps) {
     return (
         <div className="flex flex-wrap items-center gap-4 bg-zinc-900/30 border border-amber-900/20 rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
@@ -46,6 +52,36 @@ export default function CorrespondenceControls({
                     ))}
                 </select>
             </div>
+
+            {showGraphScopeControls && onGraphScopeChange && (
+                <div className="min-w-[220px]">
+                    <label className="block text-xs text-amber-100/60 mb-1">Graph Coverage</label>
+                    <div className="flex items-center gap-1 rounded-lg border border-amber-900/30 bg-zinc-800 p-1">
+                        <button
+                            type="button"
+                            onClick={() => onGraphScopeChange("full")}
+                            className={`flex-1 rounded-md px-3 py-2 text-xs uppercase tracking-[0.18em] transition-colors ${
+                                graphScope === "full"
+                                    ? "bg-amber-500/20 text-amber-200"
+                                    : "text-amber-100/55 hover:text-amber-100"
+                            }`}
+                        >
+                            Full Archive
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onGraphScopeChange("focused")}
+                            className={`flex-1 rounded-md px-3 py-2 text-xs uppercase tracking-[0.18em] transition-colors ${
+                                graphScope === "focused"
+                                    ? "bg-amber-500/20 text-amber-200"
+                                    : "text-amber-100/55 hover:text-amber-100"
+                            }`}
+                        >
+                            Focused
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Clear Filters */}
             {(searchQuery || selectedCategory) && (

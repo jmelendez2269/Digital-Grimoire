@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const typeId = searchParams.get("typeId");
     const q = searchParams.get("q");
     const lens = searchParams.get("lens");
-    const limit = Math.min(Number(searchParams.get("limit") || 50), 200);
+    const limit = Math.min(Number(searchParams.get("limit") || 50), 5000);
 
     let query = supabase
       .from("correspondences")
@@ -42,10 +42,10 @@ export async function GET(req: NextRequest) {
 
     const response = NextResponse.json({ items: data || [] });
 
-    // Add cache headers for public, read-only data (15 minutes)
+    // Keep this fresh while we iterate on graph exploration behavior.
     response.headers.set(
       'Cache-Control',
-      'public, s-maxage=900, stale-while-revalidate=1800'
+      'no-store'
     );
 
     return response;

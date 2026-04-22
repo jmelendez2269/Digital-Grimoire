@@ -196,7 +196,7 @@ async function upsertEntities() {
 
 async function insertEdges() {
   const supabase = createServiceClient();
-  console.log(`Seeding ${EDGES.length} correspondence relationships...`);
+  console.log(`Ensuring ${EDGES.length} correspondence relationships...`);
 
   const { data: allEntities, error: entityError } = await supabase
     .from('correspondences')
@@ -218,19 +218,24 @@ async function insertEdges() {
       continue;
     }
 
-    const { error } = await supabase.from('correspondence_relationships').insert({
-      source_id,
-      target_id,
-      type: edge.type,
-      relationship_type_id: relationshipTypeBySlug.get(edge.type),
-      weight: edge.weight ?? 0.5,
-      confidence: edge.confidence ?? 'tradition',
-      source_citation: edge.source_citation,
-      notes: edge.notes,
-    });
+    const { error } = await supabase
+      .from('correspondence_relationships')
+      .upsert(
+        {
+          source_id,
+          target_id,
+          type: edge.type,
+          relationship_type_id: relationshipTypeBySlug.get(edge.type),
+          weight: edge.weight ?? 0.5,
+          confidence: edge.confidence ?? 'tradition',
+          source_citation: edge.source_citation,
+          notes: edge.notes,
+        },
+        { onConflict: 'source_id,target_id,type' },
+      );
 
-    if (error && error.code !== '23505') throw error;
-    console.log(`seeded ${edge.sourceSlug} -> ${edge.targetSlug} (${edge.type})`);
+    if (error) throw error;
+    console.log(`upserted ${edge.sourceSlug} -> ${edge.targetSlug} (${edge.type})`);
   }
 }
 

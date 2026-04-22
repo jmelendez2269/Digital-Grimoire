@@ -97,3 +97,41 @@ export function slugifyEntityName(name: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+/**
+ * Heuristic guardrail for imported correspondence labels that are actually
+ * descriptive sentences or parsing spillover rather than stable entities.
+ */
+export function isSentenceLikeEntityName(name: string): boolean {
+  if (!name || typeof name !== 'string') {
+    return false;
+  }
+
+  const normalized = name.replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return false;
+  }
+
+  const wordCount = normalized.split(/\s+/).length;
+
+  if (/[!?]/.test(normalized) || /\.\s+[A-Z]/.test(normalized)) {
+    return true;
+  }
+
+  if (normalized.length > 120 || wordCount > 18) {
+    return true;
+  }
+
+  if (wordCount >= 10 && /,/.test(normalized) && !/[()]/.test(normalized)) {
+    return true;
+  }
+
+  if (
+    wordCount >= 7 &&
+    /\b(which|touching|represents|consciousness|offering|offerings|experience|experiences|through|radiance|spectrum)\b/i.test(normalized)
+  ) {
+    return true;
+  }
+
+  return false;
+}

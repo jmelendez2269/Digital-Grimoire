@@ -215,7 +215,7 @@ async function upsertConcepts() {
 
 async function seedRelationships() {
   const supabase = createServiceClient();
-  console.log(`Seeding ${RELATIONSHIPS.length} convergence relationships...`);
+  console.log(`Ensuring ${RELATIONSHIPS.length} convergence relationships...`);
 
   const { data: concepts, error: conceptError } = await supabase
     .from('convergence_concepts')
@@ -231,16 +231,21 @@ async function seedRelationships() {
       continue;
     }
 
-    const { error } = await supabase.from('convergence_relationships').insert({
-      source_id,
-      target_id,
-      similarity: relationship.similarity,
-      source_citation: relationship.source_citation,
-      notes: relationship.notes,
-    });
+    const { error } = await supabase
+      .from('convergence_relationships')
+      .upsert(
+        {
+          source_id,
+          target_id,
+          similarity: relationship.similarity,
+          source_citation: relationship.source_citation,
+          notes: relationship.notes,
+        },
+        { onConflict: 'source_id,target_id' },
+      );
 
-    if (error && error.code !== '23505') throw error;
-    console.log(`seeded ${relationship.sourceSlug} -> ${relationship.targetSlug}`);
+    if (error) throw error;
+    console.log(`upserted ${relationship.sourceSlug} -> ${relationship.targetSlug}`);
   }
 }
 

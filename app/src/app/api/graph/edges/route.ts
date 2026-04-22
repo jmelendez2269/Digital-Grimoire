@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const minWeight = Number(searchParams.get("minWeight") || 0);
     const sourceId = searchParams.get("sourceId");
     const targetId = searchParams.get("targetId");
-    const limit = Math.min(Number(searchParams.get("limit") || 100), 400);
+    const limit = Math.min(Number(searchParams.get("limit") || 100), 25000);
 
     let query = supabase
       .from("correspondence_relationships")
@@ -42,10 +42,10 @@ export async function GET(req: NextRequest) {
 
     const response = NextResponse.json({ items: data || [] });
 
-    // Add cache headers for public, read-only data (15 minutes)
+    // Keep this fresh while we iterate on graph exploration behavior.
     response.headers.set(
       'Cache-Control',
-      'public, s-maxage=900, stale-while-revalidate=1800'
+      'no-store'
     );
 
     return response;

@@ -117,8 +117,8 @@ export function buildGraphologyGraph(
         if (graph.hasEdge(edge.source_id, edge.target_id)) return;
 
         graph.addEdge(edge.source_id, edge.target_id, {
-            size: 0.4 + weight * 0.8,
-            color: "#2d1c08",
+            size: 1.4 + weight * 1.6,
+            color: "#7a5a24",
             originalData: edge,
         });
     });

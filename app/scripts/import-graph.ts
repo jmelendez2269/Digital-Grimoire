@@ -44,6 +44,7 @@ async function main() {
         convergenceRelationships: bundle.convergence.relationships.length,
         correspondenceEntities: bundle.correspondences.entities.length,
         correspondenceRelationships: bundle.correspondences.relationships.length,
+        correspondenceClaims: bundle.correspondences.claims?.length || 0,
       },
       null,
       2,

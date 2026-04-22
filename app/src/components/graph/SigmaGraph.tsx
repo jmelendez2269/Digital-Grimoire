@@ -14,8 +14,15 @@ interface SigmaGraphProps {
     height?: number;
 }
 
-const GRAPH_PADDING = 160;
-const MIN_WORLD_SIZE = 1200;
+type LayoutSnapshot = Record<string, { x: number; y: number }>;
+
+const LAYOUT_STORAGE_PREFIX = "digital-grimoire:sigma-layout:";
+const MIN_LAYOUT_SPAN = 900;
+const layoutMemoryCache = new Map<string, LayoutSnapshot>();
+
+function resetCamera(renderer: Sigma, duration = 250) {
+    void renderer.getCamera().animatedReset({ duration });
+}
 
 function getGraphBounds(graph: Graph) {
     let minX = Number.POSITIVE_INFINITY;
@@ -25,49 +32,110 @@ function getGraphBounds(graph: Graph) {
 
     graph.forEachNode((node) => {
         const attrs = graph.getNodeAttributes(node);
-        const size = typeof attrs.size === "number" ? attrs.size : 0;
         const x = typeof attrs.x === "number" ? attrs.x : 0;
         const y = typeof attrs.y === "number" ? attrs.y : 0;
-        minX = Math.min(minX, x - size);
-        minY = Math.min(minY, y - size);
-        maxX = Math.max(maxX, x + size);
-        maxY = Math.max(maxY, y + size);
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
     });
 
     if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
-        return { minX: -MIN_WORLD_SIZE / 2, minY: -MIN_WORLD_SIZE / 2, maxX: MIN_WORLD_SIZE / 2, maxY: MIN_WORLD_SIZE / 2 };
+        return { minX: -MIN_LAYOUT_SPAN / 2, minY: -MIN_LAYOUT_SPAN / 2, maxX: MIN_LAYOUT_SPAN / 2, maxY: MIN_LAYOUT_SPAN / 2 };
     }
+
     return { minX, minY, maxX, maxY };
 }
 
-function spreadGraph(graph: Graph) {
+function normalizeGraphLayout(graph: Graph) {
     const bounds = getGraphBounds(graph);
     const width = Math.max(bounds.maxX - bounds.minX, 1);
     const height = Math.max(bounds.maxY - bounds.minY, 1);
-    const diameter = Math.max(MIN_WORLD_SIZE, Math.sqrt(graph.order || 1) * 420);
-    const scale = diameter / Math.max(width, height);
+    const scale = Math.max(1, MIN_LAYOUT_SPAN / Math.max(width, height));
     const centerX = (bounds.minX + bounds.maxX) / 2;
     const centerY = (bounds.minY + bounds.maxY) / 2;
 
     graph.updateEachNodeAttributes((_, attrs) => ({
         ...attrs,
-        x: ((attrs.x as number) - centerX) * scale,
-        y: ((attrs.y as number) - centerY) * scale,
+        x: ((typeof attrs.x === "number" ? attrs.x : 0) - centerX) * scale,
+        y: ((typeof attrs.y === "number" ? attrs.y : 0) - centerY) * scale,
     }));
 }
 
-function fitCameraToGraph(renderer: Sigma, graph: Graph) {
-    const container = renderer.getContainer();
-    const bounds = getGraphBounds(graph);
-    const availableWidth = Math.max(container.clientWidth - GRAPH_PADDING * 2, 1);
-    const availableHeight = Math.max(container.clientHeight - GRAPH_PADDING * 2, 1);
-    const graphWidth = Math.max(bounds.maxX - bounds.minX, 1);
-    const graphHeight = Math.max(bounds.maxY - bounds.minY, 1);
-    const centerX = (bounds.minX + bounds.maxX) / 2;
-    const centerY = (bounds.minY + bounds.maxY) / 2;
-    const ratio = Math.max(graphWidth / availableWidth, graphHeight / availableHeight, 0.01);
+function snapshotLayout(graph: Graph): LayoutSnapshot {
+    const snapshot: LayoutSnapshot = {};
 
-    renderer.getCamera().setState({ x: centerX, y: centerY, ratio, angle: 0 });
+    graph.forEachNode((node) => {
+        const attrs = graph.getNodeAttributes(node);
+        snapshot[node] = {
+            x: typeof attrs.x === "number" ? attrs.x : 0,
+            y: typeof attrs.y === "number" ? attrs.y : 0,
+        };
+    });
+
+    return snapshot;
+}
+
+function applyLayoutSnapshot(graph: Graph, snapshot: LayoutSnapshot | null) {
+    if (!snapshot) return false;
+
+    let applied = 0;
+    graph.forEachNode((node) => {
+        const position = snapshot[node];
+        if (!position) return;
+        graph.mergeNodeAttributes(node, position);
+        applied += 1;
+    });
+
+    return applied === graph.order;
+}
+
+function readStoredLayout(layoutKey: string) {
+    const memoryLayout = layoutMemoryCache.get(layoutKey);
+    if (memoryLayout) return memoryLayout;
+
+    if (typeof window === "undefined") return null;
+
+    try {
+        const raw = window.localStorage.getItem(`${LAYOUT_STORAGE_PREFIX}${layoutKey}`);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as LayoutSnapshot;
+        layoutMemoryCache.set(layoutKey, parsed);
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+function writeStoredLayout(layoutKey: string, snapshot: LayoutSnapshot) {
+    layoutMemoryCache.set(layoutKey, snapshot);
+
+    if (typeof window === "undefined") return;
+
+    try {
+        window.localStorage.setItem(`${LAYOUT_STORAGE_PREFIX}${layoutKey}`, JSON.stringify(snapshot));
+    } catch {
+        // Ignore storage quota/private mode failures and keep the in-memory cache.
+    }
+}
+
+function buildLayoutKey(entities: GraphEntity[], edges: GraphEdge[], minSimilarity: number) {
+    const nodePart = entities
+        .map((entity) => entity.id)
+        .sort()
+        .join("|");
+
+    const edgePart = edges
+        .map((edge) => {
+            const source = edge.source_id <= edge.target_id ? edge.source_id : edge.target_id;
+            const target = edge.source_id <= edge.target_id ? edge.target_id : edge.source_id;
+            const weight = edge.similarity ?? edge.weight ?? 0.5;
+            return `${source}->${target}:${weight.toFixed(3)}`;
+        })
+        .sort()
+        .join("|");
+
+    return `${minSimilarity.toFixed(3)}::${nodePart}::${edgePart}`;
 }
 
 // Custom label renderer — clean text below each node, no white background box
@@ -160,23 +228,27 @@ export default function SigmaGraph({
         if (!containerRef.current || entities.length === 0) return;
 
         const graph = buildGraphologyGraph(entities, edges, minSimilarity);
+        const layoutKey = buildLayoutKey(entities, edges, minSimilarity);
+        const cachedLayout = readStoredLayout(layoutKey);
+        const reusedCachedLayout = applyLayoutSnapshot(graph, cachedLayout);
 
-        if (graph.order > 0) {
+        if (graph.order > 0 && !reusedCachedLayout) {
             forceAtlas2.assign(graph, {
-                iterations: 100,
+                iterations: 180,
                 settings: {
-                    gravity: 0.05,
-                    scalingRatio: 4,
+                    gravity: 0.08,
+                    scalingRatio: 8,
                     strongGravityMode: false,
                     barnesHutOptimize: graph.order > 300,
                 },
             });
-            spreadGraph(graph);
+            normalizeGraphLayout(graph);
+            writeStoredLayout(layoutKey, snapshotLayout(graph));
         }
 
         const renderer = new Sigma(graph, containerRef.current, {
             renderEdgeLabels: false,
-            defaultEdgeColor: "#2d1c08",
+            defaultEdgeColor: "#7a5a24",
             defaultNodeColor: "#c8882a",
             labelFont: "Cinzel, 'Palatino Linotype', serif",
             labelSize: 11,
@@ -192,9 +264,14 @@ export default function SigmaGraph({
         });
 
         sigmaRef.current = renderer;
-        fitCameraToGraph(renderer, graph);
+        resetCamera(renderer, 0);
 
-        const resizeObserver = new ResizeObserver(() => fitCameraToGraph(renderer, graph));
+        // Let Sigma keep its own centering/rescaling logic instead of hard-fitting
+        // against a fixed padding value, which was collapsing small/mobile views.
+        const resizeObserver = new ResizeObserver(() => {
+            renderer.refresh();
+            resetCamera(renderer);
+        });
         resizeObserver.observe(containerRef.current);
 
         let hoveredNode: string | null = null;
@@ -235,9 +312,9 @@ export default function SigmaGraph({
 
             renderer.setSetting("edgeReducer", (edge, data) => {
                 if (graph.hasExtremity(edge, node)) {
-                    return { ...data, color: "#c8a050", size: 1.5, zIndex: 10 };
+                    return { ...data, color: "#e0b85d", size: Math.max((data.size ?? 1.8) * 1.65, 2.4), zIndex: 10 };
                 }
-                return { ...data, hidden: true };
+                return { ...data, color: "rgba(60, 42, 14, 0.28)", size: Math.max((data.size ?? 1.8) * 0.55, 0.9) };
             });
         });
 
