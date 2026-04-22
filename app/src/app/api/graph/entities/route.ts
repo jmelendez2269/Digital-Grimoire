@@ -3,6 +3,10 @@ import { createClient as createSupabaseServerClient } from "@/lib/supabase/serve
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugifyEntityName } from "@/lib/graph/entity-utils";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 async function isAdmin() {
   const supabase = await createSupabaseServerClient();
   const {
@@ -25,22 +29,34 @@ export async function GET(req: NextRequest) {
     const typeId = searchParams.get("typeId");
     const q = searchParams.get("q");
     const lens = searchParams.get("lens");
-    const limit = Math.min(Number(searchParams.get("limit") || 50), 5000);
+    const offset = Math.max(Number(searchParams.get("offset") || 0), 0);
+    const limit = Math.min(Math.max(Number(searchParams.get("limit") || 50), 1), 5000);
 
     let query = supabase
       .from("correspondences")
-      .select("id, slug, name, category, aliases, description, lenses, created_at, updated_at, type:correspondence_entity_types(id, slug, label, color, icon)")
-      .limit(limit);
+      .select("id, slug, name, category, aliases, description, lenses, created_at, updated_at, type:correspondence_entity_types(id, slug, label, color, icon)", { count: "exact" })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + limit - 1);
 
     if (category) query = query.eq("category", category);
     if (typeId) query = query.eq("type_id", typeId);
     if (lens) query = query.contains("lenses", [lens]);
     if (q) query = query.ilike("name", `%${q}%`);
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     if (error) throw error;
 
-    const response = NextResponse.json({ items: data || [] });
+    const items = data || [];
+    const total = count ?? items.length;
+
+    const response = NextResponse.json({
+      items,
+      total,
+      offset,
+      limit,
+      hasMore: offset + items.length < total,
+    });
 
     // Keep this fresh while we iterate on graph exploration behavior.
     response.headers.set(
@@ -49,9 +65,9 @@ export async function GET(req: NextRequest) {
     );
 
     return response;
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: err?.message || "Failed to fetch entities" },
+      { error: getErrorMessage(err, "Failed to fetch entities") },
       { status: 500 }
     );
   }
@@ -154,9 +170,9 @@ export async function POST(req: NextRequest) {
       .single();
     if (error) throw error;
     return NextResponse.json({ entity: data }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: err?.message || "Failed to create entity" },
+      { error: getErrorMessage(err, "Failed to create entity") },
       { status: 500 }
     );
   }

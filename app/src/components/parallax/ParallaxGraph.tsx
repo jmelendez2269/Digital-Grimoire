@@ -8,7 +8,7 @@ console.log("[GraphDebug] ParallaxGraph.tsx module loaded");
 
 interface ParallaxGraphProps {
   concepts: (ParallaxConcept | CorrespondenceEntity)[];
-  relationships: ParallaxRelationship[];
+  relationships: (ParallaxRelationship | GraphEdge)[];
   onSelectConcept: (concept: ParallaxConcept | CorrespondenceEntity) => void;
   minSimilarity: number;
 }

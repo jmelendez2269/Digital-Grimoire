@@ -28,6 +28,29 @@ type RelationshipRow = {
   type: string;
 };
 
+async function selectAllPages<T>(
+  queryFactory: (from: number, to: number) => Promise<{ data: T[] | null; error: any }>,
+  pageSize = 1000,
+): Promise<T[]> {
+  const rows: T[] = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + pageSize - 1;
+    const { data, error } = await queryFactory(from, to);
+    if (error) throw error;
+
+    const batch = data || [];
+    if (batch.length === 0) break;
+
+    rows.push(...batch);
+    if (batch.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return rows;
+}
+
 function parseArgs(): Args {
   const args = process.argv.slice(2);
   const parsed: Args = {
@@ -121,25 +144,29 @@ async function main() {
     ? normalizeSlugListFile(path.resolve(process.cwd(), args.slugsFile))
     : null;
 
-  const { data: entities, error: entitiesError } = await supabase
-    .from('correspondences')
-    .select('id, slug, name, category')
-    .order('slug', { ascending: true });
-  if (entitiesError) throw entitiesError;
+  const entities = await selectAllPages<CandidateEntity>((from, to) =>
+    supabase
+      .from('correspondences')
+      .select('id, slug, name, category')
+      .order('slug', { ascending: true })
+      .range(from, to),
+  );
 
   const candidateEntities = (entities || [])
-    .filter((entity) => isSentenceLikeEntityName(entity.name))
+    .filter((entity) => slugAllowlist || isSentenceLikeEntityName(entity.name))
     .filter((entity) => !args.category || entity.category === args.category)
     .filter((entity) => !slugAllowlist || slugAllowlist.has(entity.slug)) as CandidateEntity[];
 
   const candidateIds = new Set(candidateEntities.map((entity) => entity.id));
 
-  const { data: relationships, error: relationshipsError } = await supabase
-    .from('correspondence_relationships')
-    .select('id, source_id, target_id, type');
-  if (relationshipsError) throw relationshipsError;
+  const relationships = await selectAllPages<RelationshipRow>((from, to) =>
+    supabase
+      .from('correspondence_relationships')
+      .select('id, source_id, target_id, type')
+      .range(from, to),
+  );
 
-  const affectedRelationships = ((relationships || []) as RelationshipRow[]).filter(
+  const affectedRelationships = relationships.filter(
     (relationship) => candidateIds.has(relationship.source_id) || candidateIds.has(relationship.target_id),
   );
 
@@ -198,6 +225,13 @@ async function main() {
     .delete()
     .in('target_id', candidateIdList);
   if (targetRelationshipDeleteError) throw targetRelationshipDeleteError;
+
+  const { error: claimDeleteError } = await supabase
+    .from('knowledge_claims')
+    .delete()
+    .eq('entity_type', 'correspondence')
+    .in('entity_id', candidateIdList);
+  if (claimDeleteError) throw claimDeleteError;
 
   const { error: entityDeleteError } = await supabase
     .from('correspondences')

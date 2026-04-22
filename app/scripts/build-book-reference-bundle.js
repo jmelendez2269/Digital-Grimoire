@@ -2,6 +2,204 @@ const fs = require('fs');
 const path = require('path');
 
 const SOURCE_SECTION_TYPES = {
+  'THE ZODIAC': {
+    category: 'zodiac_sign',
+    type: {
+      slug: 'zodiac_sign',
+      label: 'Zodiac Sign',
+      color: '#22c55e',
+      icon: 'sign',
+      description: 'Zodiac sign correspondences.',
+      sort_order: 20,
+    },
+  },
+  'THE SOLAR SYSTEM': {
+    category: 'planetary_body',
+    type: {
+      slug: 'planetary_body',
+      label: 'Planetary Body',
+      color: '#f59e0b',
+      icon: 'sun',
+      description: 'Planets and celestial bodies used in correspondence systems.',
+      sort_order: 30,
+    },
+  },
+  'THE MOON PHASES': {
+    category: 'moon_phase',
+    type: {
+      slug: 'moon_phase',
+      label: 'Moon Phase',
+      color: '#60a5fa',
+      icon: 'moon',
+      description: 'Moon phase correspondences.',
+      sort_order: 40,
+    },
+  },
+  'THE FULL MOONS': {
+    category: 'full_moon',
+    type: {
+      slug: 'full_moon',
+      label: 'Full Moon',
+      color: '#93c5fd',
+      icon: 'moon-full',
+      description: 'Named and month-based full moon correspondences.',
+      sort_order: 50,
+    },
+  },
+  'THE SEASONS': {
+    category: 'season',
+    type: {
+      slug: 'season',
+      label: 'Season',
+      color: '#84cc16',
+      icon: 'leaf',
+      description: 'Seasonal correspondences.',
+      sort_order: 60,
+    },
+  },
+  'THE DAYS OF THE WEEK': {
+    category: 'weekday',
+    type: {
+      slug: 'weekday',
+      label: 'Weekday',
+      color: '#f97316',
+      icon: 'calendar',
+      description: 'Weekday correspondences.',
+      sort_order: 70,
+    },
+  },
+  'THE TIMES OF DAY': {
+    category: 'time_of_day',
+    type: {
+      slug: 'time_of_day',
+      label: 'Time of Day',
+      color: '#fb7185',
+      icon: 'clock',
+      description: 'Times of day used in correspondence systems.',
+      sort_order: 80,
+    },
+  },
+  CELEBRATIONS: {
+    category: 'celebration',
+    type: {
+      slug: 'celebration',
+      label: 'Celebration',
+      color: '#eab308',
+      icon: 'festival',
+      description: 'Holy days and ritual celebrations.',
+      sort_order: 90,
+    },
+  },
+  'THE OGHAM AND CELTIC TREE CALENDAR': {
+    category: 'ogham',
+    type: {
+      slug: 'ogham',
+      label: 'Ogham',
+      color: '#14b8a6',
+      icon: 'tree',
+      description: 'Ogham correspondences.',
+      sort_order: 100,
+    },
+  },
+  'THE RUNES AND RUNIC HALF-MONTHS': {
+    category: 'rune',
+    type: {
+      slug: 'rune',
+      label: 'Rune',
+      color: '#06b6d4',
+      icon: 'rune',
+      description: 'Runic correspondences.',
+      sort_order: 110,
+    },
+  },
+  'THE ELEMENTS': {
+    category: 'element',
+    type: {
+      slug: 'element',
+      label: 'Element',
+      color: '#38bdf8',
+      icon: 'element',
+      description: 'Elemental correspondences.',
+      sort_order: 120,
+    },
+  },
+  'THE DIRECTIONS': {
+    category: 'direction',
+    type: {
+      slug: 'direction',
+      label: 'Direction',
+      color: '#0ea5e9',
+      icon: 'compass',
+      description: 'Directional correspondences.',
+      sort_order: 130,
+    },
+  },
+  COLORS: {
+    category: 'color',
+    type: {
+      slug: 'color',
+      label: 'Color',
+      color: '#ec4899',
+      icon: 'color',
+      description: 'Color correspondences.',
+      sort_order: 140,
+    },
+  },
+  'ENERGY: YIN AND YANG': {
+    category: 'energy',
+    type: {
+      slug: 'energy',
+      label: 'Energy',
+      color: '#8b5cf6',
+      icon: 'chakra',
+      description: 'Energy polarities and expressions.',
+      sort_order: 150,
+    },
+  },
+  'THE CHAKRAS': {
+    category: 'chakra',
+    type: {
+      slug: 'chakra',
+      label: 'Chakra',
+      color: '#8b5cf6',
+      icon: 'chakra',
+      description: 'Chakra correspondences.',
+      sort_order: 160,
+    },
+  },
+  NUMBERS: {
+    category: 'number_symbol',
+    type: {
+      slug: 'number_symbol',
+      label: 'Number',
+      color: '#64748b',
+      icon: 'hash',
+      description: 'Number correspondences.',
+      sort_order: 170,
+    },
+  },
+  'THE TAROT - MAJOR ARCANA': {
+    category: 'tarot',
+    type: {
+      slug: 'tarot',
+      label: 'Tarot',
+      color: '#a855f7',
+      icon: 'cards',
+      description: 'Tarot correspondences.',
+      sort_order: 180,
+    },
+  },
+  'THE TAROT - MINOR ARCANA SUITS': {
+    category: 'tarot',
+    type: {
+      slug: 'tarot',
+      label: 'Tarot',
+      color: '#a855f7',
+      icon: 'cards',
+      description: 'Tarot correspondences.',
+      sort_order: 181,
+    },
+  },
   ANIMALS: {
     category: 'animal',
     type: {
@@ -340,6 +538,14 @@ function isAllCapsHeading(line) {
   return /^[A-Z0-9/&,'(). -]+$/.test(cleaned);
 }
 
+function normalizeEntryTitle(title) {
+  return cleanText(
+    title
+      .replace(/^\s*[-–—]\s*/, '')
+      .replace(/\s+\((?:CONTINUED|CONTINTUED)\)\s*$/i, ''),
+  );
+}
+
 function startsFieldBlock(line) {
   const cleaned = cleanText(line);
   if (!cleaned) return false;
@@ -378,7 +584,7 @@ function parseAliases(description) {
 }
 
 function createEntry(title, category, sectionLabel) {
-  const normalizedTitle = cleanText(title.replace(/\s+\((?:CONTINUED|CONTINTUED)\)\s*$/i, ''));
+  const normalizedTitle = normalizeEntryTitle(title);
   return {
     title: normalizedTitle,
     slug: slugify(normalizedTitle),
@@ -412,6 +618,10 @@ function getLookaheadText(lines, startIndex, lineCount = 3) {
   return cleanText(lines.slice(startIndex, startIndex + lineCount).join(' '));
 }
 
+function looksLikeCelebrationDateHeading(line) {
+  return /^(?:\d+(?:ST|ND|RD|TH)\s+DAY OF|[A-Z]+(?:\s+\d+(?:\s+OR\s+\d+)?)?(?:\s*[-–—]\s*.+)?)$/.test(line);
+}
+
 function parseRawLines(rawText) {
   const lines = rawText
     .replace(/\r/g, '\n')
@@ -436,12 +646,30 @@ function parseRawLines(rawText) {
       continue;
     }
 
+    if (/^\[contents\]$/i.test(line) || /^CHAPTER\s+\w+/i.test(line)) {
+      currentEntry = null;
+      continue;
+    }
+
     const nextLine = cleanText(lines[index + 1] || '');
     const looksLikeLowercaseEntryHeading = isLowercaseEntryHeading(line) && startsFieldBlock(nextLine);
 
     if (isAllCapsHeading(line) || looksLikeLowercaseEntryHeading) {
+      let headingLine = line;
+
+      if (
+        currentSectionLabel === 'CELEBRATIONS'
+        && isAllCapsHeading(line)
+        && isAllCapsHeading(nextLine)
+        && looksLikeCelebrationDateHeading(line)
+        && startsFieldBlock(cleanText(lines[index + 2] || ''))
+      ) {
+        headingLine = `${line} ${nextLine}`;
+        index += 1;
+      }
+
       const isContinued = /\((?:CONTINUED|CONTINTUED)\)\s*$/i.test(line);
-      const normalizedTitle = cleanText(line.replace(/\s+\((?:CONTINUED|CONTINTUED)\)\s*$/i, ''));
+      const normalizedTitle = normalizeEntryTitle(headingLine);
 
       if (isContinued && currentEntry && currentEntry.title === normalizedTitle) {
         continue;

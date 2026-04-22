@@ -18,7 +18,7 @@ import ComparativeTable from "@/components/parallax/ComparativeTable";
 import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import ConceptDetailModal from "@/components/parallax/ConceptDetailModal";
 import { isSentenceLikeEntityName } from "@/lib/graph/entity-utils";
-import { CorrespondenceEntity, GraphType, ParallaxConcept } from "@/lib/types";
+import { CorrespondenceEntity, GraphType, ParallaxConcept, ParallaxRelationship } from "@/lib/types";
 
 type CorrespondenceRelationship = {
   id: string;
@@ -40,8 +40,15 @@ type FocusedCorrespondenceGraph = {
   availableEdgeCount: number;
 };
 
-const CORRESPONDENCE_ENTITY_FETCH_LIMIT = 5000;
-const CORRESPONDENCE_EDGE_FETCH_LIMIT = 25000;
+type PaginatedGraphResponse<T> = {
+  items?: T[];
+  total?: number;
+  offset?: number;
+  limit?: number;
+  hasMore?: boolean;
+};
+
+const CORRESPONDENCE_PAGE_SIZE = 5000;
 const FOCUSED_GRAPH_NODE_LIMIT = 140;
 const FOCUSED_GRAPH_EDGE_LIMIT = 520;
 const FOCUSED_NEIGHBOR_FANOUT = 18;
@@ -60,6 +67,60 @@ const FloatingAISearch = dynamic(() => import("@/components/FloatingAISearch"), 
 
 function getRelationshipStrength(relationship: CorrespondenceRelationship) {
   return relationship.similarity ?? relationship.weight ?? 0.5;
+}
+
+async function fetchGraphPage<T>(
+  endpoint: string,
+  options: { limit: number; offset: number; cacheBust: number },
+): Promise<PaginatedGraphResponse<T>> {
+  const params = new URLSearchParams({
+    limit: String(options.limit),
+    offset: String(options.offset),
+    _t: String(options.cacheBust),
+  });
+  const response = await fetch(`${endpoint}?${params.toString()}`, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${endpoint}: ${response.status}`);
+  }
+
+  return response.json() as Promise<PaginatedGraphResponse<T>>;
+}
+
+async function fetchAllGraphPages<T>(endpoint: string, pageSize: number) {
+  const cacheBust = Date.now();
+  const firstPage = await fetchGraphPage<T>(endpoint, {
+    limit: pageSize,
+    offset: 0,
+    cacheBust,
+  });
+
+  const firstItems = firstPage.items || [];
+  const total = Math.max(firstPage.total ?? firstItems.length, firstItems.length);
+
+  if (!firstPage.hasMore || total <= firstItems.length) {
+    return firstItems;
+  }
+
+  const offsets: number[] = [];
+  for (let offset = firstItems.length; offset < total; offset += pageSize) {
+    offsets.push(offset);
+  }
+
+  const remainingPages = await Promise.all(
+    offsets.map((offset) =>
+      fetchGraphPage<T>(endpoint, {
+        limit: pageSize,
+        offset,
+        cacheBust,
+      }),
+    ),
+  );
+
+  return [
+    ...firstItems,
+    ...remainingPages.flatMap((page) => page.items || []),
+  ];
 }
 
 function pickCorrespondenceSeed(
@@ -200,7 +261,7 @@ function GraphPageContent() {
   const [graphType, setGraphType] = useState<GraphType>((searchParams.get("type") as GraphType) || "correspondences");
   const [viewMode, setViewMode] = useState<"cards" | "graph" | "table">("graph");
   const [entities, setEntities] = useState<(ParallaxConcept | CorrespondenceEntity)[]>([]);
-  const [relationships, setRelationships] = useState<any[]>([]);
+  const [relationships, setRelationships] = useState<(ParallaxRelationship | CorrespondenceRelationship)[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedParallaxConcept, setSelectedParallaxConcept] = useState<ParallaxConcept | null>(null);
   const [selectedCorrespondenceEntity, setSelectedCorrespondenceEntity] = useState<CorrespondenceEntity | null>(null);
@@ -212,6 +273,8 @@ function GraphPageContent() {
   const [correspondenceGraphScope, setCorrespondenceGraphScope] = useState<"focused" | "full">("full");
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchEntities = async () => {
       setLoading(true);
       try {
@@ -224,33 +287,39 @@ function GraphPageContent() {
           const entitiesData = await entitiesRes.json();
           const relationshipsData = await relationshipsRes.json();
 
+          if (cancelled) return;
           setEntities(entitiesData.items || []);
           setRelationships(relationshipsData.items || []);
         } else {
-          const [entitiesRes, relationshipsRes] = await Promise.all([
-            fetch(`/api/graph/entities?limit=${CORRESPONDENCE_ENTITY_FETCH_LIMIT}&_t=${Date.now()}`, { cache: "no-store" }),
-            fetch(`/api/graph/edges?limit=${CORRESPONDENCE_EDGE_FETCH_LIMIT}&_t=${Date.now()}`, { cache: "no-store" }),
+          const [allEntities, allRelationships] = await Promise.all([
+            fetchAllGraphPages<CorrespondenceEntity>("/api/graph/entities", CORRESPONDENCE_PAGE_SIZE),
+            fetchAllGraphPages<CorrespondenceRelationship>("/api/graph/edges", CORRESPONDENCE_PAGE_SIZE),
           ]);
 
-          const entitiesData = await entitiesRes.json();
-          const relationshipsData = await relationshipsRes.json();
-
-          setEntities(entitiesData.items || []);
-          setRelationships((relationshipsData.items || []).map((relationship: CorrespondenceRelationship) => ({
+          if (cancelled) return;
+          setEntities(allEntities);
+          setRelationships(allRelationships.map((relationship: CorrespondenceRelationship) => ({
             ...relationship,
             similarity: relationship.weight || 0.5,
           })));
         }
       } catch (error) {
         console.error("Failed to fetch entities", error);
+        if (cancelled) return;
         setEntities([]);
         setRelationships([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     void fetchEntities();
+
+    return () => {
+      cancelled = true;
+    };
   }, [graphType, minSimilarity]);
 
   const traditions = useMemo(() => {
@@ -325,6 +394,40 @@ function GraphPageContent() {
     });
   }, [entities, graphType, searchQuery, selectedCategory, selectedTradition]);
 
+  const graphFilteredCorrespondenceEntities = useMemo(() => {
+    if (graphType !== "correspondences") {
+      return filteredEntities as CorrespondenceEntity[];
+    }
+
+    const anchors = filteredEntities as CorrespondenceEntity[];
+    if (anchors.length === 0) return [];
+    if (!selectedCategory) return anchors;
+
+    const correspondenceById = new Map(
+      (entities as CorrespondenceEntity[]).map((entity) => [entity.id, entity] as const),
+    );
+    const anchorIds = new Set(anchors.map((entity) => entity.id));
+    const graphIds = new Set(anchorIds);
+
+    for (const relationship of relationships as CorrespondenceRelationship[]) {
+      if (anchorIds.has(relationship.source_id) || anchorIds.has(relationship.target_id)) {
+        const source = correspondenceById.get(relationship.source_id);
+        const target = correspondenceById.get(relationship.target_id);
+
+        if (source && !isSentenceLikeEntityName(source.name)) {
+          graphIds.add(source.id);
+        }
+        if (target && !isSentenceLikeEntityName(target.name)) {
+          graphIds.add(target.id);
+        }
+      }
+    }
+
+    return [...graphIds]
+      .map((entityId) => correspondenceById.get(entityId))
+      .filter(Boolean) as CorrespondenceEntity[];
+  }, [entities, filteredEntities, graphType, relationships, selectedCategory]);
+
   const focusedCorrespondenceGraph = useMemo(() => {
     if (graphType !== "correspondences") return null;
 
@@ -333,7 +436,7 @@ function GraphPageContent() {
     );
 
     return buildFocusedCorrespondenceGraph(
-      filteredEntities as CorrespondenceEntity[],
+      graphFilteredCorrespondenceEntities,
       (relationships as CorrespondenceRelationship[]).filter((relationship) => {
         const source = correspondenceById.get(relationship.source_id);
         const target = correspondenceById.get(relationship.target_id);
@@ -344,13 +447,13 @@ function GraphPageContent() {
       }),
       correspondenceShuffleToken,
     );
-  }, [entities, graphType, filteredEntities, relationships, correspondenceShuffleToken]);
+  }, [correspondenceShuffleToken, entities, graphFilteredCorrespondenceEntities, graphType, relationships]);
 
   const fullCorrespondenceGraph = useMemo(() => {
     if (graphType !== "correspondences") return null;
 
     const visibleEntityIds = new Set(
-      (filteredEntities as CorrespondenceEntity[]).map((entity) => entity.id),
+      graphFilteredCorrespondenceEntities.map((entity) => entity.id),
     );
 
     const eligibleRelationships = (relationships as CorrespondenceRelationship[]).filter(
@@ -360,10 +463,10 @@ function GraphPageContent() {
     );
 
     return {
-      entities: filteredEntities as CorrespondenceEntity[],
+      entities: graphFilteredCorrespondenceEntities,
       relationships: eligibleRelationships,
     };
-  }, [filteredEntities, graphType, relationships]);
+  }, [graphFilteredCorrespondenceEntities, graphType, relationships]);
 
   const activeCorrespondenceGraph =
     correspondenceGraphScope === "focused" ? focusedCorrespondenceGraph : fullCorrespondenceGraph;
@@ -564,9 +667,9 @@ function GraphPageContent() {
               <div className={isParallaxGraphView ? "lg:col-span-3" : "col-span-1"}>
                 <div className="h-[700px] bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl">
                   <GraphVisualization
-                    concepts={graphEntities as any}
+                    concepts={graphEntities as (ParallaxConcept | CorrespondenceEntity)[]}
                     relationships={graphRelationships}
-                    onSelectConcept={(entity: any) => handleSelectEntity(entity)}
+                    onSelectConcept={(entity: ParallaxConcept | CorrespondenceEntity) => handleSelectEntity(entity)}
                     minSimilarity={minSimilarity}
                   />
                 </div>

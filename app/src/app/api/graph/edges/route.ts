@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 async function isAdmin() {
   const supabase = await createSupabaseServerClient();
   const {
@@ -25,22 +29,34 @@ export async function GET(req: NextRequest) {
     const minWeight = Number(searchParams.get("minWeight") || 0);
     const sourceId = searchParams.get("sourceId");
     const targetId = searchParams.get("targetId");
-    const limit = Math.min(Number(searchParams.get("limit") || 100), 25000);
+    const offset = Math.max(Number(searchParams.get("offset") || 0), 0);
+    const limit = Math.min(Math.max(Number(searchParams.get("limit") || 100), 1), 25000);
 
     let query = supabase
       .from("correspondence_relationships")
-      .select("id, source_id, target_id, type, weight, confidence, source_citation, notes, created_at, relationship_type:correspondence_relationship_types(id, slug, label, color, icon)")
-      .limit(limit);
+      .select("id, source_id, target_id, type, weight, confidence, source_citation, notes, created_at, relationship_type:correspondence_relationship_types(id, slug, label, color, icon)", { count: "exact" })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + limit - 1);
     if (type) query = query.eq("type", type);
     if (typeId) query = query.eq("relationship_type_id", typeId);
     if (!Number.isNaN(minWeight)) query = query.gte("weight", minWeight);
     if (sourceId) query = query.eq("source_id", sourceId);
     if (targetId) query = query.eq("target_id", targetId);
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     if (error) throw error;
 
-    const response = NextResponse.json({ items: data || [] });
+    const items = data || [];
+    const total = count ?? items.length;
+
+    const response = NextResponse.json({
+      items,
+      total,
+      offset,
+      limit,
+      hasMore: offset + items.length < total,
+    });
 
     // Keep this fresh while we iterate on graph exploration behavior.
     response.headers.set(
@@ -49,9 +65,9 @@ export async function GET(req: NextRequest) {
     );
 
     return response;
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: err?.message || "Failed to fetch edges" },
+      { error: getErrorMessage(err, "Failed to fetch edges") },
       { status: 500 }
     );
   }
@@ -118,9 +134,9 @@ export async function POST(req: NextRequest) {
       .single();
     if (error) throw error;
     return NextResponse.json({ edge: data }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: err?.message || "Failed to create edge" },
+      { error: getErrorMessage(err, "Failed to create edge") },
       { status: 500 }
     );
   }
