@@ -32,6 +32,9 @@ type CorrespondenceRelationship = {
   notes?: string;
 };
 
+type CorrespondenceRelationshipLayer = "corresponds_to" | "associated_with" | "shares_correspondence_with" | "refines";
+type CorrespondenceRelationshipFilters = Record<CorrespondenceRelationshipLayer, boolean>;
+
 type FocusedCorrespondenceGraph = {
   entities: CorrespondenceEntity[];
   relationships: CorrespondenceRelationship[];
@@ -54,6 +57,12 @@ const FOCUSED_GRAPH_EDGE_LIMIT = 520;
 const FOCUSED_NEIGHBOR_FANOUT = 18;
 const FULL_GRAPH_SAFE_NODE_HINT = 1200;
 const FULL_GRAPH_SAFE_EDGE_HINT = 6000;
+const DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS: CorrespondenceRelationshipFilters = {
+  corresponds_to: true,
+  associated_with: true,
+  shares_correspondence_with: true,
+  refines: false,
+};
 
 const GraphVisualization = dynamic(
   () => import("@/components/parallax/ParallaxGraph"),
@@ -67,6 +76,13 @@ const FloatingAISearch = dynamic(() => import("@/components/FloatingAISearch"), 
 
 function getRelationshipStrength(relationship: CorrespondenceRelationship) {
   return relationship.similarity ?? relationship.weight ?? 0.5;
+}
+
+function getCorrespondenceRelationshipType(relationship: CorrespondenceRelationship): CorrespondenceRelationshipLayer {
+  if (relationship.type === "associated_with") return "associated_with";
+  if (relationship.type === "shares_correspondence_with") return "shares_correspondence_with";
+  if (relationship.type === "refines") return "refines";
+  return "corresponds_to";
 }
 
 async function fetchGraphPage<T>(
@@ -270,7 +286,9 @@ function GraphPageContent() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [minSimilarity, setMinSimilarity] = useState(0);
   const [correspondenceShuffleToken, setCorrespondenceShuffleToken] = useState(() => Math.floor(Math.random() * 997));
-  const [correspondenceGraphScope, setCorrespondenceGraphScope] = useState<"focused" | "full">("full");
+  const [correspondenceGraphScope, setCorrespondenceGraphScope] = useState<"focused" | "full">("focused");
+  const [correspondenceRelationshipFilters, setCorrespondenceRelationshipFilters] =
+    useState<CorrespondenceRelationshipFilters>(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
 
   useEffect(() => {
     let cancelled = false;
@@ -437,17 +455,26 @@ function GraphPageContent() {
 
     return buildFocusedCorrespondenceGraph(
       graphFilteredCorrespondenceEntities,
-      (relationships as CorrespondenceRelationship[]).filter((relationship) => {
-        const source = correspondenceById.get(relationship.source_id);
-        const target = correspondenceById.get(relationship.target_id);
-        return !(
-          (source && isSentenceLikeEntityName(source.name)) ||
-          (target && isSentenceLikeEntityName(target.name))
-        );
-      }),
+      (relationships as CorrespondenceRelationship[])
+        .filter((relationship) => correspondenceRelationshipFilters[getCorrespondenceRelationshipType(relationship)])
+        .filter((relationship) => {
+          const source = correspondenceById.get(relationship.source_id);
+          const target = correspondenceById.get(relationship.target_id);
+          return !(
+            (source && isSentenceLikeEntityName(source.name)) ||
+            (target && isSentenceLikeEntityName(target.name))
+          );
+        }),
       correspondenceShuffleToken,
     );
-  }, [correspondenceShuffleToken, entities, graphFilteredCorrespondenceEntities, graphType, relationships]);
+  }, [
+    correspondenceRelationshipFilters,
+    correspondenceShuffleToken,
+    entities,
+    graphFilteredCorrespondenceEntities,
+    graphType,
+    relationships,
+  ]);
 
   const fullCorrespondenceGraph = useMemo(() => {
     if (graphType !== "correspondences") return null;
@@ -458,6 +485,7 @@ function GraphPageContent() {
 
     const eligibleRelationships = (relationships as CorrespondenceRelationship[]).filter(
       (relationship) =>
+        correspondenceRelationshipFilters[getCorrespondenceRelationshipType(relationship)] &&
         visibleEntityIds.has(relationship.source_id) &&
         visibleEntityIds.has(relationship.target_id),
     );
@@ -466,7 +494,7 @@ function GraphPageContent() {
       entities: graphFilteredCorrespondenceEntities,
       relationships: eligibleRelationships,
     };
-  }, [graphFilteredCorrespondenceEntities, graphType, relationships]);
+  }, [correspondenceRelationshipFilters, graphFilteredCorrespondenceEntities, graphType, relationships]);
 
   const activeCorrespondenceGraph =
     correspondenceGraphScope === "focused" ? focusedCorrespondenceGraph : fullCorrespondenceGraph;
@@ -490,7 +518,8 @@ function GraphPageContent() {
     setSelectedCategory(null);
     setSelectedTradition(null);
     setMinSimilarity(0);
-    setCorrespondenceGraphScope("full");
+    setCorrespondenceGraphScope("focused");
+    setCorrespondenceRelationshipFilters(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     router.replace(`/graph?${params.toString()}`, { scroll: false });
@@ -505,6 +534,29 @@ function GraphPageContent() {
   };
 
   const isParallaxGraphView = graphType === "parallax" && viewMode === "graph";
+  const correspondenceRelationshipCounts = useMemo(() => {
+    if (graphType !== "correspondences") {
+      return {
+        corresponds_to: 0,
+        associated_with: 0,
+        shares_correspondence_with: 0,
+        refines: 0,
+      };
+    }
+
+    return (relationships as CorrespondenceRelationship[]).reduce(
+      (counts, relationship) => {
+        counts[getCorrespondenceRelationshipType(relationship)] += 1;
+        return counts;
+      },
+      {
+        corresponds_to: 0,
+        associated_with: 0,
+        shares_correspondence_with: 0,
+        refines: 0,
+      } as Record<CorrespondenceRelationshipLayer, number>,
+    );
+  }, [graphType, relationships]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-900/30">
@@ -611,6 +663,15 @@ function GraphPageContent() {
                 graphScope={correspondenceGraphScope}
                 onGraphScopeChange={setCorrespondenceGraphScope}
                 showGraphScopeControls={viewMode === "graph"}
+                relationshipFilters={correspondenceRelationshipFilters}
+                onRelationshipFilterChange={(layer, value) =>
+                  setCorrespondenceRelationshipFilters((current) => ({
+                    ...current,
+                    [layer]: value,
+                  }))
+                }
+                relationshipCounts={correspondenceRelationshipCounts}
+                showRelationshipFilters={viewMode === "graph"}
               />
             </div>
           )}
@@ -675,11 +736,19 @@ function GraphPageContent() {
                 </div>
                 {graphType === "correspondences" &&
                   viewMode === "graph" &&
+                  correspondenceGraphScope === "focused" &&
+                  activeCorrespondenceGraph && (
+                    <div className="mt-3 rounded-xl border border-emerald-900/30 bg-emerald-950/20 px-4 py-3 text-xs leading-6 text-emerald-100/70">
+                      Focused mode is the best entry point when you arrive with a search term or just want one inviting thread to follow. Add layers gradually, then switch to `Full Archive` when you want to wander the wider network and discover unexpected neighbors.
+                    </div>
+                  )}
+                {graphType === "correspondences" &&
+                  viewMode === "graph" &&
                   correspondenceGraphScope === "full" &&
                   displayedEntityCount > FULL_GRAPH_SAFE_NODE_HINT && (
                     <div className="mt-3 rounded-xl border border-amber-900/30 bg-amber-950/20 px-4 py-3 text-xs leading-6 text-amber-100/70">
-                      Full archive mode is active. With {displayedEntityCount} nodes and {displayedRelationshipCount} links, the graph may feel denser or slower to navigate.
-                      Narrow by category or search, or switch to `Focused` for a guided constellation.
+                      Full archive mode is active. With {displayedEntityCount} nodes and {displayedRelationshipCount} links, this view is meant for exploration more than exhaustive reading.
+                      Narrow by category or search when you want precision, or switch back to `Focused` for a calmer constellation.
                     </div>
                   )}
                 {graphType === "correspondences" &&
@@ -687,7 +756,7 @@ function GraphPageContent() {
                   correspondenceGraphScope === "full" &&
                   displayedRelationshipCount > FULL_GRAPH_SAFE_EDGE_HINT && (
                     <div className="mt-3 rounded-xl border border-zinc-800 bg-black/30 px-4 py-3 text-xs leading-6 text-zinc-400">
-                      This view is rendering a very large network. If labels feel crowded, use search or category filters to carve out a cleaner subgraph.
+                      This is a discovery view. Don’t worry about reading every label at once. Use search, category filters, hover, and click-to-focus to pull one thread out of the archive at a time.
                     </div>
                   )}
               </div>

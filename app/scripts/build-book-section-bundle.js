@@ -35,6 +35,14 @@ const RELATIONSHIP_TYPES = [
     description: 'A subsection or refinement of a broader issue/intention/power.',
     sort_order: 30,
   },
+  {
+    slug: 'shares_correspondence_with',
+    label: 'Shares Correspondence With',
+    color: '#14b8a6',
+    icon: 'network',
+    description: 'A derived relationship between issue/intention/power nodes with strong shared correspondences.',
+    sort_order: 40,
+  },
 ];
 
 const FIELD_CONFIGS = [
@@ -55,6 +63,7 @@ const FIELD_CONFIGS = [
   { labels: ['Number', 'Numbers'], category: 'number_symbol', relationshipType: 'corresponds_to', color: '#64748b', icon: 'hash', sortOrder: 160, description: 'Number correspondences.' },
   { labels: ['Tarot'], category: 'tarot', relationshipType: 'corresponds_to', color: '#a855f7', icon: 'cards', sortOrder: 170, description: 'Tarot correspondences.' },
   { labels: ['Trees', 'Tree'], category: 'tree', relationshipType: 'corresponds_to', color: '#16a34a', icon: 'tree', sortOrder: 180, description: 'Trees used in correspondences.' },
+  { labels: ['Plants', 'Plant'], category: 'plant_misc', relationshipType: 'corresponds_to', color: '#65a30d', icon: 'sprout', sortOrder: 185, description: 'General plant correspondences.' },
   { labels: ['Herb & Garden'], category: 'herb_garden', relationshipType: 'corresponds_to', color: '#22c55e', icon: 'flower', sortOrder: 190, description: 'Herbs and cultivated flowers.' },
   { labels: ['Misc. Plant', 'Misc. Plants'], category: 'plant_misc', relationshipType: 'corresponds_to', color: '#65a30d', icon: 'sprout', sortOrder: 200, description: 'Miscellaneous plant correspondences.' },
   { labels: ['Gemstone/Mineral', 'Gemstones & Minerals'], category: 'stone', relationshipType: 'corresponds_to', color: '#ec4899', icon: 'crystal', sortOrder: 210, description: 'Gemstone and mineral correspondences.' },
@@ -118,6 +127,15 @@ const SUBSECTION_STARTERS = [
   'Psychic',
   'Dream',
   'Travel',
+  'Fertility',
+  'Growth',
+  'Healing',
+  'Luck',
+  'Protection',
+  'Prosperity',
+  'Strength',
+  'Success',
+  'Willpower',
 ];
 
 function parseArgs() {
@@ -329,6 +347,32 @@ function isProbableSubsectionHeading(candidate) {
   });
 }
 
+function splitListSuffixIntoHeading(cleaned) {
+  if (!cleaned.includes(',')) {
+    return null;
+  }
+
+  const match = cleaned.match(
+    /^(.*?,\s*[A-Z][A-Za-z'â€™-]+)\s+([A-Z][A-Za-z'â€™/-]*(?:\s+(?:[A-Z][A-Za-z'â€™/-]*|and|or|of|the|to|for|from|with|without|into)){2,5})$/,
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const value = cleanText(match[1]);
+  const nextSubsection = cleanText(match[2]);
+  if (!value || !nextSubsection || !isProbableSubsectionHeading(nextSubsection)) {
+    return null;
+  }
+
+  return {
+    value,
+    nextSubsection,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function splitTrailingSubsection(rawValue) {
   const cleaned = cleanText(rawValue);
   if (!cleaned) {
@@ -385,7 +429,37 @@ function splitTrailingSubsectionV2(rawValue) {
     };
   }
 
+  const listSuffixSplit = splitListSuffixIntoHeading(cleaned);
+  if (listSuffixSplit) {
+    return listSuffixSplit;
+  }
+
   return { value: cleaned, nextSubsection: null };
+}
+
+function isLikelyFragmentValue(category, value) {
+  const cleaned = cleanText(value);
+  if (!cleaned) {
+    return true;
+  }
+
+  if (cleaned.includes(':')) {
+    return true;
+  }
+
+  if (/^[a-z]/.test(cleaned) && /^(and|or|of|the|to|for|from|with|without|into)\b/.test(cleaned)) {
+    return true;
+  }
+
+  if (cleaned === cleaned.toLowerCase() && category !== 'issue_intention_power') {
+    return true;
+  }
+
+  if (/^(all\s+plants?|all\s+animals?|all\s+birds?)\b/i.test(cleaned)) {
+    return true;
+  }
+
+  return false;
 }
 
 function stripContinuationPrefix(text, entry) {
@@ -540,9 +614,8 @@ function splitPageIntoChunks(pageText) {
     return [];
   }
 
-  return matches.map((match, index) => {
+  return matches.map((match) => {
     const start = match.index;
-    const end = index + 1 < matches.length ? matches[index + 1].index : pageText.length;
     const heading = match[1];
     const body = pageText.slice(start + heading.length).trim();
     return {
@@ -581,7 +654,15 @@ function parseSectionExtraction(payload) {
 
     for (const chunk of chunks) {
       const heading = normalizeHeading(chunk.heading);
-      if (!heading.isContinued || !currentEntry || currentEntry.key !== heading.key) {
+      const canReuseContinuedEntry =
+        heading.isContinued &&
+        currentEntry &&
+        (
+          currentEntry.key === heading.key ||
+          currentEntry.key.startsWith(`${heading.key} (`)
+        );
+
+      if (!canReuseContinuedEntry) {
         currentEntry = createEntry(heading, page.pageNumber);
         parsed.entries.push(currentEntry);
       } else if (!currentEntry.pageNumbers.includes(page.pageNumber)) {
@@ -674,7 +755,7 @@ function dedupeBy(items, keyOf) {
 }
 
 function buildTargetEntity(category, value) {
-  if (isSentenceLikeEntityName(value)) {
+  if (isSentenceLikeEntityName(value) || isLikelyFragmentValue(category, value)) {
     return null;
   }
 
@@ -717,11 +798,132 @@ function buildIssueEntity(entry, section) {
   };
 }
 
+function deriveSharedCorrespondenceRelationships(issueTargetsBySlug, targetStatsBySlug, parsed) {
+  const issueSlugs = Array.from(issueTargetsBySlug.keys());
+  const derivedRelationships = [];
+  const maxLinksPerIssue = 12;
+  const candidateLinksByIssue = new Map();
+
+  function queueCandidate(sourceSlug, candidate) {
+    if (!candidateLinksByIssue.has(sourceSlug)) {
+      candidateLinksByIssue.set(sourceSlug, []);
+    }
+    candidateLinksByIssue.get(sourceSlug).push(candidate);
+  }
+
+  for (let sourceIndex = 0; sourceIndex < issueSlugs.length; sourceIndex += 1) {
+    const sourceSlug = issueSlugs[sourceIndex];
+    const sourceTargets = issueTargetsBySlug.get(sourceSlug);
+
+    if (!sourceTargets || sourceTargets.size < 3) {
+      continue;
+    }
+
+    const sourceTargetSlugs = Array.from(sourceTargets.keys());
+    const sourceWeightTotal = sourceTargetSlugs.reduce((sum, targetSlug) => {
+      const targetCount = targetStatsBySlug.get(targetSlug)?.issueCount || 1;
+      return sum + (1 / Math.sqrt(targetCount));
+    }, 0);
+
+    for (let targetIndex = sourceIndex + 1; targetIndex < issueSlugs.length; targetIndex += 1) {
+      const targetSlug = issueSlugs[targetIndex];
+      const targetTargets = issueTargetsBySlug.get(targetSlug);
+
+      if (!targetTargets || targetTargets.size < 3) {
+        continue;
+      }
+
+      if (sourceSlug === targetSlug || sourceSlug.startsWith(`${targetSlug}-`) || targetSlug.startsWith(`${sourceSlug}-`)) {
+        continue;
+      }
+
+      const sharedTargets = [];
+      let sharedWeight = 0;
+
+      for (const targetTargetSlug of targetTargets.keys()) {
+        if (!sourceTargets.has(targetTargetSlug)) {
+          continue;
+        }
+
+        sharedTargets.push(targetTargetSlug);
+        const targetCount = targetStatsBySlug.get(targetTargetSlug)?.issueCount || 1;
+        sharedWeight += 1 / Math.sqrt(targetCount);
+      }
+
+      if (sharedTargets.length < 3) {
+        continue;
+      }
+
+      const targetWeightTotal = Array.from(targetTargets.keys()).reduce((sum, targetTargetSlug) => {
+        const targetCount = targetStatsBySlug.get(targetTargetSlug)?.issueCount || 1;
+        return sum + (1 / Math.sqrt(targetCount));
+      }, 0);
+
+      const rarityWeightedSimilarity = sharedWeight / Math.max(sourceWeightTotal, targetWeightTotal);
+      if (rarityWeightedSimilarity < 0.26 || sharedWeight < 1.35) {
+        continue;
+      }
+
+      const sharedTargetNames = sharedTargets
+        .map((targetTargetSlug) => sourceTargets.get(targetTargetSlug)?.name || targetTargets.get(targetTargetSlug)?.name || targetTargetSlug)
+        .slice(0, 4);
+
+      const candidate = {
+        relationship: {
+          source_slug: sourceSlug,
+          target_slug: targetSlug,
+          type: 'shares_correspondence_with',
+          relationship_type_slug: 'shares_correspondence_with',
+          weight: Math.min(0.92, Math.max(0.38, Number(rarityWeightedSimilarity.toFixed(3)))),
+          confidence: 'interpretive',
+          source_citation: `${parsed.source.bookTitle}, derived from shared correspondences in ${parsed.source.sectionTitle}`,
+          notes: `Shared ${sharedTargets.length} correspondences (${sharedTargetNames.join(', ')})`,
+        },
+        sharedCount: sharedTargets.length,
+        score: rarityWeightedSimilarity,
+      };
+
+      queueCandidate(sourceSlug, candidate);
+      queueCandidate(targetSlug, candidate);
+    }
+  }
+
+  const selectedKeys = new Set();
+
+  for (const issueSlug of issueSlugs) {
+    const candidates = (candidateLinksByIssue.get(issueSlug) || [])
+      .sort((left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+        if (right.sharedCount !== left.sharedCount) {
+          return right.sharedCount - left.sharedCount;
+        }
+        return `${left.relationship.source_slug}|${left.relationship.target_slug}`.localeCompare(
+          `${right.relationship.source_slug}|${right.relationship.target_slug}`,
+        );
+      })
+      .slice(0, maxLinksPerIssue);
+
+    for (const candidate of candidates) {
+      const key = `${candidate.relationship.source_slug}|${candidate.relationship.target_slug}|${candidate.relationship.type}`;
+      if (!selectedKeys.has(key)) {
+        selectedKeys.add(key);
+        derivedRelationships.push(candidate.relationship);
+      }
+    }
+  }
+
+  return derivedRelationships;
+}
+
 function buildBundle(parsed) {
   const entityTypes = collectEntityTypeSeeds();
   const entities = [];
   const relationshipMap = new Map();
   const claims = [];
+  const issueTargetsBySlug = new Map();
+  const targetStatsBySlug = new Map();
 
   function addRelationship(item) {
     const key = `${item.source_slug}|${item.target_slug}|${item.type}`;
@@ -810,9 +1012,38 @@ function buildBundle(parsed) {
             source_citation: `${parsed.source.bookTitle}, ${parsed.source.sectionTitle}, p.${citationPages}`,
             notes: `${field.label}: ${value}`,
           });
+
+          if (relationshipType === 'corresponds_to') {
+            if (!issueTargetsBySlug.has(sourceSlug)) {
+              issueTargetsBySlug.set(sourceSlug, new Map());
+            }
+            issueTargetsBySlug.get(sourceSlug).set(target.slug, {
+              name: target.name,
+              category: target.category,
+            });
+
+            if (!targetStatsBySlug.has(target.slug)) {
+              targetStatsBySlug.set(target.slug, {
+                issueCount: 0,
+              });
+            }
+          }
         }
       }
     }
+  }
+
+  for (const targetSlugs of issueTargetsBySlug.values()) {
+    for (const targetSlug of targetSlugs.keys()) {
+      const stats = targetStatsBySlug.get(targetSlug);
+      if (stats) {
+        stats.issueCount += 1;
+      }
+    }
+  }
+
+  for (const relationship of deriveSharedCorrespondenceRelationships(issueTargetsBySlug, targetStatsBySlug, parsed)) {
+    addRelationship(relationship);
   }
 
   return {

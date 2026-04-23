@@ -1,6 +1,6 @@
 {
   "kind": "book-section-parse",
-  "parsedAt": "2026-04-21T22:32:40.879Z",
+  "parsedAt": "2026-04-22T18:01:38.926Z",
   "source": {
     "bookSlug": "llewellyns-complete-book-of-correspondences",
     "bookTitle": "Llewellyn's Complete Book of Correspondences",
@@ -19,8 +19,8 @@
   },
   "stats": {
     "inputPageCount": 361,
-    "parsedEntryCount": 238,
-    "parsedSectionCount": 338,
+    "parsedEntryCount": 220,
+    "parsedSectionCount": 327,
     "parseWarningCount": 0
   },
   "entries": [
@@ -30,7 +30,8 @@
       "title": "Abundance (To Attract, Perpetuate)",
       "slug": "abundance-to-attract-perpetuate",
       "pageNumbers": [
-        14
+        14,
+        15
       ],
       "sections": [
         {
@@ -211,29 +212,7 @@
               "pageNumbers": [
                 14
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "ABUNDANCE",
-      "rawHeading": "ABUNDANCE (CONTINUED)",
-      "title": "Abundance",
-      "slug": "abundance",
-      "pageNumbers": [
-        15
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            15
-          ],
-          "fields": [
+            },
             {
               "label": "Gods",
               "values": [
@@ -1609,7 +1588,8 @@
       "title": "Agriculture (Farming, Gardening)",
       "slug": "agriculture-farming-gardening",
       "pageNumbers": [
-        24
+        24,
+        25
       ],
       "sections": [
         {
@@ -1660,7 +1640,16 @@
             {
               "label": "Colors",
               "values": [
-                "Brown, Green Plants: All plants used for food, flavorings, and healing"
+                "Brown, Green"
+              ],
+              "pageNumbers": [
+                24
+              ]
+            },
+            {
+              "label": "Plants",
+              "values": [
+                "All plants used for food, flavorings, and healing"
               ],
               "pageNumbers": [
                 24
@@ -1692,29 +1681,7 @@
               "pageNumbers": [
                 24
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "AGRICULTURE",
-      "rawHeading": "AGRICULTURE (CONTINUED)",
-      "title": "Agriculture",
-      "slug": "agriculture",
-      "pageNumbers": [
-        25
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            25
-          ],
-          "fields": [
+            },
             {
               "label": "Magical",
               "values": [
@@ -1727,8 +1694,7 @@
             {
               "label": "Animals",
               "values": [
-                "Bat, Coyote, Dog (stimulate growth), Fox",
-                "Armadillo, Cattle ( bull )"
+                "Bat, Coyote, Dog (stimulate growth), Fox"
               ],
               "pageNumbers": [
                 25
@@ -1755,16 +1721,35 @@
             {
               "label": "Insects & Misc.",
               "values": [
-                "Bee, Butterfly, Ladybug, Praying Mantis, Spider, Worm Fertility of the Land"
+                "Bee, Butterfly, Ladybug, Praying Mantis, Spider, Worm"
+              ],
+              "pageNumbers": [
+                25
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "subsection",
+          "title": "Fertility of the Land",
+          "slug": "fertility-of-the-land",
+          "pageNumbers": [
+            25
+          ],
+          "fields": [
+            {
+              "label": "Gods",
+              "values": [
+                "Faunus, Enki"
               ],
               "pageNumbers": [
                 25
               ]
             },
             {
-              "label": "Gods",
+              "label": "Animals",
               "values": [
-                "Faunus, Enki"
+                "Armadillo, Cattle ( bull )"
               ],
               "pageNumbers": [
                 25
@@ -5603,7 +5588,9 @@
       "title": "Change/S (To Cope with, Initiate, Support)",
       "slug": "change-s-to-cope-with-initiate-support",
       "pageNumbers": [
-        56
+        56,
+        57,
+        58
       ],
       "sections": [
         {
@@ -5748,30 +5735,7 @@
               "pageNumbers": [
                 56
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "CHANGE/S",
-      "rawHeading": "CHANGE/S (CONTINUED)",
-      "title": "Change/S",
-      "slug": "change-s",
-      "pageNumbers": [
-        57,
-        58
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            57
-          ],
-          "fields": [
+            },
             {
               "label": "Metal",
               "values": [
@@ -9626,7 +9590,8 @@
       "title": "Danger (To Recognize, Cope with, Avert, Protect from)",
       "slug": "danger-to-recognize-cope-with-avert-protect-from",
       "pageNumbers": [
-        90
+        90,
+        91
       ],
       "sections": [
         {
@@ -9757,10 +9722,13 @@
             {
               "label": "Animals",
               "values": [
-                "Bear ( grizzly ), Boar, Jackal (protect against hidden), Mouse, Polar Bear, Tiger, Wolf"
+                "Bear ( grizzly ), Boar, Jackal (protect against hidden), Mouse, Polar Bear, Tiger, Wolf",
+                "Antelope, Fox, Squirrel",
+                "Cattle, Horse"
               ],
               "pageNumbers": [
-                90
+                90,
+                91
               ]
             },
             {
@@ -9775,34 +9743,14 @@
             {
               "label": "Marine Life",
               "values": [
-                "Seal, Shark"
+                "Seal, Shark",
+                "Octopus Warn of Danger"
               ],
               "pageNumbers": [
-                90
+                90,
+                91
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "DANGER",
-      "rawHeading": "DANGER (CONTINUED)",
-      "title": "Danger",
-      "slug": "danger",
-      "pageNumbers": [
-        91
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            91
-          ],
-          "fields": [
+            },
             {
               "label": "Insect/Misc.",
               "values": [
@@ -9816,25 +9764,6 @@
               "label": "Mythical",
               "values": [
                 "Dragon, Selkies Avoid Danger"
-              ],
-              "pageNumbers": [
-                91
-              ]
-            },
-            {
-              "label": "Animals",
-              "values": [
-                "Antelope, Fox, Squirrel",
-                "Cattle, Horse"
-              ],
-              "pageNumbers": [
-                91
-              ]
-            },
-            {
-              "label": "Marine Life",
-              "values": [
-                "Octopus Warn of Danger"
               ],
               "pageNumbers": [
                 91
@@ -12542,7 +12471,8 @@
       "title": "Emotions (To Deal with, Support, Understand)",
       "slug": "emotions-to-deal-with-support-understand",
       "pageNumbers": [
-        112
+        112,
+        113
       ],
       "sections": [
         {
@@ -12687,29 +12617,7 @@
               "pageNumbers": [
                 112
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "EMOTIONS",
-      "rawHeading": "EMOTIONS (CONTINUED)",
-      "title": "Emotions",
-      "slug": "emotions",
-      "pageNumbers": [
-        113
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            113
-          ],
-          "fields": [
+            },
             {
               "label": "Gemstones & Minerals",
               "values": [
@@ -13904,36 +13812,7 @@
             {
               "label": "Tarot",
               "values": [
-                "Emperor, Strength"
-              ],
-              "pageNumbers": [
-                120
-              ]
-            },
-            {
-              "label": "Trees",
-              "values": [
-                "Elder, Fir, Hawthorn, Holly, Juniper, Oak, Palm ( dragon’s blood ), Pine, Sycamore"
-              ],
-              "pageNumbers": [
-                120
-              ]
-            },
-            {
-              "label": "Herb & Garden",
-              "values": [
-                "Agrimony, Anemone, Basil, Bergamot, Carnation, Catnip, Chamomile, Dill, Fennel, Foxglove (fairy), Garlic, Gorse, Iris (creative), Lovage, Marigold, Pennyroyal, Peppermint, Primrose, Rose, Sage, St. John’s Wort, Sunflower, Thyme",
-                "Yarrow"
-              ],
-              "pageNumbers": [
-                120,
-                124
-              ]
-            },
-            {
-              "label": "Misc. Plants",
-              "values": [
-                "Allspice, Anise, Bamboo, Betony, Burdock, Cinquefoil, Clove, Frankincense, Galangal, Ginger, Horehound, Lady’s Slipper, Mistletoe, Nettle, Nutmeg, Orris Root (creative), Star Anise, Vanilla"
+                "Emperor,"
               ],
               "pageNumbers": [
                 120
@@ -14036,6 +13915,15 @@
               ]
             },
             {
+              "label": "Herb & Garden",
+              "values": [
+                "Yarrow"
+              ],
+              "pageNumbers": [
+                124
+              ]
+            },
+            {
               "label": "Gemstone/Mineral",
               "values": [
                 "Moldovite"
@@ -14069,6 +13957,43 @@
               ],
               "pageNumbers": [
                 124
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "subsection",
+          "title": "Strength",
+          "slug": "strength",
+          "pageNumbers": [
+            120
+          ],
+          "fields": [
+            {
+              "label": "Trees",
+              "values": [
+                "Elder, Fir, Hawthorn, Holly, Juniper, Oak, Palm ( dragon’s blood ), Pine, Sycamore"
+              ],
+              "pageNumbers": [
+                120
+              ]
+            },
+            {
+              "label": "Herb & Garden",
+              "values": [
+                "Agrimony, Anemone, Basil, Bergamot, Carnation, Catnip, Chamomile, Dill, Fennel, Foxglove (fairy), Garlic, Gorse, Iris (creative), Lovage, Marigold, Pennyroyal, Peppermint, Primrose, Rose, Sage, St. John’s Wort, Sunflower, Thyme"
+              ],
+              "pageNumbers": [
+                120
+              ]
+            },
+            {
+              "label": "Misc. Plants",
+              "values": [
+                "Allspice, Anise, Bamboo, Betony, Burdock, Cinquefoil, Clove, Frankincense, Galangal, Ginger, Horehound, Lady’s Slipper, Mistletoe, Nettle, Nutmeg, Orris Root (creative), Star Anise, Vanilla"
+              ],
+              "pageNumbers": [
+                120
               ]
             }
           ]
@@ -15606,7 +15531,8 @@
       "title": "Fear (To Deal with)",
       "slug": "fear-to-deal-with",
       "pageNumbers": [
-        135
+        135,
+        136
       ],
       "sections": [
         {
@@ -15701,19 +15627,23 @@
             {
               "label": "Gemstones & Minerals",
               "values": [
-                "Agate ( red banded ), Amazonite, Amber, Amethyst, Apache Tears, Aquamarine, Azurite, Beryl, Bloodstone, Calcite ( green ), Carnelian, Charoite, Chrysocolla, Citrine, Diamond, Jasper, Jet, Obsidian, Onyx, Opal, Peridot, Quartz ( rutilated ), Sapphire, Smoky Quartz, Sodalite, Sunstone, Tiger’s Eye, Topaz, Tourmaline ( black )"
+                "Agate ( red banded ), Amazonite, Amber, Amethyst, Apache Tears, Aquamarine, Azurite, Beryl, Bloodstone, Calcite ( green ), Carnelian, Charoite, Chrysocolla, Citrine, Diamond, Jasper, Jet, Obsidian, Onyx, Opal, Peridot, Quartz ( rutilated ), Sapphire, Smoky Quartz, Sodalite, Sunstone, Tiger’s Eye, Topaz, Tourmaline ( black )",
+                "Angelite, Blue Lace Agate, Zoisite"
               ],
               "pageNumbers": [
-                135
+                135,
+                136
               ]
             },
             {
               "label": "From the Sea",
               "values": [
-                "Coral ( black ), Pearl"
+                "Coral ( black ), Pearl",
+                "Cowry"
               ],
               "pageNumbers": [
-                135
+                135,
+                136
               ]
             },
             {
@@ -15724,29 +15654,7 @@
               "pageNumbers": [
                 135
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "FEAR",
-      "rawHeading": "FEAR (CONTINUED)",
-      "title": "Fear",
-      "slug": "fear",
-      "pageNumbers": [
-        136
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            136
-          ],
-          "fields": [
+            },
             {
               "label": "Goddesses",
               "values": [
@@ -15798,24 +15706,6 @@
               "label": "Insect/Misc.",
               "values": [
                 "Butterfly Overcome Fear"
-              ],
-              "pageNumbers": [
-                136
-              ]
-            },
-            {
-              "label": "From the Sea",
-              "values": [
-                "Cowry"
-              ],
-              "pageNumbers": [
-                136
-              ]
-            },
-            {
-              "label": "Gemstones & Minerals",
-              "values": [
-                "Angelite, Blue Lace Agate, Zoisite"
               ],
               "pageNumbers": [
                 136
@@ -17895,7 +17785,8 @@
       "title": "Grounding (To Ground and Center Energy)",
       "slug": "grounding-to-ground-and-center-energy",
       "pageNumbers": [
-        153
+        153,
+        154
       ],
       "sections": [
         {
@@ -18004,29 +17895,7 @@
               "pageNumbers": [
                 153
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "GROUNDING",
-      "rawHeading": "GROUNDING (CONTINUED)",
-      "title": "Grounding",
-      "slug": "grounding",
-      "pageNumbers": [
-        154
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            154
-          ],
-          "fields": [
+            },
             {
               "label": "Gemstones & Minerals",
               "values": [
@@ -28999,7 +28868,8 @@
       "title": "Messages/Omens (To Receive)",
       "slug": "messages-omens-to-receive",
       "pageNumbers": [
-        239
+        239,
+        240
       ],
       "sections": [
         {
@@ -29076,7 +28946,16 @@
             {
               "label": "Misc. Plants",
               "values": [
-                "Mistletoe, Mushroom Garden Plants: Basil, Daisy, Dandelion, Iris, Ivy, Marigold"
+                "Mistletoe, Mushroom Garden"
+              ],
+              "pageNumbers": [
+                239
+              ]
+            },
+            {
+              "label": "Plants",
+              "values": [
+                "Basil, Daisy, Dandelion, Iris, Ivy, Marigold"
               ],
               "pageNumbers": [
                 239
@@ -29162,29 +29041,7 @@
               "pageNumbers": [
                 239
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "MESSAGES/OMENS",
-      "rawHeading": "MESSAGES/OMENS (CONTINUED)",
-      "title": "Messages/Omens",
-      "slug": "messages-omens",
-      "pageNumbers": [
-        240
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            240
-          ],
-          "fields": [
+            },
             {
               "label": "Insects & Misc.",
               "values": [
@@ -29717,7 +29574,8 @@
       "title": "Money (To Acquire, Increase, Hold On to)",
       "slug": "money-to-acquire-increase-hold-on-to",
       "pageNumbers": [
-        246
+        246,
+        247
       ],
       "sections": [
         {
@@ -29844,29 +29702,7 @@
               "pageNumbers": [
                 246
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "MONEY",
-      "rawHeading": "MONEY (CONTINUED)",
-      "title": "Money",
-      "slug": "money",
-      "pageNumbers": [
-        247
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            247
-          ],
-          "fields": [
+            },
             {
               "label": "Gemstones & Minerals",
               "values": [
@@ -30593,7 +30429,8 @@
       "title": "Negativity (To Avert, Banish, Release)",
       "slug": "negativity-to-avert-banish-release",
       "pageNumbers": [
-        252
+        252,
+        253
       ],
       "sections": [
         {
@@ -30675,29 +30512,7 @@
               "pageNumbers": [
                 252
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "NEGATIVITY",
-      "rawHeading": "NEGATIVITY (CONTINUED)",
-      "title": "Negativity",
-      "slug": "negativity",
-      "pageNumbers": [
-        253
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            253
-          ],
-          "fields": [
+            },
             {
               "label": "From the Sea",
               "values": [
@@ -33902,7 +33717,8 @@
       "title": "Problems (To Deal with)",
       "slug": "problems-to-deal-with",
       "pageNumbers": [
-        279
+        279,
+        280
       ],
       "sections": [
         {
@@ -33993,29 +33809,7 @@
               "pageNumbers": [
                 279
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "PROBLEMS",
-      "rawHeading": "PROBLEMS (CONTINUED)",
-      "title": "Problems",
-      "slug": "problems",
-      "pageNumbers": [
-        280
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            280
-          ],
-          "fields": [
+            },
             {
               "label": "Metals",
               "values": [
@@ -34173,7 +33967,8 @@
       "title": "Prophecy (To Seek Answers, Ability for)",
       "slug": "prophecy-to-seek-answers-ability-for",
       "pageNumbers": [
-        281
+        281,
+        282
       ],
       "sections": [
         {
@@ -34309,29 +34104,7 @@
               "pageNumbers": [
                 281
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "PROPHECY",
-      "rawHeading": "PROPHECY (CONTINUED)",
-      "title": "Prophecy",
-      "slug": "prophecy",
-      "pageNumbers": [
-        282
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            282
-          ],
-          "fields": [
+            },
             {
               "label": "Goddesses",
               "values": [
@@ -34801,12 +34574,10 @@
             {
               "label": "Misc. Plants",
               "values": [
-                "Aloe (from evil influences), Asafoetida, Bamboo, Bittersweet, Black Cohosh, Blessed, Thistle, Bloodroot, Burdock, Cinnamon, Cinquefoil, Clove, Coltsfoot, Coriander, Cowslip, Cumin, Fairy Wand, Flax, Ginseng, High John, Horehound, Lady’s Slipper, Mandrake, Mustard, Orris Root, Pepper, Reed, Sandalwood, Thistle, Thornapple, Water Lily, Wormwood (from enchantment)",
-                "Anise, Betony"
+                "Aloe (from evil influences), Asafoetida, Bamboo, Bittersweet, Black Cohosh, Blessed, Thistle, Bloodroot, Burdock, Cinnamon, Cinquefoil, Clove, Coltsfoot, Coriander, Cowslip, Cumin, Fairy Wand, Flax, Ginseng, High John, Horehound, Lady’s Slipper, Mandrake, Mustard, Orris Root, Pepper, Reed, Sandalwood, Thistle, Thornapple, Water Lily, Wormwood (from enchantment)"
               ],
               "pageNumbers": [
-                286,
-                290
+                286
               ]
             },
             {
@@ -34848,12 +34619,10 @@
             {
               "label": "Goddesses",
               "values": [
-                "Aine (of women), Ariadne, Athena, Bast, Brigantia (of land), Brigid, Cailleach Bheur, Cybele (during war), Devi, Diana, Flora (fruit trees), Frigg, Hathor, Hera, Ishtar, Isis, Juno, Justitia, Kali, Kuan Yin, Kupala, Minerva, the Morrigan, Nut, Sarasvati, Sekhmet, Seshat, Venus",
-                "Artemis (girls), Chalchiuhtlicue (newborns), Hecate (children)"
+                "Aine (of women), Ariadne, Athena, Bast, Brigantia (of land), Brigid, Cailleach Bheur, Cybele (during war), Devi, Diana, Flora (fruit trees), Frigg, Hathor, Hera, Ishtar, Isis, Juno, Justitia, Kali, Kuan Yin, Kupala, Minerva, the Morrigan, Nut, Sarasvati, Sekhmet, Seshat, Venus"
               ],
               "pageNumbers": [
-                288,
-                290
+                288
               ]
             },
             {
@@ -34886,8 +34655,7 @@
             {
               "label": "Birds",
               "values": [
-                "Condor, Crow, Duck, Owl, Peacock, Quail, Raven, Swallow, Woodpecker",
-                "Crane, Stork (of young), Vulture (during childbirth) Protection while Dreaming"
+                "Condor, Crow, Duck, Owl, Peacock, Quail, Raven, Swallow, Woodpecker"
               ],
               "pageNumbers": [
                 290
@@ -34914,7 +34682,26 @@
             {
               "label": "Mythical",
               "values": [
-                "Dragon Protection of Children"
+                "Dragon"
+              ],
+              "pageNumbers": [
+                290
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "subsection",
+          "title": "Protection of Children",
+          "slug": "protection-of-children",
+          "pageNumbers": [
+            290
+          ],
+          "fields": [
+            {
+              "label": "Goddesses",
+              "values": [
+                "Artemis (girls), Chalchiuhtlicue (newborns), Hecate (children)"
               ],
               "pageNumbers": [
                 290
@@ -34939,9 +34726,27 @@
               ]
             },
             {
+              "label": "Birds",
+              "values": [
+                "Crane, Stork (of young), Vulture (during childbirth) Protection while Dreaming"
+              ],
+              "pageNumbers": [
+                290
+              ]
+            },
+            {
               "label": "Tree",
               "values": [
                 "Cedar"
+              ],
+              "pageNumbers": [
+                290
+              ]
+            },
+            {
+              "label": "Misc. Plants",
+              "values": [
+                "Anise, Betony"
               ],
               "pageNumbers": [
                 290
@@ -34987,12 +34792,22 @@
             {
               "label": "Animal",
               "values": [
-                "Armadillo Maternal Protection"
+                "Armadillo Maternal"
               ],
               "pageNumbers": [
                 291
               ]
-            },
+            }
+          ]
+        },
+        {
+          "kind": "subsection",
+          "title": "Protection",
+          "slug": "protection",
+          "pageNumbers": [
+            291
+          ],
+          "fields": [
             {
               "label": "Animals",
               "values": [
@@ -35152,8 +34967,7 @@
             {
               "label": "Herb & Garden",
               "values": [
-                "Hyacinth, Marigold, Rosemary, Thyme, Yarrow",
-                "Garlic Protection during"
+                "Hyacinth, Marigold, Rosemary, Thyme, Yarrow"
               ],
               "pageNumbers": [
                 292
@@ -35162,16 +34976,35 @@
             {
               "label": "Gemstones & Minerals",
               "values": [
-                "Angelite, Calcite, Tiger’s Eye Protection from Theft"
+                "Angelite, Calcite, Tiger’s Eye"
+              ],
+              "pageNumbers": [
+                292
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "subsection",
+          "title": "Protection from Theft",
+          "slug": "protection-from-theft",
+          "pageNumbers": [
+            292
+          ],
+          "fields": [
+            {
+              "label": "Trees",
+              "values": [
+                "Aspen, Juniper"
               ],
               "pageNumbers": [
                 292
               ]
             },
             {
-              "label": "Trees",
+              "label": "Herb & Garden",
               "values": [
-                "Aspen, Juniper"
+                "Garlic Protection during"
               ],
               "pageNumbers": [
                 292
@@ -35428,7 +35261,9 @@
       "title": "Purification (To Cleanse, Make New)",
       "slug": "purification-to-cleanse-make-new",
       "pageNumbers": [
-        295
+        295,
+        296,
+        297
       ],
       "sections": [
         {
@@ -35573,30 +35408,7 @@
               "pageNumbers": [
                 295
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "PURIFICATION",
-      "rawHeading": "PURIFICATION (CONTINUED)",
-      "title": "Purification",
-      "slug": "purification",
-      "pageNumbers": [
-        296,
-        297
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            296
-          ],
-          "fields": [
+            },
             {
               "label": "Gemstones & Minerals",
               "values": [
@@ -36891,7 +36703,8 @@
       "title": "Release (To Let Go of Something or Someone and Move On)",
       "slug": "release-to-let-go-of-something-or-someone-and-move-on",
       "pageNumbers": [
-        308
+        308,
+        309
       ],
       "sections": [
         {
@@ -37009,29 +36822,7 @@
               "pageNumbers": [
                 308
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "RELEASE",
-      "rawHeading": "RELEASE (CONTINUED)",
-      "title": "Release",
-      "slug": "release",
-      "pageNumbers": [
-        309
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            309
-          ],
-          "fields": [
+            },
             {
               "label": "Gemstones & Minerals",
               "values": [
@@ -41400,25 +41191,7 @@
             {
               "label": "Tarot",
               "values": [
-                "Chariot, Emperor, Justice, Strength"
-              ],
-              "pageNumbers": [
-                342
-              ]
-            },
-            {
-              "label": "Colors",
-              "values": [
-                "Blue ( royal ), Gold, Green, Orange, Peach, Red, White"
-              ],
-              "pageNumbers": [
-                342
-              ]
-            },
-            {
-              "label": "Trees",
-              "values": [
-                "Alder ( black ), Ash (magical), Blackthorn, Cedar, Cypress, Hazel, Holly, Juniper, Laurel, Linden, Locust, Oak, Palm, Pine, Poplar, Willow, Yew"
+                "Chariot, Emperor, Justice,"
               ],
               "pageNumbers": [
                 342
@@ -41530,6 +41303,34 @@
               ],
               "pageNumbers": [
                 345
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "subsection",
+          "title": "Strength",
+          "slug": "strength",
+          "pageNumbers": [
+            342
+          ],
+          "fields": [
+            {
+              "label": "Colors",
+              "values": [
+                "Blue ( royal ), Gold, Green, Orange, Peach, Red, White"
+              ],
+              "pageNumbers": [
+                342
+              ]
+            },
+            {
+              "label": "Trees",
+              "values": [
+                "Alder ( black ), Ash (magical), Blackthorn, Cedar, Cypress, Hazel, Holly, Juniper, Laurel, Linden, Locust, Oak, Palm, Pine, Poplar, Willow, Yew"
+              ],
+              "pageNumbers": [
+                342
               ]
             }
           ]
@@ -41779,12 +41580,10 @@
             {
               "label": "Zodiac",
               "values": [
-                "Capricorn, Scorpio",
-                "Virgo"
+                "Capricorn, Scorpio"
               ],
               "pageNumbers": [
-                347,
-                348
+                347
               ]
             },
             {
@@ -41916,8 +41715,7 @@
             {
               "label": "Gemstones & Minerals",
               "values": [
-                "Agate ( black, brown, red banded ), Alexandrite, Amazonite, Amber, Amethyst, Andalusite, Aventurine ( green ), Bloodstone, Carnelian, Chrysoprase, Citrine, Garnet, Jasper ( yellow ), Labradorite, Lodestone, Malachite, Peridot, Pyrite, Rose Quartz, Sodalite, Spinel, Sunstone, Tanzanite, Tourmaline ( green ), Turquoise, Zircon",
-                "Fluorite, Tiger’s Eye"
+                "Agate ( black, brown, red banded ), Alexandrite, Amazonite, Amber, Amethyst, Andalusite, Aventurine ( green ), Bloodstone, Carnelian, Chrysoprase, Citrine, Garnet, Jasper ( yellow ), Labradorite, Lodestone, Malachite, Peridot, Pyrite, Rose Quartz, Sodalite, Spinel, Sunstone, Tanzanite, Tourmaline ( green ), Turquoise, Zircon"
               ],
               "pageNumbers": [
                 348
@@ -41953,8 +41751,7 @@
             {
               "label": "Gods",
               "values": [
-                "Apollo, Baal, Belenus, Ganesh, Janus, Mithras, Njord, Osiris, Poseidon, Saturn, Thoth, Zeus",
-                "Inari, Mercury"
+                "Apollo, Baal, Belenus, Ganesh, Janus, Mithras, Njord, Osiris, Poseidon, Saturn, Thoth, Zeus"
               ],
               "pageNumbers": [
                 348
@@ -42008,7 +41805,44 @@
             {
               "label": "Insect/Misc.",
               "values": [
-                "Cicada Business Success"
+                "Cicada Business"
+              ],
+              "pageNumbers": [
+                348
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "subsection",
+          "title": "Success",
+          "slug": "success",
+          "pageNumbers": [
+            348
+          ],
+          "fields": [
+            {
+              "label": "Zodiac",
+              "values": [
+                "Virgo"
+              ],
+              "pageNumbers": [
+                348
+              ]
+            },
+            {
+              "label": "Gods",
+              "values": [
+                "Inari, Mercury"
+              ],
+              "pageNumbers": [
+                348
+              ]
+            },
+            {
+              "label": "Gemstones & Minerals",
+              "values": [
+                "Fluorite, Tiger’s Eye"
               ],
               "pageNumbers": [
                 348
@@ -42025,7 +41859,8 @@
       "title": "Support (To Receive, Give)",
       "slug": "support-to-receive-give",
       "pageNumbers": [
-        349
+        349,
+        350
       ],
       "sections": [
         {
@@ -42161,29 +41996,7 @@
               "pageNumbers": [
                 349
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "SUPPORT",
-      "rawHeading": "SUPPORT (CONTINUED)",
-      "title": "Support",
-      "slug": "support",
-      "pageNumbers": [
-        350
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            350
-          ],
-          "fields": [
+            },
             {
               "label": "Gods",
               "values": [
@@ -42389,7 +42202,8 @@
       "title": "Transformation (To Seek, Manifest, Understand)",
       "slug": "transformation-to-seek-manifest-understand",
       "pageNumbers": [
-        352
+        352,
+        353
       ],
       "sections": [
         {
@@ -42534,29 +42348,7 @@
               "pageNumbers": [
                 352
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "TRANSFORMATION",
-      "rawHeading": "TRANSFORMATION (CONTINUED)",
-      "title": "Transformation",
-      "slug": "transformation",
-      "pageNumbers": [
-        353
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            353
-          ],
-          "fields": [
+            },
             {
               "label": "Gemstones & Minerals",
               "values": [
@@ -42667,7 +42459,8 @@
       "title": "Travel (To Initiate, For Guidance and/Or Protection During)",
       "slug": "travel-to-initiate-for-guidance-and-or-protection-during",
       "pageNumbers": [
-        354
+        354,
+        355
       ],
       "sections": [
         {
@@ -42830,29 +42623,7 @@
               "pageNumbers": [
                 354
               ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "TRAVEL",
-      "rawHeading": "TRAVEL (CONTINUED)",
-      "title": "Travel",
-      "slug": "travel",
-      "pageNumbers": [
-        355
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            355
-          ],
-          "fields": [
+            },
             {
               "label": "Animals",
               "values": [
@@ -44059,7 +43830,8 @@
       "title": "Weather (To Influence)",
       "slug": "weather-to-influence",
       "pageNumbers": [
-        362
+        362,
+        363
       ],
       "sections": [
         {
@@ -44074,28 +43846,36 @@
               "label": "Elements",
               "values": [
                 "Air, Earth, Fire, Water",
-                "Air, Fire"
+                "Air, Fire",
+                "Air, Water"
               ],
               "pageNumbers": [
-                362
+                362,
+                363
               ]
             },
             {
               "label": "Misc. Plant",
               "values": [
-                "Clove"
+                "Clove",
+                "Mistletoe",
+                "Ginger (calm)"
               ],
               "pageNumbers": [
-                362
+                362,
+                363
               ]
             },
             {
               "label": "Herb & Garden",
               "values": [
-                "Garlic, Yarrow"
+                "Garlic, Yarrow",
+                "Mugwort, St. John’s Wort",
+                "St. John’s Wort (protect from)"
               ],
               "pageNumbers": [
-                362
+                362,
+                363
               ]
             },
             {
@@ -44110,28 +43890,36 @@
             {
               "label": "Goddesses",
               "values": [
-                "Cailleach Bheur, Chalchiuhtlicue, Frigg, Gaia, Inanna, Iris, Kali, Nut, Ran"
+                "Cailleach Bheur, Chalchiuhtlicue, Frigg, Gaia, Inanna, Iris, Kali, Nut, Ran",
+                "Amphitrite (calm), Chalchiuhtlicue, Cybele, Hecate, Sekhmet"
               ],
               "pageNumbers": [
-                362
+                362,
+                363
               ]
             },
             {
               "label": "Gods",
               "values": [
-                "Baal, the Dagda, Freyr, Indra, Jupiter, Manannan, Perun, Thor, Zeus"
+                "Baal, the Dagda, Freyr, Indra, Jupiter, Manannan, Perun, Thor, Zeus",
+                "Agni, Baal, Belenus, Jupiter, Marduk, Perun, Shiva, Thor, Zeus",
+                "Aegir, Ares, Baal, Indra, Jupiter, Manannan (ocean), Marduk, Perun, Poseidon (ocean), Set (desert), Shiva, Thor, Zeus"
               ],
               "pageNumbers": [
-                362
+                362,
+                363
               ]
             },
             {
               "label": "Bird",
               "values": [
-                "Woodpecker"
+                "Woodpecker",
+                "Kingfisher Storms",
+                "Kingfisher"
               ],
               "pageNumbers": [
-                362
+                362,
+                363
               ]
             },
             {
@@ -44155,10 +43943,12 @@
             {
               "label": "Mythical",
               "values": [
-                "Dragon Lightning (protect against)"
+                "Dragon Lightning (protect against)",
+                "Selkies (raise)"
               ],
               "pageNumbers": [
-                362
+                362,
+                363
               ]
             },
             {
@@ -44168,48 +43958,6 @@
               ],
               "pageNumbers": [
                 362
-              ]
-            }
-          ]
-        }
-      ],
-      "parseWarnings": []
-    },
-    {
-      "key": "WEATHER",
-      "rawHeading": "WEATHER (CONTINUED)",
-      "title": "Weather",
-      "slug": "weather",
-      "pageNumbers": [
-        363
-      ],
-      "sections": [
-        {
-          "kind": "main",
-          "title": null,
-          "slug": null,
-          "pageNumbers": [
-            363
-          ],
-          "fields": [
-            {
-              "label": "Herb & Garden",
-              "values": [
-                "Mugwort, St. John’s Wort",
-                "St. John’s Wort (protect from)"
-              ],
-              "pageNumbers": [
-                363
-              ]
-            },
-            {
-              "label": "Misc. Plant",
-              "values": [
-                "Mistletoe",
-                "Ginger (calm)"
-              ],
-              "pageNumbers": [
-                363
               ]
             },
             {
@@ -44223,38 +43971,9 @@
               ]
             },
             {
-              "label": "Gods",
-              "values": [
-                "Agni, Baal, Belenus, Jupiter, Marduk, Perun, Shiva, Thor, Zeus",
-                "Aegir, Ares, Baal, Indra, Jupiter, Manannan (ocean), Marduk, Perun, Poseidon (ocean), Set (desert), Shiva, Thor, Zeus"
-              ],
-              "pageNumbers": [
-                363
-              ]
-            },
-            {
               "label": "Goddess",
               "values": [
                 "Pele"
-              ],
-              "pageNumbers": [
-                363
-              ]
-            },
-            {
-              "label": "Bird",
-              "values": [
-                "Kingfisher Storms",
-                "Kingfisher"
-              ],
-              "pageNumbers": [
-                363
-              ]
-            },
-            {
-              "label": "Elements",
-              "values": [
-                "Air, Water"
               ],
               "pageNumbers": [
                 363
@@ -44279,27 +43998,9 @@
               ]
             },
             {
-              "label": "Goddesses",
-              "values": [
-                "Amphitrite (calm), Chalchiuhtlicue, Cybele, Hecate, Sekhmet"
-              ],
-              "pageNumbers": [
-                363
-              ]
-            },
-            {
               "label": "Reptile",
               "values": [
                 "Snake"
-              ],
-              "pageNumbers": [
-                363
-              ]
-            },
-            {
-              "label": "Mythical",
-              "values": [
-                "Selkies (raise)"
               ],
               "pageNumbers": [
                 363

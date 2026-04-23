@@ -13,6 +13,16 @@ function getTopEntries(map, limit = 15) {
   return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit);
 }
 
+function isSuspiciousEntityName(name) {
+  const normalized = String(name || "").replace(/\s+/g, " ").trim();
+  if (!normalized) return true;
+  if (normalized.includes(":")) return true;
+  if (/^[a-z]/.test(normalized) && /^(and|or|of|the|to|for|from|with|without|into)\b/.test(normalized)) return true;
+  if (normalized === normalized.toLowerCase()) return true;
+  if (/\b(all plants?|all animals?|all birds?)\b/i.test(normalized)) return true;
+  return false;
+}
+
 function auditSection(name, entities, relationships) {
   const entityIds = new Set();
   const degree = new Map();
@@ -20,12 +30,16 @@ function auditSection(name, entities, relationships) {
   const duplicateDirected = new Map();
   const duplicateUndirected = new Map();
   const relationshipTypes = new Map();
+  const suspiciousEntities = [];
 
   for (const entity of entities) {
     const slug = String(entity.slug || "");
     if (!slug) continue;
     entityIds.add(slug);
     degree.set(slug, 0);
+    if (isSuspiciousEntityName(entity.name)) {
+      suspiciousEntities.push({ slug, name: entity.name, category: entity.category || null });
+    }
   }
 
   for (const rel of relationships) {
@@ -59,6 +73,7 @@ function auditSection(name, entities, relationships) {
   console.log(`relationships_with_missing_endpoints=${missingEndpoints.length}`);
   console.log(`duplicate_directed_relationships=${directedDupes.length}`);
   console.log(`duplicate_undirected_relationships_same_type=${undirectedDupes.length}`);
+  console.log(`suspicious_entity_names=${suspiciousEntities.length}`);
 
   console.log("\nTop relationship types:");
   for (const [type, count] of getTopEntries(relationshipTypes, 10)) {
@@ -81,6 +96,13 @@ function auditSection(name, entities, relationships) {
     console.log("\nSample relationships with missing endpoints:");
     for (const rel of missingEndpoints.slice(0, 10)) {
       console.log(`  ${rel.source} -> ${rel.target} (${rel.type})`);
+    }
+  }
+
+  if (suspiciousEntities.length) {
+    console.log("\nSample suspicious entities:");
+    for (const entity of suspiciousEntities.slice(0, 15)) {
+      console.log(`  ${entity.slug} :: ${entity.name} [${entity.category || "uncategorized"}]`);
     }
   }
 }
@@ -116,10 +138,10 @@ function main() {
     const entityCount = (bundle.correspondences.entities || []).length;
     const relationshipCount = (bundle.correspondences.relationships || []).length;
     console.log("\n[ui-fit-check]");
-    console.log(`graph_page_entity_fetch_limit=100`);
-    console.log(`graph_page_edge_fetch_limit=400`);
-    console.log(`bundle_entities_over_limit=${Math.max(entityCount - 100, 0)}`);
-    console.log(`bundle_relationships_over_limit=${Math.max(relationshipCount - 400, 0)}`);
+    console.log(`graph_page_entity_page_size=5000`);
+    console.log(`graph_page_edge_page_size=5000`);
+    console.log(`bundle_entity_pages_required=${Math.max(Math.ceil(entityCount / 5000), 1)}`);
+    console.log(`bundle_relationship_pages_required=${Math.max(Math.ceil(relationshipCount / 5000), 1)}`);
   }
 }
 

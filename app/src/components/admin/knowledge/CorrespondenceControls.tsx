@@ -1,5 +1,7 @@
 "use client";
 
+type CorrespondenceRelationshipLayer = "corresponds_to" | "associated_with" | "shares_correspondence_with" | "refines";
+
 interface CorrespondenceControlsProps {
     searchQuery: string;
     onSearchChange: (value: string) => void;
@@ -9,7 +11,28 @@ interface CorrespondenceControlsProps {
     graphScope?: "focused" | "full";
     onGraphScopeChange?: (value: "focused" | "full") => void;
     showGraphScopeControls?: boolean;
+    relationshipFilters?: Record<CorrespondenceRelationshipLayer, boolean>;
+    onRelationshipFilterChange?: (layer: CorrespondenceRelationshipLayer, value: boolean) => void;
+    relationshipCounts?: Record<CorrespondenceRelationshipLayer, number>;
+    showRelationshipFilters?: boolean;
 }
+
+const RELATIONSHIP_LAYER_OPTIONS: Array<{
+    key: CorrespondenceRelationshipLayer;
+    label: string;
+    accentClass: string;
+}> = [
+    { key: "corresponds_to", label: "Direct", accentClass: "border-amber-500/30 text-amber-200" },
+    { key: "associated_with", label: "Associative", accentClass: "border-sky-500/30 text-sky-200" },
+    { key: "shares_correspondence_with", label: "Semantic Overlap", accentClass: "border-teal-500/30 text-teal-200" },
+    { key: "refines", label: "Refines", accentClass: "border-fuchsia-500/30 text-fuchsia-200" },
+];
+const DEFAULT_RELATIONSHIP_FILTERS: Record<CorrespondenceRelationshipLayer, boolean> = {
+    corresponds_to: true,
+    associated_with: true,
+    shares_correspondence_with: true,
+    refines: false,
+};
 
 export default function CorrespondenceControls({
     searchQuery,
@@ -20,7 +43,15 @@ export default function CorrespondenceControls({
     graphScope = "full",
     onGraphScopeChange,
     showGraphScopeControls = false,
+    relationshipFilters,
+    onRelationshipFilterChange,
+    relationshipCounts,
+    showRelationshipFilters = false,
 }: CorrespondenceControlsProps) {
+    const hasRelationshipFilterChanges = relationshipFilters
+        ? RELATIONSHIP_LAYER_OPTIONS.some((option) => relationshipFilters[option.key] !== DEFAULT_RELATIONSHIP_FILTERS[option.key])
+        : false;
+
     return (
         <div className="flex flex-wrap items-center gap-4 bg-zinc-900/30 border border-amber-900/20 rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
             {/* Search */}
@@ -83,17 +114,51 @@ export default function CorrespondenceControls({
                 </div>
             )}
 
+            {showRelationshipFilters && relationshipFilters && onRelationshipFilterChange && relationshipCounts && (
+                <div className="min-w-[280px] flex-1">
+                    <label className="block text-xs text-amber-100/60 mb-1">Visible Link Layers</label>
+                    <div className="flex flex-wrap gap-2 rounded-lg border border-amber-900/30 bg-zinc-800/80 p-2">
+                        {RELATIONSHIP_LAYER_OPTIONS.map((option) => {
+                            const active = relationshipFilters[option.key];
+                            return (
+                                <button
+                                    key={option.key}
+                                    type="button"
+                                    onClick={() => onRelationshipFilterChange(option.key, !active)}
+                                    className={`rounded-md border px-3 py-2 text-left text-[11px] uppercase tracking-[0.14em] transition-all ${
+                                        active
+                                            ? `${option.accentClass} bg-white/5 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]`
+                                            : "border-white/8 text-zinc-500 hover:border-white/15 hover:text-zinc-300"
+                                    }`}
+                                >
+                                    <span className="block">{option.label}</span>
+                                    <span className="mt-1 block text-[10px] normal-case tracking-normal opacity-70">
+                                        {relationshipCounts[option.key]} links
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Clear Filters */}
-            {(searchQuery || selectedCategory) && (
+            {(searchQuery || selectedCategory || hasRelationshipFilterChanges) && (
                 <div className="flex items-end">
                     <button
                         onClick={() => {
                             onSearchChange("");
                             onCategoryChange(null);
+                            if (onRelationshipFilterChange && relationshipFilters) {
+                                onRelationshipFilterChange("corresponds_to", true);
+                                onRelationshipFilterChange("associated_with", true);
+                                onRelationshipFilterChange("shares_correspondence_with", true);
+                                onRelationshipFilterChange("refines", false);
+                            }
                         }}
                         className="px-4 py-2 text-sm text-amber-100/70 hover:text-amber-100 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
                     >
-                        Clear Filters
+                        Reset View
                     </button>
                 </div>
             )}

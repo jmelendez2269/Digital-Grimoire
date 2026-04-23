@@ -5,6 +5,22 @@ import {
   getSupabaseCookieOptions,
 } from "./auth-config";
 
+function getErrorCauseMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "cause" in error &&
+    typeof error.cause === "object" &&
+    error.cause !== null &&
+    "message" in error.cause &&
+    typeof error.cause.message === "string"
+  ) {
+    return error.cause.message;
+  }
+
+  return "";
+}
+
 function clearSupabaseAuthCookies(
   request: NextRequest,
   response: NextResponse,
@@ -149,7 +165,9 @@ export async function updateSession(request: NextRequest) {
     // If there's an auth error (like invalid refresh token), clear the session
     if (authError) {
       const isRefreshTokenError = authError.message?.includes('refresh_token') || authError.message?.includes('Refresh Token');
-      const isFetchError = authError.message?.includes('fetch failed') || (authError.cause as any)?.message?.includes('fetch failed');
+      const isFetchError =
+        authError.message?.includes('fetch failed') ||
+        getErrorCauseMessage(authError).includes('fetch failed');
 
       if (isRefreshTokenError) {
         console.warn('[Middleware] Invalid refresh token detected, clearing session:', authError.message);
@@ -178,9 +196,14 @@ export async function updateSession(request: NextRequest) {
     // Continue without user - will redirect to login if needed
   }
 
-  // Define public routes that don't require authentication
   const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/api/proxy-image", "/api/concepts", "/api/stripe/webhook"];
+  const devOnlyPublicRoutes =
+    process.env.NODE_ENV === "development"
+      ? ["/graph", "/knowledge-graph", "/api/graph"]
+      : [];
   const isPublicRoute = publicRoutes.some((route) =>
+    request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
+  ) || devOnlyPublicRoutes.some((route) =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
   );
 
