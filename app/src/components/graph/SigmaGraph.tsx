@@ -27,6 +27,7 @@ type GraphSummary = {
 };
 
 const LAYOUT_STORAGE_PREFIX = "digital-grimoire:sigma-layout:";
+const LAYOUT_VERSION = "category-clusters-v1";
 const MIN_LAYOUT_SPAN = 900;
 const LABEL_RENDERED_SIZE_THRESHOLD = 3.2;
 const DENSE_GRAPH_ENTITY_THRESHOLD = 220;
@@ -242,7 +243,7 @@ function buildLayoutKey(entities: GraphEntity[], edges: GraphEdge[], minSimilari
     .sort()
     .join("|");
 
-  return `${minSimilarity.toFixed(3)}::${nodePart}::${edgePart}`;
+  return `${LAYOUT_VERSION}::${minSimilarity.toFixed(3)}::${nodePart}::${edgePart}`;
 }
 
 function drawNodeLabel(
@@ -406,6 +407,19 @@ export default function SigmaGraph({
     };
   }, [edges, entities, minSimilarity]);
 
+  const categorySummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const entity of entities) {
+      const label = entity.category?.trim();
+      if (!label) continue;
+      counts.set(label, (counts.get(label) || 0) + 1);
+    }
+
+    return [...counts.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .slice(0, 6);
+  }, [entities]);
+
   const isDenseGraph =
     (graphSummary?.entityCount || 0) >= DENSE_GRAPH_ENTITY_THRESHOLD ||
     (graphSummary?.edgeCount || 0) >= DENSE_GRAPH_EDGE_THRESHOLD;
@@ -430,10 +444,10 @@ export default function SigmaGraph({
 
     if (graph.order > 0 && !reusedCachedLayout) {
       forceAtlas2.assign(graph, {
-        iterations: 180,
+        iterations: 220,
         settings: {
-          gravity: 0.08,
-          scalingRatio: 8,
+          gravity: graphSummary?.isCorrespondenceGraph ? 0.16 : 0.08,
+          scalingRatio: graphSummary?.isCorrespondenceGraph ? 10.5 : 8,
           strongGravityMode: false,
           barnesHutOptimize: graph.order > 300,
         },
@@ -717,6 +731,7 @@ export default function SigmaGraph({
     denseOverviewRatio,
     edges,
     entities,
+    graphSummary?.isCorrespondenceGraph,
     graphInteractionKey,
     isDenseGraph,
     isVeryDenseGraph,
@@ -822,6 +837,25 @@ export default function SigmaGraph({
       />
 
       <StarField height={height} />
+
+      {graphSummary?.isCorrespondenceGraph && categorySummary.length > 0 && (
+        <div className="pointer-events-none absolute left-4 top-4 z-20 max-w-[340px] rounded-2xl border border-amber-900/25 bg-black/35 px-4 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-amber-500/55">Category Constellations</p>
+          <p className="mt-2 text-xs leading-5 text-amber-100/70">
+            Related correspondences now gather in loose neighborhoods so the archive reads more like regions than one knot.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {categorySummary.map(([category, count]) => (
+              <span
+                key={category}
+                className="rounded-full border border-amber-800/30 bg-amber-950/20 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-amber-100/70"
+              >
+                {category.replaceAll("_", " ")} · {count}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {(["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"] as const).map((pos, index) => (
         <div

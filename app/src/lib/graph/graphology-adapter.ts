@@ -15,6 +15,9 @@ const TRADITION_COLORS: Record<string, string> = {
 
 const CORRESPONDENCE_ANCHOR_COLOR = "#f5d084";
 const CORRESPONDENCE_NODE_COLOR = "#c8882a";
+const CATEGORY_CLUSTER_RADIUS = 440;
+const CATEGORY_CLUSTER_NODE_SPREAD = 118;
+const CATEGORY_CLUSTER_CORE_SPREAD = 82;
 
 const DEFAULT_NODE_COLOR = "#22D3EE";
 const DEFAULT_EDGE_COLOR = "rgba(168, 120, 36, 0.16)";
@@ -101,6 +104,72 @@ function resolveEdgeColor(edge: GraphEdge) {
   return edge.relationship_type?.color ?? EDGE_TYPE_COLORS[edgeType] ?? DEFAULT_EDGE_COLOR;
 }
 
+function positionCorrespondenceClusters(graph: Graph) {
+  const groupedNodeIds = new Map<string, string[]>();
+
+  graph.forEachNode((node) => {
+    const originalData = graph.getNodeAttribute(node, "originalData") as GraphEntity | undefined;
+    const categoryKey = normalizeCategoryKey(originalData?.category) || "other";
+    const group = groupedNodeIds.get(categoryKey) || [];
+    group.push(node);
+    groupedNodeIds.set(categoryKey, group);
+  });
+
+  const categories = [...groupedNodeIds.entries()].sort((left, right) => {
+    if (left[0] === "issue_intention_power") return -1;
+    if (right[0] === "issue_intention_power") return 1;
+    const sizeDelta = right[1].length - left[1].length;
+    if (sizeDelta !== 0) return sizeDelta;
+    return left[0].localeCompare(right[0]);
+  });
+
+  const orbitingCategories = categories.filter(([category]) => category !== "issue_intention_power");
+  const clusterCenterByCategory = new Map<string, { x: number; y: number }>();
+  clusterCenterByCategory.set("issue_intention_power", { x: 0, y: 0 });
+
+  orbitingCategories.forEach(([category], index) => {
+    const angle = (index * 2 * Math.PI) / Math.max(orbitingCategories.length, 1);
+    clusterCenterByCategory.set(category, {
+      x: Math.cos(angle) * CATEGORY_CLUSTER_RADIUS,
+      y: Math.sin(angle) * CATEGORY_CLUSTER_RADIUS,
+    });
+  });
+
+  categories.forEach(([category, nodeIds]) => {
+    const center = clusterCenterByCategory.get(category) || { x: 0, y: 0 };
+    const spread = category === "issue_intention_power" ? CATEGORY_CLUSTER_CORE_SPREAD : CATEGORY_CLUSTER_NODE_SPREAD;
+
+    nodeIds
+      .sort((left, right) => {
+        const leftDegree = graph.getNodeAttribute(left, "degree") as number | undefined;
+        const rightDegree = graph.getNodeAttribute(right, "degree") as number | undefined;
+        return (rightDegree ?? 0) - (leftDegree ?? 0);
+      })
+      .forEach((nodeId, index) => {
+        if (index === 0) {
+          graph.mergeNodeAttributes(nodeId, {
+            x: center.x,
+            y: center.y,
+            clusterKey: category,
+            clusterCenterX: center.x,
+            clusterCenterY: center.y,
+          });
+          return;
+        }
+
+        const angle = index * 2.399963229728653;
+        const radius = Math.sqrt(index) * spread;
+        graph.mergeNodeAttributes(nodeId, {
+          x: center.x + Math.cos(angle) * radius,
+          y: center.y + Math.sin(angle) * radius,
+          clusterKey: category,
+          clusterCenterX: center.x,
+          clusterCenterY: center.y,
+        });
+      });
+  });
+}
+
 export function buildGraphologyGraph(
   entities: GraphEntity[],
   edges: GraphEdge[],
@@ -163,13 +232,19 @@ export function buildGraphologyGraph(
       });
     });
 
-    const radius = 500;
-    const nodes = graph.nodes();
-    nodes.forEach((node, index) => {
-      const angle = (index * 2 * Math.PI) / nodes.length;
-      graph.setNodeAttribute(node, "x", radius * Math.cos(angle));
-      graph.setNodeAttribute(node, "y", radius * Math.sin(angle));
-    });
+    const isCorrespondenceArchive = entities.some((entity) => typeof entity.category === "string" && entity.category.length > 0);
+
+    if (isCorrespondenceArchive) {
+      positionCorrespondenceClusters(graph);
+    } else {
+      const radius = 500;
+      const nodes = graph.nodes();
+      nodes.forEach((node, index) => {
+        const angle = (index * 2 * Math.PI) / nodes.length;
+        graph.setNodeAttribute(node, "x", radius * Math.cos(angle));
+        graph.setNodeAttribute(node, "y", radius * Math.sin(angle));
+      });
+    }
   }
 
   return graph;

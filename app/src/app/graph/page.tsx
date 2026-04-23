@@ -412,6 +412,26 @@ function GraphPageContent() {
     });
   }, [entities, graphType, searchQuery, selectedCategory, selectedTradition]);
 
+  const groupedCorrespondenceCards = useMemo(() => {
+    if (graphType !== "correspondences") return [];
+
+    const groups = new Map<string, CorrespondenceEntity[]>();
+
+    for (const entity of filteredEntities as CorrespondenceEntity[]) {
+      const label = entity.type?.label || entity.category || "Other";
+      const bucket = groups.get(label) || [];
+      bucket.push(entity);
+      groups.set(label, bucket);
+    }
+
+    return [...groups.entries()]
+      .map(([label, items]) => ({
+        label,
+        items: [...items].sort((left, right) => left.name.localeCompare(right.name)),
+      }))
+      .sort((left, right) => right.items.length - left.items.length || left.label.localeCompare(right.label));
+  }, [filteredEntities, graphType]);
+
   const graphFilteredCorrespondenceEntities = useMemo(() => {
     if (graphType !== "correspondences") {
       return filteredEntities as CorrespondenceEntity[];
@@ -692,31 +712,66 @@ function GraphPageContent() {
               </div>
             </div>
           ) : viewMode === "cards" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredEntities.map((entity) => (
-                <EntityNode
-                  key={entity.id}
-                  entity={entity}
-                  graphType={graphType}
-                  relationships={relationships}
-                  onSelect={() => handleSelectEntity(entity)}
-                />
-              ))}
-
-              {filteredEntities.length === 0 && (
-                <div className="col-span-full py-20 text-center">
-                  <div className="inline-block p-4 rounded-full bg-white/5 border border-white/10 mb-4">
-                    <AlertCircle className="w-8 h-8 text-amber-500/50" />
-                  </div>
-                  <h3 className="text-amber-100 font-bold mb-2">No Signal Found</h3>
-                  <p className="text-amber-100/40 text-sm max-w-sm mx-auto">
-                    {searchQuery
-                      ? "Query produced no matches. Adjust search parameters."
-                      : "Knowledge base is empty."}
-                  </p>
+            filteredEntities.length === 0 ? (
+              <div className="py-20 text-center">
+                <div className="inline-block p-4 rounded-full bg-white/5 border border-white/10 mb-4">
+                  <AlertCircle className="w-8 h-8 text-amber-500/50" />
                 </div>
-              )}
-            </div>
+                <h3 className="text-amber-100 font-bold mb-2">No Signal Found</h3>
+                <p className="text-amber-100/40 text-sm max-w-sm mx-auto">
+                  {searchQuery
+                    ? "Query produced no matches. Adjust search parameters."
+                    : "Knowledge base is empty."}
+                </p>
+              </div>
+            ) : graphType === "correspondences" ? (
+              <div className="space-y-8">
+                {groupedCorrespondenceCards.map((group) => (
+                  <section
+                    key={group.label}
+                    className="rounded-2xl border border-amber-900/20 bg-zinc-950/30 p-4 md:p-5"
+                  >
+                    <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-amber-900/20 pb-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-amber-500/45">
+                          Correspondence Category
+                        </p>
+                        <h3 className="mt-1 text-lg font-semibold text-amber-100">
+                          {group.label}
+                        </h3>
+                      </div>
+                      <span className="rounded-full border border-amber-800/30 bg-amber-950/30 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-amber-100/65">
+                        {group.items.length} card{group.items.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {group.items.map((entity) => (
+                        <EntityNode
+                          key={entity.id}
+                          entity={entity}
+                          graphType={graphType}
+                          relationships={relationships}
+                          onSelect={() => handleSelectEntity(entity)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredEntities.map((entity) => (
+                  <EntityNode
+                    key={entity.id}
+                    entity={entity}
+                    graphType={graphType}
+                    relationships={relationships}
+                    onSelect={() => handleSelectEntity(entity)}
+                  />
+                ))}
+              </div>
+            )
           ) : viewMode === "table" ? (
             <ComparativeTable
               concepts={filteredEntities as ParallaxConcept[]}
