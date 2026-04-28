@@ -11,6 +11,7 @@ interface ParallaxGraphProps {
   relationships: (ParallaxRelationship | GraphEdge)[];
   onSelectConcept: (concept: ParallaxConcept | CorrespondenceEntity) => void;
   minSimilarity: number;
+  layoutDensity?: "compact" | "balanced" | "expanded";
 }
 
 /**
@@ -22,6 +23,7 @@ export default function ParallaxGraph({
   relationships,
   onSelectConcept,
   minSimilarity,
+  layoutDensity = "balanced",
 }: ParallaxGraphProps) {
   return (
     <SigmaGraph
@@ -30,6 +32,7 @@ export default function ParallaxGraph({
       onSelectEntity={(entity) => onSelectConcept(entity as unknown as ParallaxConcept | CorrespondenceEntity)}
       minSimilarity={minSimilarity}
       height={600}
+      layoutDensity={layoutDensity}
     />
   );
 }

@@ -15,9 +15,6 @@ const TRADITION_COLORS: Record<string, string> = {
 
 const CORRESPONDENCE_ANCHOR_COLOR = "#f5d084";
 const CORRESPONDENCE_NODE_COLOR = "#c8882a";
-const CATEGORY_CLUSTER_RADIUS = 440;
-const CATEGORY_CLUSTER_NODE_SPREAD = 118;
-const CATEGORY_CLUSTER_CORE_SPREAD = 82;
 
 const DEFAULT_NODE_COLOR = "#22D3EE";
 const DEFAULT_EDGE_COLOR = "rgba(168, 120, 36, 0.16)";
@@ -53,6 +50,8 @@ export interface GraphEdge {
   similarity?: number;
   relationship_type?: { slug?: string; color?: string; label?: string };
 }
+
+export type GraphLayoutDensity = "compact" | "balanced" | "expanded";
 
 function normalizeCategoryKey(value?: string | null) {
   return value?.trim().toLowerCase().replace(/[\s/-]+/g, "_") ?? "";
@@ -104,7 +103,20 @@ function resolveEdgeColor(edge: GraphEdge) {
   return edge.relationship_type?.color ?? EDGE_TYPE_COLORS[edgeType] ?? DEFAULT_EDGE_COLOR;
 }
 
-function positionCorrespondenceClusters(graph: Graph) {
+function getCorrespondenceClusterLayout(density: GraphLayoutDensity) {
+  switch (density) {
+    case "compact":
+      return { radius: 400, nodeSpread: 104, coreSpread: 76 };
+    case "expanded":
+      return { radius: 640, nodeSpread: 156, coreSpread: 112 };
+    case "balanced":
+    default:
+      return { radius: 500, nodeSpread: 128, coreSpread: 92 };
+  }
+}
+
+function positionCorrespondenceClusters(graph: Graph, density: GraphLayoutDensity) {
+  const layout = getCorrespondenceClusterLayout(density);
   const groupedNodeIds = new Map<string, string[]>();
 
   graph.forEachNode((node) => {
@@ -130,14 +142,14 @@ function positionCorrespondenceClusters(graph: Graph) {
   orbitingCategories.forEach(([category], index) => {
     const angle = (index * 2 * Math.PI) / Math.max(orbitingCategories.length, 1);
     clusterCenterByCategory.set(category, {
-      x: Math.cos(angle) * CATEGORY_CLUSTER_RADIUS,
-      y: Math.sin(angle) * CATEGORY_CLUSTER_RADIUS,
+      x: Math.cos(angle) * layout.radius,
+      y: Math.sin(angle) * layout.radius,
     });
   });
 
   categories.forEach(([category, nodeIds]) => {
     const center = clusterCenterByCategory.get(category) || { x: 0, y: 0 };
-    const spread = category === "issue_intention_power" ? CATEGORY_CLUSTER_CORE_SPREAD : CATEGORY_CLUSTER_NODE_SPREAD;
+    const spread = category === "issue_intention_power" ? layout.coreSpread : layout.nodeSpread;
 
     nodeIds
       .sort((left, right) => {
@@ -173,7 +185,8 @@ function positionCorrespondenceClusters(graph: Graph) {
 export function buildGraphologyGraph(
   entities: GraphEntity[],
   edges: GraphEdge[],
-  minSimilarity = 0
+  minSimilarity = 0,
+  layoutDensity: GraphLayoutDensity = "balanced",
 ): Graph {
   const graph = new Graph({ multi: false, type: "undirected" });
 
@@ -235,7 +248,7 @@ export function buildGraphologyGraph(
     const isCorrespondenceArchive = entities.some((entity) => typeof entity.category === "string" && entity.category.length > 0);
 
     if (isCorrespondenceArchive) {
-      positionCorrespondenceClusters(graph);
+      positionCorrespondenceClusters(graph, layoutDensity);
     } else {
       const radius = 500;
       const nodes = graph.nodes();

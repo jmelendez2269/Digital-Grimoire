@@ -34,6 +34,7 @@ type CorrespondenceRelationship = {
 
 type CorrespondenceRelationshipLayer = "corresponds_to" | "associated_with" | "shares_correspondence_with" | "refines";
 type CorrespondenceRelationshipFilters = Record<CorrespondenceRelationshipLayer, boolean>;
+type CorrespondenceLayoutDensity = "compact" | "balanced" | "expanded";
 
 type FocusedCorrespondenceGraph = {
   entities: CorrespondenceEntity[];
@@ -289,6 +290,8 @@ function GraphPageContent() {
   const [correspondenceGraphScope, setCorrespondenceGraphScope] = useState<"focused" | "full">("focused");
   const [correspondenceRelationshipFilters, setCorrespondenceRelationshipFilters] =
     useState<CorrespondenceRelationshipFilters>(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
+  const [correspondenceLayoutDensity, setCorrespondenceLayoutDensity] =
+    useState<CorrespondenceLayoutDensity>("balanced");
 
   useEffect(() => {
     let cancelled = false;
@@ -540,6 +543,7 @@ function GraphPageContent() {
     setMinSimilarity(0);
     setCorrespondenceGraphScope("focused");
     setCorrespondenceRelationshipFilters(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
+    setCorrespondenceLayoutDensity("balanced");
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     router.replace(`/graph?${params.toString()}`, { scroll: false });
@@ -692,6 +696,9 @@ function GraphPageContent() {
                 }
                 relationshipCounts={correspondenceRelationshipCounts}
                 showRelationshipFilters={viewMode === "graph"}
+                layoutDensity={correspondenceLayoutDensity}
+                onLayoutDensityChange={setCorrespondenceLayoutDensity}
+                showLayoutDensityControls={viewMode === "graph"}
               />
             </div>
           )}
@@ -787,6 +794,7 @@ function GraphPageContent() {
                     relationships={graphRelationships}
                     onSelectConcept={(entity: ParallaxConcept | CorrespondenceEntity) => handleSelectEntity(entity)}
                     minSimilarity={minSimilarity}
+                    layoutDensity={correspondenceLayoutDensity}
                   />
                 </div>
                 {graphType === "correspondences" &&

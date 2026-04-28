@@ -1,6 +1,7 @@
 "use client";
 
 type CorrespondenceRelationshipLayer = "corresponds_to" | "associated_with" | "shares_correspondence_with" | "refines";
+type CorrespondenceLayoutDensity = "compact" | "balanced" | "expanded";
 
 interface CorrespondenceControlsProps {
     searchQuery: string;
@@ -15,6 +16,9 @@ interface CorrespondenceControlsProps {
     onRelationshipFilterChange?: (layer: CorrespondenceRelationshipLayer, value: boolean) => void;
     relationshipCounts?: Record<CorrespondenceRelationshipLayer, number>;
     showRelationshipFilters?: boolean;
+    layoutDensity?: CorrespondenceLayoutDensity;
+    onLayoutDensityChange?: (value: CorrespondenceLayoutDensity) => void;
+    showLayoutDensityControls?: boolean;
 }
 
 const RELATIONSHIP_LAYER_OPTIONS: Array<{
@@ -47,6 +51,9 @@ export default function CorrespondenceControls({
     onRelationshipFilterChange,
     relationshipCounts,
     showRelationshipFilters = false,
+    layoutDensity = "balanced",
+    onLayoutDensityChange,
+    showLayoutDensityControls = false,
 }: CorrespondenceControlsProps) {
     const hasRelationshipFilterChanges = relationshipFilters
         ? RELATIONSHIP_LAYER_OPTIONS.some((option) => relationshipFilters[option.key] !== DEFAULT_RELATIONSHIP_FILTERS[option.key])
@@ -138,6 +145,32 @@ export default function CorrespondenceControls({
                                 </button>
                             );
                         })}
+                    </div>
+                </div>
+            )}
+
+            {showLayoutDensityControls && onLayoutDensityChange && (
+                <div className="min-w-[220px]">
+                    <label className="block text-xs text-amber-100/60 mb-1">Graph Spacing</label>
+                    <div className="flex items-center gap-1 rounded-lg border border-amber-900/30 bg-zinc-800 p-1">
+                        {([
+                            { key: "compact", label: "Compact" },
+                            { key: "balanced", label: "Balanced" },
+                            { key: "expanded", label: "Expanded" },
+                        ] as const).map((option) => (
+                            <button
+                                key={option.key}
+                                type="button"
+                                onClick={() => onLayoutDensityChange(option.key)}
+                                className={`flex-1 rounded-md px-3 py-2 text-[11px] uppercase tracking-[0.14em] transition-colors ${
+                                    layoutDensity === option.key
+                                        ? "bg-amber-500/20 text-amber-200"
+                                        : "text-amber-100/55 hover:text-amber-100"
+                                }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
             )}

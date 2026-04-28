@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Sigma } from "sigma";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 import type Graph from "graphology";
-import { buildGraphologyGraph, GraphEntity, GraphEdge } from "@/lib/graph/graphology-adapter";
+import { buildGraphologyGraph, GraphEntity, GraphEdge, GraphLayoutDensity } from "@/lib/graph/graphology-adapter";
 
 interface SigmaGraphProps {
   entities: GraphEntity[];
@@ -12,6 +12,7 @@ interface SigmaGraphProps {
   onSelectEntity: (entity: GraphEntity) => void;
   minSimilarity?: number;
   height?: number;
+  layoutDensity?: GraphLayoutDensity;
 }
 
 type LayoutSnapshot = Record<string, { x: number; y: number }>;
@@ -27,8 +28,12 @@ type GraphSummary = {
 };
 
 const LAYOUT_STORAGE_PREFIX = "digital-grimoire:sigma-layout:";
-const LAYOUT_VERSION = "category-clusters-v1";
-const MIN_LAYOUT_SPAN = 900;
+const LAYOUT_VERSION = "category-clusters-v2";
+const MIN_LAYOUT_SPAN_BY_DENSITY: Record<GraphLayoutDensity, number> = {
+  compact: 900,
+  balanced: 1200,
+  expanded: 1700,
+};
 const LABEL_RENDERED_SIZE_THRESHOLD = 3.2;
 const DENSE_GRAPH_ENTITY_THRESHOLD = 220;
 const DENSE_GRAPH_EDGE_THRESHOLD = 900;
@@ -48,6 +53,9 @@ const TWINKLE_SPAWN_INTERVAL_MS = 420;
 const TWINKLE_FRAME_INTERVAL_MS = 60;
 const BACKGROUND_NODE_DIM_ALPHA = 0.35;
 const BACKGROUND_EDGE_DIM_ALPHA = 0.14;
+const IDLE_EDGE_ALPHA_SPARSE = 0;
+const IDLE_EDGE_ALPHA_DENSE = 0;
+const IDLE_EDGE_ALPHA_VERY_DENSE = 0;
 
 type TwinkleEntry = { birth: number; lifespan: number };
 
@@ -127,7 +135,7 @@ function focusCameraOnNode(renderer: Sigma, graph: Graph, node: string, isDenseG
   );
 }
 
-function getGraphBounds(graph: Graph) {
+function getGraphBounds(graph: Graph, minLayoutSpan: number) {
   let minX = Number.POSITIVE_INFINITY;
   let minY = Number.POSITIVE_INFINITY;
   let maxX = Number.NEGATIVE_INFINITY;
@@ -145,21 +153,21 @@ function getGraphBounds(graph: Graph) {
 
   if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
     return {
-      minX: -MIN_LAYOUT_SPAN / 2,
-      minY: -MIN_LAYOUT_SPAN / 2,
-      maxX: MIN_LAYOUT_SPAN / 2,
-      maxY: MIN_LAYOUT_SPAN / 2,
+      minX: -minLayoutSpan / 2,
+      minY: -minLayoutSpan / 2,
+      maxX: minLayoutSpan / 2,
+      maxY: minLayoutSpan / 2,
     };
   }
 
   return { minX, minY, maxX, maxY };
 }
 
-function normalizeGraphLayout(graph: Graph) {
-  const bounds = getGraphBounds(graph);
+function normalizeGraphLayout(graph: Graph, minLayoutSpan: number) {
+  const bounds = getGraphBounds(graph, minLayoutSpan);
   const width = Math.max(bounds.maxX - bounds.minX, 1);
   const height = Math.max(bounds.maxY - bounds.minY, 1);
-  const scale = Math.max(1, MIN_LAYOUT_SPAN / Math.max(width, height));
+  const scale = Math.max(1, minLayoutSpan / Math.max(width, height));
   const centerX = (bounds.minX + bounds.maxX) / 2;
   const centerY = (bounds.minY + bounds.maxY) / 2;
 
@@ -227,7 +235,12 @@ function writeStoredLayout(layoutKey: string, snapshot: LayoutSnapshot) {
   }
 }
 
-function buildLayoutKey(entities: GraphEntity[], edges: GraphEdge[], minSimilarity: number) {
+function buildLayoutKey(
+  entities: GraphEntity[],
+  edges: GraphEdge[],
+  minSimilarity: number,
+  layoutDensity: GraphLayoutDensity,
+) {
   const nodePart = entities
     .map((entity) => entity.id)
     .sort()
@@ -243,7 +256,7 @@ function buildLayoutKey(entities: GraphEntity[], edges: GraphEdge[], minSimilari
     .sort()
     .join("|");
 
-  return `${LAYOUT_VERSION}::${minSimilarity.toFixed(3)}::${nodePart}::${edgePart}`;
+  return `${LAYOUT_VERSION}::${layoutDensity}::${minSimilarity.toFixed(3)}::${nodePart}::${edgePart}`;
 }
 
 function drawNodeLabel(
@@ -330,6 +343,7 @@ export default function SigmaGraph({
   onSelectEntity,
   minSimilarity = 0,
   height = 700,
+  layoutDensity = "balanced",
 }: SigmaGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
@@ -430,29 +444,36 @@ export default function SigmaGraph({
   const denseLabelRevealRatio = isVeryDenseGraph ? VERY_DENSE_LABEL_REVEAL_RATIO : DENSE_LABEL_REVEAL_RATIO;
   const denseOverviewRatio = isVeryDenseGraph ? VERY_DENSE_OVERVIEW_RATIO : DENSE_OVERVIEW_RATIO;
   const graphInteractionKey = useMemo(
-    () => buildLayoutKey(entities, edges, minSimilarity),
-    [edges, entities, minSimilarity],
+    () => buildLayoutKey(entities, edges, minSimilarity, layoutDensity),
+    [edges, entities, layoutDensity, minSimilarity],
   );
+  const minLayoutSpan = MIN_LAYOUT_SPAN_BY_DENSITY[layoutDensity];
 
   useEffect(() => {
     if (!containerRef.current || entities.length === 0) return;
 
-    const graph = buildGraphologyGraph(entities, edges, minSimilarity);
+    const graph = buildGraphologyGraph(entities, edges, minSimilarity, layoutDensity);
     const layoutKey = graphInteractionKey;
     const cachedLayout = readStoredLayout(layoutKey);
     const reusedCachedLayout = applyLayoutSnapshot(graph, cachedLayout);
 
     if (graph.order > 0 && !reusedCachedLayout) {
+      const correspondenceLayoutSettings =
+        layoutDensity === "expanded"
+          ? { gravity: 0.09, scalingRatio: 18, iterations: 260 }
+          : layoutDensity === "compact"
+            ? { gravity: 0.18, scalingRatio: 9.5, iterations: 220 }
+            : { gravity: 0.12, scalingRatio: 13.5, iterations: 240 };
       forceAtlas2.assign(graph, {
-        iterations: 220,
+        iterations: correspondenceLayoutSettings.iterations,
         settings: {
-          gravity: graphSummary?.isCorrespondenceGraph ? 0.16 : 0.08,
-          scalingRatio: graphSummary?.isCorrespondenceGraph ? 10.5 : 8,
+          gravity: graphSummary?.isCorrespondenceGraph ? correspondenceLayoutSettings.gravity : 0.08,
+          scalingRatio: graphSummary?.isCorrespondenceGraph ? correspondenceLayoutSettings.scalingRatio : 8,
           strongGravityMode: false,
           barnesHutOptimize: graph.order > 300,
         },
       });
-      normalizeGraphLayout(graph);
+      normalizeGraphLayout(graph, minLayoutSpan);
       writeStoredLayout(layoutKey, snapshotLayout(graph));
     }
 
@@ -524,7 +545,6 @@ export default function SigmaGraph({
 
     const resizeObserver = new ResizeObserver(() => {
       renderer.refresh();
-      resetCamera(renderer);
     });
     resizeObserver.observe(containerRef.current);
 
@@ -624,12 +644,7 @@ export default function SigmaGraph({
         if (!activeNode) {
           return {
             ...data,
-            color: isDenseGraph
-              ? withAlpha(data.color, isVeryDenseGraph ? 0.06 : 0.1)
-              : withAlpha(data.color, 0.38),
-            size: isDenseGraph
-              ? Math.max((data.size ?? 1.8) * (isVeryDenseGraph ? 0.42 : 0.68), 0.38)
-              : data.size,
+            hidden: true,
           };
         }
 
@@ -644,8 +659,7 @@ export default function SigmaGraph({
 
         return {
           ...data,
-          color: withAlpha(data.color, BACKGROUND_EDGE_DIM_ALPHA),
-          size: Math.max((data.size ?? 1.8) * (isDenseGraph ? (isVeryDenseGraph ? 0.22 : 0.34) : 0.42), 0.32),
+          hidden: true,
         };
       });
 
@@ -733,9 +747,11 @@ export default function SigmaGraph({
     entities,
     graphSummary?.isCorrespondenceGraph,
     graphInteractionKey,
+    layoutDensity,
     isDenseGraph,
     isVeryDenseGraph,
     labelSizeThreshold,
+    minLayoutSpan,
     minSimilarity,
     onSelectEntity,
   ]);
@@ -839,10 +855,13 @@ export default function SigmaGraph({
       <StarField height={height} />
 
       {graphSummary?.isCorrespondenceGraph && categorySummary.length > 0 && (
-        <div className="pointer-events-none absolute left-4 top-4 z-20 max-w-[340px] rounded-2xl border border-amber-900/25 bg-black/35 px-4 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm">
+        <div className="pointer-events-none absolute left-4 top-24 z-20 max-w-[320px] rounded-2xl border border-amber-900/25 bg-black/35 px-4 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur-sm">
           <p className="text-[10px] uppercase tracking-[0.28em] text-amber-500/55">Category Constellations</p>
           <p className="mt-2 text-xs leading-5 text-amber-100/70">
-            Related correspondences now gather in loose neighborhoods so the archive reads more like regions than one knot.
+            Related correspondences gather in readable neighborhoods so the archive can be scanned region by region instead of as one knot.
+          </p>
+          <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-amber-100/45">
+            Spacing: {layoutDensity}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {categorySummary.map(([category, count]) => (
@@ -904,7 +923,7 @@ export default function SigmaGraph({
             Reading the Archive
           </p>
           <p className="mt-2">
-            Unlabeled dots are still loaded nodes. Zoom or hover to inspect them.
+            Unlabeled dots are still loaded nodes. Connections stay hidden until hover or selection.
           </p>
           <p className="mt-1">
             {graphSummary.leafCount} leaf nodes are present, and {graphSummary.labeledHubCount} anchors stay labeled to hold the structure together.
