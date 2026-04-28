@@ -281,7 +281,11 @@ export default function EditDocumentPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to rescan metadata');
+        const errorMessage =
+          errorData.error && errorData.error !== 'Failed to rescan metadata'
+            ? errorData.error
+            : errorData.details || errorData.error || 'Failed to rescan metadata';
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
