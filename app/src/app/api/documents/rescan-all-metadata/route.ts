@@ -5,6 +5,33 @@ import { getR2Client, GetObjectCommand } from '@/lib/storage/r2-client';
 import { performOCR } from '@/lib/azure-ocr';
 import { extractPdfTextLocally, isTextSubstantial } from '@/lib/utils/server-pdf-extractor';
 
+function getRescanMetadataError(error: unknown) {
+  const details = error instanceof Error ? error.message : 'Unknown error';
+  const normalized = details.toLowerCase();
+
+  if (normalized.includes('429') || normalized.includes('quota') || normalized.includes('rate limit')) {
+    return {
+      status: 429,
+      error: 'AI metadata rescan is currently unavailable because the OpenAI quota or rate limit has been exceeded. Check billing or try again later.',
+      details,
+    };
+  }
+
+  if (normalized.includes('openai api key not configured')) {
+    return {
+      status: 500,
+      error: 'AI metadata rescan is not configured because the OpenAI API key is missing.',
+      details,
+    };
+  }
+
+  return {
+    status: 500,
+    error: details || 'Failed to rescan metadata',
+    details,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -184,12 +211,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[Rescan All Metadata] Error:', error);
+    const failure = getRescanMetadataError(error);
+
     return NextResponse.json(
-      {
-        error: 'Failed to rescan metadata',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
+      failure,
+      { status: failure.status }
     );
   }
 }

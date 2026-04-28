@@ -31,6 +31,27 @@ function checkSupabaseStatus() {
     }
 }
 
+function getCurrentSupabaseMode() {
+    const envPath = path.join(process.cwd(), '.env.local');
+    if (!fs.existsSync(envPath)) {
+        return 'missing';
+    }
+
+    const content = fs.readFileSync(envPath, 'utf-8');
+    const urlMatch = content.match(/^NEXT_PUBLIC_SUPABASE_URL=(.+)$/m);
+    const url = urlMatch?.[1]?.trim() || '';
+
+    if (url.includes('127.0.0.1:54321') || url.includes('localhost:54321')) {
+        return 'local';
+    }
+
+    if (url.includes('supabase.co')) {
+        return 'remote';
+    }
+
+    return 'unknown';
+}
+
 function checkGitBranch() {
     try {
         const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
@@ -55,13 +76,14 @@ function checkEnvFile() {
     }
 
     const content = fs.readFileSync(envPath, 'utf-8');
-    if (content.includes('supabase.co')) { // simplistic check for remote URL
-        log(YELLOW, '⚠️  YOUR .env.local CONTAINS REMOTE SUPABASE URLS!');
-        log(YELLOW, '   This means you might connect to PROD from local.');
-        log(YELLOW, '   Verify this is intentional.');
-        // We don't block, but we warn heavily.
-    } else {
+    const mode = getCurrentSupabaseMode();
+    if (mode === 'remote') {
+        log(GREEN, '✅ .env.local points to a hosted Supabase project.');
+        log(YELLOW, '   Confirm this is your staging/dev project and not production.');
+    } else if (mode === 'local') {
         log(GREEN, '✅ .env.local looks safe (local keys detected).');
+    } else {
+        log(YELLOW, '⚠️  Could not classify the active Supabase environment in .env.local.');
     }
     return true;
 }
@@ -69,7 +91,20 @@ function checkEnvFile() {
 function main() {
     console.log('🛡️  Running Safety Checks...\n');
 
-    const isSupabaseRunning = checkSupabaseStatus();
+    const supabaseMode = getCurrentSupabaseMode();
+    let isSupabaseRunning = true;
+
+    if (supabaseMode === 'local') {
+        log(YELLOW, 'Environment mode: local Supabase');
+        isSupabaseRunning = checkSupabaseStatus();
+    } else if (supabaseMode === 'remote') {
+        log(GREEN, 'Environment mode: staging/remote Supabase');
+        log(YELLOW, 'Skipping local Supabase health check because .env.local points to a hosted project.');
+    } else {
+        log(YELLOW, 'Environment mode: unknown');
+        log(YELLOW, 'Could not determine whether .env.local points to local or remote Supabase.');
+    }
+
     const isBranchSafe = checkGitBranch();
     const isEnvSafe = checkEnvFile();
 

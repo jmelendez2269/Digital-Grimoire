@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -14,10 +13,11 @@ export function VerifyEmailContent() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Check if user is already verified
     const checkVerification = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (user?.email_confirmed_at) {
         router.push("/dashboard");
@@ -36,38 +36,36 @@ export function VerifyEmailContent() {
       const supabase = createClient();
 
       if (!email) {
-        setError("DATA_NOT_FOUND: EMAIL_MISSING");
+        setError("We couldn't find the email address for this verification request.");
         setResending(false);
         return;
       }
 
       const { error: resendError } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
+        type: "signup",
+        email,
       });
 
       if (resendError) {
         setError(resendError.message);
       } else {
-        setMessage("SIGNAL_SENT: CHECK_INBOX");
+        setMessage("A fresh verification email is on its way.");
       }
-    } catch (err) {
-      setError("TRANSMISSION_FAILED");
+    } catch {
+      setError("We couldn't resend the verification email. Please try again.");
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div className="glass-panel p-8 backdrop-blur-xl relative overflow-hidden rounded-2xl border-white/5">
-      {/* Top Border Gradient */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+    <div className="glass-panel relative overflow-hidden rounded-2xl border-white/5 p-8 backdrop-blur-xl">
+      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
 
-      {/* Email Icon */}
       <div className="mb-6 flex justify-center">
         <div className="relative">
-          <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
-          <div className="relative rounded-full bg-zinc-900 border border-amber-500/30 p-4 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+          <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl" />
+          <div className="relative rounded-full border border-amber-500/30 bg-zinc-900 p-4 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
             <svg
               className="h-10 w-10 text-amber-500"
               fill="none"
@@ -75,10 +73,10 @@ export function VerifyEmailContent() {
               viewBox="0 0 24 24"
             >
               <path
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={1.5}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
           </div>
@@ -86,57 +84,53 @@ export function VerifyEmailContent() {
       </div>
 
       <div className="space-y-4 text-center">
-        <p className="text-amber-100 font-sans text-sm">
-          A verification link has been transmitted to:
+        <p className="text-sm leading-6 text-zinc-200">
+          We sent a confirmation link to the email address below. Open it to finish joining Prismarium.
         </p>
-        <div className="rounded border border-amber-500/20 bg-amber-500/5 py-2 px-3">
-          <p className="font-mono text-amber-400 text-sm break-all">
-            {email || "UNKNOWN_TARGET"}
-          </p>
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+          <p className="break-all text-sm text-amber-300">{email || "Email address unavailable"}</p>
         </div>
-        <p className="text-xs text-zinc-500 font-mono uppercase tracking-wide">
-          ACTION_REQUIRED: VERIFY_IDENTITY
+        <p className="text-xs text-zinc-500">
+          Once confirmed, you&apos;ll be able to sign in and continue your work in Prismarium.
         </p>
       </div>
 
-      {/* Success/Error Messages */}
       {message && (
-        <div className="mt-6 rounded border border-green-500/30 bg-green-500/10 px-4 py-3 text-xs font-mono text-green-400 flex items-center justify-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+        <div className="mt-6 flex items-center justify-center gap-2 rounded border border-green-500/30 bg-green-500/10 px-4 py-3 text-xs text-green-400">
+          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
           {message}
         </div>
       )}
 
       {error && (
-        <div className="mt-6 rounded border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-mono text-red-400 flex items-center justify-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+        <div className="mt-6 flex items-center justify-center gap-2 rounded border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-400">
+          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
           {error}
         </div>
       )}
 
-      {/* Resend Button */}
       <div className="mt-8">
         <button
-          onClick={handleResendEmail}
+          className="relative w-full overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-amber-500/40 hover:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={resending}
-          className="relative w-full overflow-hidden rounded bg-zinc-900 border border-zinc-800 px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider hover:text-white hover:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 transition-all group"
+          onClick={handleResendEmail}
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            {resending ? "RE-TRANSMITTING..." : "RESEND_SIGNAL"}
+            {resending ? "Resending email..." : "Resend verification email"}
           </span>
         </button>
       </div>
 
-      {/* Help Text */}
       <div className="mt-6 border-t border-white/5 pt-6 text-center">
-        <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-widest mb-2">Troubleshooting_Protocols</p>
-        <ul className="text-xs text-zinc-500 space-y-1">
-          <li>Check Spam/Junk folders</li>
-          <li>Verify email address spelling</li>
-          <li>Allow 5 minutes for transmission</li>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
+          Need help?
+        </p>
+        <ul className="space-y-1 text-xs text-zinc-500">
+          <li>Check your spam or junk folder</li>
+          <li>Make sure the email address is spelled correctly</li>
+          <li>Give it a few minutes, then resend if needed</li>
         </ul>
       </div>
     </div>
   );
 }
-

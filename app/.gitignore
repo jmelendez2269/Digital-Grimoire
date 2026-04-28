@@ -32,7 +32,9 @@ yarn-error.log*
 
 # env files (do not commit)
 .env
+.env.source-books
 .env*.local
+.env.local.*
 .env.development
 .env.production
 

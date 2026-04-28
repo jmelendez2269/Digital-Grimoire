@@ -46,15 +46,24 @@ cd app
 pnpm install
 
 # Set up environment variables
-# Copy .env.example to .env.local and fill in your credentials:
-# - Supabase URL and keys
-# - AWS credentials
-# - API keys for Claude and OpenAI
+# Copy .env.local.staging.example to .env.local.staging and fill in your credentials
+# Then activate the staging profile:
+pwsh ./scripts/switch-env.ps1 -Profile staging
 
 # Run the development server
 pnpm dev
 
 # Open http://localhost:3000 in your browser
+```
+
+For most day-to-day work, use the hosted staging database profile. Use the local Supabase profile only for isolated schema or migration testing.
+
+If you want to run the app without relying on the host machine's Node setup, see `docs/DOCKER_WORKFLOW.md` for the Docker-based dev flow.
+
+For a fresh machine, start with:
+
+```powershell
+.\bootstrap-dev.ps1 -Profile staging
 ```
 
 **Current Status:** Sprint 2 Complete! ✅ Ready for Sprint 3  
@@ -153,6 +162,7 @@ Digital-Grimoire/
 ```
 
 **See:** `docs/planning/QUICK_START_GUIDE.md` for detailed instructions
+**Database workflow:** `docs/DB_WORKFLOW.md`
 
 ### For Project Managers
 

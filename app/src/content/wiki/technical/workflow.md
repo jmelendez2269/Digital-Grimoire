@@ -152,7 +152,26 @@ feature/* (local)     → Your local feature branches
 3. Deploy to production → Live Site
 ```
 
-### Step 1: Test Locally First (localhost:3000)
+### Step 1: Pick the Right Database Mode
+
+For normal feature work, point the app at the hosted staging database so you can see the shared seeded data and keep building without recreating your local DB.
+
+```powershell
+cd "C:\Projects\Digital-Grimoire\app"
+.\scripts\switch-env.ps1 -Profile staging
+pnpm dev
+```
+
+Use local Supabase only when you intentionally want an isolated sandbox:
+
+```powershell
+cd "C:\Projects\Digital-Grimoire\app"
+.\scripts\switch-env.ps1 -Profile local-supabase
+npx supabase start
+pnpm dev
+```
+
+### Step 2: Test Locally First (localhost:3000)
 
 **Before committing, test your changes locally:**
 
@@ -187,7 +206,7 @@ pnpm dev
 - **Private** - Only you see it
 - **Fast iteration** - Make changes, see results immediately
 
-### Step 2: Commit to Develop (Creates Preview)
+### Step 3: Commit to Develop (Creates Preview)
 
 **After localhost testing works, commit to create a preview:**
 
@@ -208,7 +227,7 @@ Tell AI: **"Commit this to develop"**
 - ✅ **Share with others** - Get feedback before production
 - ✅ **Catch build issues** - Some issues only appear in production builds
 
-### Step 3: Deploy to Production
+### Step 4: Deploy to Production
 
 **After preview testing looks good:**
 

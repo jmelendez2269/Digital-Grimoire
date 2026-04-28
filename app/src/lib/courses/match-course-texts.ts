@@ -19,6 +19,12 @@ interface TextMatch {
   cover_image_url: string | null;
 }
 
+interface ReadingCandidate {
+  title: string;
+  author?: string;
+  variants: string[];
+}
+
 export interface MatchedCourseText {
   id: string;
   text_id: string;
@@ -27,35 +33,58 @@ export interface MatchedCourseText {
 }
 
 interface QueryableClient {
-  from: (table: string) => any;
+  from: (table: string) => {
+    select: (columns: string) => {
+      ilike: (column: string, pattern: string) => {
+        limit: (count: number) => Promise<{ data: TextMatch[] | null; error: unknown }>;
+      };
+    };
+  };
 }
 
 function escapeLikePattern(value: string): string {
   return value.replace(/[%_]/g, (char) => `\\${char}`);
 }
 
-function looksLikeAuthorName(value: string): boolean {
-  if (!value) return false;
-  const normalized = value.trim().toLowerCase();
+function normalizeForComparison(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[’'"]/g, '')
+    .replace(/[–—]/g, '-')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  const knownAuthors = [
-    'plato',
-    'lao tzu',
-    'marcus aurelius',
-    'descartes',
-    'bacon',
-    'rumi',
-    'eckhart',
-    'william james',
-    'anonymous',
-    'zhuangzi',
-    'ovid',
-    'carl jung',
-  ];
+function stripLeadingArticle(value: string): string {
+  return value.replace(/^(the|a|an)\s+/i, '').trim();
+}
 
-  if (knownAuthors.includes(normalized)) return true;
+function stripTrailingQualifier(value: string): string {
+  return value
+    .replace(/\s*\([^)]*\)\s*$/g, '')
+    .replace(/\s*[:,-]\s*(selected|selections|selection|chapters?|books?|parts?|tractates?|sections?|volumes?).*$/i, '')
+    .trim();
+}
 
-  return /^[a-z]+(?:\s+[a-z.]+){0,3}$/i.test(value) && !/[,:]/.test(value);
+function dedupeNonEmpty(values: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (!trimmed) continue;
+
+    const key = normalizeForComparison(trimmed);
+    if (!key || seen.has(key)) continue;
+
+    seen.add(key);
+    deduped.push(trimmed);
+  }
+
+  return deduped;
 }
 
 function getTitleCandidateFromSection(section: string | undefined): string | null {
@@ -65,45 +94,130 @@ function getTitleCandidateFromSection(section: string | undefined): string | nul
   return clean || null;
 }
 
-export function extractReadingTitles(content: CourseContentLike | null | undefined): string[] {
-  const titles = new Set<string>();
+function buildTitleVariants(title: string, section?: string): string[] {
+  const sectionTitle = getTitleCandidateFromSection(section);
+  const strippedTitle = stripTrailingQualifier(title);
+  const strippedSectionTitle = sectionTitle ? stripTrailingQualifier(sectionTitle) : null;
+
+  return dedupeNonEmpty([
+    title,
+    strippedTitle,
+    stripLeadingArticle(title),
+    stripLeadingArticle(strippedTitle),
+    sectionTitle,
+    strippedSectionTitle,
+    strippedSectionTitle ? stripLeadingArticle(strippedSectionTitle) : null,
+  ]);
+}
+
+function extractReadingCandidates(content: CourseContentLike | null | undefined): ReadingCandidate[] {
+  const candidates = new Map<string, ReadingCandidate>();
 
   content?.weeks?.forEach((week) => {
     week?.readings?.forEach((reading) => {
       const title = reading?.title?.trim();
-      const sectionTitle = getTitleCandidateFromSection(reading?.section);
+      if (!title) return;
 
-      if (title && !looksLikeAuthorName(title)) {
-        titles.add(title);
-      }
+      const variants = buildTitleVariants(title, reading?.section);
+      if (variants.length === 0) return;
 
-      if (sectionTitle) {
-        titles.add(sectionTitle);
-      }
+      const key = normalizeForComparison(title);
+      if (!key) return;
+
+      candidates.set(key, {
+        title,
+        author: reading?.author?.trim() || undefined,
+        variants,
+      });
     });
   });
 
-  return Array.from(titles);
+  return Array.from(candidates.values());
+}
+
+function scoreTextMatch(candidate: ReadingCandidate, text: TextMatch): number {
+  const normalizedTextTitle = normalizeForComparison(text.title);
+  const normalizedTextAuthor = normalizeForComparison(text.author || '');
+  const normalizedCandidateAuthor = normalizeForComparison(candidate.author || '');
+
+  let bestScore = 0;
+
+  for (const variant of candidate.variants) {
+    const normalizedVariant = normalizeForComparison(variant);
+    if (!normalizedVariant) continue;
+
+    let score = 0;
+
+    if (normalizedTextTitle === normalizedVariant) score += 100;
+    else if (normalizedTextTitle.startsWith(normalizedVariant)) score += 80;
+    else if (normalizedTextTitle.includes(normalizedVariant)) score += 65;
+    else if (normalizedVariant.includes(normalizedTextTitle)) score += 55;
+
+    const variantWords = normalizedVariant.split(' ').filter(Boolean);
+    const sharedWords = variantWords.filter((word) => normalizedTextTitle.includes(word));
+    score += sharedWords.length * 4;
+
+    if (normalizedCandidateAuthor && normalizedTextAuthor) {
+      if (normalizedTextAuthor === normalizedCandidateAuthor) score += 30;
+      else if (
+        normalizedTextAuthor.includes(normalizedCandidateAuthor) ||
+        normalizedCandidateAuthor.includes(normalizedTextAuthor)
+      ) {
+        score += 20;
+      }
+    }
+
+    bestScore = Math.max(bestScore, score);
+  }
+
+  return bestScore;
+}
+
+async function findBestTextMatch(
+  client: QueryableClient,
+  candidate: ReadingCandidate
+): Promise<TextMatch | null> {
+  const variants = candidate.variants.slice(0, 5);
+  const seen = new Map<string, TextMatch>();
+
+  for (const variant of variants) {
+    const { data, error } = await client
+      .from('texts')
+      .select('id, title, author, cover_image_url')
+      .ilike('title', `%${escapeLikePattern(variant)}%`)
+      .limit(8);
+
+    if (error || !data || data.length === 0) continue;
+
+    for (const text of data as TextMatch[]) {
+      seen.set(text.id, text);
+    }
+  }
+
+  const rankedMatches = Array.from(seen.values())
+    .map((text) => ({
+      text,
+      score: scoreTextMatch(candidate, text),
+    }))
+    .filter((match) => match.score >= 60)
+    .sort((a, b) => b.score - a.score);
+
+  return rankedMatches[0]?.text || null;
+}
+
+export function extractReadingTitles(content: CourseContentLike | null | undefined): string[] {
+  return extractReadingCandidates(content).flatMap((candidate) => candidate.variants);
 }
 
 export async function matchCourseTextsFromContent(
   client: QueryableClient,
   content: CourseContentLike | null | undefined
 ): Promise<MatchedCourseText[]> {
-  const titles = extractReadingTitles(content);
-  if (titles.length === 0) return [];
+  const candidates = extractReadingCandidates(content);
+  if (candidates.length === 0) return [];
 
   const matches = await Promise.all(
-    titles.map(async (title) => {
-      const { data, error } = await client
-        .from('texts')
-        .select('id, title, author, cover_image_url')
-        .ilike('title', `%${escapeLikePattern(title)}%`)
-        .limit(1);
-
-      if (error || !data || data.length === 0) return null;
-      return data[0];
-    })
+    candidates.map((candidate) => findBestTextMatch(client, candidate))
   );
 
   const uniqueMatches = Array.from(

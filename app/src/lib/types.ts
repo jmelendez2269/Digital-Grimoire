@@ -39,6 +39,7 @@ export interface ParallaxConcept {
 
 export interface CorrespondenceEntity {
   id: string;
+  slug?: string;
   name: string;
   category: string | null;
   type?: {
@@ -50,7 +51,9 @@ export interface CorrespondenceEntity {
   };
   aliases?: string[];
   description?: string;
+  lenses?: string[];
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface Relationship {

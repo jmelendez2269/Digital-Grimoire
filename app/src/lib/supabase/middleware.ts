@@ -1,5 +1,49 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  getLegacySupabaseCookiePrefixes,
+  getSupabaseCookieOptions,
+} from "./auth-config";
+
+function getErrorCauseMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "cause" in error &&
+    typeof error.cause === "object" &&
+    error.cause !== null &&
+    "message" in error.cause &&
+    typeof error.cause.message === "string"
+  ) {
+    return error.cause.message;
+  }
+
+  return "";
+}
+
+function clearSupabaseAuthCookies(
+  request: NextRequest,
+  response: NextResponse,
+  supabaseUrl?: string,
+) {
+  const expiredDate = new Date(0);
+  const cookiePrefixes = getLegacySupabaseCookiePrefixes(supabaseUrl);
+  const cookieOptions = getSupabaseCookieOptions();
+
+  request.cookies
+    .getAll()
+    .filter(({ name }) =>
+      cookiePrefixes.some(
+        (prefix) => name === prefix || name.startsWith(`${prefix}.`),
+      ),
+    )
+    .forEach(({ name }) => {
+      response.cookies.set(name, "", {
+        ...cookieOptions,
+        expires: expiredDate,
+      });
+    });
+}
 
 export async function updateSession(request: NextRequest) {
   // MAINTENANCE MODE CHECK - Check at the beginning
@@ -29,6 +73,7 @@ export async function updateSession(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
+        cookieOptions: getSupabaseCookieOptions(),
         cookies: {
           getAll() {
             return request.cookies.getAll();
@@ -85,6 +130,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: getSupabaseCookieOptions(),
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -119,14 +165,17 @@ export async function updateSession(request: NextRequest) {
     // If there's an auth error (like invalid refresh token), clear the session
     if (authError) {
       const isRefreshTokenError = authError.message?.includes('refresh_token') || authError.message?.includes('Refresh Token');
-      const isFetchError = authError.message?.includes('fetch failed') || (authError.cause as any)?.message?.includes('fetch failed');
+      const isFetchError =
+        authError.message?.includes('fetch failed') ||
+        getErrorCauseMessage(authError).includes('fetch failed');
 
       if (isRefreshTokenError) {
         console.warn('[Middleware] Invalid refresh token detected, clearing session:', authError.message);
-        // Clear auth cookies by setting them to empty with past expiration
-        const expiredDate = new Date(0);
-        supabaseResponse.cookies.set('sb-access-token', '', { expires: expiredDate, path: '/' });
-        supabaseResponse.cookies.set('sb-refresh-token', '', { expires: expiredDate, path: '/' });
+        clearSupabaseAuthCookies(
+          request,
+          supabaseResponse,
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+        );
         // Continue without user - will redirect to login if needed
       } else if (isFetchError) {
         // Suppress noisy fetch errors in middleware, assume offline/unreachable
@@ -147,9 +196,14 @@ export async function updateSession(request: NextRequest) {
     // Continue without user - will redirect to login if needed
   }
 
-  // Define public routes that don't require authentication
   const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/api/proxy-image", "/api/concepts", "/api/stripe/webhook"];
+  const devOnlyPublicRoutes =
+    process.env.NODE_ENV === "development"
+      ? ["/graph", "/knowledge-graph", "/api/graph"]
+      : [];
   const isPublicRoute = publicRoutes.some((route) =>
+    request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
+  ) || devOnlyPublicRoutes.some((route) =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
   );
 

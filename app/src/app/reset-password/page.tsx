@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -16,47 +16,43 @@ export default function ResetPasswordPage() {
   const [checkingToken, setCheckingToken] = useState(true);
 
   useEffect(() => {
-    // Check if user has a valid recovery session
     const checkSession = async () => {
       const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Check if this is a password recovery session
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (session) {
         setValidToken(true);
-        
-        // Preserve admin status and sync profile picture when user arrives via reset link
-        // This handles the case where user is already logged in from the email link
+
         try {
-          const preserveResponse = await fetch('/api/auth/preserve-account-data', {
-            method: 'POST',
-            credentials: 'include',
+          const preserveResponse = await fetch("/api/auth/preserve-account-data", {
+            method: "POST",
+            credentials: "include",
           });
-          
+
           if (preserveResponse.ok) {
             const preserveData = await preserveResponse.json();
-            console.log('✅ Account data preserved on page load:', preserveData);
+            console.log("Account data preserved on page load:", preserveData);
           }
         } catch (preserveErr) {
-          console.warn('⚠️ Error preserving account data on page load:', preserveErr);
-          // Don't fail if this fails
+          console.warn("Error preserving account data on page load:", preserveErr);
         }
       } else {
         setError("Invalid or expired reset link. Please request a new one.");
       }
-      
+
       setCheckingToken(false);
     };
 
     checkSession();
   }, []);
 
-  // Password validation helpers
   const checkPasswordRequirements = (pwd: string) => {
     const hasLowercase = /[a-z]/.test(pwd);
     const hasUppercase = /[A-Z]/.test(pwd);
     const hasNumber = /[0-9]/.test(pwd);
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pwd);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?`~]/.test(pwd);
     const hasMinLength = pwd.length >= 8;
 
     return {
@@ -65,7 +61,6 @@ export default function ResetPasswordPage() {
       hasNumber,
       hasSpecial,
       hasMinLength,
-      missing: [] as string[],
     };
   };
 
@@ -87,82 +82,66 @@ export default function ResetPasswordPage() {
     setError("");
     setSuccess(false);
 
-    console.log("🔄 Password reset form submitted");
-
-    // Validation
     if (password !== confirmPassword) {
-      console.warn("⚠️ Passwords do not match");
       setError("Passwords do not match");
       return;
     }
 
     if (password.length < 8) {
-      console.warn("⚠️ Password too short");
       setError("Password must be at least 8 characters");
       return;
     }
 
-    // Check password complexity
     const missing = getMissingRequirements(password);
     if (missing.length > 0) {
-      const missingList = missing.join(", ");
-      setError(`Password is missing: ${missingList}`);
+      setError(`Password is missing: ${missing.join(", ")}`);
       return;
     }
 
     setLoading(true);
-    console.log("🔐 Updating password...");
 
     try {
       const supabase = createClient();
-      
+
       if (!supabase) {
-        console.error("❌ Supabase client failed to initialize");
         setError("Configuration error. Please contact support.");
         setLoading(false);
         return;
       }
-      
+
       const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
+        password,
       });
 
       if (updateError) {
-        console.error("❌ Password update error:", updateError);
         setError(updateError.message);
         setLoading(false);
         return;
       }
 
-      console.log("✅ Password updated successfully");
-      
-      // Preserve admin status and sync profile picture after password reset
       try {
-        const preserveResponse = await fetch('/api/auth/preserve-account-data', {
-          method: 'POST',
-          credentials: 'include',
+        const preserveResponse = await fetch("/api/auth/preserve-account-data", {
+          method: "POST",
+          credentials: "include",
         });
-        
+
         if (preserveResponse.ok) {
           const preserveData = await preserveResponse.json();
-          console.log('✅ Account data preserved:', preserveData);
+          console.log("Account data preserved:", preserveData);
         } else {
-          console.warn('⚠️ Account data preservation had issues, but password reset succeeded');
+          console.warn("Account data preservation had issues, but password reset succeeded");
         }
       } catch (preserveErr) {
-        console.warn('⚠️ Error preserving account data:', preserveErr);
-        // Don't fail password reset if this fails
+        console.warn("Error preserving account data:", preserveErr);
       }
-      
+
       setSuccess(true);
       setLoading(false);
 
-      // Redirect to login after 3 seconds
       setTimeout(() => {
         router.push("/login");
       }, 3000);
-    } catch (err) {
-      console.error("❌ Unexpected error during password reset:", err);
+    } catch {
       setError("An unexpected error occurred");
       setLoading(false);
     }
@@ -170,179 +149,184 @@ export default function ResetPasswordPage() {
 
   if (checkingToken) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black select-none pointer-events-none">
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-[#050505] to-black select-none pointer-events-none">
         <div className="text-center">
           <div className="mb-4 inline-block animate-spin">
             <svg
-              viewBox="0 0 100 100"
-              className="h-12 w-12 text-amber-500/30"
+              className="h-12 w-12 text-cyan-500/40"
               fill="currentColor"
+              viewBox="0 0 100 100"
             >
-              <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" />
-              <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="1" fill="none" />
-              <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" />
+              <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="2" />
+              <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="1" />
+              <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="1" />
               <circle cx="50" cy="50" r="3" fill="currentColor" />
             </svg>
           </div>
-          <p className="text-amber-100">Verifying reset link...</p>
+          <p className="text-zinc-200">Checking your reset link...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black px-4">
-      <div className="w-full max-w-md">
-        {/* Logo/Title */}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-[#050505] to-black px-4">
+      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/5 blur-[100px]" />
+        <div className="absolute left-1/2 top-1/3 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[100px]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.32em] text-cyan-400/80">
+            Prismarium
+          </p>
           <div className="mb-4 inline-block">
             <svg
-              viewBox="0 0 100 100"
-              className="h-16 w-16 text-amber-500/30"
+              className="h-16 w-16 text-cyan-500/50"
               fill="currentColor"
+              viewBox="0 0 100 100"
             >
-              <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" />
-              <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="1" fill="none" />
-              <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" />
+              <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="2" />
+              <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="1" />
+              <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="1" />
               <circle cx="50" cy="50" r="3" fill="currentColor" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-amber-100">Create New Password</h1>
+          <h1 className="bg-gradient-to-r from-amber-300 via-amber-500 to-cyan-400 bg-clip-text text-3xl font-bold text-transparent">
+            Choose a new password
+          </h1>
           <p className="mt-2 text-sm text-zinc-400">
-            Enter a strong password for your account
+            Update your Prismarium password and return to your library.
           </p>
         </div>
 
-        {/* Reset Form */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-8 shadow-xl backdrop-blur">
+        <div className="glass-panel rounded-2xl border-white/5 p-8 shadow-2xl backdrop-blur-xl">
           {!validToken ? (
             <div className="space-y-6">
               <div className="rounded-md border border-red-500/20 bg-red-500/10 px-4 py-4 text-center">
                 <svg
                   className="mx-auto mb-3 h-12 w-12 text-red-400"
                   fill="none"
-                  viewBox="0 0 24 24"
                   stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
                   <path
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
-                <h3 className="text-lg font-semibold text-red-400 mb-2">
-                  Invalid Reset Link
-                </h3>
+                <h3 className="mb-2 text-lg font-semibold text-red-400">Reset link expired</h3>
                 <p className="text-sm text-red-300">
                   {error || "This password reset link is invalid or has expired."}
                 </p>
               </div>
 
               <Link
-                href="/forgot-password"
                 className="block w-full rounded-md bg-amber-500 px-4 py-3 text-center font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
+                href="/forgot-password"
               >
-                Request New Reset Link
+                Send a new reset email
               </Link>
             </div>
           ) : success ? (
             <div className="space-y-4">
-              {/* Success Message */}
               <div className="rounded-md border border-green-500/20 bg-green-500/10 px-4 py-4 text-center">
                 <div className="mb-3 flex justify-center">
                   <svg
                     className="h-12 w-12 text-green-400"
                     fill="none"
-                    viewBox="0 0 24 24"
                     stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
                     <path
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-green-100 mb-2">
-                  Password Updated!
-                </h3>
+                <h3 className="mb-2 text-lg font-semibold text-green-100">Password updated</h3>
                 <p className="text-sm text-green-200/80">
-                  Your password has been successfully reset. Redirecting to login...
+                  Your new password is saved. Redirecting you back to sign in...
                 </p>
               </div>
 
               <Link
-                href="/login"
                 className="block w-full rounded-md bg-amber-500 px-4 py-3 text-center font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
+                href="/login"
               >
-                Go to Login
+                Go to sign in
               </Link>
             </div>
           ) : (
-            <form onSubmit={handlePasswordReset} className="space-y-6">
-              {/* New Password Field */}
+            <form className="space-y-6" onSubmit={handlePasswordReset}>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-amber-100">
-                  New Password
+                <label className="block text-sm font-medium text-amber-100" htmlFor="password">
+                  New password
                 </label>
                 <input
+                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                   id="password"
+                  minLength={8}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="********"
+                  required
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                  placeholder="••••••••"
                 />
-                <p className="mt-1 text-xs text-zinc-500">
-                  At least 8 characters
-                </p>
+                <p className="mt-1 text-xs text-zinc-500">Use at least 8 characters.</p>
               </div>
 
-              {/* Confirm Password Field */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-amber-100">
-                  Confirm New Password
+                <label className="block text-sm font-medium text-amber-100" htmlFor="confirmPassword">
+                  Confirm new password
                 </label>
                 <input
+                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                   id="confirmPassword"
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="********"
+                  required
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="mt-2 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                  placeholder="••••••••"
                 />
               </div>
 
-              {/* Password Strength Indicator */}
               <div className="rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3">
-                <p className="mb-2 text-xs font-medium text-zinc-400">Password Requirements:</p>
+                <p className="mb-2 text-xs font-medium text-zinc-400">Password requirements</p>
                 <ul className="space-y-1 text-xs">
                   {(() => {
                     const checks = checkPasswordRequirements(password);
                     return (
                       <>
                         <li className={checks.hasMinLength ? "text-green-400" : "text-zinc-500"}>
-                          {checks.hasMinLength ? "✓" : "○"} At least 8 characters
+                          {checks.hasMinLength ? "[x]" : "[ ]"} At least 8 characters
                         </li>
                         <li className={checks.hasLowercase ? "text-green-400" : "text-zinc-500"}>
-                          {checks.hasLowercase ? "✓" : "○"} Lowercase letter
+                          {checks.hasLowercase ? "[x]" : "[ ]"} Lowercase letter
                         </li>
                         <li className={checks.hasUppercase ? "text-green-400" : "text-zinc-500"}>
-                          {checks.hasUppercase ? "✓" : "○"} Uppercase letter
+                          {checks.hasUppercase ? "[x]" : "[ ]"} Uppercase letter
                         </li>
                         <li className={checks.hasNumber ? "text-green-400" : "text-zinc-500"}>
-                          {checks.hasNumber ? "✓" : "○"} Number
+                          {checks.hasNumber ? "[x]" : "[ ]"} Number
                         </li>
                         <li className={checks.hasSpecial ? "text-green-400" : "text-zinc-500"}>
-                          {checks.hasSpecial ? "✓" : "○"} Special character
+                          {checks.hasSpecial ? "[x]" : "[ ]"} Special character
                         </li>
-                        <li className={password === confirmPassword && password.length > 0 ? "text-green-400" : "text-zinc-500"}>
-                          {password === confirmPassword && password.length > 0 ? "✓" : "○"} Passwords match
+                        <li
+                          className={
+                            password === confirmPassword && password.length > 0
+                              ? "text-green-400"
+                              : "text-zinc-500"
+                          }
+                        >
+                          {password === confirmPassword && password.length > 0 ? "[x]" : "[ ]"} Passwords match
                         </li>
                       </>
                     );
@@ -350,41 +334,34 @@ export default function ResetPasswordPage() {
                 </ul>
               </div>
 
-              {/* Error Message */}
               {error && (
                 <div className="rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
                   {error}
                 </div>
               )}
 
-              {/* Submit Button */}
               <button
-                type="submit"
-                disabled={loading}
-                onClick={() => console.log("🖱️ Update password button clicked")}
                 className="w-full rounded-md bg-amber-500 px-4 py-3 font-semibold text-zinc-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={loading}
+                type="submit"
               >
-                {loading ? "Updating password..." : "Update Password"}
+                {loading ? "Updating password..." : "Update password"}
               </button>
             </form>
           )}
 
-          {/* Back to Login */}
           {!success && (
             <>
               <div className="my-6 flex items-center">
-                <div className="flex-1 border-t border-zinc-700"></div>
+                <div className="flex-1 border-t border-zinc-700" />
                 <span className="px-4 text-sm text-zinc-500">or</span>
-                <div className="flex-1 border-t border-zinc-700"></div>
+                <div className="flex-1 border-t border-zinc-700" />
               </div>
 
               <div className="text-center">
                 <p className="text-sm text-zinc-400">
                   Remember your password?{" "}
-                  <Link
-                    href="/login"
-                    className="font-semibold text-amber-400 hover:text-amber-300"
-                  >
+                  <Link className="font-semibold text-amber-400 hover:text-amber-300" href="/login">
                     Sign in
                   </Link>
                 </p>
@@ -393,17 +370,12 @@ export default function ResetPasswordPage() {
           )}
         </div>
 
-        {/* Back to Home */}
         <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-sm text-zinc-500 hover:text-zinc-400"
-          >
-            ← Back to home
+          <Link className="text-sm text-zinc-500 hover:text-zinc-400" href="/">
+            &larr; Back to home
           </Link>
         </div>
       </div>
     </div>
   );
 }
-
