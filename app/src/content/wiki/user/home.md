@@ -2,20 +2,20 @@
 
 ## Welcome Home
 
-Your Dashboard is the central command center for Prismarium. From here, you can access all your tools for research, practice, and discovery.
+Your Dashboard is the central command center for Prismarium. From here, you can move directly into reading, structured study, concept exploration, and synthesis.
 
 ## Getting Started
 
-When you log in, you will be greeted by your personal dashboard. This view is designed to be your home base, a place to start every session.
+When you log in, you will be greeted by your personal dashboard. This view is designed to be your home base and a strong starting point for every session.
 
 ### 1. Unified Search
 
-**"Find anything, instantly."**
-At the top of your dashboard is the **[Search Hub](/wiki/library-search-bar)**. This is not just a standard search bar. It uses AI to understand your intent.
+**"Find ideas, texts, and patterns quickly."**
+At the top of your dashboard is the **[Search Hub](/wiki/library-search-bar)**. It gives you multiple ways to explore the corpus depending on the kind of question you have.
 
-* **Search the Library**: Find books and documents.
-* **Search Concepts**: Look for ideas within the texts.
-* **Ask Questions**: Get answers synthesized from the wisdom traditions in the database.
+* **Concept Search**: Trace a theme or idea across the library.
+* **Library Search**: Find books, authors, and documents.
+* **AI Search**: Ask broader questions and get synthesized guidance for where to look next.
 
 ### 2. Core Tools
 
@@ -25,11 +25,11 @@ These are your primary instruments for study and exploration:
   Your archive of knowledge. Browse the complete collection of esoteric texts, sacred writings, and historical documents.
 
 * **[Study Journal](/wiki/journal)**
-  Your personal notebook. This is where you record your own insights, dreams, and ritual results.
+  Your personal notebook. This is where you record insights, questions, excerpts, and synthesis work.
   Note: You can customize the name of your journal in your user settings.
 
 * **[Knowledge Graph](/wiki/graph)**
-  See the unseen connections. This visual tool maps how different concepts, authors, and traditions relate to one another in a 3D network.
+  See the unseen connections. This visual tool maps how different concepts, authors, and traditions relate to one another.
 
 * **[Courses](/wiki/courses)**
   Structured learning paths. If you want a guided deep dive into a specific tradition or topic, start here.
@@ -44,16 +44,12 @@ These are your primary instruments for study and exploration:
   6. Symbolic/Occult
   7. Mathematical
 
-### 3. Practitioner Tools ("Extras")
-
-For those who wish to apply wisdom, not just study it:
-
-* **[Ritual Library](/wiki/ritual-machine)**: Browse curated ritual protocols from esoteric traditions. Select a rite and follow along step by step.
-* **[Workbench](/wiki/workbench)**: Your maker's space. Design personal rituals, run the Ritual Machine, and forge custom tarot cards.
-* **[The Oracle](/wiki/tarot)**: Consult the digital tarot for daily guidance. Draw cards and save your readings.
+* **[Concept Search](/wiki/library-search-bar)**
+  Follow an idea across books and traditions. This is especially useful when you want to compare how one concept appears in different intellectual or spiritual lineages.
 
 ## Tips for Success
 
 * **Personalize**: Ensure you are logged in so the dashboard can display your custom journal name and track your progress.
-* **Explore**: Don't be afraid to click the Extras menu. The tarot and ritual tools are powerful aids for daily practice.
-* **Connect**: Use the **[Knowledge Graph](/wiki/graph)** to find unexpected links between the books you read in the **[Library](/wiki/library-features)**.
+* **Start with a question**: Courses, Concept Search, and Seven Lenses all work best when you bring a real question or tension into them.
+* **Connect your work**: Use the **[Knowledge Graph](/wiki/graph)** and **[Concept Search](/wiki/library-search-bar)** together to surface unexpected relationships.
+* **Capture what matters**: Move your best findings into the **[Journal](/wiki/journal)** so your understanding compounds over time.
