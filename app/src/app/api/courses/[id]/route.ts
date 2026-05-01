@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
+import { sanitizeCourseForPreview } from '@/lib/courses/access';
 import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
 
 export const dynamic = 'force-dynamic';
@@ -25,12 +26,47 @@ async function getAdminUser() {
   return { supabase, user, forbidden: profile?.role !== 'admin' };
 }
 
-export async function GET(_request: NextRequest, { params }: Params) {
+async function getViewer(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) return { user: null, isAdmin: false };
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  return { user, isAdmin: profile?.role === 'admin' };
+}
+
+async function isEnrolled(
+  serviceSupabase: ReturnType<typeof createServiceClient>,
+  userId: string,
+  courseId: string
+) {
+  const { data } = await serviceSupabase
+    .from('course_enrollments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .maybeSingle();
+
+  return !!data;
+}
+
+export async function GET(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const supabase = await createClient();
+  const serviceSupabase = createServiceClient();
+  const viewer = await getViewer(supabase);
+  const wantsFullAccess = request.nextUrl.searchParams.get('access') === 'full';
 
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-  const query = supabase
+  const query = serviceSupabase
     .from('courses')
     .select(`
       *,
@@ -47,9 +83,13 @@ export async function GET(_request: NextRequest, { params }: Params) {
       )
     `);
 
-  const { data: course, error } = await (isUUID ? query.eq('id', id) : query.eq('slug', id)).single();
+  const { data: course, error } = await (isUUID ? query.eq('id', id) : query.eq('slug', id)).maybeSingle();
 
   if (error || !course) {
+    return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 });
+  }
+
+  if (!course.is_published && !viewer.isAdmin) {
     return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 });
   }
 
@@ -58,13 +98,41 @@ export async function GET(_request: NextRequest, { params }: Params) {
     : {
         ...course,
         course_texts: await matchCourseTextsFromContent(
-          createServiceClient(),
+          serviceSupabase,
           (course.content as Record<string, unknown> | null) ?? null
         ),
       };
 
+  const enrolled = viewer.user
+    ? await isEnrolled(serviceSupabase, viewer.user.id, String(course.id))
+    : false;
+  const canViewFullCourse = viewer.isAdmin || enrolled;
+
+  if (wantsFullAccess && !canViewFullCourse) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: viewer.user ? 'Enrollment required' : 'Unauthorized',
+        code: viewer.user ? 'ENROLLMENT_REQUIRED' : 'AUTH_REQUIRED',
+      },
+      { status: viewer.user ? 403 : 401 }
+    );
+  }
+
+  const coursePayload = viewer.isAdmin || (wantsFullAccess && canViewFullCourse)
+    ? enrichedCourse
+    : sanitizeCourseForPreview(enrichedCourse);
+
   return NextResponse.json(
-    { success: true, course: enrichedCourse },
+    {
+      success: true,
+      course: coursePayload,
+      access: {
+        full: coursePayload === enrichedCourse,
+        enrolled,
+        admin: viewer.isAdmin,
+      },
+    },
     {
       headers: {
         'Cache-Control': 'no-store, max-age=0, must-revalidate',

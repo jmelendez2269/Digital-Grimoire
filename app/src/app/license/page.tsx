@@ -171,7 +171,23 @@ export default function LicensePage() {
               </a>.
             </p>
 
-            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.3 Prismarium-Generated Content</h3>
+            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.3 Prismarium Courses</h3>
+            <p className="text-zinc-300 mb-2">
+              Prismarium-authored course materials are separate from the public-domain, licensed, or third-party source texts
+              referenced by those courses. Unless explicitly licensed otherwise, Prismarium course materials are
+              <strong> All Rights Reserved</strong>.
+            </p>
+            <p className="text-zinc-300 mb-2">
+              Public previews, course titles, reading references, and public Curator&apos;s Notes may be quoted or shared with
+              attribution. Full weekly instructions, prompts, exercises, sequencing, micro-artifacts, capstones, facilitator
+              materials, and related curriculum language are provided for personal educational use inside Prismarium.
+            </p>
+            <p className="text-zinc-300">
+              You may not reproduce, scrape, mirror, redistribute, resell, sublicense, publish, adapt for teaching outside
+              Prismarium, or use full course materials for AI model training or dataset creation without written permission.
+            </p>
+
+            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.4 Prismarium-Generated Content</h3>
             <p className="text-zinc-300 mb-2">
               Content created by Prismarium (AI-generated metadata, synthesized responses, UI text) is:
             </p>

@@ -116,7 +116,8 @@ function CourseLearnContent() {
     useEffect(() => {
         if (authLoading) return;
         if (!user) {
-            // Optional: router.push(`/login?redirect=/courses/${slug}/learn`);
+            router.replace(`/login?redirect=/courses/${slug}/learn`);
+            return;
         }
         if (!slug) return;
 
@@ -125,7 +126,15 @@ function CourseLearnContent() {
             setError(null);
 
             try {
-                const courseResponse = await fetch(`/api/courses/${slug}`);
+                const courseResponse = await fetch(`/api/courses/${slug}?access=full`);
+                if (courseResponse.status === 401) {
+                    router.replace(`/login?redirect=/courses/${slug}/learn`);
+                    return;
+                }
+                if (courseResponse.status === 403) {
+                    router.replace(`/courses/${slug}`);
+                    return;
+                }
                 if (!courseResponse.ok) {
                     const data = await courseResponse.json();
                     throw new Error(data.error || 'Failed to fetch course');
@@ -135,7 +144,7 @@ function CourseLearnContent() {
                 if (courseData.success && courseData.course) {
                     setCourse(courseData.course);
                     if (courseData.course.content?.weeks?.length > 0) {
-                        const sortedWeeks = courseData.course.content.weeks.sort((a: Week, b: Week) => a.week_number - b.week_number);
+                        const sortedWeeks = courseData.course.content.weeks.slice().sort((a: Week, b: Week) => a.week_number - b.week_number);
                         setSelectedWeek(sortedWeeks[0].week_number);
                     }
                 } else {
@@ -438,6 +447,14 @@ function CourseLearnContent() {
                                             ))}
                                         </div>
                                     )}
+                                </div>
+
+                                <div className="flex items-start gap-3 rounded-lg border border-amber-500/15 bg-amber-950/10 px-4 py-3 text-xs text-zinc-400">
+                                    <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                                    <p>
+                                        Prismarium course materials are protected for personal educational use inside Prismarium. Do not reproduce,
+                                        scrape, mirror, resell, redistribute, or use this curriculum for model training without written permission.
+                                    </p>
                                 </div>
 
                                 {/* Section Tabs */}
