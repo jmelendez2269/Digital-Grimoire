@@ -36,7 +36,7 @@ interface QueryableClient {
   from: (table: string) => {
     select: (columns: string) => {
       ilike: (column: string, pattern: string) => {
-        limit: (count: number) => Promise<{ data: TextMatch[] | null; error: unknown }>;
+        limit: (count: number) => PromiseLike<{ data: TextMatch[] | null; error: unknown }>;
       };
     };
   };
