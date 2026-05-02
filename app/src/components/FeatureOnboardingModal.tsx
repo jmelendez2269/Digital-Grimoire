@@ -494,7 +494,7 @@ export default function FeatureOnboardingModal({ onClose }: FeatureOnboardingMod
   const [mounted, setMounted] = useState(typeof window !== "undefined");
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timer: number | undefined;
     let frame: number | undefined;
 
     if (!mounted) {
