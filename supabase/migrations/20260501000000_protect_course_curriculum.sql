@@ -5,6 +5,7 @@
 BEGIN;
 
 DROP POLICY IF EXISTS "Courses are viewable by everyone" ON public.courses;
+DROP POLICY IF EXISTS "Published course previews are viewable by everyone" ON public.courses;
 
 CREATE POLICY "Published course previews are viewable by everyone"
 ON public.courses
@@ -41,6 +42,7 @@ GRANT SELECT (
 GRANT ALL ON TABLE public.courses TO service_role;
 
 DROP POLICY IF EXISTS "Course texts are viewable by everyone" ON public.course_texts;
+DROP POLICY IF EXISTS "Published course text references are viewable by everyone" ON public.course_texts;
 
 CREATE POLICY "Published course text references are viewable by everyone"
 ON public.course_texts
