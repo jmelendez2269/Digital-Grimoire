@@ -782,7 +782,7 @@ function GraphPageContent() {
           ) : viewMode === "table" ? (
             <ComparativeTable
               concepts={filteredEntities as ParallaxConcept[]}
-              relationships={relationships}
+              relationships={relationships as ParallaxRelationship[]}
               onSelectConcept={(entity) => handleSelectEntity(entity)}
             />
           ) : (
@@ -843,7 +843,7 @@ function GraphPageContent() {
         {selectedParallaxConcept && (
           <ConceptDetailModal
             concept={selectedParallaxConcept}
-            relationships={relationships}
+            relationships={relationships as ParallaxRelationship[]}
             concepts={entities as ParallaxConcept[]}
             onClose={() => setSelectedParallaxConcept(null)}
           />

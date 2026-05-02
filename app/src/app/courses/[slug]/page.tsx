@@ -60,6 +60,20 @@ interface Enrollment {
   enrolled_at?: string;
 }
 
+interface CoursePreviewWeek {
+  week_number?: number;
+  title?: string;
+  description?: string;
+  week_summary?: string;
+  core_question?: string;
+  key_tension?: string;
+  readings?: Array<{
+    title?: string;
+    author?: string;
+    section?: string;
+  }>;
+}
+
 function CourseDetailContent() {
   const params = useParams();
   const router = useRouter();
@@ -188,6 +202,13 @@ function CourseDetailContent() {
   const courseIdTag = courseContent?.course_id_tag as string | undefined;
   const arc = courseContent?.arc as string | undefined;
   const arcPosition = courseContent?.arc_position as number | undefined;
+  const previewWeeks = Array.isArray(courseContent?.weeks)
+    ? courseContent.weeks as CoursePreviewWeek[]
+    : [];
+  const curatorNote = (
+    courseContent?.curator_note_public ||
+    courseContent?.curator_note
+  ) as string | undefined;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-200 font-sans selection:bg-amber-500/30">
@@ -276,6 +297,18 @@ function CourseDetailContent() {
                 </div>
               </div>
 
+              {/* Curator's Note */}
+              {curatorNote && (
+                <section className="relative p-6 md:p-7 bg-cyan-950/10 border border-cyan-500/15 rounded-lg">
+                  <h2 className="text-xs font-mono text-cyan-400 uppercase tracking-widest mb-4">
+                    Curator&apos;s Note
+                  </h2>
+                  <div className="text-sm md:text-base text-zinc-300 leading-relaxed whitespace-pre-line">
+                    {curatorNote}
+                  </div>
+                </section>
+              )}
+
               {/* Premise */}
               {course.premise && (
                 <div className="relative p-6 md:p-8 bg-zinc-900/30 border-l-2 border-amber-500 rounded-r-lg">
@@ -344,6 +377,54 @@ function CourseDetailContent() {
                     </div>
                   )}
 
+                  {previewWeeks.length > 0 && (
+                    <div className="pt-8 border-t border-white/5">
+                      <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">Public Syllabus</h2>
+                      <div className="space-y-3">
+                        {previewWeeks.map((week) => {
+                          const summary = week.description || week.week_summary;
+                          return (
+                            <div
+                              key={`${week.week_number}-${week.title}`}
+                              className="rounded-lg border border-white/5 bg-zinc-900/25 p-4"
+                            >
+                              <div className="mb-2 flex flex-wrap items-center gap-2">
+                                {week.week_number && (
+                                  <span className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+                                    Week {week.week_number}
+                                  </span>
+                                )}
+                                {week.key_tension && (
+                                  <span className="font-mono text-[10px] text-zinc-600">
+                                    {week.key_tension}
+                                  </span>
+                                )}
+                              </div>
+                              <h3 className="text-sm font-semibold text-zinc-200">
+                                {week.title || `Week ${week.week_number}`}
+                              </h3>
+                              {week.core_question && (
+                                <p className="mt-1 text-sm italic text-amber-300/70">
+                                  {week.core_question}
+                                </p>
+                              )}
+                              {summary && (
+                                <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                                  {summary}
+                                </p>
+                              )}
+                              {week.readings && week.readings.length > 0 && (
+                                <p className="mt-3 text-xs font-mono text-zinc-600">
+                                  {week.readings.length} public reading reference{week.readings.length === 1 ? '' : 's'}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {course.learning_outcomes && course.learning_outcomes.length > 0 && (
                     <div className="pt-8 border-t border-white/5">
                       <h2 className="text-lg font-bold text-amber-500 mb-4">Learning Outcomes</h2>
@@ -399,7 +480,7 @@ function CourseDetailContent() {
                         ) : (
                           <>
                             <p className="text-xs text-zinc-500 mb-5">
-                              Enter this path and access the knowledge data stream.
+                              Enter this path and access the protected course workspace.
                             </p>
 
                             <button
@@ -429,6 +510,16 @@ function CourseDetailContent() {
                           </>
                         )}
                       </div>
+                    </div>
+
+                    <div className="rounded-lg border border-amber-500/10 bg-amber-950/10 p-4">
+                      <h4 className="mb-2 text-[10px] font-mono uppercase tracking-wider text-amber-400">
+                        Protected Curriculum
+                      </h4>
+                      <p className="text-xs leading-relaxed text-zinc-500">
+                        Public previews are shareable with attribution. Full Prismarium course prompts, exercises,
+                        sequencing, and artifacts are for personal use inside Prismarium unless written permission is granted.
+                      </p>
                     </div>
 
                     {/* Status indicator */}

@@ -11,16 +11,11 @@ Welcome to the documentation hub for Prismarium, a Project Parallax product.
 * [**Home & Dashboard**](/wiki/home)
 * [**Library Features**](/wiki/library-features)
 * [**Search & Discovery**](/wiki/library-search-bar)
+* [**Concept Search**](/wiki/library-search-bar)
 * [**Courses**](/wiki/courses)
 * [**Journal**](/wiki/journal)
 * [**Knowledge Graph**](/wiki/graph)
 * [**Prismarium Lens Engine**](/wiki/parallax-engine)
-
-### Extras & Practice Tools
-
-* [**The Workbench** — My Rituals, Ritual Machine, Deck Forge](/wiki/workbench)
-* [**The Oracle** — Tarot Readings](/wiki/tarot)
-* [**Ritual Library** — Curated Protocols](/wiki/ritual-machine)
 
 ---
 

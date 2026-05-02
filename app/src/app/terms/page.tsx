@@ -117,6 +117,8 @@ export default function TermsOfServicePage() {
               <li>Attempt to gain unauthorized access to our systems or other users' accounts</li>
               <li>Interfere with or disrupt the Service or servers</li>
               <li>Use automated systems (bots, scrapers) to access the Service without permission</li>
+              <li>Scrape, mirror, bulk export, redistribute, resell, sublicense, or republish Prismarium-authored course materials without written permission</li>
+              <li>Use Prismarium-authored course materials to train, fine-tune, benchmark, or populate AI models, datasets, or retrieval systems without written permission</li>
               <li>Impersonate any person or entity or misrepresent your affiliation</li>
               <li>Harass, abuse, or harm other users</li>
               <li>Upload content that is illegal, harmful, threatening, or violates others' rights</li>
@@ -164,7 +166,23 @@ export default function TermsOfServicePage() {
               derivative works from our content without our written permission.
             </p>
 
-            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.4 Third-Party Content</h3>
+            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.4 Prismarium Courses</h3>
+            <p className="text-zinc-300 mb-2">
+              Prismarium courses include public preview materials and protected curriculum materials. Public previews, reading
+              references, and public Curator&apos;s Notes may be viewed and shared with attribution. Full course materials are for
+              personal educational use inside Prismarium unless we grant written permission.
+            </p>
+            <p className="text-zinc-300 mb-2">
+              Protected course materials include full weekly instructions, prompts, exercises, sequencing, micro-artifacts,
+              capstones, facilitator materials, and the original pedagogical framing of the curriculum.
+            </p>
+            <p className="text-zinc-300">
+              You may not reproduce, scrape, mirror, redistribute, resell, sublicense, publish, adapt for teaching outside
+              Prismarium, or use protected course materials for AI model training, fine-tuning, benchmarking, retrieval systems,
+              or dataset creation without written permission.
+            </p>
+
+            <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.5 Third-Party Content</h3>
             <p className="text-zinc-300 mb-2">
               Our Service may include content from third parties, including public domain works and licensed content. We strive
               to respect intellectual property rights and include only:

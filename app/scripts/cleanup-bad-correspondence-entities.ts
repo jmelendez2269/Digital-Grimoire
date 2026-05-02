@@ -29,7 +29,7 @@ type RelationshipRow = {
 };
 
 async function selectAllPages<T>(
-  queryFactory: (from: number, to: number) => Promise<{ data: T[] | null; error: any }>,
+  queryFactory: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: any }>,
   pageSize = 1000,
 ): Promise<T[]> {
   const rows: T[] = [];

@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
+import { sanitizeCourseForPreview } from '@/lib/courses/access';
 import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
 
 export const dynamic = 'force-dynamic';
 
+async function getViewer(supabase: Awaited<ReturnType<typeof createClient>>) {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return { user: null, isAdmin: false };
+
+    const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    return { user, isAdmin: profile?.role === 'admin' };
+}
+
 export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient();
+        const serviceSupabase = createServiceClient();
+        const { isAdmin } = await getViewer(supabase);
         const searchParams = request.nextUrl.searchParams;
 
         const filters = {
@@ -20,7 +36,7 @@ export async function GET(request: NextRequest) {
         let courses = null;
         let error = null;
 
-        let primaryQuery = supabase
+        let primaryQuery = serviceSupabase
             .from('courses')
             .select(`
                 id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, content, sort_order, created_at, updated_at,
@@ -51,8 +67,12 @@ export async function GET(request: NextRequest) {
             primaryQuery = primaryQuery.eq('level', filters.level);
         }
 
-        if (filters.published === 'true') {
+        if (!isAdmin) {
             primaryQuery = primaryQuery.eq('is_published', true);
+        } else if (filters.published === 'true') {
+            primaryQuery = primaryQuery.eq('is_published', true);
+        } else if (filters.published === 'false') {
+            primaryQuery = primaryQuery.eq('is_published', false);
         }
 
         ({ data: courses, error } = await primaryQuery);
@@ -60,11 +80,12 @@ export async function GET(request: NextRequest) {
         if (error) {
             console.warn('[courses GET] Primary query failed, attempting fallback:', error);
 
-            let fallbackQuery = supabase
+            let fallbackQuery = serviceSupabase
                 .from('courses')
                 .select(`
-                    id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, content, created_at, updated_at
+                    id, title, slug, description, premise, learning_outcomes, course_type, level, duration_weeks, is_published, content, sort_order, created_at, updated_at
                 `)
+                .order('sort_order', { ascending: true })
                 .order('title', { ascending: true });
 
             if (filters.search) {
@@ -79,8 +100,12 @@ export async function GET(request: NextRequest) {
                 fallbackQuery = fallbackQuery.eq('level', filters.level);
             }
 
-            if (filters.published === 'true') {
+            if (!isAdmin) {
                 fallbackQuery = fallbackQuery.eq('is_published', true);
+            } else if (filters.published === 'true') {
+                fallbackQuery = fallbackQuery.eq('is_published', true);
+            } else if (filters.published === 'false') {
+                fallbackQuery = fallbackQuery.eq('is_published', false);
             }
 
             const fallbackResult = await fallbackQuery;
@@ -96,7 +121,6 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        const serviceSupabase = createServiceClient();
         const enrichedCourses = await Promise.all(
             (courses || []).map(async (course: Record<string, unknown>) => {
                 const existingCourseTexts = Array.isArray(course.course_texts) ? course.course_texts : [];
@@ -117,7 +141,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(
             {
                 success: true,
-                courses: enrichedCourses
+                courses: isAdmin ? enrichedCourses : enrichedCourses.map(sanitizeCourseForPreview)
             },
             {
                 headers: {
@@ -177,6 +201,15 @@ export async function POST(request: NextRequest) {
 
         const serviceSupabase = createServiceClient();
 
+        const { data: highestOrderedCourse } = await serviceSupabase
+            .from('courses')
+            .select('sort_order')
+            .order('sort_order', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        const nextSortOrder = (highestOrderedCourse?.sort_order ?? -1) + 1;
+
         const { data: course, error } = await serviceSupabase
             .from('courses')
             .insert({
@@ -190,6 +223,7 @@ export async function POST(request: NextRequest) {
                 duration_weeks: duration_weeks || 8,
                 content: content || {},
                 is_published: is_published ?? false,
+                sort_order: nextSortOrder,
             })
             .select()
             .single();

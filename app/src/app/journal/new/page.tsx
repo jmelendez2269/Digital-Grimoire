@@ -70,7 +70,14 @@ function NewJournalPageContent() {
       setError(null);
 
       // Fetch course data
-      const courseResponse = await fetch(`/api/courses/${courseId}`);
+      const courseResponse = await fetch(`/api/courses/${courseId}?access=full`);
+      if (courseResponse.status === 401) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+        return;
+      }
+      if (courseResponse.status === 403) {
+        throw new Error('Enroll in this course before creating a synthesis artifact');
+      }
       if (!courseResponse.ok) {
         throw new Error('Failed to fetch course data');
       }
