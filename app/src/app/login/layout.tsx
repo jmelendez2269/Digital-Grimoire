@@ -11,10 +11,10 @@ export const metadata: Metadata = {
     title: "Sign In | Prismarium",
     description: "Sign in to Prismarium to access your personal library, digital grimoire, and explore esoteric texts and wisdom traditions through AI-powered analysis.",
     type: "website",
-    url: "https://projectparallax.xyz/login",
+    url: "/login",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Sign In",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sign In | Prismarium",
     description: "Sign in to Prismarium to access your personal library and digital grimoire.",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

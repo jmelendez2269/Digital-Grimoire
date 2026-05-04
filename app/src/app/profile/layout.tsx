@@ -11,10 +11,10 @@ export const metadata: Metadata = {
     title: "Profile | Prismarium",
     description: "Manage your Prismarium profile, subscription, and preferences",
     type: "website",
-    url: "https://projectparallax.xyz/profile",
+    url: "/profile",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Profile",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Profile | Prismarium",
     description: "Manage your Prismarium profile, subscription, and preferences",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

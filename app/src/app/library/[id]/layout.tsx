@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { getAbsoluteUrl } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -15,8 +16,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     } catch (error) {
       console.error('Error getting params in generateMetadata:', error);
     }
-
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://projectparallax.xyz';
 
     try {
       let supabase;
@@ -53,10 +52,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 title: `${title}${author} | Prismarium`,
                 description,
                 type: "website",
-                url: `${baseUrl}/library/${id}`,
+                url: getAbsoluteUrl(`/library/${id}`),
                 images: [
                   {
-                    url: "https://projectparallax.xyz/og-image.png",
+                    url: getAbsoluteUrl("/og-image.png"),
                     width: 1200,
                     height: 630,
                     alt: title,
@@ -67,7 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 card: "summary_large_image",
                 title: `${title}${author} | Prismarium`,
                 description,
-                images: ["https://projectparallax.xyz/og-image.png"],
+                images: [getAbsoluteUrl("/og-image.png")],
               },
               robots: {
                 index: true,
@@ -94,10 +93,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: "Document | Prismarium",
         description: "Explore this document in the Prismarium.",
         type: "website",
-        url: `${baseUrl}/library/${id}`,
+        url: getAbsoluteUrl(`/library/${id}`),
         images: [
           {
-            url: "https://projectparallax.xyz/og-image.png",
+            url: getAbsoluteUrl("/og-image.png"),
             width: 1200,
             height: 630,
             alt: "Prismarium Document",
@@ -108,7 +107,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         card: "summary_large_image",
         title: "Document | Prismarium",
         description: "Explore this document in the Prismarium.",
-        images: ["https://projectparallax.xyz/og-image.png"],
+        images: [getAbsoluteUrl("/og-image.png")],
       },
       robots: {
         index: false,

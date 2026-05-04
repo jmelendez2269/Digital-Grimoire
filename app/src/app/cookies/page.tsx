@@ -8,10 +8,10 @@ export const metadata: Metadata = {
     title: "Cookie Policy | Prismarium",
     description: "Cookie Policy for Prismarium - Learn about how we use cookies",
     type: "website",
-    url: "https://prismarium.xyz/cookies",
+    url: "/cookies",
     images: [
       {
-        url: "https://prismarium.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Cookie Policy",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Cookie Policy | Prismarium",
     description: "Cookie Policy for Prismarium - Learn about how we use cookies",
-    images: ["https://prismarium.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

@@ -7,10 +7,10 @@ export const metadata: Metadata = {
     title: "Courses | Prismarium",
     description: "Explore Prismarium courses - foundational courses and rotating themes designed to deepen your understanding.",
     type: "website",
-    url: "https://projectparallax.xyz/courses",
+    url: "/courses",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Courses - Foundational Courses & Rotating Themes",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Courses | Prismarium",
     description: "Explore Prismarium courses - foundational courses and rotating themes.",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

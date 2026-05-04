@@ -7,10 +7,10 @@ export const metadata: Metadata = {
     title: "Library | Prismarium",
     description: "Browse and explore the Prismarium - a curated collection of esoteric texts, sacred writings, and wisdom traditions.",
     type: "website",
-    url: "https://projectparallax.xyz/library",
+    url: "/library",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium - Esoteric Texts & Wisdom Traditions",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Library | Prismarium",
     description: "Browse and explore the Prismarium - a curated collection of esoteric texts and wisdom traditions.",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

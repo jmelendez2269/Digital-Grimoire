@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
+import { getAbsoluteUrl } from '@/lib/utils';
 
 function getStripeClient(): Stripe {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -225,8 +226,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/profile?tab=subscription&success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/profile?tab=subscription&canceled=true`,
+      success_url: getAbsoluteUrl('/profile?tab=subscription&success=true'),
+      cancel_url: getAbsoluteUrl('/profile?tab=subscription&canceled=true'),
       metadata: {
         user_id: user.id,
       },

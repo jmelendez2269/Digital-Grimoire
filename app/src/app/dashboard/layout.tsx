@@ -13,10 +13,10 @@ export const metadata: Metadata = {
     title: "Dashboard | Prismarium",
     description: "Your Prismarium dashboard - Access your personal library and study journal.",
     type: "website",
-    url: "https://prismarium.xyz/dashboard",
+    url: "/dashboard",
     images: [
       {
-        url: "https://prismarium.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Dashboard",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Dashboard | Prismarium",
     description: "Your Prismarium dashboard - Access your personal library and study journal.",
-    images: ["https://prismarium.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

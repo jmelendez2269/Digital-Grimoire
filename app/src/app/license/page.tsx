@@ -8,10 +8,10 @@ export const metadata: Metadata = {
     title: "License | Prismarium",
     description: "License information for Prismarium - Software, documentation, and content licensing",
     type: "website",
-    url: "https://prismarium.xyz/license",
+    url: "/license",
     images: [
       {
-        url: "https://prismarium.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium License",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "License | Prismarium",
     description: "License information for Prismarium - Software, documentation, and content licensing",
-    images: ["https://prismarium.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

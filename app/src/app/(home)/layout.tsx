@@ -7,10 +7,10 @@ export const metadata: Metadata = {
     title: "Prismarium | Multi-Lens Library & Knowledge Network",
     description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
     type: "website",
-    url: "https://projectparallax.xyz",
+    url: "/",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium - Multi-Lens Library & Knowledge Network",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Prismarium | Multi-Lens Library & Knowledge Network",
     description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity.",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

@@ -4,6 +4,9 @@
       "origins": [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://prismarium.xyz",
+        "https://www.prismarium.xyz",
+        "https://projectparallax.xyz",
         "https://convergencelibrary.com",
         "https://www.convergencelibrary.com"
       ],
