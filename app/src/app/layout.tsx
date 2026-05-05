@@ -69,6 +69,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Prismarium" }],
   creator: "Prismarium",
   publisher: "Prismarium",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",

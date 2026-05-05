@@ -29,6 +29,7 @@
     "graph:import": "powershell -ExecutionPolicy Bypass -File scripts/import-graph.ps1",
     "library:copy": "powershell -ExecutionPolicy Bypass -File scripts/copy-library-corpus.ps1",
     "courses:copy": "powershell -ExecutionPolicy Bypass -File scripts/copy-courses.ps1",
+    "courses:curator-notes": "tsx scripts/backfill-course-curator-notes.ts",
     "book:extract-section": "node scripts/export-book-section.js",
     "book:build-bundle": "node scripts/build-book-section-bundle.js",
     "summary": "tsx scripts/generate-session-summary.ts",

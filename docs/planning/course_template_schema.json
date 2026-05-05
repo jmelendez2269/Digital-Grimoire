@@ -14,6 +14,7 @@
     "orientation",
     "mode",
     "premise",
+    "curator_note_public",
     "key_tensions",
     "learning_outcomes",
     "tone_safety",
@@ -68,6 +69,11 @@
     "premise": {
       "type": "string",
       "description": "2-4 sentences. Why this course exists. Platform voice."
+    },
+    "curator_note_public": {
+      "type": "string",
+      "minLength": 150,
+      "description": "Public curator's note: why this course was created, what it serves, why the materials belong together, and what the course deliberately does not claim."
     },
     "key_tensions": {
       "type": "array",

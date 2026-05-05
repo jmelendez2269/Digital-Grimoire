@@ -48,6 +48,25 @@ interface ParsedCourse {
 const COURSE_TYPES = ["foundational", "theme", "rotation"];
 const LEVELS = ["foundational", "intermediate", "advanced"];
 
+function getCuratorNote(content: Record<string, unknown> | null | undefined): string {
+  const note = content?.curator_note_public || content?.curator_note;
+  return typeof note === "string" ? note : "";
+}
+
+function applyCuratorNote(content: Record<string, unknown>, note: string): Record<string, unknown> {
+  const nextContent = { ...content };
+  const trimmedNote = note.trim();
+
+  if (trimmedNote) {
+    nextContent.curator_note_public = trimmedNote;
+  } else {
+    delete nextContent.curator_note_public;
+  }
+
+  delete nextContent.curator_note;
+  return nextContent;
+}
+
 export default function EditCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -61,6 +80,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [outcomesText, setOutcomesText] = useState("");
+  const [curatorNoteText, setCuratorNoteText] = useState("");
   const [jsonInput, setJsonInput] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
 
@@ -84,6 +104,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       if (data.success) {
         setCourse(data.course);
         setOutcomesText((data.course.learning_outcomes || []).join("\n"));
+        setCuratorNoteText(getCuratorNote(data.course.content || null));
         setJsonInput(JSON.stringify(data.course.content || {}, null, 2));
       } else {
         setError(data.error || "Course not found");
@@ -106,7 +127,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       .filter(Boolean);
 
     try {
-      const parsedContent = JSON.parse(jsonInput);
+      const parsedContent = applyCuratorNote(JSON.parse(jsonInput), curatorNoteText);
       const response = await fetch(`/api/courses/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -127,6 +148,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       const data = await response.json();
       if (data.success) {
         setCourse(data.course);
+        setCuratorNoteText(getCuratorNote(data.course.content || null));
         setJsonInput(JSON.stringify(data.course.content || {}, null, 2));
       } else {
         setSaveError(data.error || "Failed to save");
@@ -203,6 +225,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           : prev
       );
       setOutcomesText((parsed.learning_outcomes || []).join("\n"));
+      setCuratorNoteText(getCuratorNote(parsed.content || null));
       setJsonInput(JSON.stringify(parsed.content || {}, null, 2));
       setImportWarnings(data.warnings || []);
       setImportSuccess(true);
@@ -561,6 +584,28 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                   rows={4}
                   className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-sm transition-all focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20"
                 />
+              </div>
+
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <label htmlFor="course-curator-note" className="block text-sm font-medium text-zinc-300">
+                    Curator&apos;s Note
+                  </label>
+                  <span className="font-mono text-xs text-zinc-500">
+                    {curatorNoteText.trim().split(/\s+/).filter(Boolean).length} words
+                  </span>
+                </div>
+                <textarea
+                  id="course-curator-note"
+                  value={curatorNoteText}
+                  onChange={(e) => setCuratorNoteText(e.target.value)}
+                  rows={7}
+                  placeholder="Why this course exists, what it serves, why these materials belong together, and what it deliberately does not claim."
+                  className="w-full resize-none rounded-lg border border-cyan-900/50 bg-cyan-950/10 px-4 py-2.5 text-sm text-zinc-200 transition-all placeholder:text-zinc-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20"
+                />
+                <p className="mt-2 text-xs text-zinc-500">
+                  Saved into <span className="font-mono text-zinc-400">content.curator_note_public</span> for the public course page.
+                </p>
               </div>
 
               <div>

@@ -17,6 +17,8 @@ interface CourseContent {
   arc_position?: number;
   core_question?: string;
   course_id_tag?: string;
+  curator_note_public?: string;
+  curator_note?: string;
   key_tensions?: Array<{ label: string; description: string }>;
   completion_pathways?: Array<{ code: string; title: string }>;
   weeks?: unknown[];

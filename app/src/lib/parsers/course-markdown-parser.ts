@@ -90,6 +90,7 @@ export interface CourseContent {
   course_id_tag: string;
   orientation?: string;
   mode?: string;
+  curator_note_public?: string;
   tone_safety?: string;
   key_tensions: KeyTension[];
   completion_pathways: CompletionPathway[];
@@ -729,6 +730,16 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     const premise = premiseSection.trim();
     if (!premise) warnings.push('No COURSE PREMISE section found');
 
+    const curatorNoteSection = getSection(
+      sections,
+      "CURATOR'S NOTE",
+      'CURATOR NOTE',
+      'CURATORS NOTE',
+      "Curator's Note",
+      'Curator Note'
+    );
+    const curator_note_public = curatorNoteSection.trim();
+
     const outcomesSection = getSection(sections, 'LEARNING OUTCOMES', 'Learning Outcomes');
     const learning_outcomes = parseLearningOutcomes(outcomesSection);
     if (learning_outcomes.length === 0) warnings.push('No learning outcomes found');
@@ -789,6 +800,7 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
 
     if (orientation) content.orientation = orientation;
     if (mode) content.mode = mode;
+    if (curator_note_public) content.curator_note_public = curator_note_public;
     if (tone_safety) content.tone_safety = tone_safety;
 
     const slug = `${courseIdTag.toLowerCase()}-${slugify(courseTitle)}`;

@@ -32,6 +32,19 @@ export async function vectorSearch(
 ): Promise<VectorSearchResult[]> {
   const supabase = await createClient();
 
+  const { data: indexedChunks, error: indexedChunksError } = await supabase
+    .from('text_chunks')
+    .select('id')
+    .not('embedding', 'is', null)
+    .limit(1);
+
+  if (indexedChunksError) {
+    console.warn('Unable to check indexed text chunks before vector search:', indexedChunksError);
+  } else if (!indexedChunks || indexedChunks.length === 0) {
+    console.warn('Vector search skipped: no embedded text chunks are available');
+    return [];
+  }
+
   // Generate embedding for query
   const queryEmbedding = await generateEmbedding(query);
 
