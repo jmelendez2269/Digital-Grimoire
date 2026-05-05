@@ -8,11 +8,11 @@ export const metadata: Metadata = {
     title: "Terms of Service | Prismarium",
     description: "Terms of Service for Prismarium - Rules and guidelines for using our platform",
     type: "website",
-    url: "https://projectparallax.xyz/terms",
+    url: "/terms",
     siteName: "Prismarium",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Terms of Service",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Terms of Service | Prismarium",
     description: "Terms of Service for Prismarium - Rules and guidelines for using our platform",
-    images: ["https://www.projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 
@@ -194,8 +194,8 @@ export default function TermsOfServicePage() {
             </ul>
             <p className="text-zinc-300 mt-4">
               If you believe content on our Service infringes your intellectual property rights, please contact us at{" "}
-              <a href="mailto:legal@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                legal@projectparallax.xyz
+              <a href="mailto:legal@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                legal@prismarium.xyz
               </a>{" "}
               with specific information about the allegedly infringing content.
             </p>
@@ -420,7 +420,7 @@ export default function TermsOfServicePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">11. Indemnification</h2>
             <p className="text-zinc-300">
-              You agree to indemnify, defend, and hold harmless Convergence and its operators, employees, and contributors from and
+              You agree to indemnify, defend, and hold harmless Prismarium and its operators, employees, and contributors from and
               against any claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including attorney's fees)
               arising from:
             </p>
@@ -444,8 +444,8 @@ export default function TermsOfServicePage() {
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">12.2 Informal Resolution</h3>
             <p className="text-zinc-300">
               Before filing a claim, you agree to try to resolve the dispute informally by contacting us at{" "}
-              <a href="mailto:legal@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                legal@projectparallax.xyz
+              <a href="mailto:legal@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                legal@prismarium.xyz
               </a>. We will try to resolve the dispute within 60 days.
             </p>
 
@@ -501,8 +501,8 @@ export default function TermsOfServicePage() {
               <p className="text-zinc-300">
                 <strong>Service:</strong> Prismarium<br />
                 <strong>Contact:</strong>{" "}
-                <a href="mailto:legal@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                  legal@projectparallax.xyz
+                <a href="mailto:legal@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                  legal@prismarium.xyz
                 </a>
                 <br />
                 <strong>Operated by:</strong> Jeanine Melendez

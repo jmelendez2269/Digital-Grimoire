@@ -9,10 +9,10 @@ export const metadata: Metadata = {
     title: "AI Disclaimer & Discernment Guide | Prismarium",
     description: "Understanding how AI works, the importance of discernment, and mental health resources when using Prismarium's AI features",
     type: "website",
-    url: "https://prismarium.xyz/ai-disclaimer",
+    url: "/ai-disclaimer",
     images: [
       {
-        url: "https://prismarium.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium AI Disclaimer & Discernment Guide",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AI Disclaimer & Discernment Guide | Prismarium",
     description: "Understanding how AI works, the importance of discernment, and mental health resources when using Prismarium's AI features",
-    images: ["https://prismarium.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

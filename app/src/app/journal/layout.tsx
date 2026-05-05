@@ -11,10 +11,10 @@ export const metadata: Metadata = {
     title: "Study Journal | Prismarium",
     description: "Your personal study journal in Prismarium - Create, organize, and explore your notes, annotations, and insights from esoteric texts and wisdom traditions.",
     type: "website",
-    url: "https://prismarium.xyz/journal",
+    url: "/journal",
     images: [
       {
-        url: "https://prismarium.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium Study Journal",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Study Journal | Prismarium",
     description: "Your personal study journal in Prismarium - Create, organize, and explore your notes and insights.",
-    images: ["https://prismarium.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

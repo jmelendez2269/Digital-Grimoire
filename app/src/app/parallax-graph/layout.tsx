@@ -11,10 +11,10 @@ export const metadata: Metadata = {
     title: "Parallax Graph | Prismarium",
     description: "Explore the Parallax Graph - visualize cross-tradition connections and discover unity across wisdom traditions",
     type: "website",
-    url: "https://projectparallax.xyz/parallax-graph",
+    url: "/parallax-graph",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Parallax Graph - Cross-Tradition Unity",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Parallax Graph | Prismarium",
     description: "Explore the Parallax Graph - visualize cross-tradition connections",
-    images: ["https://projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 

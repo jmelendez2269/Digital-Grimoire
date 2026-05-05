@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
+import { getAbsoluteUrl } from '@/lib/utils';
 
 function getStripeClient(): Stripe {
   const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Create portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: userData.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/profile?tab=subscription`,
+      return_url: getAbsoluteUrl('/profile?tab=subscription'),
     });
 
     return NextResponse.json({ url: session.url });

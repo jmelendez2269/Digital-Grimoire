@@ -7,10 +7,10 @@ export const metadata: Metadata = {
     title: "Privacy Policy | Prismarium",
     description: "Privacy Policy for Prismarium - How we collect, use, and protect your data",
     type: "website",
-    url: "https://projectparallax.xyz/privacy",
+    url: "/privacy",
     images: [
       {
-        url: "https://projectparallax.xyz/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Prismarium - Multi-lens library and knowledge network",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Privacy Policy | Prismarium",
     description: "Privacy Policy for Prismarium - How we collect, use, and protect your data",
-    images: ["https://www.projectparallax.xyz/og-image.png"],
+    images: ["/og-image.png"],
   },
 };
 
@@ -294,7 +294,7 @@ export default function PrivacyPolicyPage() {
               <li>Log into your account</li>
               <li>Go to your profile settings</li>
               <li>Navigate to Privacy Settings, or</li>
-              <li>Contact us at: <a href="mailto:privacy@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">privacy@projectparallax.xyz</a></li>
+              <li>Contact us at: <a href="mailto:privacy@prismarium.xyz" className="text-amber-400 hover:text-amber-300">privacy@prismarium.xyz</a></li>
             </ol>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">7.3 GDPR Rights (EU Users)</h3>
@@ -317,8 +317,8 @@ export default function PrivacyPolicyPage() {
               Our Service is not intended for children under 13 years of age. We do not knowingly collect personal
               information from children under 13. If you are a parent or guardian and believe your child has provided
               us with personal information, please contact us immediately at{" "}
-              <a href="mailto:privacy@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                privacy@projectparallax.xyz
+              <a href="mailto:privacy@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                privacy@prismarium.xyz
               </a>.
             </p>
             <p className="text-zinc-300 mt-2">
@@ -364,8 +364,8 @@ export default function PrivacyPolicyPage() {
               <p className="text-zinc-300">
                 <strong>Service:</strong> Prismarium<br />
                 <strong>Contact:</strong>{" "}
-                <a href="mailto:privacy@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                  privacy@projectparallax.xyz
+                <a href="mailto:privacy@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                  privacy@prismarium.xyz
                 </a>
                 <br />
                 <strong>Operated by:</strong> Jeanine Melendez
@@ -385,8 +385,8 @@ export default function PrivacyPolicyPage() {
                 <strong>Service:</strong> Prismarium<br />
                 <strong>Operated by:</strong> Jeanine Melendez<br />
                 <strong>Contact Email:</strong>{" "}
-                <a href="mailto:privacy@projectparallax.xyz" className="text-amber-400 hover:text-amber-300">
-                  privacy@projectparallax.xyz
+                <a href="mailto:privacy@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                  privacy@prismarium.xyz
                 </a>
               </p>
               <p className="text-zinc-400 text-sm mt-2 italic">

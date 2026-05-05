@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { getAppUrl } from '@/lib/utils';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://projectparallax.xyz';
+  const baseUrl = getAppUrl();
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [
