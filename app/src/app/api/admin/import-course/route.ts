@@ -52,6 +52,15 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = createServiceClient();
 
+    const { data: highestOrderedCourse } = await serviceSupabase
+      .from('courses')
+      .select('sort_order')
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const nextSortOrder = (highestOrderedCourse?.sort_order ?? -1) + 1;
+
     const { data: existing } = await serviceSupabase
       .from('courses')
       .select('id, slug')
@@ -84,6 +93,7 @@ export async function POST(request: NextRequest) {
         duration_weeks: course.duration_weeks,
         content: course.content,
         is_published: publishImmediately,
+        sort_order: nextSortOrder,
       })
       .select('id, slug, title')
       .single();

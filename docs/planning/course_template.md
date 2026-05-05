@@ -24,6 +24,9 @@
 ### Course Premise
 > 2–4 sentences. Why this course exists. What gap it fills. Written in the platform voice — calm, precise, invitational. Not a sales pitch.
 
+### Curator's Note
+> 150–250 words for the public version. This is the course's statement of care: why we created it, what it serves in the larger curriculum, why these materials belong together, and what the course deliberately does not claim. It should be transparent, humble, and specific. This is not marketing copy and not a summary.
+
 ### Key Tensions / Lenses in Dialogue (Course Spine)
 > 3–6 named tensions that run through the entire course. Format: **A** vs **B**. These are the fault lines the course walks along. Each weekly question should connect to at least one of these.
 

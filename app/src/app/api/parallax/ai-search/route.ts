@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { hybridSearch } from '@/lib/parallax/hybrid-retrieval';
+import { hybridSearch, HybridSearchResult } from '@/lib/parallax/hybrid-retrieval';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
 
@@ -24,6 +24,120 @@ interface AiSearchResult {
         author: string;
         reason: string;
     }>;
+}
+
+function buildFallbackLibraryResults(searchResults: HybridSearchResult[]): AiSearchResult['libraryResults'] {
+    return searchResults.slice(0, 8).map((result, index) => ({
+        book_id: result.text_id,
+        title: result.text_title || 'Unknown Title',
+        author: result.text_author || 'Unknown Author',
+        relevanceSentence: index === 0
+            ? 'This appears to be the strongest direct match in the library results.'
+            : 'This text surfaced as a relevant supporting source for the search concept.',
+        relevanceLabel: index === 0 ? 'Top Match' : 'Relevant Source',
+        excerpts: [
+            {
+                text: result.content.trim().slice(0, 280),
+                page_number: 1,
+            },
+        ],
+    }));
+}
+
+function buildFallbackSummary(query: string, searchResults: HybridSearchResult[]): string {
+    if (searchResults.length === 0) {
+        return `No strong library matches were found for "${query}" yet. The search completed, but the system could not assemble a richer AI synthesis from the current results.`;
+    }
+
+    const topTitles = searchResults
+        .slice(0, 3)
+        .map(result => result.text_title || 'Unknown Title')
+        .join(', ');
+
+    return `Here is a direct library-first view of "${query}" based on the strongest matches currently available. The most relevant texts surfaced were ${topTitles}, and the excerpts below should still give you a useful starting point while the richer AI synthesis is unavailable.`;
+}
+
+function buildFallbackResponse(query: string, searchResults: HybridSearchResult[]): AiSearchResult {
+    return {
+        summary: buildFallbackSummary(query, searchResults),
+        libraryResults: buildFallbackLibraryResults(searchResults),
+        externalRecommendations: [],
+    };
+}
+
+function hasUsableCachedLibraryResults(results: unknown): boolean {
+    return !!results
+        && typeof results === 'object'
+        && Array.isArray((results as Partial<AiSearchResult>).libraryResults)
+        && ((results as Partial<AiSearchResult>).libraryResults?.length ?? 0) > 0;
+}
+
+function normalizeAiResult(
+    rawResult: unknown,
+    query: string,
+    searchResults: HybridSearchResult[]
+): AiSearchResult {
+    const fallback = buildFallbackResponse(query, searchResults);
+
+    if (!rawResult || typeof rawResult !== 'object') {
+        return fallback;
+    }
+
+    const candidate = rawResult as Partial<AiSearchResult>;
+    const validTextIds = new Set(searchResults.map(result => result.text_id));
+
+    const libraryResults = Array.isArray(candidate.libraryResults)
+        ? candidate.libraryResults
+            .filter((item): item is NonNullable<AiSearchResult['libraryResults']>[number] => {
+                return !!item && typeof item === 'object' && typeof item.book_id === 'string' && validTextIds.has(item.book_id);
+            })
+            .map(item => ({
+                book_id: item.book_id,
+                title: typeof item.title === 'string' && item.title.trim() ? item.title : 'Unknown Title',
+                author: typeof item.author === 'string' && item.author.trim() ? item.author : 'Unknown Author',
+                relevanceSentence: typeof item.relevanceSentence === 'string' && item.relevanceSentence.trim()
+                    ? item.relevanceSentence
+                    : 'This text appears relevant to the search concept.',
+                relevanceLabel: typeof item.relevanceLabel === 'string' && item.relevanceLabel.trim()
+                    ? item.relevanceLabel
+                    : undefined,
+                excerpts: Array.isArray(item.excerpts)
+                    ? item.excerpts
+                        .filter((excerpt): excerpt is { text: string; page_number: number } => {
+                            return !!excerpt && typeof excerpt.text === 'string';
+                        })
+                        .slice(0, 2)
+                        .map(excerpt => ({
+                            text: excerpt.text.trim(),
+                            page_number: Number.isFinite(excerpt.page_number) ? excerpt.page_number : 1,
+                        }))
+                    : [],
+            }))
+        : [];
+
+    const externalRecommendations = Array.isArray(candidate.externalRecommendations)
+        ? candidate.externalRecommendations
+            .filter((item): item is NonNullable<AiSearchResult['externalRecommendations']>[number] => {
+                return !!item && typeof item === 'object' && typeof item.title === 'string';
+            })
+            .map(item => ({
+                title: item.title.trim(),
+                author: typeof item.author === 'string' ? item.author.trim() : 'Unknown Author',
+                reason: typeof item.reason === 'string' && item.reason.trim()
+                    ? item.reason
+                    : 'Relevant external reading for this concept.',
+            }))
+            .filter(item => item.title.length > 0)
+            .slice(0, 3)
+        : [];
+
+    return {
+        summary: typeof candidate.summary === 'string' && candidate.summary.trim()
+            ? candidate.summary.trim()
+            : fallback.summary,
+        libraryResults: libraryResults.length > 0 ? libraryResults : fallback.libraryResults,
+        externalRecommendations,
+    };
 }
 
 export async function POST(request: NextRequest) {
@@ -77,8 +191,12 @@ export async function POST(request: NextRequest) {
                 .maybeSingle();
 
             if (cachedData && cachedData.results) {
-                console.log(`[Deep Search] Cache hit for: "${normalizedQuery}"`);
-                return NextResponse.json(cachedData.results);
+                if (hasUsableCachedLibraryResults(cachedData.results)) {
+                    console.log(`[Deep Search] Cache hit for: "${normalizedQuery}"`);
+                    return NextResponse.json(cachedData.results);
+                }
+
+                console.log(`[Deep Search] Cache hit for "${normalizedQuery}" had no library results; refreshing live retrieval`);
             }
         } catch (cacheReadError) {
             console.warn('[Deep Search] Cache read error, proceeding to live search:', cacheReadError);
@@ -144,35 +262,28 @@ Generate the Deep Search response JSON.`;
             { role: 'user', content: userPrompt }
         ];
 
-        const aiResponse = await aiOrchestrator.chatComplete(messages, {
-            model: 'gpt-4o-mini', // Reduced from gpt-4o for 2-3x faster generation
-            jsonMode: true,
-            temperature: 0.3 // Keep it relatively focused
-        });
-
-        // 5. Parse and Return
-        let parsedResult: AiSearchResult;
+        let finalResponse: AiSearchResult;
         try {
-            parsedResult = JSON.parse(aiResponse.content);
-        } catch (e) {
-            console.error('[Deep Search] Failed to parse AI JSON:', e);
-            console.error('[Deep Search] Raw content:', aiResponse.content);
-            return NextResponse.json(
-                { error: 'Failed to generate valid search results' },
-                { status: 500 }
-            );
+            const aiResponse = await aiOrchestrator.chatComplete(messages, {
+                model: 'gpt-4o-mini', // Reduced from gpt-4o for 2-3x faster generation
+                jsonMode: true,
+                temperature: 0.3 // Keep it relatively focused
+            });
+
+            let parsedResult: unknown;
+            try {
+                parsedResult = JSON.parse(aiResponse.content);
+            } catch (parseError) {
+                console.error('[Deep Search] Failed to parse AI JSON:', parseError);
+                console.error('[Deep Search] Raw content:', aiResponse.content);
+                parsedResult = null;
+            }
+
+            finalResponse = normalizeAiResult(parsedResult, query, searchResults);
+        } catch (aiError) {
+            console.error('[Deep Search] AI synthesis failed, returning fallback response:', aiError);
+            finalResponse = buildFallbackResponse(query, searchResults);
         }
-
-        // Filter out library results that don't match actual search results (hallucination guard)
-        // and ensure IDs are correct
-        const validLibraryResults = parsedResult.libraryResults.filter(libResult => {
-            return searchResults.some(r => r.text_id === libResult.book_id);
-        });
-
-        const finalResponse: AiSearchResult = {
-            ...parsedResult,
-            libraryResults: validLibraryResults
-        };
 
         // 6. Save to Cache
         try {

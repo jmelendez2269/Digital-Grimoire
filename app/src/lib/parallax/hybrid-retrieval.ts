@@ -1,5 +1,5 @@
 import { vectorSearch, VectorSearchResult, LensFilters } from './vector-search';
-import { ftsSearchChunks, FTSSearchResult } from './fts-search';
+import { ftsSearch, ftsSearchChunks, FTSSearchResult } from './fts-search';
 
 export interface RetrievalOptions {
   vectorWeight?: number; // Default 0.7
@@ -51,7 +51,7 @@ export async function hybridSearch(
   };
 
   // Run both searches in parallel
-  const [vectorResults, ftsResults] = await Promise.all([
+  const [vectorResults, chunkFtsResults] = await Promise.all([
     vectorSearch(query, limit * 2, filters).catch(err => {
       console.warn('Vector search failed:', err);
       return [];
@@ -61,6 +61,13 @@ export async function hybridSearch(
       return [];
     }),
   ]);
+
+  const ftsResults = chunkFtsResults.length > 0
+    ? chunkFtsResults
+    : await ftsSearch(query, limit * 2, filters).catch(err => {
+      console.warn('Full-text fallback search failed:', err);
+      return [];
+    });
 
   // Merge results using Reciprocal Rank Fusion (RRF)
   const merged = mergeWithRRF(vectorResults, ftsResults, vectorWeight, ftsWeight);

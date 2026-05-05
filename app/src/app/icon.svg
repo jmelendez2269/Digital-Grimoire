@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gold" x1="112" y1="64" x2="400" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E8C77A"/>
+      <stop offset="1" stop-color="#8E6B23"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="256" y1="66" x2="256" y2="446" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7CECE0"/>
+      <stop offset="1" stop-color="#2BD9E8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="#0A0A0E"/>
+  <polygon points="256,67 440,445 72,445" fill="url(#cyan)" stroke="url(#gold)" stroke-width="6"/>
+  <line x1="256" y1="67" x2="179" y2="445" stroke="url(#gold)" stroke-width="4" opacity="0.6"/>
+  <line x1="256" y1="67" x2="333" y2="445" stroke="#F2EFE6" stroke-width="4" opacity="0.52"/>
+  <line x1="36" y1="266" x2="195" y2="266" stroke="#F2EFE6" stroke-width="5" opacity="0.9"/>
+  <line x1="317" y1="230" x2="476" y2="179" stroke="#FF8B6E" stroke-width="5" opacity="0.9"/>
+  <line x1="317" y1="256" x2="476" y2="230" stroke="#F0A858" stroke-width="5" opacity="0.9"/>
+  <line x1="317" y1="282" x2="476" y2="282" stroke="#F5D86C" stroke-width="5" opacity="0.9"/>
+  <line x1="317" y1="307" x2="476" y2="333" stroke="#7CECE0" stroke-width="5" opacity="0.9"/>
+</svg>

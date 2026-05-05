@@ -13,6 +13,32 @@ export interface FTSSearchResult {
   chunk_index?: number;
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildContentExcerpt(content: string, terms: string[], maxLength = 1200): string {
+  const normalized = content.replace(/\s+/g, ' ').trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  const lowerContent = normalized.toLowerCase();
+  const firstMatchIndex = terms.reduce((bestIndex, term) => {
+    const index = lowerContent.indexOf(term.toLowerCase());
+    if (index === -1) return bestIndex;
+    return bestIndex === -1 ? index : Math.min(bestIndex, index);
+  }, -1);
+
+  const midpoint = firstMatchIndex === -1 ? 0 : firstMatchIndex;
+  const start = Math.max(0, midpoint - Math.floor(maxLength / 3));
+  const end = Math.min(normalized.length, start + maxLength);
+  const excerpt = normalized.slice(start, end);
+
+  return `${start > 0 ? '...' : ''}${excerpt}${end < normalized.length ? '...' : ''}`;
+}
+
 /**
  * Full-text search using PostgreSQL FTS
  * Uses existing tsvector indexes on texts.content
@@ -39,14 +65,12 @@ export async function ftsSearch(
     return [];
   }
 
-  // Build search query - search in texts.content
-  // PostgreSQL FTS uses to_tsquery format: 'word1 & word2'
-  const searchQuery = cleanQuery
+  const queryTerms = cleanQuery
+    .toLowerCase()
     .split(/\s+/)
-    .filter(word => word.length > 2 && !STOP_WORDS.has(word.toLowerCase())) // Ignore short words and stop words
-    .join(' & '); // AND operator for all terms
+    .filter(word => word.length > 2 && !STOP_WORDS.has(word.toLowerCase()));
 
-  if (!searchQuery) {
+  if (queryTerms.length === 0) {
     return [];
   }
 
@@ -54,7 +78,7 @@ export async function ftsSearch(
   let textQuery = supabase
     .from('texts')
     .select('id, title, author, type, content, lenses')
-    .textSearch('content', searchQuery, {
+    .textSearch('content', cleanQuery, {
       type: 'plain',
       config: 'english',
     });
@@ -83,18 +107,14 @@ export async function ftsSearch(
     return [];
   }
 
-  // Calculate relevance scores using ts_rank
-  // Since Supabase doesn't expose ts_rank directly, we'll use a simple heuristic:
-  // Count occurrences of query terms in content
-  const queryTerms = cleanQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2 && !STOP_WORDS.has(t));
-
   const results: FTSSearchResult[] = texts.map(text => {
-    const content = (text.content || '').toLowerCase();
+    const rawContent = text.content || '';
+    const content = rawContent.toLowerCase();
 
     // Calculate relevance: count of matching terms / total terms
     let matchCount = 0;
     for (const term of queryTerms) {
-      const regex = new RegExp(`\\b${term}\\b`, 'gi');
+      const regex = new RegExp(`\\b${escapeRegExp(term)}\\b`, 'gi');
       const matches = content.match(regex);
       matchCount += matches ? matches.length : 0;
     }
@@ -104,7 +124,7 @@ export async function ftsSearch(
 
     return {
       text_id: text.id,
-      content: text.content || '',
+      content: buildContentExcerpt(rawContent, queryTerms),
       relevance,
       text_title: text.title,
       text_author: text.author,

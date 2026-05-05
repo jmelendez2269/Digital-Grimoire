@@ -16,6 +16,12 @@ interface Course {
   is_published: boolean;
   sort_order: number | null;
   created_at: string;
+  content: Record<string, unknown> | null;
+}
+
+function hasCuratorNote(content: Record<string, unknown> | null | undefined): boolean {
+  const note = content?.curator_note_public || content?.curator_note;
+  return typeof note === "string" && note.trim().length > 0;
 }
 
 export default function AdminCoursesPage() {
@@ -95,35 +101,41 @@ export default function AdminCoursesPage() {
     const swapIndex = direction === "up" ? index - 1 : index + 1;
     if (swapIndex < 0 || swapIndex >= courses.length) return;
 
-    const updated = [...courses];
-    const currentOrder = updated[index].sort_order ?? index;
-    const swapOrder = updated[swapIndex].sort_order ?? swapIndex;
+    const previousCourses = courses;
+    const reordered = [...courses];
+    const [movedCourse] = reordered.splice(index, 1);
+    reordered.splice(swapIndex, 0, movedCourse);
 
-    updated[index] = { ...updated[index], sort_order: swapOrder };
-    updated[swapIndex] = { ...updated[swapIndex], sort_order: currentOrder };
-    updated.sort(
-      (a, b) =>
-        (a.sort_order ?? Number.MAX_SAFE_INTEGER) - (b.sort_order ?? Number.MAX_SAFE_INTEGER) ||
-        a.title.localeCompare(b.title)
-    );
-    setCourses(updated);
+    const normalized = reordered.map((course, orderIndex) => ({
+      ...course,
+      sort_order: orderIndex,
+    }));
 
+    const changedCourses = normalized.filter((course, orderIndex) => {
+      const previousCourse = previousCourses.find((item) => item.id === course.id);
+      return (previousCourse?.sort_order ?? orderIndex) !== course.sort_order;
+    });
+
+    setCourses(normalized);
     setReordering(courses[index].id);
     try {
-      await Promise.all([
-        fetch(`/api/courses/${courses[index].id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sort_order: swapOrder }),
-        }),
-        fetch(`/api/courses/${courses[swapIndex].id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sort_order: currentOrder }),
-        }),
-      ]);
+      const responses = await Promise.all(
+        changedCourses.map((course) =>
+          fetch(`/api/courses/${course.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sort_order: course.sort_order }),
+          })
+        )
+      );
+
+      const failedResponse = responses.find((response) => !response.ok);
+      if (failedResponse) {
+        throw new Error(`Failed to persist reorder (${failedResponse.status})`);
+      }
     } catch (error) {
       console.error("Failed to reorder courses", error);
+      setCourses(previousCourses);
       void fetchCourses();
     } finally {
       setReordering(null);
@@ -290,6 +302,11 @@ export default function AdminCoursesPage() {
                     <span className="shrink-0 text-xs uppercase tracking-wider text-zinc-500">
                       {course.level}
                     </span>
+                    {!hasCuratorNote(course.content) && (
+                      <span className="shrink-0 rounded border border-amber-900/50 bg-amber-950/30 px-2 py-0.5 text-xs font-medium text-amber-300">
+                        Needs note
+                      </span>
+                    )}
                   </div>
                   <p className="truncate text-sm text-zinc-500">
                     {course.description || "No description provided."}

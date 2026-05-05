@@ -84,6 +84,7 @@ The parser expects a consistent structure built around `##` and `###` headings.
 - `# Course CXX – Title`
 - `## COURSE METADATA`
 - `## COURSE PREMISE`
+- `## CURATOR'S NOTE`
 - `## LEARNING OUTCOMES`
 - `## KEY TENSIONS (Course Spine)` or `## KEY TENSIONS`
 - `## COMPLETION PATHWAYS`
@@ -133,6 +134,7 @@ The `content` JSON includes:
 - `course_id_tag`
 - `orientation`
 - `mode`
+- `curator_note_public`
 - `tone_safety`
 - `key_tensions`
 - `completion_pathways`
@@ -216,6 +218,20 @@ Warnings do not block import by themselves. They are meant to flag incomplete st
 ---
 
 ## Operational Notes
+
+### Adding Curator's Notes to uploaded courses
+
+Courses that were imported before `## CURATOR'S NOTE` existed do not need to be re-uploaded. Open `/admin/courses`, look for the `Needs note` badge, choose **Edit**, and use the dedicated **Curator's Note** field. Saving the course writes the note into `content.curator_note_public`, which is the same field used by newly imported markdown courses.
+
+For a batch pass across already published courses, use the backfill script:
+
+```bash
+npm run courses:curator-notes -- --list-missing
+npm run courses:curator-notes -- --input ../docs/planning/course_curator_notes_backfill.json
+npm run courses:curator-notes -- --input ../docs/planning/course_curator_notes_backfill.json --apply
+```
+
+The script is preview-only unless `--apply` is present. By default it targets published courses only and skips any course that already has a curator note. Add `--include-drafts` to include drafts, or `--overwrite` to replace existing notes.
 
 ### Admin-only protection
 

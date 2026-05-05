@@ -374,7 +374,7 @@ export default function AIDisclaimerPage() {
                 If you have questions, concerns, or suggestions about our AI systems or this disclaimer, please reach out:
               </p>
               <p className="text-zinc-300 mt-2">
-                <strong>Email:</strong> <a href="mailto:info@prismarium.xyz" className="text-amber-400 hover:text-amber-300">info@prismarium.xyz</a>
+                <strong>Email:</strong> <a href="mailto:support@prismarium.xyz" className="text-amber-400 hover:text-amber-300">support@prismarium.xyz</a>
               </p>
               <p className="text-sm text-zinc-400 mt-2">
                 We're learning together, and your feedback helps us improve. If you have suggestions for how we can make our
@@ -459,8 +459,8 @@ export default function AIDisclaimerPage() {
             <p className="text-zinc-300 mt-4">
               If you have suggestions, concerns, or feedback about our AI systems, this disclaimer, or how we can better
               support safe and meaningful exploration, you can reach us at{" "}
-              <a href="mailto:info@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
-                info@prismarium.xyz
+              <a href="mailto:support@prismarium.xyz" className="text-amber-400 hover:text-amber-300">
+                support@prismarium.xyz
               </a>.
             </p>
             <p className="text-zinc-300 mt-2">
