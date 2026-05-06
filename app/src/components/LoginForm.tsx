@@ -133,10 +133,16 @@ export function LoginForm() {
     console.log("🔐 Google sign-in initiated");
 
     try {
+      const redirectOrigin =
+        window.location.hostname === "prismarium.xyz" ||
+        window.location.hostname === "www.prismarium.xyz"
+          ? "https://prismarium.xyz"
+          : window.location.origin;
+
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${redirectOrigin}/auth/callback`,
         },
       });
 
