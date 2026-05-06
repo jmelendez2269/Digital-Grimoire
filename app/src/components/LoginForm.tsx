@@ -35,6 +35,8 @@ export function LoginForm() {
     const urlError = searchParams.get("error");
     if (urlError === "verification_failed") {
       setError("Email verification failed. Please try again or request a new verification email.");
+    } else if (urlError) {
+      setError(urlError);
     }
   }, [searchParams]);
 

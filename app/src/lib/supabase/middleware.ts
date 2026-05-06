@@ -196,10 +196,10 @@ export async function updateSession(request: NextRequest) {
     // Continue without user - will redirect to login if needed
   }
 
-  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/stripe/webhook"];
+  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/graph", "/knowledge-graph", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/graph", "/api/stripe/webhook"];
   const devOnlyPublicRoutes =
     process.env.NODE_ENV === "development"
-      ? ["/graph", "/knowledge-graph", "/api/graph"]
+      ? []
       : [];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Clock, GraduationCap, BookOpen, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, GraduationCap, BookOpen, Loader2, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -74,12 +74,18 @@ interface CoursePreviewWeek {
   }>;
 }
 
+interface CourseAccess {
+  tier: 'free' | 'paid';
+  upgradeRequired: boolean;
+}
+
 function CourseDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [access, setAccess] = useState<CourseAccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,6 +111,7 @@ function CourseDetailContent() {
         const data = await res.json();
         if (data.success && data.course) {
           setCourse(data.course);
+          setAccess(data.access || null);
         } else {
           throw new Error(data.error || 'Course not found');
         }
@@ -153,6 +160,8 @@ function CourseDetailContent() {
       if (data.success && data.enrollment) {
         setEnrollment(data.enrollment);
         router.push(`/courses/${slug}/learn`);
+      } else if (res.status === 402 || data.code === 'UPGRADE_REQUIRED') {
+        router.push('/profile?tab=subscription');
       }
     } catch (err) {
       console.error('Enrollment failed:', err);
@@ -195,6 +204,8 @@ function CourseDetailContent() {
   const currentWeek = enrollment?.current_week || 1;
   const totalWeeks = course?.duration_weeks || 8;
   const progressPct = Math.min(100, Math.round((currentWeek / totalWeeks) * 100));
+  const upgradeRequired = access?.upgradeRequired === true;
+  const isFreeCourse = access?.tier === 'free';
 
   // Structured content fields from JSONB
   const courseContent = course?.content as Record<string, unknown> | null;
@@ -446,7 +457,7 @@ function CourseDetailContent() {
                     <div className="p-1 rounded-xl bg-gradient-to-b from-amber-500/20 to-cyan-500/10">
                       <div className="bg-black/80 rounded-lg p-6 backdrop-blur-xl border border-white/10">
                         <h3 className="text-base font-bold text-white mb-1">
-                          {enrollment ? 'Path Active' : 'Initialize Path'}
+                          {enrollment ? 'Path Active' : upgradeRequired ? 'Member Path' : 'Initialize Path'}
                         </h3>
 
                         {enrollmentLoading ? (
@@ -480,7 +491,11 @@ function CourseDetailContent() {
                         ) : (
                           <>
                             <p className="text-xs text-zinc-500 mb-5">
-                              Enter this path and access the protected course workspace.
+                              {upgradeRequired
+                                ? 'Pre-course and taster paths are free. Upgrade to start the full class workspace.'
+                                : isFreeCourse
+                                  ? 'This introductory path is free to begin.'
+                                  : 'Enter this path and access the protected course workspace.'}
                             </p>
 
                             <button
@@ -496,8 +511,8 @@ function CourseDetailContent() {
                                 </>
                               ) : (
                                 <>
-                                  <BookOpen className="w-4 h-4" />
-                                  {user ? 'Enter Path' : 'Sign In to Begin'}
+                                  {upgradeRequired ? <Lock className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                                  {user ? (upgradeRequired ? 'Upgrade to Start' : 'Enter Path') : 'Sign In to Begin'}
                                 </>
                               )}
                             </button>

@@ -33,7 +33,7 @@ interface TierInfo {
   name: string;
   price: number;
   priceId?: string;
-  queries: string; // e.g., "25-50" or "50-100"
+  queries: string;
   features: string[];
   icon: React.ReactNode;
   color: string;
@@ -573,6 +573,7 @@ export default function SubscriptionTab() {
             'Full library access',
             'Full graph access',
             'Basic search',
+            'Pre-course and taster courses',
             'Unlimited annotations',
             'Unlimited collections',
           ],
@@ -584,10 +585,13 @@ export default function SubscriptionTab() {
       case 'student':
         return {
           name: 'The Student',
-          price: 5,
+          price: 15,
           priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT,
           queries: '5',
           features: [
+            'Full course access',
+            'Structured 8-week learning paths',
+            'Course workbook and synthesis artifacts',
             '5 AI queries per month',
             'Unlimited journal pages',
             'Full library access',
@@ -603,17 +607,19 @@ export default function SubscriptionTab() {
       case 'scholar':
         return {
           name: 'The Scholar',
-          price: 9.99,
+          price: 29,
           priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR,
-          queries: '25-50',
+          queries: '25',
           features: [
-            '25-50 AI queries per month (beta - limits may adjust)',
+            'Everything in Student',
+            '25 AI research queries per month',
+            'Seven Lenses study workflows',
+            'Concept search and advanced research tools',
             'Unlimited journal pages',
             'Full library access',
             'Full graph access',
             'Unlimited annotations',
             'Unlimited collections',
-            'Advanced annotation search',
             'Priority support',
           ],
           icon: <Sparkles className="w-5 h-5" />,
@@ -624,19 +630,20 @@ export default function SubscriptionTab() {
       case 'adept':
         return {
           name: 'The Adept',
-          price: 15,
+          price: 49,
           priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT,
-          queries: '50-100',
+          queries: '50',
           features: [
-            '50-100 AI queries per month (beta - limits may adjust)',
+            'Everything in Scholar',
+            '50 AI research queries per month',
+            'Highest research limits',
+            'Early access to new course and AI features',
             'Unlimited journal pages',
             'Full library access',
             'Full graph access',
             'Unlimited annotations',
             'Unlimited collections',
-            'Advanced annotation search',
             'Priority support',
-            'Early access to new features',
           ],
           icon: <Crown className="w-5 h-5" />,
           color: 'text-amber-400',
@@ -751,11 +758,10 @@ export default function SubscriptionTab() {
           <div className="flex items-start gap-3">
             <Info className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-amber-100/80">
-              <p className="font-semibold mb-1">Beta Query Limits</p>
+              <p className="font-semibold mb-1">Research Query Limits</p>
               <p className="text-amber-100/60">
-                We're currently in beta and actively monitoring query costs to find the optimal balance between value and sustainability.
-                Query limits may be adjusted based on actual usage data to ensure we can continue providing this service.
-                We'll notify subscribers of any changes with at least 30 days notice.
+                Prismarium subscriptions are priced around guided study and research value, not raw token usage.
+                Query limits keep the research tools sustainable while courses, the library, and the graph remain central.
               </p>
             </div>
           </div>
@@ -775,11 +781,11 @@ export default function SubscriptionTab() {
               </div>
               <div>
                 <h4 className="text-lg font-bold text-amber-100">The Student</h4>
-                <p className="text-sm text-zinc-400">Unlock unlimited journals</p>
+                <p className="text-sm text-zinc-400">Unlock full courses and workbook depth</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$5</div>
+              <div className="text-2xl font-bold text-amber-100">$15</div>
               <div className="text-sm text-zinc-400">/month</div>
             </div>
           </div>
@@ -836,11 +842,11 @@ export default function SubscriptionTab() {
               </div>
               <div>
                 <h4 className="text-lg font-bold text-amber-100">The Scholar</h4>
-                <p className="text-sm text-zinc-400">Most popular for AI power users</p>
+                <p className="text-sm text-zinc-400">For serious comparative study</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$9.99</div>
+              <div className="text-2xl font-bold text-amber-100">$29</div>
               <div className="text-sm text-zinc-400">/month</div>
             </div>
           </div>
@@ -902,11 +908,11 @@ export default function SubscriptionTab() {
               </div>
               <div>
                 <h4 className="text-lg font-bold text-amber-100">The Adept</h4>
-                <p className="text-sm text-zinc-400">Maximum AI access</p>
+                <p className="text-sm text-zinc-400">Maximum research depth</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$15</div>
+              <div className="text-2xl font-bold text-amber-100">$49</div>
               <div className="text-sm text-zinc-400">/month</div>
             </div>
           </div>
@@ -1008,8 +1014,8 @@ export default function SubscriptionTab() {
             <p className="font-semibold mb-1">About Subscriptions</p>
             <p className="text-amber-100/60">
               Subscriptions support the development and maintenance of Prismarium.
-              Your subscription helps us continue building amazing features for the esoteric community.
-              All tiers include full access to the library and correspondence graph - we never gate knowledge.
+              Reader access keeps the library and correspondence graph open. Paid plans unlock the structured course
+              experience, workbook depth, and advanced research tools that make Prismarium sustainable.
             </p>
           </div>
         </div>

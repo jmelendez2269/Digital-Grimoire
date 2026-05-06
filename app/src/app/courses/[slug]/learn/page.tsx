@@ -135,6 +135,10 @@ function CourseLearnContent() {
                     router.replace(`/courses/${slug}`);
                     return;
                 }
+                if (courseResponse.status === 402) {
+                    router.replace('/profile?tab=subscription');
+                    return;
+                }
                 if (!courseResponse.ok) {
                     const data = await courseResponse.json();
                     throw new Error(data.error || 'Failed to fetch course');

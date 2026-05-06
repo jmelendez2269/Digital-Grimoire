@@ -11,7 +11,6 @@ import {
   cacheScores,
 } from "@/lib/concepts/ai-relevance";
 
-import { checkRateLimit, recordRateLimit } from "@/lib/rate-limit";
 import { getSubscriptionTier } from "@/lib/parallax/rate-limit";
 
 async function isAdmin() {
@@ -40,24 +39,29 @@ export async function GET(req: NextRequest) {
     const tag = searchParams.get("tag");
     const limit = Math.min(Number(searchParams.get("limit") || 50), 200);
 
-    // Apply concept search cap for free-tier users (5 searches/30 days)
-    // Only count searches with a query string (not bare list loads)
+    // Concept search is a paid feature. Bare list loads stay public so the
+    // graph can render without requiring sign-in.
     const { data: { user: authedUser } } = await supabase.auth.getUser();
-    if (authedUser && q) {
+    if (q) {
+      if (!authedUser) {
+        return NextResponse.json(
+          {
+            error: 'Authentication required',
+            message: 'Concept search is available to paid members. Sign in and choose a plan to search concepts.',
+          },
+          { status: 401 }
+        );
+      }
+
       const tier = await getSubscriptionTier(authedUser.id);
       if (tier === 'free') {
-        const CONCEPT_SEARCH_LIMIT = 5;
-        const THIRTY_DAYS = 30 * 24 * 3600;
-        const capKey = `concept_search:${authedUser.id}`;
-        const capStatus = await checkRateLimit(capKey, { limit: CONCEPT_SEARCH_LIMIT, window: THIRTY_DAYS });
-        if (!capStatus.allowed) {
-          return NextResponse.json(
-            { error: 'Concept search limit reached', message: 'Free accounts are limited to 5 concept searches per month. Upgrade to search without limits.', resetAt: capStatus.resetAt.toISOString() },
-            { status: 429 }
-          );
-        }
-        // Record this search (fire-and-forget)
-        recordRateLimit(capKey, { limit: CONCEPT_SEARCH_LIMIT, window: THIRTY_DAYS }).catch(() => {});
+        return NextResponse.json(
+          {
+            error: 'Upgrade required',
+            message: 'Concept search is available to paid members. Upgrade to search concepts without a free-tier cap.',
+          },
+          { status: 402 }
+        );
       }
     }
 
