@@ -1,7 +1,51 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getSupabaseCookieOptions } from '@/lib/supabase/auth-config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+
+type CookieToSet = Parameters<NextResponse['cookies']['set']>
+
+function createCallbackClient(request: NextRequest) {
+  const requestCookies = new Map(
+    request.cookies.getAll().map((cookie) => [cookie.name, cookie.value])
+  )
+  const responseCookies: CookieToSet[] = []
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookieOptions: getSupabaseCookieOptions(),
+      cookies: {
+        getAll() {
+          return Array.from(requestCookies.entries()).map(([name, value]) => ({
+            name,
+            value,
+          }))
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            requestCookies.set(name, value)
+            responseCookies.push([name, value, options])
+          })
+        },
+      },
+    }
+  )
+
+  return { supabase, responseCookies }
+}
+
+function redirectWithCookies(
+  request: NextRequest,
+  path: string,
+  responseCookies: CookieToSet[]
+) {
+  const response = NextResponse.redirect(new URL(path, request.url))
+  responseCookies.forEach((cookie) => response.cookies.set(...cookie))
+  return response
+}
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -12,10 +56,12 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth errors
   if (error) {
-    console.error('❌ OAuth error:', error, errorDescription)
-    const errorMessage = errorDescription || error === 'access_denied' 
-      ? 'Sign-in was cancelled' 
-      : 'Authentication failed'
+    console.error('OAuth error:', error, errorDescription)
+    const errorMessage =
+      error === 'access_denied'
+        ? 'Sign-in was cancelled'
+        : errorDescription || 'Authentication failed'
+
     return NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(errorMessage)}`, request.url)
     )
@@ -23,39 +69,41 @@ export async function GET(request: NextRequest) {
 
   // Handle OAuth code exchange
   if (code) {
-    const supabase = await createClient()
+    const { supabase, responseCookies } = createCallbackClient(request)
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-    
+
     if (exchangeError) {
-      console.error('❌ Code exchange error:', exchangeError)
-      return NextResponse.redirect(
-        new URL(`/login?error=${encodeURIComponent(exchangeError.message)}`, request.url)
+      console.error('Code exchange error:', exchangeError)
+      return redirectWithCookies(
+        request,
+        `/login?error=${encodeURIComponent(exchangeError.message)}`,
+        responseCookies
       )
     }
 
     if (data.session && data.user) {
-      console.log('✅ OAuth authentication successful', {
+      console.log('OAuth authentication successful', {
         userId: data.user.id,
-        email: data.user.email
+        email: data.user.email,
       })
-      
+
       // Check if user has a Google profile picture that should be synced
       const user = data.user
       const currentAvatarUrl = user.user_metadata?.avatar_url
-      
+
       // Google OAuth provides the picture in raw_user_meta_data or raw_app_meta_data
       // Check both locations for the profile picture (exclude current avatar_url from this check)
-      const googleAvatarUrl = 
+      const googleAvatarUrl =
         user.user_metadata?.picture ||
         (user as any).raw_user_meta_data?.avatar_url ||
         (user as any).raw_user_meta_data?.picture ||
         (user as any).raw_app_meta_data?.avatar_url ||
         (user as any).raw_app_meta_data?.picture
 
-      // If Google provided an avatar, sync it (update if different or missing)
       const hasNoAvatar = !currentAvatarUrl || currentAvatarUrl.trim() === ''
-      const avatarNeedsUpdate = googleAvatarUrl && (hasNoAvatar || currentAvatarUrl !== googleAvatarUrl)
-      
+      const avatarNeedsUpdate =
+        googleAvatarUrl && (hasNoAvatar || currentAvatarUrl !== googleAvatarUrl)
+
       if (avatarNeedsUpdate) {
         try {
           const { error: updateError } = await supabase.auth.updateUser({
@@ -65,120 +113,103 @@ export async function GET(request: NextRequest) {
           })
 
           if (updateError) {
-            console.error('⚠️ Failed to sync Google profile picture:', updateError)
-            // Don't fail the auth flow if this fails
+            console.error('Failed to sync Google profile picture:', updateError)
           } else {
-            console.log('✅ Google profile picture synced successfully', {
+            console.log('Google profile picture synced successfully', {
               hadAvatar: !hasNoAvatar,
-              newAvatar: googleAvatarUrl
+              newAvatar: googleAvatarUrl,
             })
           }
         } catch (err) {
-          console.error('⚠️ Error syncing Google profile picture:', err)
-          // Don't fail the auth flow if this fails
+          console.error('Error syncing Google profile picture:', err)
         }
       } else if (googleAvatarUrl) {
-        console.log('✅ Google profile picture already synced')
+        console.log('Google profile picture already synced')
       }
 
-      // Preserve admin status when accounts are linked
-      // This is critical: OAuth might create a new user or the trigger might create a profile with role='user'
+      // Preserve admin status when accounts are linked.
       if (user.email) {
         try {
           const serviceClient = createServiceClient()
-          
-          // First, ensure profile exists for current user (trigger might not have run yet)
+
           const { data: currentProfile } = await serviceClient
             .from('users')
             .select('id, role')
             .eq('id', user.id)
             .maybeSingle()
 
-          // If profile doesn't exist, create it (but check for admin first)
+          const { data: existingAdminProfile } = await serviceClient
+            .from('users')
+            .select('id, role')
+            .eq('email', user.email)
+            .eq('role', 'admin')
+            .maybeSingle()
+
           if (!currentProfile) {
-            // Check if ANY profile with this email has admin role
-            const { data: adminCheck } = await serviceClient
-              .from('users')
-              .select('role')
-              .eq('email', user.email)
-              .eq('role', 'admin')
-              .maybeSingle()
+            const initialRole = existingAdminProfile ? 'admin' : 'user'
 
-            const initialRole = adminCheck ? 'admin' : 'user'
-
-            // Create profile with correct role
             const { error: createError } = await serviceClient
               .from('users')
               .insert({
                 id: user.id,
                 email: user.email,
-                name: user.user_metadata?.username || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
+                name:
+                  user.user_metadata?.username ||
+                  user.user_metadata?.display_name ||
+                  user.email?.split('@')[0] ||
+                  'User',
                 role: initialRole,
                 email_verified: user.email_confirmed_at ? true : false,
                 created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
               })
 
             if (createError) {
-              console.error('⚠️ Failed to create profile:', createError)
+              console.error('Failed to create profile:', createError)
             } else {
-              console.log(`✅ Profile created with role: ${initialRole}`)
+              console.log(`Profile created with role: ${initialRole}`)
             }
-          } else {
-            // Profile exists - check if we need to upgrade to admin
-            if (currentProfile.role !== 'admin') {
-              // Check if ANY profile with this email has admin role
-              const { data: existingAdminProfile } = await serviceClient
-                .from('users')
-                .select('id, role')
-                .eq('email', user.email)
-                .eq('role', 'admin')
-                .maybeSingle()
+          } else if (currentProfile.role !== 'admin' && existingAdminProfile) {
+            const { error: roleUpdateError } = await serviceClient
+              .from('users')
+              .update({ role: 'admin', updated_at: new Date().toISOString() })
+              .eq('id', user.id)
 
-              // If an admin profile exists with the same email, update current user to admin
-              if (existingAdminProfile) {
-                const { error: roleUpdateError } = await serviceClient
-                  .from('users')
-                  .update({ role: 'admin', updated_at: new Date().toISOString() })
-                  .eq('id', user.id)
-
-                if (roleUpdateError) {
-                  console.error('⚠️ Failed to preserve admin role after account linking:', roleUpdateError)
-                } else {
-                  console.log('✅ Admin role preserved after account linking')
-                }
-              }
+            if (roleUpdateError) {
+              console.error(
+                'Failed to preserve admin role after account linking:',
+                roleUpdateError
+              )
             } else {
-              console.log('✅ User already has admin role')
+              console.log('Admin role preserved after account linking')
             }
+          } else if (currentProfile?.role === 'admin') {
+            console.log('User already has admin role')
           }
 
-          // Also update ALL profiles with this email to admin (handles duplicate profiles)
-          const { error: bulkUpdateError } = await serviceClient
-            .from('users')
-            .update({ role: 'admin', updated_at: new Date().toISOString() })
-            .eq('email', user.email)
-            .neq('role', 'admin')
+          if (existingAdminProfile) {
+            const { error: bulkUpdateError } = await serviceClient
+              .from('users')
+              .update({ role: 'admin', updated_at: new Date().toISOString() })
+              .eq('email', user.email)
+              .neq('role', 'admin')
 
-          if (bulkUpdateError) {
-            console.error('⚠️ Failed to update all profiles to admin:', bulkUpdateError)
-          } else {
-            console.log('✅ Ensured all profiles with this email have admin role')
+            if (bulkUpdateError) {
+              console.error('Failed to update all profiles to admin:', bulkUpdateError)
+            } else {
+              console.log('Ensured all profiles with this email have admin role')
+            }
           }
         } catch (err) {
-          console.error('⚠️ Error checking/preserving admin status:', err)
-          // Don't fail the auth flow if this fails
+          console.error('Error checking/preserving admin status:', err)
         }
       }
-      
-      // Successfully authenticated, redirect to dashboard
-      return NextResponse.redirect(new URL(next, request.url))
+
+      return redirectWithCookies(request, next, responseCookies)
     }
   }
 
-  // If no code and no error, redirect to login
   return NextResponse.redirect(
     new URL('/login?error=authentication_failed', request.url)
   )
 }
-

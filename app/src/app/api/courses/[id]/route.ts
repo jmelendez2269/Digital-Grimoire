@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { sanitizeCourseForPreview } from '@/lib/courses/access';
+import { getCourseAccessTier, hasPaidCourseAccess, sanitizeCourseForPreview } from '@/lib/courses/access';
 import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
 
 export const dynamic = 'force-dynamic';
@@ -36,11 +36,15 @@ async function getViewer(supabase: Awaited<ReturnType<typeof createClient>>) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role')
+    .select('role, subscription_status')
     .eq('id', user.id)
     .maybeSingle();
 
-  return { user, isAdmin: profile?.role === 'admin' };
+  return {
+    user,
+    isAdmin: profile?.role === 'admin',
+    hasPaidAccess: hasPaidCourseAccess(profile),
+  };
 }
 
 async function isEnrolled(
@@ -103,12 +107,26 @@ export async function GET(request: NextRequest, { params }: Params) {
         ),
       };
 
+  const accessTier = getCourseAccessTier(course);
+  const paidCourseUnlocked = accessTier === 'free' || viewer.hasPaidAccess;
+
   const enrolled = viewer.user
     ? await isEnrolled(serviceSupabase, viewer.user.id, String(course.id))
     : false;
-  const canViewFullCourse = viewer.isAdmin || enrolled;
+  const canViewFullCourse = viewer.isAdmin || (enrolled && paidCourseUnlocked);
 
   if (wantsFullAccess && !canViewFullCourse) {
+    if (viewer.user && enrolled && !paidCourseUnlocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Upgrade required',
+          code: 'UPGRADE_REQUIRED',
+        },
+        { status: 402 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -131,6 +149,8 @@ export async function GET(request: NextRequest, { params }: Params) {
         full: coursePayload === enrichedCourse,
         enrolled,
         admin: viewer.isAdmin,
+        tier: accessTier,
+        upgradeRequired: accessTier === 'paid' && !viewer.hasPaidAccess,
       },
     },
     {

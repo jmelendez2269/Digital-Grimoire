@@ -1,8 +1,14 @@
 type CourseContent = Record<string, unknown>;
 
 type CourseRecord = Record<string, unknown> & {
+  title?: string | null;
+  slug?: string | null;
   content?: CourseContent | null;
 };
+
+export type CourseAccessTier = 'free' | 'paid';
+
+const PAID_SUBSCRIPTION_STATUSES = new Set(['student', 'scholar', 'adept', 'premium', 'active']);
 
 const PUBLIC_CONTENT_KEYS = [
   'arc',
@@ -124,4 +130,28 @@ export function sanitizeCourseForPreview<T extends CourseRecord>(course: T): T {
     ...course,
     content: sanitizeCourseContentForPreview(course.content),
   };
+}
+
+export function getCourseAccessTier(course: CourseRecord): CourseAccessTier {
+  const content = isRecord(course.content) ? course.content : {};
+  const tag = typeof content.course_id_tag === 'string' ? content.course_id_tag.trim().toLowerCase() : '';
+  const slug = typeof course.slug === 'string' ? course.slug.trim().toLowerCase() : '';
+  const title = typeof course.title === 'string' ? course.title.trim().toLowerCase() : '';
+
+  if (tag === 'pre' || tag === 'taster') return 'free';
+  if (slug === 'pre' || slug.startsWith('pre-')) return 'free';
+  if (slug === 'taster' || slug.startsWith('taster-')) return 'free';
+  if (title.startsWith('pre:') || title.startsWith('pre-course')) return 'free';
+  if (title.includes('taster')) return 'free';
+
+  return 'paid';
+}
+
+export function isFreeCourse(course: CourseRecord): boolean {
+  return getCourseAccessTier(course) === 'free';
+}
+
+export function hasPaidCourseAccess(profile: { role?: string | null; subscription_status?: string | null } | null | undefined): boolean {
+  if (profile?.role === 'admin') return true;
+  return PAID_SUBSCRIPTION_STATUSES.has(profile?.subscription_status ?? '');
 }

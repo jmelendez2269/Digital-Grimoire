@@ -305,9 +305,9 @@ Common causes:
 To fix this:
 1. Go to your Stripe Dashboard: ${isTestKey ? 'https://dashboard.stripe.com/test/products' : 'https://dashboard.stripe.com/products'}
 2. Check if your subscription products exist:
-   - "The Student" ($5/month)
-   - "The Scholar" ($9.99/month)
-   - "The Adept" ($15/month)
+   - "The Student" ($15/month)
+   - "The Scholar" ($29/month)
+   - "The Adept" ($49/month)
 3. If products don't exist, create them:
    - Click "Add product"
    - Set name, price, and billing period (monthly recurring)
