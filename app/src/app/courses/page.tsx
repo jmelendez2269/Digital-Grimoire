@@ -413,12 +413,10 @@ function CourseCard({
       <div
         ref={cardRef}
         onClick={() => router.push(`/courses/${course.slug}`)}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={() => setHovered(false)}
-        className={`group relative flex flex-col bg-zinc-900/40 backdrop-blur-md border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 min-h-[280px] ${
+        className={`relative flex flex-col bg-zinc-900/40 backdrop-blur-md border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 min-h-[280px] ${
           hovered
             ? 'border-amber-500/40 shadow-[0_0_24px_rgba(245,158,11,0.12)]'
-            : 'border-white/8 hover:border-amber-500/20'
+            : 'border-white/8'
         }`}
       >
         {/* Enrolled progress ring */}
@@ -526,8 +524,14 @@ function CourseCard({
                 <span className="uppercase">{course.level}</span>
               </div>
             )}
-            <div className="ml-auto text-zinc-700 text-[10px] uppercase tracking-wider">
-              {hovered ? 'Details →' : 'Hover for details'}
+            <div
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={() => setHovered(false)}
+              className={`ml-auto text-[10px] uppercase tracking-wider transition-colors ${
+                hovered ? 'text-amber-400' : 'text-zinc-700 hover:text-amber-400'
+              }`}
+            >
+              More details →
             </div>
           </div>
         </div>

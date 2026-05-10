@@ -39,6 +39,17 @@ type CourseTextRow = {
   details?: string | null;
 };
 
+type ExistingCourseRow = {
+  id: string;
+  slug: string;
+};
+
+type ExistingCourseTextRow = {
+  id: string;
+  course_id: string;
+  text_id: string;
+};
+
 function parseArgs(): ParsedArgs {
   const args = process.argv.slice(2);
   let sourceEnv = '';
@@ -187,13 +198,13 @@ async function fetchAllCourseTexts(client: SupabaseClient): Promise<CourseTextRo
   return (data || []) as CourseTextRow[];
 }
 
-async function fetchExistingCourseIds(client: SupabaseClient): Promise<Set<string>> {
-  const { data, error } = await client.from('courses').select('id');
+async function fetchExistingCourses(client: SupabaseClient): Promise<ExistingCourseRow[]> {
+  const { data, error } = await client.from('courses').select('id, slug');
   if (error) {
     throw error;
   }
 
-  return new Set((data || []).map((row) => row.id as string));
+  return (data || []) as ExistingCourseRow[];
 }
 
 async function fetchExistingTextIds(client: SupabaseClient): Promise<Set<string>> {
@@ -205,13 +216,18 @@ async function fetchExistingTextIds(client: SupabaseClient): Promise<Set<string>
   return new Set((data || []).map((row) => row.id as string));
 }
 
-async function fetchExistingCourseTextIds(client: SupabaseClient): Promise<Set<string>> {
-  const { data, error } = await client.from('course_texts').select('id');
+async function fetchExistingCourseTexts(client: SupabaseClient): Promise<ExistingCourseTextRow[]> {
+  const { data, error } = await client.from('course_texts').select('id, course_id, text_id');
   if (error) {
     throw error;
   }
 
-  return new Set((data || []).map((row) => row.id as string));
+  return (data || []) as ExistingCourseTextRow[];
+}
+
+function omitCourseIdentity(course: CourseRow): Omit<CourseRow, 'id' | 'created_at'> {
+  const { id: _id, created_at: _createdAt, ...updatableCourse } = course;
+  return updatableCourse;
 }
 
 async function main() {
@@ -236,35 +252,74 @@ async function main() {
 
   const sourceCourses = await fetchAllCourses(sourceSupabase);
   const sourceCourseTexts = await fetchAllCourseTexts(sourceSupabase);
-  const existingCourseIds = await fetchExistingCourseIds(targetSupabase);
+  const existingCourses = await fetchExistingCourses(targetSupabase);
   const existingTextIds = await fetchExistingTextIds(targetSupabase);
-  const existingCourseTextIds = await fetchExistingCourseTextIds(targetSupabase);
+  const existingCourseTexts = await fetchExistingCourseTexts(targetSupabase);
+  const existingCourseIds = new Set(existingCourses.map((course) => course.id));
+  const targetCourseBySlug = new Map(existingCourses.map((course) => [course.slug, course]));
+  const targetCourseTextByPair = new Map(
+    existingCourseTexts.map((link) => [`${link.course_id}:${link.text_id}`, link]),
+  );
 
   const coursesToProcess = onlyMissing
     ? sourceCourses.filter((course) => !existingCourseIds.has(course.id))
     : sourceCourses;
 
+  const coursesToInsert = coursesToProcess.filter((course) => !targetCourseBySlug.has(course.slug));
+  const coursesToUpdateBySlug = coursesToProcess.filter((course) => {
+    const targetCourse = targetCourseBySlug.get(course.slug);
+    return targetCourse && targetCourse.id !== course.id;
+  });
+
+  const targetCourseIdBySourceCourseId = new Map<string, string>();
+  for (const course of coursesToProcess) {
+    targetCourseIdBySourceCourseId.set(course.id, targetCourseBySlug.get(course.slug)?.id || course.id);
+  }
+
   const courseIdsToProcess = new Set(coursesToProcess.map((course) => course.id));
   const courseTextsToProcess = sourceCourseTexts.filter((link) => courseIdsToProcess.has(link.course_id));
-  const filteredCourseTexts = courseTextsToProcess.filter((link) => existingTextIds.has(link.text_id));
+  const filteredCourseTexts = courseTextsToProcess
+    .filter((link) => existingTextIds.has(link.text_id))
+    .map((link) => {
+      const targetCourseId = targetCourseIdBySourceCourseId.get(link.course_id) || link.course_id;
+      const existingLink = targetCourseTextByPair.get(`${targetCourseId}:${link.text_id}`);
+      return {
+        ...link,
+        id: existingLink?.id || link.id,
+        course_id: targetCourseId,
+      };
+    });
   const skippedLinksMissingTexts = courseTextsToProcess.length - filteredCourseTexts.length;
 
   console.log(`Source Supabase: ${sourceUrl}`);
   console.log(`Target Supabase: ${targetUrl}`);
   console.log(`Courses selected from source: ${sourceCourses.length}`);
   console.log(`Courses to process: ${coursesToProcess.length}`);
+  console.log(`Courses to insert by id: ${coursesToInsert.length}`);
+  console.log(`Courses to update by slug: ${coursesToUpdateBySlug.length}`);
   console.log(`Course-text links to process: ${filteredCourseTexts.length}`);
 
-  if (!dryRun && coursesToProcess.length > 0) {
-    const { error } = await targetSupabase.from('courses').upsert(coursesToProcess, { onConflict: 'id' });
+  if (!dryRun && coursesToInsert.length > 0) {
+    const { error } = await targetSupabase.from('courses').upsert(coursesToInsert, { onConflict: 'id' });
     if (error) {
       throw new Error(`Failed to copy courses: ${error.message}`);
     }
   }
 
-  const linksToInsert = filteredCourseTexts.filter((link) => !existingCourseTextIds.has(link.id));
-  if (!dryRun && linksToInsert.length > 0) {
-    const { error } = await targetSupabase.from('course_texts').upsert(linksToInsert, { onConflict: 'id' });
+  for (const course of coursesToUpdateBySlug) {
+    if (!dryRun) {
+      const { error } = await targetSupabase
+        .from('courses')
+        .update(omitCourseIdentity(course))
+        .eq('slug', course.slug);
+      if (error) {
+        throw new Error(`Failed to update course "${course.slug}": ${error.message}`);
+      }
+    }
+  }
+
+  if (!dryRun && filteredCourseTexts.length > 0) {
+    const { error } = await targetSupabase.from('course_texts').upsert(filteredCourseTexts, { onConflict: 'id' });
     if (error) {
       throw new Error(`Failed to copy course-text links: ${error.message}`);
     }
@@ -275,10 +330,12 @@ async function main() {
     JSON.stringify(
       {
         dryRun,
-        copiedCourses: coursesToProcess.length,
+        copiedCourses: coursesToInsert.length + coursesToUpdateBySlug.length,
+        insertedCourses: coursesToInsert.length,
+        updatedCoursesBySlug: coursesToUpdateBySlug.length,
         skippedCourses: sourceCourses.length - coursesToProcess.length,
-        copiedCourseTexts: linksToInsert.length,
-        skippedCourseTexts: filteredCourseTexts.length - linksToInsert.length,
+        copiedCourseTexts: filteredCourseTexts.length,
+        skippedCourseTexts: 0,
         skippedLinksMissingTexts,
       },
       null,
