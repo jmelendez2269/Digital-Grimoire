@@ -28,7 +28,7 @@ type GraphSummary = {
 };
 
 const LAYOUT_STORAGE_PREFIX = "digital-grimoire:sigma-layout:";
-const LAYOUT_VERSION = "category-clusters-v2";
+const LAYOUT_VERSION = "category-clusters-v3-expanded-default";
 const MIN_LAYOUT_SPAN_BY_DENSITY: Record<GraphLayoutDensity, number> = {
   compact: 900,
   balanced: 1200,
@@ -343,7 +343,7 @@ export default function SigmaGraph({
   onSelectEntity,
   minSimilarity = 0,
   height = 700,
-  layoutDensity = "balanced",
+  layoutDensity = "expanded",
 }: SigmaGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);

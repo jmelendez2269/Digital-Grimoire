@@ -9,6 +9,7 @@ import { LensWeights } from '@/lib/parallax/types';
 import ExpandableLensCard from './ExpandableLensCard';
 import SourceCard from './SourceCard';
 import ParallaxLoader from '@/components/ui/ParallaxLoader';
+import StelloquyOrb from '@/components/ui/StelloquyOrb';
 
 interface Source {
   text_id: string;
@@ -892,8 +893,10 @@ export default function ResponseStream({
       {/* Streaming indicator */}
       {isStreaming && !response && (
         <div className="flex flex-col items-center justify-center p-12 gap-6">
-          <ParallaxLoader size="md" />
-          <p className="text-amber-100/70">Analyzing from multiple perspectives...</p>
+          <StelloquyOrb state="thinking" size="md" />
+          <p className="text-amber-100/70 font-mono text-xs uppercase tracking-[0.25em]">
+            Stelloquy is analyzing across seven lenses
+          </p>
         </div>
       )}
     </div>

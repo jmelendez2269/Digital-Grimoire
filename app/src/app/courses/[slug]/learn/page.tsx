@@ -687,7 +687,7 @@ function LensExerciseSection({
 
                 <div className="mt-6 pt-4 border-t border-purple-500/10">
                     <Link
-                        href={`/parallax-engine?prompt=${encodedPrompt}${lensParams}`}
+                        href={`/seven-lenses?prompt=${encodedPrompt}${lensParams}`}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-lg text-purple-200 text-sm font-medium transition-all hover:scale-[1.02]"
                     >
                         <Compass className="w-4 h-4" />

@@ -1,5 +1,20 @@
 import Link from "next/link";
-import { Github, Twitter, MessageSquare, BookOpen } from "lucide-react";
+import { Github, MessageSquare, BookOpen, ExternalLink } from "lucide-react";
+
+const ParallaxMark = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+    <defs>
+      <linearGradient id="parallax-mark-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#4EE7FD" />
+        <stop offset="50%" stopColor="#9966FF" />
+        <stop offset="100%" stopColor="#FF9B2B" />
+      </linearGradient>
+    </defs>
+    <path d="M12 3 L21 19 L3 19 Z" stroke="url(#parallax-mark-grad)" strokeWidth="1.4" strokeLinejoin="round" />
+    <path d="M12 21 L3 5 L21 5 Z" stroke="url(#parallax-mark-grad)" strokeWidth="1.4" strokeLinejoin="round" opacity="0.85" />
+    <circle cx="12" cy="12" r="1.6" fill="url(#parallax-mark-grad)" />
+  </svg>
+);
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -34,8 +49,8 @@ export default function Footer() {
               <a href="https://github.com/jmelendez2269" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
                 <Github size={18} />
               </a>
-              <a href="https://projectparallax.xyz" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-cyan-400 transition-colors" title="Project Parallax">
-                <Twitter size={18} />
+              <a href="https://projectparallax.xyz" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-cyan-300 transition-colors" title="Project Parallax — the parent brand">
+                <ParallaxMark className="w-[18px] h-[18px]" />
               </a>
               <a href="https://prismarium.xyz" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-indigo-400 transition-colors" title="Prismarium">
                 <MessageSquare size={18} />
@@ -59,7 +74,7 @@ export default function Footer() {
             <h3 className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest">Tools</h3>
             <div className="flex flex-col gap-2">
               <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Study Journal</Link>
-              <Link href="/parallax-engine" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Prismarium Lens Engine</Link>
+              <Link href="/seven-lenses" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Seven Lenses</Link>
               <Link href="/wiki" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
                 Documentation
@@ -84,10 +99,43 @@ export default function Footer() {
 
         </div>
 
+        {/* Parent Brand: Project Parallax */}
+        <a
+          href="https://projectparallax.xyz"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group mb-8 flex items-center justify-between gap-4 rounded-lg border border-white/[0.06] bg-gradient-to-r from-cyan-500/[0.03] via-violet-500/[0.04] to-amber-500/[0.03] px-5 py-4 transition-all hover:border-white/[0.12] hover:from-cyan-500/[0.06] hover:via-violet-500/[0.08] hover:to-amber-500/[0.06]"
+        >
+          <div className="flex items-center gap-3">
+            <ParallaxMark className="w-7 h-7 shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-500">
+                Part of the Project Parallax family
+              </span>
+              <span className="text-sm font-semibold tracking-wide text-zinc-200 group-hover:text-white">
+                Seeing things from different perspectives
+              </span>
+            </div>
+          </div>
+          <span className="hidden md:flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-zinc-500 group-hover:text-cyan-300">
+            projectparallax.xyz
+            <ExternalLink size={11} />
+          </span>
+        </a>
+
         {/* Bottom Bar: Copyright & Disclosures */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">
-            © {currentYear} PRISMARIUM // A PROJECT PARALLAX PRODUCT // ALL RIGHTS RESERVED
+            © {currentYear} PRISMARIUM //{" "}
+            <a
+              href="https://projectparallax.xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-400 hover:text-cyan-300 transition-colors underline-offset-2 hover:underline"
+            >
+              A PROJECT PARALLAX PRODUCT
+            </a>{" "}
+            // ALL RIGHTS RESERVED
           </p>
 
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">

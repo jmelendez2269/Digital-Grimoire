@@ -8,6 +8,7 @@ import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliat
 import ArcaneLoader from '@/components/ui/ArcaneLoader';
 import ParallaxLoader from '@/components/ui/ParallaxLoader';
 import StatusLoader from '@/components/ui/StatusLoader';
+import StelloquyOrb from '@/components/ui/StelloquyOrb';
 
 interface ConceptSuggestion {
     id: string;
@@ -335,8 +336,8 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             {/* Loading Feedback */}
             {loading && (
                 <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in-95 duration-500">
-                    <ParallaxLoader size="lg" className="mb-8" />
-                    <StatusLoader message="ANALYZING CONCEPT..." />
+                    <StelloquyOrb state="thinking" size="lg" className="mb-8" />
+                    <StatusLoader message="STELLOQUY IS ANALYZING THE CONCEPT..." />
                 </div>
             )}
 
@@ -540,9 +541,13 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
             )}
 
             {!searched && !loading && (
-                <p className="mt-4 text-sm text-zinc-400 text-center">
-                    Deep Search uses AI to summarize concepts and find relevant texts in our library and beyond.
-                </p>
+                <div className="mt-6 flex flex-col items-center gap-3">
+                    <StelloquyOrb state="listening" size="sm" />
+                    <p className="text-sm text-zinc-400 text-center max-w-md">
+                        Stelloquy is listening. Ask anything — a concept, a tradition, a question
+                        you can&apos;t quite name yet.
+                    </p>
+                </div>
             )}
         </div>
     );

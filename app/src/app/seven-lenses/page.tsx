@@ -11,6 +11,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AppLoader from '@/components/ui/AppLoader';
 import ParallaxLoader from '@/components/ui/ParallaxLoader';
+import StelloquyOrb from '@/components/ui/StelloquyOrb';
 import LensIntensitySelector from '@/components/parallax/LensIntensitySelector';
 import LensPresets from '@/components/parallax/LensPresets';
 import ResponseLengthSlider from '@/components/parallax/ResponseLengthSlider';
@@ -579,7 +580,7 @@ function ParallaxEngineContent() {
                 >
                   {isStreaming ? (
                     <>
-                      <ParallaxLoader size="sm" className="mr-2" />
+                      <StelloquyOrb state="thinking" size="xs" className="mr-2" />
                       Analyzing...
                     </>
                   ) : (

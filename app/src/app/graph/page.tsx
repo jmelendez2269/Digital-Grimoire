@@ -291,7 +291,7 @@ function GraphPageContent() {
   const [correspondenceRelationshipFilters, setCorrespondenceRelationshipFilters] =
     useState<CorrespondenceRelationshipFilters>(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
   const [correspondenceLayoutDensity, setCorrespondenceLayoutDensity] =
-    useState<CorrespondenceLayoutDensity>("balanced");
+    useState<CorrespondenceLayoutDensity>("expanded");
 
   useEffect(() => {
     let cancelled = false;
@@ -543,7 +543,7 @@ function GraphPageContent() {
     setMinSimilarity(0);
     setCorrespondenceGraphScope("focused");
     setCorrespondenceRelationshipFilters(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
-    setCorrespondenceLayoutDensity("balanced");
+    setCorrespondenceLayoutDensity("expanded");
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     router.replace(`/graph?${params.toString()}`, { scroll: false });

@@ -23,7 +23,7 @@ export default function ParallaxGraph({
   relationships,
   onSelectConcept,
   minSimilarity,
-  layoutDensity = "balanced",
+  layoutDensity = "expanded",
 }: ParallaxGraphProps) {
   return (
     <SigmaGraph

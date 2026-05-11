@@ -195,7 +195,7 @@ export default function AISearchBar({ className = '' }: AISearchBarProps) {
     if (effectiveModel === 'parallax') {
       // Navigate to parallax engine with query
       const encodedQuery = encodeURIComponent(query.trim());
-      router.push(`/parallax-engine?query=${encodedQuery}`);
+      router.push(`/seven-lenses?query=${encodedQuery}`);
     } else if (effectiveModel === 'claude' || effectiveModel === 'gpt' || effectiveModel === 'gemini' || effectiveModel === 'consensus') {
       // Open chat modal
       setChatModel(effectiveModel as any);
