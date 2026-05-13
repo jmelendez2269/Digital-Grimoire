@@ -680,18 +680,23 @@ export default function DocumentDetailPage() {
         return;
       }
 
-      console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key, 'Source format:', data.source_format);
+      console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key, 'Source format:', data.source_format, 's3_key:', data.s3_key);
       setDocument(data as TextDocument);
 
-      // Check if this is an HTML file (not structured text, source_format is html)
-      // Fallback: if source_format is null, check file extension from s3_key
-      let isHtmlFile = data.source_format === 'html' && !data.metadata?.isStructuredText;
+      // Check if this is an HTML or TXT file (not structured text). Both render
+      // through the HTML proxy route — TXT is served wrapped in a <pre> shell.
+      let isHtmlFile =
+        (data.source_format === 'html' || data.source_format === 'txt') &&
+        !data.metadata?.isStructuredText;
 
       // Fallback detection: check file extension when source_format is null
       if (!isHtmlFile && !data.source_format && data.s3_key && !data.metadata?.isStructuredText) {
         const filename = data.s3_key.split('/').pop() || '';
         const fileExtension = filename.split('.').pop()?.toLowerCase() || '';
-        isHtmlFile = fileExtension === 'html' || fileExtension === 'htm';
+        isHtmlFile =
+          fileExtension === 'html' ||
+          fileExtension === 'htm' ||
+          fileExtension === 'txt';
       }
 
       // If document has S3 key, fetch the signed URL from R2

@@ -125,10 +125,14 @@ export async function POST(request: NextRequest) {
     const isHtmlByMimeType = mimeType === 'text/html' || mimeType === 'application/xhtml+xml';
     const isHtmlFile = isHtmlByExtension && isHtmlByMimeType;
 
+    // Plain text — either by extension or MIME type is enough
+    const isPlainTextFile =
+      fileExtension === 'txt' || mimeType === 'text/plain';
+
     console.log('Starting document processing for:', key);
     console.log('File extension:', fileExtension);
     console.log('MIME type:', mimeType);
-    console.log('Detected type:', isHtmlFile ? 'HTML' : 'PDF/Image');
+    console.log('Detected type:', isHtmlFile ? 'HTML' : isPlainTextFile ? 'TXT' : 'PDF/Image');
 
     // If extension says HTML but MIME type says PDF, it's likely a misnamed file - use OCR
     if (isHtmlByExtension && !isHtmlByMimeType && mimeType === 'application/pdf') {
@@ -214,6 +218,27 @@ export async function POST(request: NextRequest) {
       } catch (htmlError) {
         console.error('HTML text extraction failed:', htmlError);
         throw new Error(`HTML processing failed: ${htmlError instanceof Error ? htmlError.message : 'Unknown error'}`);
+      }
+    } else if (isPlainTextFile) {
+      // For .txt files: Decode buffer as UTF-8 — no OCR, no tag stripping
+      console.log('Step 1: Reading plain text file...');
+      try {
+        // Strip a UTF-8 BOM if present
+        extractedText = fileBuffer.toString('utf-8').replace(/^﻿/, '');
+
+        const lineCount = extractedText.split(/\r?\n/).length;
+        const pageCount = Math.max(1, Math.ceil(extractedText.length / 3000));
+
+        ocrResult = {
+          text: extractedText,
+          lineCount,
+          pageCount,
+        };
+
+        console.log(`TXT extraction complete: ${ocrResult.lineCount} lines, estimated ${ocrResult.pageCount} pages`);
+      } catch (txtError) {
+        console.error('TXT extraction failed:', txtError);
+        throw new Error(`TXT processing failed: ${txtError instanceof Error ? txtError.message : 'Unknown error'}`);
       }
     } else {
       // For PDF/Images: Perform OCR (unless skipped)
@@ -444,7 +469,11 @@ export async function POST(request: NextRequest) {
     // Step 3.5: Rename file in R2 based on metadata
     // For HTML files, we can skip renaming if it fails (non-critical)
     console.log('Step 3.5: Renaming file in R2 based on metadata...');
-    const finalExtension = isHtmlFile ? (fileExtension || 'html') : (fileExtension || 'pdf');
+    const finalExtension = isHtmlFile
+      ? (fileExtension || 'html')
+      : isPlainTextFile
+        ? 'txt'
+        : (fileExtension || 'pdf');
     const desiredNewKey = `library/${metadata.standardizedId}.${finalExtension}`;
     console.log(`Renaming: ${key} -> ${desiredNewKey}`);
 
@@ -507,7 +536,7 @@ export async function POST(request: NextRequest) {
         Bucket: bucketName,
         Key: desiredNewKey,
         Body: fileBuffer,
-        ContentType: mimeType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+        ContentType: mimeType || (isHtmlFile ? 'text/html' : isPlainTextFile ? 'text/plain' : 'application/pdf'),
         Metadata: r2Metadata,
       });
 
@@ -529,7 +558,7 @@ export async function POST(request: NextRequest) {
               Bucket: bucketName,
               Key: desiredNewKey,
               Body: fileBuffer,
-              ContentType: mimeType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+              ContentType: mimeType || (isHtmlFile ? 'text/html' : isPlainTextFile ? 'text/plain' : 'application/pdf'),
               // No Metadata field
             });
             await s3Client.send(putCommandWithoutMetadata);
@@ -539,8 +568,8 @@ export async function POST(request: NextRequest) {
           } catch (retryError) {
             console.error('PutObjectCommand retry failed:', retryError);
             // Continue to original error handling
-            if (isHtmlFile) {
-              console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+            if (isHtmlFile || isPlainTextFile) {
+              console.warn('⚠️ Failed to rename text file, continuing with original key');
               newKey = key;
               renameSucceeded = false;
             } else {
@@ -548,9 +577,9 @@ export async function POST(request: NextRequest) {
             }
           }
         } else {
-          // For HTML files, allow processing to continue with original key
-          if (isHtmlFile) {
-            console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+          // For HTML/TXT files, allow processing to continue with original key
+          if (isHtmlFile || isPlainTextFile) {
+            console.warn('⚠️ Failed to rename text file, continuing with original key');
             newKey = key; // Keep original key
             renameSucceeded = false;
           } else {
@@ -582,9 +611,9 @@ export async function POST(request: NextRequest) {
       console.error('Error stack:', r2Error instanceof Error ? r2Error.stack : 'No stack trace');
       console.error('Error name:', r2Error instanceof Error ? r2Error.name : 'Unknown');
 
-      // For HTML files, skip rename and continue with original key
-      if (isHtmlFile) {
-        console.warn('⚠️ R2 rename failed for HTML file, continuing with original key');
+      // For HTML/TXT files, skip rename and continue with original key
+      if (isHtmlFile || isPlainTextFile) {
+        console.warn('⚠️ R2 rename failed for text file, continuing with original key');
         newKey = key; // Use original key
         renameSucceeded = false;
       } else {
@@ -646,7 +675,7 @@ export async function POST(request: NextRequest) {
         cover_source: coverSource,
         status: 'ready',
         uploaded_by: userId || null,
-        source_format: isHtmlFile ? 'html' : null, // Set source format for HTML files
+        source_format: isHtmlFile ? 'html' : isPlainTextFile ? 'txt' : null, // Set source format for HTML/TXT files
         metadata: {
           standardizedId: metadata.standardizedId,
           pageCount: ocrResult.pageCount,

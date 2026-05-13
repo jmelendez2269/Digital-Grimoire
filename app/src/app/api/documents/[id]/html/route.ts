@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import { createClient } from '@/lib/supabase/server';
 import { getR2Client, GetObjectCommand } from '@/lib/storage/r2-client';
+import { convertPlainTextBookToHtml } from '@/lib/utils/plain-text-book-to-html';
 
 const s3Client = getR2Client();
 
@@ -61,10 +62,12 @@ export async function GET(
     const ext = path.extname(document.s3_key).toLowerCase();
     const isHtmlFile =
       document.source_format === 'html' || ext === '.html' || ext === '.htm';
+    const isTxtFile =
+      document.source_format === 'txt' || ext === '.txt';
 
-    if (!isHtmlFile) {
+    if (!isHtmlFile && !isTxtFile) {
       return NextResponse.json(
-        { error: 'Document is not an HTML file' },
+        { error: 'Document is not an HTML or TXT file' },
         { status: 400 }
       );
     }
@@ -77,13 +80,19 @@ export async function GET(
     const response = await s3Client.send(command);
 
     if (!response.Body) {
-      return NextResponse.json({ error: 'HTML file not found' }, { status: 404 });
+      return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    const html = await response.Body.transformToString();
-    const rewrittenHtml = rewriteRelativeImageSources(html, id);
+    const raw = await response.Body.transformToString();
 
-    return new NextResponse(rewrittenHtml, {
+    let body: string;
+    if (isTxtFile) {
+      body = convertPlainTextBookToHtml(raw, document.title || 'Document');
+    } else {
+      body = rewriteRelativeImageSources(raw, id);
+    }
+
+    return new NextResponse(body, {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',

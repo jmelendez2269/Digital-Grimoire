@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
       // Documents
       'application/pdf',
       'text/html',
+      'text/plain',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/msword',
       // Images
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     if (!allowedTypes.includes(fileType) && !isAllowedGenericType) {
       return NextResponse.json(
-        { error: 'Invalid file type. Allowed: PDF, HTML, DOCX, images, audio, and video files' },
+        { error: 'Invalid file type. Allowed: PDF, HTML, TXT, DOCX, images, audio, and video files' },
         { status: 400 }
       );
     }
