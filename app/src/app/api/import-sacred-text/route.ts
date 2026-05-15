@@ -98,11 +98,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // AI-enhanced metadata extraction (if enabled)
+    // AI-enhanced metadata extraction (if enabled).
+    // Skip for curated corpus collection shells: their title, description,
+    // and structure are authored, and the only chapter ("Corpus Guide") would
+    // mislead the AI into renaming the library item after it.
+    const isCorpusCollection = (parsedText.extraMetadata as any)?.isCorpusCollection === true;
     let aiMetadata = null;
     let aiWarning = null;
-    
-    if (useAI) {
+
+    if (useAI && !isCorpusCollection) {
       try {
         console.log('[Import API] Running AI metadata extraction...');
         
