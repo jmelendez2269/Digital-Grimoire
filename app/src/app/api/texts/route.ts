@@ -36,10 +36,22 @@ export async function GET(request: Request) {
     const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
+    const parentIdParam = searchParams.get('parentId');
+    const includeNested = searchParams.get('includeNested') === 'true';
+
     // Build query
     let query = supabase
       .from('texts')
       .select('*', { count: 'exact' } as any) as any;
+
+    // Corpus nesting: by default only return top-level items (parent_id IS NULL).
+    // Pass ?parentId=<uuid> to fetch a specific shell's children, or
+    // ?includeNested=true to disable the filter entirely.
+    if (parentIdParam) {
+      query = query.eq('parent_id', parentIdParam);
+    } else if (!includeNested) {
+      query = query.is('parent_id', null);
+    }
 
     // Apply search filter
     if (search) {
