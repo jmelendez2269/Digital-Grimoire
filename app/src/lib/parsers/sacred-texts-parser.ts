@@ -158,8 +158,9 @@ export async function parseSacredText(
         chapterLinks = await fetchChapterList(url, false);
       } catch (err: any) {
         if (err.message.includes('HTTP 403') || err.message.includes('Forbidden') || err.message.includes('Puppeteer')) {
-          console.warn('[parseSacredText] Index returned 403, falling back to Jina Reader');
-          chapterLinks = await fetchChapterListViaJina(url);
+          console.warn('[parseSacredText] Index returned 403, falling back to Puppeteer');
+          requiresPuppeteer = true;
+          chapterLinks = await fetchChapterList(url, true);
         } else if (err.message.includes('HTTP 429') || err.message.includes('Rate limited')) {
           console.warn('[parseSacredText] Index returned 429, falling back to Jina Reader');
           chapterLinks = await fetchChapterListViaJina(url);
@@ -252,7 +253,8 @@ export async function parseSacredText(
         metadata = await extractMetadata(url, false);
       } catch (err: any) {
         if (err.message.includes('HTTP 403')) {
-          metadata = await extractMetadataViaJina(url);
+          requiresPuppeteer = true;
+          metadata = await extractMetadata(url, true);
         } else if (err.message.includes('HTTP 429') || err.message.includes('Rate limited')) {
           metadata = await extractMetadataViaJina(url);
         } else {
@@ -262,7 +264,7 @@ export async function parseSacredText(
       const content = requiresPuppeteer
         ? await fetchChapterContent(url, format, requiresPuppeteer)
         : await fetchChapterContent(url, format, false).catch(async (err) => {
-            if (err instanceof Error && (err.message.includes('HTTP 403') || err.message.includes('HTTP 429') || err.message.includes('Rate limited'))) {
+            if (err instanceof Error && (err.message.includes('HTTP 429') || err.message.includes('Rate limited'))) {
               return fetchChapterContentViaJina(url, format);
             }
             throw err;
@@ -824,8 +826,8 @@ export async function fetchChapterContent(
       
       if (!response.ok) {
         if (response.status === 403 || response.status === 429) {
-          console.warn(`[fetchChapterContent] Server blocked fetch (HTTP ${response.status}). Falling back to Jina Reader.`);
-          return fetchChapterContentViaJina(chapterUrl, format);
+          console.warn(`[fetchChapterContent] Server blocked fetch (HTTP ${response.status}). Falling back to Puppeteer.`);
+          html = await fetchWithPuppeteer(chapterUrl);
         } else {
           throw new Error(`Failed to fetch chapter (HTTP ${response.status}): ${response.statusText}`);
         }
