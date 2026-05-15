@@ -27,7 +27,8 @@ import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TableOfContents, { TOCItem } from '@/components/TableOfContents';
-import { formatFileSize, formatDate, cleanHtmlText } from '@/lib/utils/formatting';
+import { formatFileSize, formatDate, cleanHtmlText, formatLensName } from '@/lib/utils/formatting';
+import { getLensColorClasses } from '@/lib/utils/lens-colors';
 import { extractPDFText } from '@/lib/utils/pdf-text-extractor';
 import { useAuth } from '@/contexts/AuthContext';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -117,10 +118,196 @@ interface TextDocument {
     lineCount?: number;
     metadataFileKey?: string;
     isStructuredText?: boolean;
+    isCorpusCollection?: boolean;
+    corpus?: CorpusCollectionMetadata;
     chapters?: Chapter[];
     format?: 'html' | 'markdown' | 'plaintext';
     sourceUrl?: string;
   };
+}
+
+interface CorpusCollectionItem {
+  title: string;
+  subtitle?: string;
+  sourceUrl: string;
+  textId?: string;
+  expectedSections?: number;
+}
+
+interface CorpusCollectionGroup {
+  id: string;
+  title: string;
+  description?: string;
+  items: CorpusCollectionItem[];
+}
+
+interface CorpusCollectionMetadata {
+  slug: string;
+  title: string;
+  sourceUrl?: string;
+  sourceNote?: string;
+  importStrategy?: string;
+  groups: CorpusCollectionGroup[];
+}
+
+function CorpusCollectionViewer({ corpus }: { corpus: CorpusCollectionMetadata }) {
+  const [resolvedTextIds, setResolvedTextIds] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const urls = corpus.groups
+      .flatMap(group => group.items.map(item => item.sourceUrl))
+      .filter((url): url is string => typeof url === 'string' && url.length > 0);
+
+    if (urls.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch('/api/texts/by-source-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls }),
+        });
+        if (!response.ok) return;
+        const { matches } = await response.json();
+        if (cancelled || !matches) return;
+        const map: Record<string, string> = {};
+        for (const [url, info] of Object.entries(matches as Record<string, { id: string }>)) {
+          if (info?.id) map[url] = info.id;
+        }
+        setResolvedTextIds(map);
+      } catch (err) {
+        console.warn('[CorpusCollectionViewer] Failed to resolve textIds:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [corpus]);
+
+  const resolveTextId = (item: CorpusCollectionItem): string | undefined => {
+    if (item.textId) return item.textId;
+    try {
+      const key = (() => {
+        const parsed = new URL(item.sourceUrl);
+        parsed.hash = '';
+        return parsed.toString();
+      })();
+      return resolvedTextIds[key];
+    } catch {
+      return resolvedTextIds[item.sourceUrl];
+    }
+  };
+
+  const totalItems = corpus.groups.reduce((sum, group) => sum + group.items.length, 0);
+  const linkedItems = corpus.groups.reduce(
+    (sum, group) => sum + group.items.filter(item => resolveTextId(item)).length,
+    0
+  );
+
+  return (
+    <div className="h-full overflow-y-auto rounded-lg border border-amber-900/20 bg-zinc-900/50">
+      <div className="p-6 md:p-8">
+        <div className="mb-8 border-b border-amber-900/20 pb-6">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="rounded border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-300">
+              Corpus
+            </span>
+            <span className="rounded border border-amber-600/30 bg-amber-600/10 px-2.5 py-1 text-xs text-amber-300">
+              {corpus.groups.length} groups
+            </span>
+            <span className="rounded border border-amber-600/30 bg-amber-600/10 px-2.5 py-1 text-xs text-amber-300">
+              {totalItems} works
+            </span>
+            {linkedItems > 0 && (
+              <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
+                {linkedItems} linked
+              </span>
+            )}
+          </div>
+          <h2 className="mb-3 text-3xl font-bold text-amber-100">{corpus.title}</h2>
+          {corpus.sourceNote && (
+            <p className="max-w-3xl text-sm leading-relaxed text-amber-100/75">
+              {corpus.sourceNote}
+            </p>
+          )}
+          {corpus.importStrategy && (
+            <p className="mt-3 max-w-3xl text-xs leading-relaxed text-amber-100/50">
+              {corpus.importStrategy}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          {corpus.groups.map((group) => (
+            <section
+              key={group.id}
+              className="rounded-lg border border-amber-900/20 bg-zinc-950/50 p-5"
+            >
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold text-amber-100">{group.title}</h3>
+                {group.description && (
+                  <p className="mt-2 text-sm leading-relaxed text-amber-100/60">
+                    {group.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-3">
+                {group.items.map((item) => (
+                  <div
+                    key={`${group.id}-${item.title}`}
+                    className="flex flex-col gap-3 rounded border border-white/10 bg-zinc-900/70 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium text-amber-100">{item.title}</div>
+                      {item.subtitle && (
+                        <div className="mt-1 text-xs text-amber-100/50">{item.subtitle}</div>
+                      )}
+                      {item.expectedSections && (
+                        <div className="mt-1 text-xs text-amber-100/40">
+                          Expected sections: {item.expectedSections}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      {(() => {
+                        const linkedId = resolveTextId(item);
+                        return linkedId ? (
+                          <Link
+                            href={`/library/${linkedId}`}
+                            className="inline-flex items-center justify-center rounded border border-amber-600/40 bg-amber-600/15 px-3 py-1.5 text-xs font-medium text-amber-200 transition-colors hover:bg-amber-600/25"
+                          >
+                            Open Text
+                          </Link>
+                        ) : null;
+                      })()}
+                      {!resolveTextId(item) && (
+                        <span className="inline-flex items-center justify-center rounded border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-400">
+                          Not linked yet
+                        </span>
+                      )}
+                      <a
+                        href={item.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-1 rounded border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition-colors hover:bg-cyan-500/20"
+                      >
+                        Source
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function DocumentDetailPage() {
@@ -1443,8 +1630,10 @@ export default function DocumentDetailPage() {
                         </div>
                       </div>
                     )}
-                    {/* Show ChapterViewer for structured text documents */}
-                    {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                    {/* Show CorpusCollectionViewer for curated one-off collection hubs */}
+                    {document.metadata?.isCorpusCollection && document.metadata.corpus ? (
+                      <CorpusCollectionViewer corpus={document.metadata.corpus} />
+                    ) : document.metadata?.isStructuredText && document.metadata.chapters ? (
                       <ChapterViewer
                         chapters={document.metadata.chapters}
                         documentTitle={document.title}
@@ -1537,14 +1726,18 @@ export default function DocumentDetailPage() {
                           <div>
                             <dt className="text-sm text-amber-100/60 mb-2">Lenses</dt>
                             <dd className="flex flex-wrap gap-2">
-                              {document.lenses.map((lens, index) => (
+                              {document.lenses.map((lens, index) => {
+                                const lensColor = getLensColorClasses(lens);
+
+                                return (
                                 <span
                                   key={index}
-                                  className="px-3 py-1 bg-purple-600/10 text-purple-400 rounded-full text-xs font-medium border border-purple-600/20"
+                                  className={`px-3 py-1 ${lensColor.bg} ${lensColor.text} rounded-full text-xs font-medium border ${lensColor.border}`}
                                 >
-                                  {lens.replace(/_/g, ' ')}
+                                  {formatLensName(lens)}
                                 </span>
-                              ))}
+                                );
+                              })}
                             </dd>
                           </div>
                         )}
@@ -1579,7 +1772,15 @@ export default function DocumentDetailPage() {
                             <dd className="text-amber-100">{document.type.replace(/_/g, ' ')}</dd>
                           </div>
                         )}
-                        {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                        {document.metadata?.isCorpusCollection && document.metadata.corpus ? (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Corpus</dt>
+                            <dd className="text-amber-100">
+                              {document.metadata.corpus.groups.length} groups /{' '}
+                              {document.metadata.corpus.groups.reduce((sum, group) => sum + group.items.length, 0)} works
+                            </dd>
+                          </div>
+                        ) : document.metadata?.isStructuredText && document.metadata.chapters ? (
                           <div>
                             <dt className="text-sm text-amber-100/60 mb-1">Chapters</dt>
                             <dd className="text-amber-100">{document.metadata.chapters.length} chapters</dd>
@@ -1666,16 +1867,18 @@ export default function DocumentDetailPage() {
 
 
                 {/* Table of Contents */}
-                <TableOfContents
-                  items={tocItems}
-                  activeItemId={activeTOCItemId}
-                  onItemClick={handleTOCItemClick}
-                  chapters={document?.metadata?.isStructuredText ? document.metadata.chapters : undefined}
-                  documentTitle={document?.title}
-                  textId={documentId}
-                  isAdmin={isAdmin}
-                  onItemsUpdate={handleTOCItemsUpdate}
-                />
+                {!document.metadata?.isCorpusCollection && (
+                  <TableOfContents
+                    items={tocItems}
+                    activeItemId={activeTOCItemId}
+                    onItemClick={handleTOCItemClick}
+                    chapters={document?.metadata?.isStructuredText ? document.metadata.chapters : undefined}
+                    documentTitle={document?.title}
+                    textId={documentId}
+                    isAdmin={isAdmin}
+                    onItemsUpdate={handleTOCItemsUpdate}
+                  />
+                )}
 
                 <CollectionsPanel textId={documentId} />
               </div>
@@ -1683,7 +1886,7 @@ export default function DocumentDetailPage() {
           </div>
 
           {/* Floating Audio Player for TTS */}
-          {document && document.status === 'ready' && (
+          {document && document.status === 'ready' && !document.metadata?.isCorpusCollection && (
             <AudioPlayer
               documentId={documentId}
               ocrText={fullText || (document.content ? cleanHtmlText(document.content) : '')}
