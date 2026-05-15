@@ -25,6 +25,7 @@ export interface ParsedText {
   format: 'html' | 'markdown' | 'plaintext';
   chapterCount: number;
   totalLength: number;
+  extraMetadata?: Record<string, unknown>;
 }
 
 interface ChapterLink {
@@ -68,7 +69,8 @@ async function retryWithBackoff<T>(
       
       // If it's a rate limit error and we have retries left, wait and retry
       if (lastError.message.includes('Rate limited') || 
-          lastError.message.includes('HTTP 429')) {
+          lastError.message.includes('HTTP 429') ||
+          lastError.message.includes('HTTP 503')) {
         if (attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt); // Exponential backoff
           console.log(`[retryWithBackoff] Rate limited, waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
@@ -99,8 +101,14 @@ export async function parseWebText(
   try {
     const hostname = new URL(url).hostname.toLowerCase();
     
+    if (isApocryphaCorpusIndexUrl(url)) {
+      return parseApocryphaCorpusIndex(url, format);
+    }
+
     if (hostname.includes('sacred-texts.com')) {
       return await parseSacredText(url, format);
+    } else if (hostname === 'hermetic.com' || hostname.endsWith('.hermetic.com')) {
+      return await parseHermeticLibraryText(url, format);
     } else {
       // Use generic parser for other websites
       return await parseGenericWebPage(url, format);
@@ -150,9 +158,8 @@ export async function parseSacredText(
         chapterLinks = await fetchChapterList(url, false);
       } catch (err: any) {
         if (err.message.includes('HTTP 403') || err.message.includes('Forbidden') || err.message.includes('Puppeteer')) {
-          console.warn('[parseSacredText] Index returned 403, falling back to Puppeteer');
-          requiresPuppeteer = true;
-          chapterLinks = await fetchChapterList(url, true);
+          console.warn('[parseSacredText] Index returned 403, falling back to Jina Reader');
+          chapterLinks = await fetchChapterListViaJina(url);
         } else if (err.message.includes('HTTP 429') || err.message.includes('Rate limited')) {
           console.warn('[parseSacredText] Index returned 429, falling back to Jina Reader');
           chapterLinks = await fetchChapterListViaJina(url);
@@ -245,8 +252,7 @@ export async function parseSacredText(
         metadata = await extractMetadata(url, false);
       } catch (err: any) {
         if (err.message.includes('HTTP 403')) {
-          requiresPuppeteer = true;
-          metadata = await extractMetadata(url, true);
+          metadata = await extractMetadataViaJina(url);
         } else if (err.message.includes('HTTP 429') || err.message.includes('Rate limited')) {
           metadata = await extractMetadataViaJina(url);
         } else {
@@ -256,7 +262,7 @@ export async function parseSacredText(
       const content = requiresPuppeteer
         ? await fetchChapterContent(url, format, requiresPuppeteer)
         : await fetchChapterContent(url, format, false).catch(async (err) => {
-            if (err instanceof Error && (err.message.includes('HTTP 429') || err.message.includes('Rate limited'))) {
+            if (err instanceof Error && (err.message.includes('HTTP 403') || err.message.includes('HTTP 429') || err.message.includes('Rate limited'))) {
               return fetchChapterContentViaJina(url, format);
             }
             throw err;
@@ -506,24 +512,27 @@ async function fetchChapterContentViaJina(
 
 async function fetchJinaMarkdown(sourceUrl: string): Promise<string> {
   const jinaUrl = `${JINA_READER_PREFIX}${sourceUrl}`;
-  const response = await fetch(jinaUrl, {
-    headers: {
-      'Accept': 'text/plain, text/markdown;q=0.9, */*;q=0.8',
-      'User-Agent': COMMON_HEADERS['User-Agent'],
-    },
-  });
 
-  if (!response.ok) {
-    throw new Error(`Jina Reader failed to fetch ${sourceUrl} (HTTP ${response.status}): ${response.statusText}`);
-  }
+  return retryWithBackoff(async () => {
+    const response = await fetch(jinaUrl, {
+      headers: {
+        'Accept': 'text/plain, text/markdown;q=0.9, */*;q=0.8',
+        'User-Agent': COMMON_HEADERS['User-Agent'],
+      },
+    });
 
-  const markdown = await response.text();
+    if (!response.ok) {
+      throw new Error(`Jina Reader failed to fetch ${sourceUrl} (HTTP ${response.status}): ${response.statusText}`);
+    }
 
-  if (!markdown || markdown.trim().length < 50) {
-    throw new Error(`Jina Reader returned empty content for ${sourceUrl}`);
-  }
+    const markdown = await response.text();
 
-  return markdown;
+    if (!markdown || markdown.trim().length < 50) {
+      throw new Error(`Jina Reader returned empty content for ${sourceUrl}`);
+    }
+
+    return markdown;
+  }, 3, 1000);
 }
 
 function extractJinaMarkdownContent(markdown: string): string {
@@ -815,8 +824,8 @@ export async function fetchChapterContent(
       
       if (!response.ok) {
         if (response.status === 403 || response.status === 429) {
-          console.warn(`[fetchChapterContent] Server blocked fetch (HTTP ${response.status}). Falling back to Puppeteer.`);
-          html = await fetchWithPuppeteer(chapterUrl);
+          console.warn(`[fetchChapterContent] Server blocked fetch (HTTP ${response.status}). Falling back to Jina Reader.`);
+          return fetchChapterContentViaJina(chapterUrl, format);
         } else {
           throw new Error(`Failed to fetch chapter (HTTP ${response.status}): ${response.statusText}`);
         }
@@ -1696,5 +1705,240 @@ function resolveUrl(baseUrl: string, relativeUrl: string): string {
   const base = new URL(baseUrl);
   const resolved = new URL(relativeUrl, base);
   return resolved.toString();
+}
+
+function isApocryphaCorpusIndexUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.toLowerCase().includes('sacred-texts.com') &&
+      parsed.pathname.replace(/\/+$/, '') === '/chr/apo/index.htm';
+  } catch {
+    return false;
+  }
+}
+
+function parseApocryphaCorpusIndex(
+  url: string,
+  format: 'html' | 'markdown' | 'plaintext' = 'html'
+): ParsedText {
+  const sourceUrl = stripUrlHash(url);
+  const corpus = {
+    slug: 'apocrypha-christian-pseudepigrapha',
+    title: 'Apocrypha & Christian Pseudepigrapha',
+    sourceUrl,
+    sourceNote: 'Curated from the Internet Sacred Text Archive Apocrypha hub. The hub is a map across several independent public-domain source texts rather than a single book.',
+    importStrategy: 'Import this shell once, then import each source item as its own document and optionally add its textId back to the matching corpus item.',
+    groups: [
+      {
+        id: 'deuterocanonical',
+        title: 'Deuterocanonical / Biblical Apocrypha',
+        description: 'Books that appear in some biblical canons and were excluded from others.',
+        items: [
+          { title: 'The Deuterocanonical Books of the Bible', sourceUrl: 'https://sacred-texts.com/bib/apo/index.htm', expectedSections: 16 },
+        ],
+      },
+      {
+        id: 'old-testament-pseudepigrapha',
+        title: 'Old Testament Pseudepigrapha & Patriarchal Legends',
+        description: 'Second Temple, patriarchal, and legendary expansions around Genesis, Enoch, Jubilees, and related traditions.',
+        items: [
+          { title: 'The Forgotten Books of Eden', sourceUrl: 'https://sacred-texts.com/bib/fbe/index.htm' },
+          { title: 'The Book of Enoch', subtitle: 'R. H. Charles translation', sourceUrl: 'https://sacred-texts.com/bib/boe/index.htm' },
+          { title: 'The Book of Enoch the Prophet', subtitle: 'Richard Laurence translation', sourceUrl: 'https://sacred-texts.com/bib/bep/index.htm' },
+          { title: 'The Book of Jubilees', sourceUrl: 'https://sacred-texts.com/bib/jub/index.htm' },
+          { title: 'Slavonic Life of Adam and Eve', sourceUrl: 'https://sacred-texts.com/chr/apo/slanev.htm' },
+          { title: 'The Books of Adam and Eve', sourceUrl: 'https://sacred-texts.com/chr/apo/adamnev.htm' },
+          { title: 'The Book of Jasher', sourceUrl: 'https://sacred-texts.com/chr/apo/jasher/index.htm' },
+        ],
+      },
+      {
+        id: 'new-testament-apocrypha',
+        title: 'New Testament Apocrypha & Apostolic Literature',
+        description: 'Infancy gospels, passion narratives, apostolic acts, epistles, sayings texts, and early church manuals.',
+        items: [
+          { title: 'The Lost Books of the Bible', sourceUrl: 'https://sacred-texts.com/bib/lbob/index.htm' },
+          { title: 'The Gospel of Thomas', sourceUrl: 'https://sacred-texts.com/chr/thomas.htm' },
+          { title: 'The Didache', sourceUrl: 'https://sacred-texts.com/chr/did/index.htm' },
+          { title: 'Excerpts from the Gospel of Mary', sourceUrl: 'https://sacred-texts.com/chr/apo/marym.htm' },
+        ],
+      },
+      {
+        id: 'oracular-late-antique',
+        title: 'Oracular & Late Antique Border Texts',
+        description: 'Texts adjacent to Jewish and Christian apocalyptic imagination, reception, and late antique sacred history.',
+        items: [
+          { title: 'The Sibylline Oracles', sourceUrl: 'https://sacred-texts.com/cla/sib/index.htm' },
+          { title: 'The Biblical Antiquities of Philo', sourceUrl: 'https://sacred-texts.com/bib/bap/index.htm' },
+        ],
+      },
+    ],
+  };
+
+  const overviewHtml = cleanHtml(`
+    <h2>Corpus Guide</h2>
+    <p>This library item is a curated shell for a multi-work Apocrypha and Christian pseudepigrapha corpus. The source page is a hub, not a single book, so the works are preserved as separate importable documents under one collection-facing entry.</p>
+    <p>Open the viewer for the nested corpus map, then import each source item as its own text when you are ready to add it to the collection.</p>
+  `);
+
+  const chapterContent = format === 'html'
+    ? overviewHtml
+    : format === 'markdown'
+      ? htmlToMarkdown(overviewHtml)
+      : htmlToPlaintext(overviewHtml);
+
+  return {
+    metadata: {
+      title: 'Apocrypha & Christian Pseudepigrapha',
+      author: 'Various',
+      year: null,
+      publisher: 'Internet Sacred Text Archive',
+      description: 'A curated corpus shell for deuterocanonical books, Old Testament pseudepigrapha, New Testament apocrypha, apostolic literature, and related late antique texts.',
+      sourceUrl,
+    },
+    chapters: [
+      {
+        id: 'corpus-guide',
+        title: 'Corpus Guide',
+        content: chapterContent,
+      },
+    ],
+    format,
+    chapterCount: 1,
+    totalLength: chapterContent.length,
+    extraMetadata: {
+      isCorpusCollection: true,
+      corpus,
+    },
+  };
+}
+
+/**
+ * Parse Hermetic Library / DokuWiki texts.
+ * Pages like hermetic.com/texts/yetzirah store clean book content in .dw-content
+ * with heading nodes followed by matching level divs.
+ */
+export async function parseHermeticLibraryText(
+  url: string,
+  format: 'html' | 'markdown' | 'plaintext' = 'html'
+): Promise<ParsedText> {
+  const normalizedUrl = stripUrlHash(url);
+  const response = await fetch(normalizedUrl, {
+    headers: {
+      ...COMMON_HEADERS,
+      'Sec-Fetch-Site': 'none',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Hermetic Library page (HTTP ${response.status}): ${response.statusText}`);
+  }
+
+  const html = await response.text();
+  const $ = cheerio.load(html);
+
+  $('script, style, noscript, iframe, .dw-toc, .editbutton_section').remove();
+
+  const $content = $('.dw-content').first();
+  if ($content.length === 0) {
+    throw new Error('Could not find Hermetic Library content container');
+  }
+
+  const metadata = extractHermeticMetadata(normalizedUrl, $);
+  const chapters: Chapter[] = [];
+  let currentSection: { title: string; content: string[] } | null = null;
+
+  const flushSection = () => {
+    if (!currentSection) return;
+
+    const sectionHtml = currentSection.content.join('\n');
+    const textLength = cheerio.load(sectionHtml).text().replace(/\s+/g, ' ').trim().length;
+    const normalizedTitle = currentSection.title.toLowerCase();
+
+    if (textLength >= 50 && normalizedTitle !== 'sepher yetzirah') {
+      const cleanContent = cleanHtml(sectionHtml);
+      chapters.push({
+        id: `chapter-${chapters.length + 1}`,
+        title: currentSection.title,
+        content: format === 'html'
+          ? cleanContent
+          : format === 'markdown'
+            ? htmlToMarkdown(cleanContent)
+            : htmlToPlaintext(cleanContent),
+      });
+    }
+
+    currentSection = null;
+  };
+
+  $content.children().each((_, element) => {
+    const $element = $(element);
+    const tagName = $element.prop('tagName')?.toLowerCase();
+    const text = $element.text().replace(/\s+/g, ' ').trim();
+
+    if (tagName && /^h[1-6]$/.test(tagName) && text) {
+      flushSection();
+      currentSection = {
+        title: text,
+        content: [],
+      };
+      return;
+    }
+
+    if (!currentSection) return;
+
+    const htmlFragment = $.html(element);
+    if (htmlFragment && text.length > 0) {
+      currentSection.content.push(htmlFragment);
+    }
+  });
+
+  flushSection();
+
+  if (chapters.length === 0) {
+    throw new Error('Could not split Hermetic Library page into chapters');
+  }
+
+  const totalLength = chapters.reduce((sum, chapter) => sum + chapter.content.length, 0);
+
+  return {
+    metadata,
+    chapters,
+    format,
+    chapterCount: chapters.length,
+    totalLength,
+  };
+}
+
+function stripUrlHash(url: string): string {
+  const parsed = new URL(url);
+  parsed.hash = '';
+  return parsed.toString();
+}
+
+function extractHermeticMetadata(url: string, $: cheerio.CheerioAPI): ParsedTextMetadata {
+  let title = $('.dw-content h1').first().text().trim() || $('title').text().trim();
+  title = title
+    .replace(/\s*-\s*Sacred Texts\s*-\s*Hermetic Library\s*$/i, '')
+    .replace(/\s*-\s*Hermetic Library\s*$/i, '')
+    .trim() || 'Untitled Hermetic Library Text';
+
+  const contentText = $('.dw-content').text().replace(/\s+/g, ' ').trim();
+  const authorMatch =
+    contentText.match(/Translated from the Hebrew by\s+([^(.]+)/i) ||
+    contentText.match(/\bby\s+([A-Z][\w.\s-]+?)(?:\.|\(|$)/i);
+  const yearMatch = contentText.match(/\b(1[6-9]\d{2}|20[0-2]\d)\b/);
+  const description = $('.dw-content p')
+    .map((_, element) => $(element).text().replace(/\s+/g, ' ').trim())
+    .get()
+    .find(paragraph => paragraph.length > 80 && paragraph.length < 600) || null;
+
+  return {
+    title,
+    author: authorMatch?.[1]?.trim() || null,
+    year: yearMatch ? parseInt(yearMatch[1], 10) : null,
+    publisher: 'Hermetic Library',
+    description,
+    sourceUrl: url,
+  };
 }
 

@@ -178,6 +178,7 @@ export async function POST(request: Request) {
         totalLength: parsedText.totalLength,
         longSummary: finalMetadata.longSummary,
         aiEnhanced: useAI && aiMetadata !== null,
+        ...(parsedText.extraMetadata || {}),
       },
       uploaded_by: session.user.id,
     };
