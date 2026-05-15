@@ -870,7 +870,7 @@ export default function DocumentDetailPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to re-import content');
+        throw new Error(error.details || error.error || 'Failed to re-import content');
       }
 
       const data = await response.json();

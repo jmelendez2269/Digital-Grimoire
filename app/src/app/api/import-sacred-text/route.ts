@@ -20,8 +20,8 @@ interface ImportRequestBody {
   };
 }
 
-// Increase timeout for this route (60 seconds for large imports)
-export const maxDuration = 60;
+// Increase timeout for large index imports that may need reader fallbacks.
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {

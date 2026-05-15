@@ -30,6 +30,7 @@ export interface ParsedText {
 interface ChapterLink {
   href: string;
   title: string;
+  fetchVia?: 'direct' | 'jina';
 }
 
 const COMMON_HEADERS = {
@@ -45,6 +46,8 @@ const COMMON_HEADERS = {
   'Sec-Fetch-User': '?1',
   'Upgrade-Insecure-Requests': '1',
 };
+
+const JINA_READER_PREFIX = 'https://r.jina.ai/http://r.jina.ai/http://';
 
 /**
  * Retry a function with exponential backoff
@@ -150,47 +153,90 @@ export async function parseSacredText(
           console.warn('[parseSacredText] Index returned 403, falling back to Puppeteer');
           requiresPuppeteer = true;
           chapterLinks = await fetchChapterList(url, true);
+        } else if (err.message.includes('HTTP 429') || err.message.includes('Rate limited')) {
+          console.warn('[parseSacredText] Index returned 429, falling back to Jina Reader');
+          chapterLinks = await fetchChapterListViaJina(url);
         } else {
           throw err;
         }
       }
       
-      // Add delay before fetching metadata to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-      
-      metadata = await extractMetadata(url, requiresPuppeteer);
-      
-      // Fetch chapters sequentially with delays to avoid rate limiting
-      chapters = [];
-      for (let index = 0; index < chapterLinks.length; index++) {
-        const link = chapterLinks[index];
-        const absoluteUrl = resolveUrl(url, link.href);
-        
-        // Add delay between requests (2-3 seconds to be respectful)
-        if (index > 0) {
-          const delay = 2000 + Math.random() * 1000; // 2-3 seconds with some randomization
-          await new Promise(resolve => setTimeout(resolve, delay));
+      const usingJina = chapterLinks.some(link => link.fetchVia === 'jina');
+
+      if (!usingJina) {
+        // Add delay before fetching metadata to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+      }
+
+      try {
+        metadata = usingJina
+          ? await extractMetadataViaJina(url)
+          : await extractMetadata(url, requiresPuppeteer);
+      } catch (err: any) {
+        if (err.message.includes('HTTP 429') || err.message.includes('Rate limited') || err.message.includes('HTTP 403')) {
+          console.warn('[parseSacredText] Metadata fetch was blocked, falling back to Jina Reader');
+          metadata = await extractMetadataViaJina(url);
+        } else {
+          throw err;
         }
-        
+      }
+
+      const startReadingLink = chapterLinks.find(link => isStartReadingLink(link));
+      if (startReadingLink && startReadingLink.fetchVia !== 'jina') {
+        const combinedUrl = resolveUrl(url, startReadingLink.href);
         try {
-          const content = await fetchChapterContent(absoluteUrl, format, requiresPuppeteer);
-          chapters.push({
-            id: `chapter-${index + 1}`,
-            title: link.title || `Chapter ${index + 1}`,
-            content: content,
-          });
-        } catch (error) {
-          console.error(`[parseSacredText] Failed to fetch chapter ${index + 1} (${link.title}):`, error);
-          // If rate limited, throw immediately
-          if (error instanceof Error && error.message.includes('Rate limited')) {
-            throw error;
+          const combinedChapters = await fetchCombinedSacredText(combinedUrl, format, requiresPuppeteer);
+          if (combinedChapters.length > 1) {
+            console.log(`[parseSacredText] Parsed ${combinedChapters.length} chapters from combined Start Reading file`);
+            chapters = combinedChapters;
+          } else {
+            console.warn('[parseSacredText] Combined Start Reading file did not contain split chapters, falling back to linked pages');
+            chapters = [];
           }
-          // For other errors, continue but log
-          chapters.push({
-            id: `chapter-${index + 1}`,
-            title: link.title || `Chapter ${index + 1}`,
-            content: `[Error: Failed to fetch this chapter]`,
-          });
+        } catch (error) {
+          console.warn('[parseSacredText] Failed to parse combined Start Reading file, falling back to linked pages:', error);
+          chapters = [];
+        }
+      } else {
+        chapters = [];
+      }
+
+      if (chapters.length === 0) {
+        // Fetch chapters sequentially with delays to avoid rate limiting
+        const linkedChapters = chapterLinks.filter(link => !isStartReadingLink(link));
+        const failedChapters: string[] = [];
+
+        for (let index = 0; index < linkedChapters.length; index++) {
+          const link = linkedChapters[index];
+          const absoluteUrl = resolveUrl(url, link.href);
+
+          // Add delay between requests (2-3 seconds to be respectful)
+          if (index > 0) {
+            const delay = link.fetchVia === 'jina'
+              ? 250
+              : 2000 + Math.random() * 1000; // 2-3 seconds with some randomization
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+
+          try {
+            const content = link.fetchVia === 'jina'
+              ? await fetchChapterContentViaJina(absoluteUrl, format)
+              : await fetchChapterContent(absoluteUrl, format, requiresPuppeteer);
+            chapters.push({
+              id: `chapter-${index + 1}`,
+              title: link.title || `Chapter ${index + 1}`,
+              content: content,
+            });
+          } catch (error) {
+            console.error(`[parseSacredText] Failed to fetch chapter ${index + 1} (${link.title}):`, error);
+            failedChapters.push(link.title || `Chapter ${index + 1}`);
+          }
+        }
+
+        if (failedChapters.length > 0) {
+          throw new Error(
+            `Failed to fetch ${failedChapters.length} chapter(s): ${failedChapters.slice(0, 5).join(', ')}${failedChapters.length > 5 ? ', ...' : ''}. Import aborted so broken placeholder chapters are not saved.`
+          );
         }
       }
     } else {
@@ -201,11 +247,20 @@ export async function parseSacredText(
         if (err.message.includes('HTTP 403')) {
           requiresPuppeteer = true;
           metadata = await extractMetadata(url, true);
+        } else if (err.message.includes('HTTP 429') || err.message.includes('Rate limited')) {
+          metadata = await extractMetadataViaJina(url);
         } else {
           throw err;
         }
       }
-      const content = await fetchChapterContent(url, format, requiresPuppeteer);
+      const content = requiresPuppeteer
+        ? await fetchChapterContent(url, format, requiresPuppeteer)
+        : await fetchChapterContent(url, format, false).catch(async (err) => {
+            if (err instanceof Error && (err.message.includes('HTTP 429') || err.message.includes('Rate limited'))) {
+              return fetchChapterContentViaJina(url, format);
+            }
+            throw err;
+          });
       
       console.log(`[parseSacredText] Single page - extracted content length: ${content.length}`);
       console.log(`[parseSacredText] First 200 chars: ${content.substring(0, 200)}`);
@@ -258,6 +313,10 @@ export async function parseSacredText(
     }
     throw new Error(`Failed to parse sacred text: Unknown error`);
   }
+}
+
+function isStartReadingLink(link: ChapterLink): boolean {
+  return link.title.trim().toLowerCase() === 'start reading';
 }
 
 /**
@@ -383,6 +442,354 @@ export async function fetchChapterList(indexUrl: string, forcePuppeteer: boolean
   }, 3, 2000); // 3 retries with 2 second initial delay
 }
 
+async function fetchChapterListViaJina(indexUrl: string): Promise<ChapterLink[]> {
+  const markdown = await fetchJinaMarkdown(indexUrl);
+  const base = new URL(indexUrl);
+  const baseDir = base.pathname.replace(/\/[^/]*$/, '/');
+  const chapters: ChapterLink[] = [];
+  const seen = new Set<string>();
+  const linkRegex = /\[([^\]]+)\]\((https?:\/\/(?:www\.)?sacred-texts\.com\/[^)]+?\.htm)\)/g;
+
+  for (const match of markdown.matchAll(linkRegex)) {
+    const title = match[1].replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim();
+    const hrefUrl = new URL(match[2]);
+    const hrefPath = hrefUrl.pathname;
+    const lowerTitle = title.toLowerCase();
+
+    if (
+      !title ||
+      !hrefPath.startsWith(baseDir) ||
+      hrefPath.endsWith('/index.htm') ||
+      hrefPath.includes('../') ||
+      lowerTitle.includes('contents') ||
+      lowerTitle.includes('next') ||
+      lowerTitle.includes('previous')
+    ) {
+      continue;
+    }
+
+    const href = hrefPath.split('/').pop();
+    if (!href || seen.has(href)) {
+      continue;
+    }
+
+    seen.add(href);
+    chapters.push({ href, title, fetchVia: 'jina' });
+  }
+
+  if (chapters.length === 0) {
+    throw new Error('No chapters found on index page through Jina Reader');
+  }
+
+  return chapters;
+}
+
+async function fetchChapterContentViaJina(
+  chapterUrl: string,
+  format: 'html' | 'markdown' | 'plaintext'
+): Promise<string> {
+  const markdown = await fetchJinaMarkdown(chapterUrl);
+  const markdownContent = extractJinaMarkdownContent(markdown);
+
+  if (format === 'markdown') {
+    return markdownContent;
+  }
+
+  const html = markdownToBasicHtml(markdownContent);
+
+  if (format === 'plaintext') {
+    return htmlToPlaintext(html);
+  }
+
+  return html;
+}
+
+async function fetchJinaMarkdown(sourceUrl: string): Promise<string> {
+  const jinaUrl = `${JINA_READER_PREFIX}${sourceUrl}`;
+  const response = await fetch(jinaUrl, {
+    headers: {
+      'Accept': 'text/plain, text/markdown;q=0.9, */*;q=0.8',
+      'User-Agent': COMMON_HEADERS['User-Agent'],
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Jina Reader failed to fetch ${sourceUrl} (HTTP ${response.status}): ${response.statusText}`);
+  }
+
+  const markdown = await response.text();
+
+  if (!markdown || markdown.trim().length < 50) {
+    throw new Error(`Jina Reader returned empty content for ${sourceUrl}`);
+  }
+
+  return markdown;
+}
+
+function extractJinaMarkdownContent(markdown: string): string {
+  const marker = 'Markdown Content:';
+  const markerIndex = markdown.indexOf(marker);
+  const body = markerIndex >= 0 ? markdown.slice(markerIndex + marker.length) : markdown;
+
+  return body
+    .replace(/^\s*\[[^\]]+\]\(https?:\/\/(?:www\.)?sacred-texts\.com\/(?:index\.htm)?\)\s*$/gim, '')
+    .replace(/^\s*\* \* \*\s*$/gm, '\n')
+    .trim();
+}
+
+function markdownToBasicHtml(markdown: string): string {
+  const lines = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const blocks: string[] = [];
+  let paragraph: string[] = [];
+
+  const flushParagraph = () => {
+    const text = paragraph.join(' ').replace(/\s+/g, ' ').trim();
+    if (text) {
+      blocks.push(`<p>${formatInlineMarkdown(text)}</p>`);
+    }
+    paragraph = [];
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      flushParagraph();
+      continue;
+    }
+
+    if (/^!\[[^\]]*\]\([^)]+\)/.test(trimmed)) {
+      flushParagraph();
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      flushParagraph();
+      const level = Math.min(headingMatch[1].length, 6);
+      blocks.push(`<h${level}>${formatInlineMarkdown(headingMatch[2])}</h${level}>`);
+      continue;
+    }
+
+    paragraph.push(trimmed);
+  }
+
+  flushParagraph();
+
+  return cleanHtml(blocks.join('\n'));
+}
+
+function formatInlineMarkdown(text: string): string {
+  return escapeHtml(text)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/_([^_]+)_/g, '<em>$1</em>');
+}
+
+async function extractMetadataViaJina(url: string): Promise<ParsedTextMetadata> {
+  const markdown = await fetchJinaMarkdown(url);
+  const titleMatch = markdown.match(/^Title:\s*(.+)$/m);
+  const publishedMatch = markdown.match(/^Published Time:\s*(.+)$/m);
+  const content = extractJinaMarkdownContent(markdown);
+
+  let title = titleMatch?.[1]?.trim() || 'Untitled Document';
+  title = title
+    .replace(/\s*\|\s*Internet Sacred Text Archive\s*$/i, '')
+    .replace(/\s*[-:]\s*(Index|Contents|Sacred[- ]Texts\.com).*$/i, '')
+    .trim() || 'Untitled Document';
+
+  let author: string | null = null;
+  const authorMatch =
+    content.match(/#{1,6}\s+([A-Z][\w.\s-]+),\s*(?:tr\.|trans\.|translator)/i) ||
+    content.match(/\b([A-Z][\w.\s-]+),\s*(?:tr\.|trans\.|translator)/i) ||
+    content.match(/\bby\s+([A-Z][\w.\s-]+?)(?:\n|$)/i);
+
+  if (authorMatch?.[1]) {
+    author = authorMatch[1].replace(/\s+/g, ' ').trim();
+  }
+
+  let year: number | null = null;
+  const yearMatch =
+    content.match(/\[(1[6-9]\d{2}|20[0-2]\d)\]/) ||
+    publishedMatch?.[1]?.match(/\b(1[6-9]\d{2}|20[0-2]\d)\b/) ||
+    content.match(/\b(1[6-9]\d{2}|20[0-2]\d)\b/);
+
+  if (yearMatch?.[1]) {
+    year = parseInt(yearMatch[1], 10);
+  }
+
+  const description = content
+    .split(/\n\s*\n+/)
+    .map(section => section.replace(/[#_*[\]()]/g, '').trim())
+    .find(section => section.length > 80 && section.length < 600) || null;
+
+  return {
+    title,
+    author,
+    year,
+    publisher: null,
+    description,
+    sourceUrl: url,
+  };
+}
+
+async function fetchCombinedSacredText(
+  combinedUrl: string,
+  format: 'html' | 'markdown' | 'plaintext',
+  forcePuppeteer: boolean = false
+): Promise<Chapter[]> {
+  let html: string;
+
+  if (forcePuppeteer) {
+    html = await fetchWithPuppeteer(combinedUrl);
+  } else {
+    const response = await fetch(combinedUrl, {
+      headers: {
+        ...COMMON_HEADERS,
+        'Referer': new URL(combinedUrl).origin,
+        'Sec-Fetch-Site': 'same-origin',
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 403 || response.status === 429) {
+        console.warn(`[fetchCombinedSacredText] Server blocked fetch (HTTP ${response.status}). Falling back to Puppeteer.`);
+        html = await fetchWithPuppeteer(combinedUrl);
+      } else {
+        throw new Error(`Failed to fetch combined text (HTTP ${response.status}): ${response.statusText}`);
+      }
+    } else {
+      html = await response.text();
+    }
+  }
+
+  assertNotChallengePage(html, combinedUrl);
+
+  const markerRegex = /\{file\s+"([^"]+)"\s+"([^"]+)"\}/g;
+  const markers = Array.from(html.matchAll(markerRegex));
+
+  if (markers.length < 2) {
+    return [];
+  }
+
+  const chapters: Chapter[] = [];
+
+  for (let index = 0; index < markers.length; index++) {
+    const marker = markers[index];
+    const title = marker[1]?.trim() || `Chapter ${index + 1}`;
+    const start = (marker.index || 0) + marker[0].length;
+    const end = markers[index + 1]?.index ?? html.length;
+    const rawContent = html.slice(start, end).trim();
+
+    if (!rawContent || rawContent.length < 20) {
+      continue;
+    }
+
+    const contentHtml = looksLikeHtml(rawContent)
+      ? cleanHtml(rawContent)
+      : sacredTextMarkupToHtml(rawContent);
+
+    chapters.push({
+      id: `chapter-${chapters.length + 1}`,
+      title,
+      content: format === 'html'
+        ? contentHtml
+        : format === 'markdown'
+          ? htmlToMarkdown(contentHtml)
+          : htmlToPlaintext(contentHtml),
+    });
+  }
+
+  return chapters;
+}
+
+function looksLikeHtml(content: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(content);
+}
+
+function sacredTextMarkupToHtml(content: string): string {
+  const lines = content
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n');
+
+  const blocks: string[] = [];
+  let paragraph: string[] = [];
+
+  const flushParagraph = () => {
+    const text = paragraph.join(' ').replace(/\s+/g, ' ').trim();
+    if (text) {
+      blocks.push(`<p>${escapeHtml(text)}</p>`);
+    }
+    paragraph = [];
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      flushParagraph();
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      flushParagraph();
+      const level = Math.min(headingMatch[1].length, 6);
+      blocks.push(`<h${level}>${escapeHtml(cleanSacredTextMarkerText(headingMatch[2]))}</h${level}>`);
+      continue;
+    }
+
+    if (/^\{(?:p|prr|page|footnote)\b/i.test(trimmed)) {
+      flushParagraph();
+      blocks.push(`<p class="source-page">${escapeHtml(trimmed.replace(/[{}]/g, ''))}</p>`);
+      continue;
+    }
+
+    if (/^\{img\b/i.test(trimmed)) {
+      flushParagraph();
+      continue;
+    }
+
+    paragraph.push(cleanSacredTextMarkerText(trimmed));
+  }
+
+  flushParagraph();
+
+  return cleanHtml(blocks.join('\n'));
+}
+
+function cleanSacredTextMarkerText(text: string): string {
+  return text
+    .replace(/\{fr\.\s*([^}]+)\}/gi, '$1')
+    .replace(/\{fn\.\s*/gi, 'Note: ')
+    .replace(/\{\/?[^}]+\}/g, '')
+    .replace(/\|3([^|]+)\|/g, 'Ž$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function assertNotChallengePage(html: string, url: string): void {
+  const lower = html.slice(0, 12000).toLowerCase();
+
+  if (
+    lower.includes('<title>just a moment') ||
+    lower.includes('cf-chl') ||
+    lower.includes('cloudflare') && lower.includes('enable javascript and cookies')
+  ) {
+    throw new Error(`Sacred Texts returned an anti-bot challenge for ${url}`);
+  }
+}
+
 /**
  * Fetch and extract content from a chapter page
  */
@@ -417,6 +824,7 @@ export async function fetchChapterContent(
         html = await response.text();
       }
     }
+    assertNotChallengePage(html, chapterUrl);
     const $ = cheerio.load(html);
 
     // Remove unwanted elements (navigation, ads, etc.)
