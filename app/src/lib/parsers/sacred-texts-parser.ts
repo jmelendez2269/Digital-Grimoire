@@ -144,8 +144,10 @@ export async function parseSacredText(
       throw new Error('URL must be from sacred-texts.com');
     }
 
-    // Determine if this is an index page or a single page
-    const isIndexPage = url.includes('/index.htm');
+    // Determine if this is an index page or a single page.
+    // Sacred Texts also exposes per-book index pages like /bib/apo/bar.htm
+    // whose URLs don't contain /index.htm but list every chapter file.
+    const isIndexPage = url.includes('/index.htm') || isBibleApocryphaBookIndex(url);
     
     let chapters: Chapter[];
     let metadata: ParsedTextMetadata;
@@ -1712,21 +1714,74 @@ function resolveUrl(baseUrl: string, relativeUrl: string): string {
 function isApocryphaCorpusIndexUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.hostname.toLowerCase().includes('sacred-texts.com') &&
-      parsed.pathname.replace(/\/+$/, '') === '/chr/apo/index.htm';
+    if (!parsed.hostname.toLowerCase().includes('sacred-texts.com')) return false;
+    const path = parsed.pathname.replace(/\/+$/, '');
+    return path === '/chr/apo/index.htm' || path === '/bib/apo/index.htm';
   } catch {
     return false;
   }
 }
 
-function parseApocryphaCorpusIndex(
-  url: string,
-  format: 'html' | 'markdown' | 'plaintext' = 'html'
-): ParsedText {
-  const sourceUrl = stripUrlHash(url);
-  const corpus = {
+function isBibleApocryphaBookIndex(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.toLowerCase().includes('sacred-texts.com')) return false;
+    const path = parsed.pathname;
+    if (!/^\/bib\/apo\/[^/]+\.htm$/i.test(path)) return false;
+    if (path.endsWith('/index.htm')) return false;
+    const filename = path.split('/').pop() || '';
+    // Chapter pages end with 3 digits before .htm (bar001.htm, es1016.htm).
+    // Book-index pages do not (bar.htm, es1.htm, ma2.htm).
+    return !/\d{3}\.htm$/i.test(filename);
+  } catch {
+    return false;
+  }
+}
+
+function getApocryphaCorpus(sourceUrl: string) {
+  const path = new URL(sourceUrl).pathname.replace(/\/+$/, '');
+  if (path === '/bib/apo/index.htm') {
+    return {
+      slug: 'deuterocanonical-bible-apocrypha',
+      title: 'The Deuterocanonical Books of the Bible',
+      metadataTitle: 'The Deuterocanonical Books of the Bible',
+      metadataDescription: 'A curated corpus shell for the deuterocanonical and biblical apocrypha collected at the Internet Sacred Text Archive.',
+      sourceUrl,
+      sourceNote: 'Curated from the Internet Sacred Text Archive Bible Apocrypha index. The page is a map across 16 independent public-domain source texts rather than a single book.',
+      importStrategy: 'Import this shell once, then import each book individually so its chapters are stored as a proper multi-chapter document.',
+      groups: [
+        {
+          id: 'deuterocanonical',
+          title: 'Deuterocanonical & Biblical Apocrypha',
+          description: 'Books considered deuterocanonical in Catholic and Orthodox Bibles, plus related apocrypha excluded from the modern canon.',
+          items: [
+            { title: '1 Esdras', sourceUrl: 'https://sacred-texts.com/bib/apo/es1.htm' },
+            { title: '2 Esdras', sourceUrl: 'https://sacred-texts.com/bib/apo/es2.htm' },
+            { title: 'Additions to Esther', sourceUrl: 'https://sacred-texts.com/bib/apo/aes.htm' },
+            { title: '1 Maccabees', sourceUrl: 'https://sacred-texts.com/bib/apo/ma1.htm' },
+            { title: '2 Maccabees', sourceUrl: 'https://sacred-texts.com/bib/apo/ma2.htm' },
+            { title: 'Tobias', sourceUrl: 'https://sacred-texts.com/bib/apo/tob.htm' },
+            { title: 'Judith', sourceUrl: 'https://sacred-texts.com/bib/apo/jdt.htm' },
+            { title: 'Wisdom', sourceUrl: 'https://sacred-texts.com/bib/apo/wis.htm' },
+            { title: 'Sirach', sourceUrl: 'https://sacred-texts.com/bib/apo/sir.htm' },
+            { title: 'Baruch', sourceUrl: 'https://sacred-texts.com/bib/apo/bar.htm' },
+            { title: 'Epistle of Jeremiah', sourceUrl: 'https://sacred-texts.com/bib/apo/epj.htm' },
+            { title: 'Susanna', sourceUrl: 'https://sacred-texts.com/bib/apo/sus.htm' },
+            { title: 'Prayer of Azariah', sourceUrl: 'https://sacred-texts.com/bib/apo/aza.htm' },
+            { title: 'Prayer of Manasseh', sourceUrl: 'https://sacred-texts.com/bib/apo/man.htm' },
+            { title: 'Bel and the Dragon', sourceUrl: 'https://sacred-texts.com/bib/apo/bel.htm' },
+            { title: 'Laodiceans', sourceUrl: 'https://sacred-texts.com/bib/apo/lao.htm' },
+          ],
+        },
+      ],
+    };
+  }
+
+  return {
     slug: 'apocrypha-christian-pseudepigrapha',
     title: 'Apocrypha & Christian Pseudepigrapha',
+    metadataTitle: 'Apocrypha & Christian Pseudepigrapha',
+    metadataDescription: 'A curated corpus shell for deuterocanonical books, Old Testament pseudepigrapha, New Testament apocrypha, apostolic literature, and related late antique texts.',
     sourceUrl,
     sourceNote: 'Curated from the Internet Sacred Text Archive Apocrypha hub. The hub is a map across several independent public-domain source texts rather than a single book.',
     importStrategy: 'Import this shell once, then import each source item as its own document and optionally add its textId back to the matching corpus item.',
@@ -1775,10 +1830,18 @@ function parseApocryphaCorpusIndex(
       },
     ],
   };
+}
+
+function parseApocryphaCorpusIndex(
+  url: string,
+  format: 'html' | 'markdown' | 'plaintext' = 'html'
+): ParsedText {
+  const sourceUrl = stripUrlHash(url);
+  const corpus = getApocryphaCorpus(sourceUrl);
 
   const overviewHtml = cleanHtml(`
     <h2>Corpus Guide</h2>
-    <p>This library item is a curated shell for a multi-work Apocrypha and Christian pseudepigrapha corpus. The source page is a hub, not a single book, so the works are preserved as separate importable documents under one collection-facing entry.</p>
+    <p>This library item is a curated shell for <strong>${escapeHtml(corpus.title)}</strong>. The source page is a hub across several independent public-domain works rather than a single book, so each work is preserved as its own importable document under one collection-facing entry.</p>
     <p>Open the viewer for the nested corpus map, then import each source item as its own text when you are ready to add it to the collection.</p>
   `);
 
@@ -1790,11 +1853,11 @@ function parseApocryphaCorpusIndex(
 
   return {
     metadata: {
-      title: 'Apocrypha & Christian Pseudepigrapha',
+      title: corpus.metadataTitle,
       author: 'Various',
       year: null,
       publisher: 'Internet Sacred Text Archive',
-      description: 'A curated corpus shell for deuterocanonical books, Old Testament pseudepigrapha, New Testament apocrypha, apostolic literature, and related late antique texts.',
+      description: corpus.metadataDescription,
       sourceUrl,
     },
     chapters: [
