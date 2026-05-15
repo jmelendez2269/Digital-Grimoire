@@ -170,7 +170,25 @@ export async function parseSacredText(
           throw err;
         }
       }
-      
+
+      // For per-book index pages like /bib/apo/bar.htm, chapter files always
+      // follow the pattern `{bookPrefix}\d+\.htm` (bar001.htm, bar002.htm, ...).
+      // Filter out sibling-book nav (sir.htm, epj.htm), cross-version nav
+      // (Polyglot/Sep/Vul), and footer Previous/Next links.
+      const bookPrefix = getSacredTextsBookPrefix(url);
+      if (bookPrefix) {
+        const chapterPattern = new RegExp(`^${escapeRegex(bookPrefix)}\\d+\\.htm$`, 'i');
+        const before = chapterLinks.length;
+        chapterLinks = chapterLinks.filter(link => {
+          const filename = (link.href.split('/').pop() || '').toLowerCase();
+          return chapterPattern.test(filename);
+        });
+        console.log(`[parseSacredText] Book-prefix chapter filter: ${before} -> ${chapterLinks.length} (prefix=${bookPrefix})`);
+        if (chapterLinks.length === 0) {
+          throw new Error(`No chapter pages matched the book pattern ${bookPrefix}NNN.htm on ${url}`);
+        }
+      }
+
       const usingJina = chapterLinks.some(link => link.fetchVia === 'jina');
 
       if (!usingJina) {
@@ -1719,6 +1737,21 @@ function isApocryphaCorpusIndexUrl(url: string): boolean {
     return path === '/chr/apo/index.htm' || path === '/bib/apo/index.htm';
   } catch {
     return false;
+  }
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getSacredTextsBookPrefix(url: string): string | null {
+  if (!isBibleApocryphaBookIndex(url)) return null;
+  try {
+    const filename = new URL(url).pathname.split('/').pop() || '';
+    const match = filename.match(/^([a-z0-9]+)\.htm$/i);
+    return match ? match[1].toLowerCase() : null;
+  } catch {
+    return null;
   }
 }
 
