@@ -150,8 +150,24 @@ interface CorpusCollectionMetadata {
   groups: CorpusCollectionGroup[];
 }
 
+function normalizeCorpusUrlKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.hash = '';
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+const BATCH_IMPORT_DELAY_MS = 5000;
+
 function CorpusCollectionViewer({ corpus }: { corpus: CorpusCollectionMetadata }) {
   const [resolvedTextIds, setResolvedTextIds] = useState<Record<string, string>>({});
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number; current?: string } | null>(null);
+  const [batchSummary, setBatchSummary] = useState<{ success: number; failures: { title: string; error: string }[] } | null>(null);
+  const cancelBatchRef = useRef(false);
 
   useEffect(() => {
     const urls = corpus.groups
@@ -188,16 +204,7 @@ function CorpusCollectionViewer({ corpus }: { corpus: CorpusCollectionMetadata }
 
   const resolveTextId = (item: CorpusCollectionItem): string | undefined => {
     if (item.textId) return item.textId;
-    try {
-      const key = (() => {
-        const parsed = new URL(item.sourceUrl);
-        parsed.hash = '';
-        return parsed.toString();
-      })();
-      return resolvedTextIds[key];
-    } catch {
-      return resolvedTextIds[item.sourceUrl];
-    }
+    return resolvedTextIds[normalizeCorpusUrlKey(item.sourceUrl)];
   };
 
   const totalItems = corpus.groups.reduce((sum, group) => sum + group.items.length, 0);
@@ -205,6 +212,58 @@ function CorpusCollectionViewer({ corpus }: { corpus: CorpusCollectionMetadata }
     (sum, group) => sum + group.items.filter(item => resolveTextId(item)).length,
     0
   );
+  const unlinkedItems = corpus.groups.flatMap(g => g.items).filter(item => !resolveTextId(item));
+
+  const importAllUnlinked = async () => {
+    if (unlinkedItems.length === 0 || batchRunning) return;
+    cancelBatchRef.current = false;
+    setBatchSummary(null);
+    setBatchRunning(true);
+
+    const failures: { title: string; error: string }[] = [];
+    let success = 0;
+
+    for (let i = 0; i < unlinkedItems.length; i++) {
+      if (cancelBatchRef.current) break;
+      const item = unlinkedItems[i];
+      setBatchProgress({ done: i, total: unlinkedItems.length, current: item.title });
+
+      try {
+        const resp = await fetch('/api/import-sacred-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: item.sourceUrl, useAI: false }),
+        });
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          failures.push({ title: item.title, error: data?.error || `HTTP ${resp.status}` });
+        } else {
+          const data = await resp.json();
+          if (data?.textId) {
+            setResolvedTextIds(prev => ({
+              ...prev,
+              [normalizeCorpusUrlKey(item.sourceUrl)]: data.textId,
+            }));
+          }
+          success++;
+        }
+      } catch (err) {
+        failures.push({ title: item.title, error: err instanceof Error ? err.message : 'Unknown error' });
+      }
+
+      if (i < unlinkedItems.length - 1 && !cancelBatchRef.current) {
+        await new Promise(r => setTimeout(r, BATCH_IMPORT_DELAY_MS));
+      }
+    }
+
+    setBatchProgress(null);
+    setBatchRunning(false);
+    setBatchSummary({ success, failures });
+  };
+
+  const cancelBatch = () => {
+    cancelBatchRef.current = true;
+  };
 
   return (
     <div className="h-full overflow-y-auto rounded-lg border border-amber-900/20 bg-zinc-900/50">
@@ -237,6 +296,51 @@ function CorpusCollectionViewer({ corpus }: { corpus: CorpusCollectionMetadata }
               {corpus.importStrategy}
             </p>
           )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {unlinkedItems.length > 0 && !batchRunning && (
+              <button
+                type="button"
+                onClick={importAllUnlinked}
+                className="inline-flex items-center justify-center rounded border border-amber-500/60 bg-amber-500/15 px-4 py-2 text-sm font-medium text-amber-100 transition-colors hover:bg-amber-500/25"
+              >
+                Import all unlinked ({unlinkedItems.length})
+              </button>
+            )}
+            {batchRunning && batchProgress && (
+              <>
+                <span className="inline-flex items-center gap-2 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+                  Importing {batchProgress.done + 1} of {batchProgress.total}
+                  {batchProgress.current ? `: ${batchProgress.current}` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={cancelBatch}
+                  className="inline-flex items-center rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-200 hover:bg-red-500/20"
+                >
+                  Cancel after current
+                </button>
+              </>
+            )}
+            {batchSummary && !batchRunning && (
+              <div className="w-full rounded border border-amber-700/30 bg-zinc-950/60 p-3 text-sm text-amber-100/80">
+                <div className="font-medium">
+                  Batch complete: {batchSummary.success} imported
+                  {batchSummary.failures.length > 0 ? `, ${batchSummary.failures.length} failed` : ''}.
+                </div>
+                {batchSummary.failures.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-red-300">
+                    {batchSummary.failures.map((f, idx) => (
+                      <li key={idx}>
+                        <span className="font-medium">{f.title}:</span> {f.error}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-6">
