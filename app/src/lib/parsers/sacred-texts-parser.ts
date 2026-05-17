@@ -1729,12 +1729,18 @@ function resolveUrl(baseUrl: string, relativeUrl: string): string {
   return resolved.toString();
 }
 
+// Sacred Texts subsections that contain a curated set of independently-imported
+// books, each with its own per-book index page (e.g. /bib/apo/bar.htm).
+// Used both for corpus-shell detection on /<section>/index.htm and for book-index
+// detection on /<section>/<basename>.htm (where basename has no 3-digit suffix).
+const SACRED_TEXTS_CURATED_SECTIONS = ['/chr/apo/', '/bib/apo/', '/bib/kjv/'] as const;
+
 function isApocryphaCorpusIndexUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     if (!parsed.hostname.toLowerCase().includes('sacred-texts.com')) return false;
     const path = parsed.pathname.replace(/\/+$/, '');
-    return path === '/chr/apo/index.htm' || path === '/bib/apo/index.htm';
+    return SACRED_TEXTS_CURATED_SECTIONS.some(section => path === `${section.replace(/\/$/, '')}/index.htm`);
   } catch {
     return false;
   }
@@ -1745,7 +1751,7 @@ function escapeRegex(value: string): string {
 }
 
 function getSacredTextsBookPrefix(url: string): string | null {
-  if (!isBibleApocryphaBookIndex(url)) return null;
+  if (!isSacredTextsBookIndex(url)) return null;
   try {
     const filename = new URL(url).pathname.split('/').pop() || '';
     const match = filename.match(/^([a-z0-9]+)\.htm$/i);
@@ -1755,24 +1761,126 @@ function getSacredTextsBookPrefix(url: string): string | null {
   }
 }
 
-function isBibleApocryphaBookIndex(url: string): boolean {
+function isSacredTextsBookIndex(url: string): boolean {
   try {
     const parsed = new URL(url);
     if (!parsed.hostname.toLowerCase().includes('sacred-texts.com')) return false;
     const path = parsed.pathname;
-    if (!/^\/bib\/apo\/[^/]+\.htm$/i.test(path)) return false;
     if (path.endsWith('/index.htm')) return false;
+    const matchedSection = SACRED_TEXTS_CURATED_SECTIONS.find(section => {
+      const pattern = new RegExp(`^${section.replace(/\//g, '\\/')}[^/]+\\.htm$`, 'i');
+      return pattern.test(path);
+    });
+    if (!matchedSection) return false;
     const filename = path.split('/').pop() || '';
-    // Chapter pages end with 3 digits before .htm (bar001.htm, es1016.htm).
-    // Book-index pages do not (bar.htm, es1.htm, ma2.htm).
+    // Chapter pages end with 3 digits before .htm (bar001.htm, gen001.htm).
+    // Book-index pages do not (bar.htm, gen.htm, sa1.htm).
     return !/\d{3}\.htm$/i.test(filename);
   } catch {
     return false;
   }
 }
 
+// Backwards-compatible alias for the previous narrower helper.
+const isBibleApocryphaBookIndex = isSacredTextsBookIndex;
+
 function getApocryphaCorpus(sourceUrl: string) {
   const path = new URL(sourceUrl).pathname.replace(/\/+$/, '');
+
+  if (path === '/bib/kjv/index.htm') {
+    return {
+      slug: 'kjv-bible',
+      title: 'The King James Bible',
+      metadataTitle: 'The King James Bible',
+      metadataDescription: 'The 1611 King James Version of the Bible, split into 39 Old Testament and 27 New Testament books for individual study.',
+      sourceUrl,
+      sourceNote: 'The KJV index at the Internet Sacred Text Archive lists each of the 66 books as its own multi-chapter document. Each entry below points to a book and imports as its own library item.',
+      importStrategy: 'Import this shell once, then import each book individually (or batch all unlinked) so each becomes a proper multi-chapter library item.',
+      groups: [
+        {
+          id: 'old-testament',
+          title: 'Old Testament',
+          description: 'The 39 books of the Hebrew Bible canon as received in the Protestant Old Testament. Sacred Texts retains Septuagint book numbering ("1 Kings" = 1 Samuel, "3 Kings" = 1 Kings) on its archive labels; titles here use the conventional Protestant names.',
+          items: [
+            { title: 'Genesis', sourceUrl: 'https://sacred-texts.com/bib/kjv/gen.htm' },
+            { title: 'Exodus', sourceUrl: 'https://sacred-texts.com/bib/kjv/exo.htm' },
+            { title: 'Leviticus', sourceUrl: 'https://sacred-texts.com/bib/kjv/lev.htm' },
+            { title: 'Numbers', sourceUrl: 'https://sacred-texts.com/bib/kjv/num.htm' },
+            { title: 'Deuteronomy', sourceUrl: 'https://sacred-texts.com/bib/kjv/deu.htm' },
+            { title: 'Joshua', sourceUrl: 'https://sacred-texts.com/bib/kjv/jos.htm' },
+            { title: 'Judges', sourceUrl: 'https://sacred-texts.com/bib/kjv/jdg.htm' },
+            { title: 'Ruth', sourceUrl: 'https://sacred-texts.com/bib/kjv/rut.htm' },
+            { title: '1 Samuel', sourceUrl: 'https://sacred-texts.com/bib/kjv/sa1.htm' },
+            { title: '2 Samuel', sourceUrl: 'https://sacred-texts.com/bib/kjv/sa2.htm' },
+            { title: '1 Kings', sourceUrl: 'https://sacred-texts.com/bib/kjv/kg1.htm' },
+            { title: '2 Kings', sourceUrl: 'https://sacred-texts.com/bib/kjv/kg2.htm' },
+            { title: '1 Chronicles', sourceUrl: 'https://sacred-texts.com/bib/kjv/ch1.htm' },
+            { title: '2 Chronicles', sourceUrl: 'https://sacred-texts.com/bib/kjv/ch2.htm' },
+            { title: 'Ezra', sourceUrl: 'https://sacred-texts.com/bib/kjv/ezr.htm' },
+            { title: 'Nehemiah', sourceUrl: 'https://sacred-texts.com/bib/kjv/neh.htm' },
+            { title: 'Esther', sourceUrl: 'https://sacred-texts.com/bib/kjv/est.htm' },
+            { title: 'Job', sourceUrl: 'https://sacred-texts.com/bib/kjv/job.htm' },
+            { title: 'Psalms', sourceUrl: 'https://sacred-texts.com/bib/kjv/psa.htm' },
+            { title: 'Proverbs', sourceUrl: 'https://sacred-texts.com/bib/kjv/pro.htm' },
+            { title: 'Ecclesiastes', sourceUrl: 'https://sacred-texts.com/bib/kjv/ecc.htm' },
+            { title: 'Song of Solomon', sourceUrl: 'https://sacred-texts.com/bib/kjv/sol.htm' },
+            { title: 'Isaiah', sourceUrl: 'https://sacred-texts.com/bib/kjv/isa.htm' },
+            { title: 'Jeremiah', sourceUrl: 'https://sacred-texts.com/bib/kjv/jer.htm' },
+            { title: 'Lamentations', sourceUrl: 'https://sacred-texts.com/bib/kjv/lam.htm' },
+            { title: 'Ezekiel', sourceUrl: 'https://sacred-texts.com/bib/kjv/eze.htm' },
+            { title: 'Daniel', sourceUrl: 'https://sacred-texts.com/bib/kjv/dan.htm' },
+            { title: 'Hosea', sourceUrl: 'https://sacred-texts.com/bib/kjv/hos.htm' },
+            { title: 'Joel', sourceUrl: 'https://sacred-texts.com/bib/kjv/joe.htm' },
+            { title: 'Amos', sourceUrl: 'https://sacred-texts.com/bib/kjv/amo.htm' },
+            { title: 'Obadiah', sourceUrl: 'https://sacred-texts.com/bib/kjv/oba.htm' },
+            { title: 'Jonah', sourceUrl: 'https://sacred-texts.com/bib/kjv/jon.htm' },
+            { title: 'Micah', sourceUrl: 'https://sacred-texts.com/bib/kjv/mic.htm' },
+            { title: 'Nahum', sourceUrl: 'https://sacred-texts.com/bib/kjv/nah.htm' },
+            { title: 'Habakkuk', sourceUrl: 'https://sacred-texts.com/bib/kjv/hab.htm' },
+            { title: 'Zephaniah', sourceUrl: 'https://sacred-texts.com/bib/kjv/zep.htm' },
+            { title: 'Haggai', sourceUrl: 'https://sacred-texts.com/bib/kjv/hag.htm' },
+            { title: 'Zechariah', sourceUrl: 'https://sacred-texts.com/bib/kjv/zac.htm' },
+            { title: 'Malachi', sourceUrl: 'https://sacred-texts.com/bib/kjv/mal.htm' },
+          ],
+        },
+        {
+          id: 'new-testament',
+          title: 'New Testament',
+          description: 'The 27 books of the New Testament canon: gospels, Acts, Pauline and general epistles, and the Apocalypse of John.',
+          items: [
+            { title: 'Matthew', sourceUrl: 'https://sacred-texts.com/bib/kjv/mat.htm' },
+            { title: 'Mark', sourceUrl: 'https://sacred-texts.com/bib/kjv/mar.htm' },
+            { title: 'Luke', sourceUrl: 'https://sacred-texts.com/bib/kjv/luk.htm' },
+            { title: 'John', sourceUrl: 'https://sacred-texts.com/bib/kjv/joh.htm' },
+            { title: 'Acts', sourceUrl: 'https://sacred-texts.com/bib/kjv/act.htm' },
+            { title: 'Romans', sourceUrl: 'https://sacred-texts.com/bib/kjv/rom.htm' },
+            { title: '1 Corinthians', sourceUrl: 'https://sacred-texts.com/bib/kjv/co1.htm' },
+            { title: '2 Corinthians', sourceUrl: 'https://sacred-texts.com/bib/kjv/co2.htm' },
+            { title: 'Galatians', sourceUrl: 'https://sacred-texts.com/bib/kjv/gal.htm' },
+            { title: 'Ephesians', sourceUrl: 'https://sacred-texts.com/bib/kjv/eph.htm' },
+            { title: 'Philippians', sourceUrl: 'https://sacred-texts.com/bib/kjv/phi.htm' },
+            { title: 'Colossians', sourceUrl: 'https://sacred-texts.com/bib/kjv/col.htm' },
+            { title: '1 Thessalonians', sourceUrl: 'https://sacred-texts.com/bib/kjv/th1.htm' },
+            { title: '2 Thessalonians', sourceUrl: 'https://sacred-texts.com/bib/kjv/th2.htm' },
+            { title: '1 Timothy', sourceUrl: 'https://sacred-texts.com/bib/kjv/ti1.htm' },
+            { title: '2 Timothy', sourceUrl: 'https://sacred-texts.com/bib/kjv/ti2.htm' },
+            { title: 'Titus', sourceUrl: 'https://sacred-texts.com/bib/kjv/tit.htm' },
+            { title: 'Philemon', sourceUrl: 'https://sacred-texts.com/bib/kjv/plm.htm' },
+            { title: 'Hebrews', sourceUrl: 'https://sacred-texts.com/bib/kjv/heb.htm' },
+            { title: 'James', sourceUrl: 'https://sacred-texts.com/bib/kjv/jam.htm' },
+            { title: '1 Peter', sourceUrl: 'https://sacred-texts.com/bib/kjv/pe1.htm' },
+            { title: '2 Peter', sourceUrl: 'https://sacred-texts.com/bib/kjv/pe2.htm' },
+            { title: '1 John', sourceUrl: 'https://sacred-texts.com/bib/kjv/jo1.htm' },
+            { title: '2 John', sourceUrl: 'https://sacred-texts.com/bib/kjv/jo2.htm' },
+            { title: '3 John', sourceUrl: 'https://sacred-texts.com/bib/kjv/jo3.htm' },
+            { title: 'Jude', sourceUrl: 'https://sacred-texts.com/bib/kjv/jde.htm' },
+            { title: 'Revelation', sourceUrl: 'https://sacred-texts.com/bib/kjv/rev.htm' },
+          ],
+        },
+      ],
+    };
+  }
+
   if (path === '/bib/apo/index.htm') {
     return {
       slug: 'deuterocanonical-bible-apocrypha',
