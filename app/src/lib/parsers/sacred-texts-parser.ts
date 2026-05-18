@@ -109,6 +109,8 @@ export async function parseWebText(
       return await parseSacredText(url, format);
     } else if (hostname === 'hermetic.com' || hostname.endsWith('.hermetic.com')) {
       return await parseHermeticLibraryText(url, format);
+    } else if (hostname === 'gutenberg.org' || hostname.endsWith('.gutenberg.org')) {
+      return await parseGutenbergText(url, format);
     } else {
       // Use generic parser for other websites
       return await parseGenericWebPage(url, format);
@@ -1528,6 +1530,193 @@ export async function parseGenericWebPage(
     console.error('Error parsing generic web page:', error);
     throw new Error(`Failed to parse web page: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+/**
+ * Parse a Project Gutenberg HTML page (gutenberg.org).
+ * Handles the canonical "<pre> header → body content → <pre> license footer" layout,
+ * strips the START/END boilerplate, drops the TOC and back-of-book index, and pulls
+ * Title/Author from the header block so the AI metadata step has clean input.
+ */
+export async function parseGutenbergText(
+  url: string,
+  format: 'html' | 'markdown' | 'plaintext' = 'html'
+): Promise<ParsedText> {
+  console.log('[parseGutenbergText] Parsing:', url);
+
+  // Direct fetch first; fall back to Puppeteer on network errors (some hosts
+  // refuse undici's default IPv6 path) or soft-block HTTP codes.
+  let html = '';
+  try {
+    const response = await fetch(url, {
+      headers: { ...COMMON_HEADERS, 'Sec-Fetch-Site': 'none' },
+    });
+    if (!response.ok) {
+      if (response.status === 403 || response.status === 429 || response.status === 401) {
+        console.warn(`[parseGutenbergText] Fetch blocked (HTTP ${response.status}), falling back to Puppeteer`);
+        html = await fetchWithPuppeteer(url);
+      } else {
+        throw new Error(`Failed to fetch Gutenberg page (HTTP ${response.status}): ${response.statusText}`);
+      }
+    } else {
+      html = await response.text();
+    }
+  } catch (fetchError) {
+    console.warn('[parseGutenbergText] Direct fetch failed, falling back to Puppeteer:', fetchError);
+    try {
+      html = await fetchWithPuppeteer(url);
+    } catch (puppeteerError) {
+      console.error('[parseGutenbergText] Puppeteer fallback also failed:', puppeteerError);
+      throw new Error(
+        `Failed to fetch Gutenberg page from ${url}: ${fetchError instanceof Error ? fetchError.message : 'Network error'}`
+      );
+    }
+  }
+
+  if (!html || html.trim().length === 0) {
+    throw new Error('Gutenberg page returned empty content');
+  }
+
+  const $ = cheerio.load(html);
+
+  // Grab header <pre> text BEFORE we strip it — that's where Title/Author live.
+  const headerText = $('pre').first().text() || '';
+  const metadata = extractGutenbergMetadata(url, $, headerText);
+
+  // Strip the Gutenberg boilerplate: header + END/license <pre>, plus standard noise.
+  $('pre').remove();
+  $('script, style, noscript, iframe, header, footer, nav, aside').remove();
+
+  // Drop the TOC ("Contents") and back-of-book index sections so they don't
+  // pollute chapter output. Common Gutenberg anchor names.
+  for (const anchor of ['contents', 'toc', 'bkindex', 'index']) {
+    removeSectionByAnchor($, anchor);
+  }
+
+  // Some Gutenberg books mark chapters with <p class="chapter">CHAPTER N</p>
+  // instead of heading tags. Promote those markers to <h3> so the heading-based
+  // splitter picks them up. Prefix with the current PART (when the book is
+  // divided into parts) so chapter titles stay unique across parts.
+  promoteGutenbergChapterMarkers($);
+
+  const bodyHtml = $('body').html() || '';
+  if (!bodyHtml.trim()) {
+    throw new Error('Gutenberg page had no body content after stripping boilerplate');
+  }
+
+  // Reuse the generic heading-based splitter — Gutenberg's <h2>/<h3> structure
+  // matches it cleanly once boilerplate is gone.
+  const chapters = extractSectionsFromGenericContent(bodyHtml, metadata.title, format)
+    .map(ch => ({ ...ch, title: ch.title.replace(/\s+/g, ' ').trim() }))
+    .filter(ch => {
+      // Drop any straggler title-page / dedication shells that survived splitting.
+      const t = ch.title.toLowerCase();
+      return t !== 'contents.' && t !== 'contents' && t !== 'index.' && t !== 'index';
+    });
+
+  const totalLength = chapters.reduce((sum, ch) => sum + ch.content.length, 0);
+  console.log(`[parseGutenbergText] Extracted ${chapters.length} chapters, total length: ${totalLength}`);
+
+  return {
+    metadata,
+    chapters,
+    format,
+    chapterCount: chapters.length,
+    totalLength,
+  };
+}
+
+/**
+ * Extract Title / Author / original-work year from the Gutenberg header <pre> block.
+ * Note: "Release Date" in the header is when the EBook was posted to Gutenberg, NOT
+ * when the work was written, so we deliberately leave `year` null and let the AI
+ * metadata pass (or the human override field) fill it.
+ */
+function extractGutenbergMetadata(
+  url: string,
+  $: cheerio.CheerioAPI,
+  headerText: string
+): ParsedTextMetadata {
+  let title = '';
+  let author: string | null = null;
+
+  const titleMatch = headerText.match(/^\s*Title:\s*(.+?)\s*$/m);
+  if (titleMatch) title = titleMatch[1].trim();
+  const authorMatch = headerText.match(/^\s*Author:\s*(.+?)\s*$/m);
+  if (authorMatch) author = authorMatch[1].trim();
+
+  if (!title) {
+    title = $('title').text().trim() || $('h1').first().text().trim() || 'Untitled';
+  }
+
+  let description: string | null =
+    $('meta[name="description"]').attr('content') ||
+    $('meta[property="og:description"]').attr('content') ||
+    null;
+  if (!description) {
+    const firstParagraph = $('p').first().text().trim();
+    if (firstParagraph.length > 50 && firstParagraph.length < 500) {
+      description = firstParagraph;
+    }
+  }
+
+  return {
+    title,
+    author,
+    year: null,
+    publisher: 'Project Gutenberg',
+    description,
+    sourceUrl: url,
+  };
+}
+
+/**
+ * Promote <p class="chapter"> markers to <h3> headings (used by some Gutenberg
+ * editions instead of real heading tags). Tracks the current PART so chapter
+ * titles in multi-part works don't collide ("PART ONE — CHAPTER 1" vs
+ * "PART TWO — CHAPTER 1").
+ */
+function promoteGutenbergChapterMarkers($: cheerio.CheerioAPI): void {
+  let currentPart: string | null = null;
+  $('body').children().each((_, el) => {
+    const $el = $(el);
+    const tag = ($el.prop('tagName') || '').toLowerCase();
+    const text = $el.text().replace(/\s+/g, ' ').trim();
+    if (/^h[1-6]$/.test(tag) && /^part\s+/i.test(text)) {
+      currentPart = text;
+      return;
+    }
+    if (tag === 'p' && $el.hasClass('chapter') && text) {
+      const title = currentPart ? `${currentPart} — ${text}` : text;
+      $el.replaceWith(`<h3>${escapeHtml(title)}</h3>`);
+    }
+  });
+}
+
+/**
+ * Remove a Gutenberg section identified by an <a name="..."> anchor inside a heading:
+ * removes the heading itself plus every following sibling up to (but not including)
+ * the next heading of equal or higher level.
+ */
+function removeSectionByAnchor($: cheerio.CheerioAPI, anchorName: string): void {
+  const anchor = $(`a[name="${anchorName}"]`).first();
+  if (anchor.length === 0) return;
+  const heading = anchor.closest('h1, h2, h3, h4, h5, h6');
+  if (heading.length === 0) return;
+  const headingLevel = parseInt((heading.prop('tagName') || 'H6').slice(1), 10);
+
+  let cur = heading.next();
+  while (cur.length > 0) {
+    const tag = (cur.prop('tagName') || '').toLowerCase();
+    if (/^h[1-6]$/.test(tag)) {
+      const lvl = parseInt(tag.slice(1), 10);
+      if (lvl <= headingLevel) break;
+    }
+    const next = cur.next();
+    cur.remove();
+    cur = next;
+  }
+  heading.remove();
 }
 
 /**

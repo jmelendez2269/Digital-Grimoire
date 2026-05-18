@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, memo } from 'react';
 import { Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatLensName, LENS_DESCRIPTIONS } from '@/lib/utils/formatting';
+import { getLensColorClasses } from '@/lib/utils/lens-colors';
 
 interface FilterOptions {
   domains: string[];
@@ -317,20 +318,24 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
                       options.allLenses.map((lens) => {
                         const lensDisplay = formatLensName(lens);
                         const lensDescription = LENS_DESCRIPTIONS[lens];
+                        const lensColor = getLensColorClasses(lens);
 
                         return (
                           <label
                             key={lens}
-                            className="flex items-start gap-3 px-3 py-3 hover:bg-zinc-700/50 cursor-pointer transition-colors border-b border-amber-900/10 last:border-0"
+                            className={`flex items-start gap-3 px-3 py-3 ${lensColor.hoverBg} cursor-pointer transition-colors border-b border-amber-900/10 last:border-0`}
                           >
                             <input
                               type="checkbox"
                               checked={values.lenses.includes(lens)}
                               onChange={() => handleLensToggle(lens)}
-                              className="w-4 h-4 mt-0.5 rounded border-amber-900/20 bg-zinc-700 text-amber-600 focus:ring-amber-600 focus:ring-offset-0"
+                              className={`w-4 h-4 mt-0.5 rounded border-amber-900/20 bg-zinc-700 ${lensColor.accent} ${lensColor.ring} focus:ring-offset-0`}
                             />
                             <div className="flex-1">
-                              <div className="text-sm font-medium text-amber-100">{lensDisplay}</div>
+                              <div className="flex items-center gap-2 text-sm font-medium text-amber-100">
+                                <span className={`h-2 w-2 rounded-full ${lensColor.dot}`} />
+                                <span>{lensDisplay}</span>
+                              </div>
                               <div className="text-xs text-amber-100/50 mt-0.5">{lensDescription}</div>
                             </div>
                           </label>
@@ -349,21 +354,25 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
             {/* Selected Lenses */}
             {values.lenses.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {values.lenses.map((lens) => (
+                {values.lenses.map((lens) => {
+                  const lensColor = getLensColorClasses(lens);
+
+                  return (
                   <span
                     key={lens}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-amber-600/10 text-amber-400 rounded-full text-xs font-medium border border-amber-600/20"
+                    className={`inline-flex items-center gap-1 px-2 py-1 ${lensColor.bg} ${lensColor.text} rounded-full text-xs font-medium border ${lensColor.border}`}
                   >
                     {formatLensName(lens)}
                     <button
                       onClick={() => handleLensToggle(lens)}
                       aria-label={`Remove ${formatLensName(lens)}`}
-                      className="hover:bg-amber-600/20 rounded-full p-0.5 transition-colors"
+                      className={`${lensColor.hoverBg} rounded-full p-0.5 transition-colors`}
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

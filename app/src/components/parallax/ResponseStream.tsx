@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { Copy, Check, Link2, ChevronDown, ChevronUp, BookOpen, Sparkles, Loader2, FileText, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getAllLenses, getActiveLenses } from '@/lib/parallax/lenses';
 import { LensWeights } from '@/lib/parallax/types';
+import { getLensColorClasses, getLensColorStyle } from '@/lib/utils/lens-colors';
 import ExpandableLensCard from './ExpandableLensCard';
 import SourceCard from './SourceCard';
 import ParallaxLoader from '@/components/ui/ParallaxLoader';
@@ -123,6 +125,7 @@ export default function ResponseStream({
         const weight = lensWeights[lens.id as keyof LensWeights] || 0;
         const barSize = Math.max(1, Math.round((weight / maxWeight) * maxBarLength));
         return {
+          id: lens.id,
           abbrev: lensAbbrev[lens.name] || lens.name.substring(0, 4),
           weight,
           barSize
@@ -780,9 +783,9 @@ export default function ResponseStream({
             <div className="px-4 py-4 border-t border-cyan-500/20 space-y-2.5">
               {getLensWeightBars(lensWeights).map((lens, idx) => (
                 <div key={idx} className="flex items-center gap-3 text-sm">
-                  <span className="text-amber-100/90 w-12 text-left font-medium">{lens.abbrev}</span>
+                  <span className={`w-12 text-left font-medium ${getLensColorClasses(lens.id).text}`}>{lens.abbrev}</span>
                   <div className="flex-1 flex items-center min-w-0">
-                    <span className="text-cyan-400 font-mono">{'â–ˆ'.repeat(lens.barSize)}</span>
+                    <span className="font-mono" style={{ color: getLensColorStyle(lens.id).hex }}>{'â–ˆ'.repeat(lens.barSize)}</span>
                     <span className="text-amber-100/30 font-mono">{'â–‘'.repeat(20 - lens.barSize)}</span>
                   </div>
                   <span className="text-amber-100/80 w-10 text-right font-medium">{lens.weight}</span>
@@ -836,12 +839,17 @@ export default function ResponseStream({
           </h3>
           {response.responses && response.responses.length > 0 ? (
             // Show full responses if already loaded
-            response.responses.map((lensResponse, idx) => (
+            response.responses.map((lensResponse, idx) => {
+              const lensColor = getLensColorClasses(lensResponse.lens || lensResponse.lensName);
+              const lensStyle = getLensColorStyle(lensResponse.lens || lensResponse.lensName);
+
+              return (
               <div
                 key={idx}
-                className="bg-zinc-900/30 border border-cyan-500/20 rounded-xl p-6"
+                className={`bg-zinc-900/30 border ${lensColor.border} rounded-xl p-6 shadow-[0_0_24px_var(--lens-glow)]`}
+                style={{ '--lens-glow': lensStyle.glow } as CSSProperties}
               >
-                <h3 className="text-xl font-bold text-cyan-400 mb-4">
+                <h3 className={`text-xl font-bold ${lensColor.text} mb-4`}>
                   {lensResponse.lensName} Perspective
                 </h3>
                 <div className="prose prose-invert max-w-none">
@@ -853,7 +861,7 @@ export default function ResponseStream({
                 {lensResponse.sources.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-amber-900/20">
                     <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      <Sparkles className={`w-4 h-4 ${lensColor.text}`} />
                       <p className="text-sm font-medium text-amber-100/80">
                         Sources ({lensResponse.sources.length})
                       </p>
@@ -870,7 +878,8 @@ export default function ResponseStream({
                   </div>
                 )}
               </div>
-            ))
+              );
+            })
           ) : (
             // Show expandable placeholders if not loaded yet
             lenses

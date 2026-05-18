@@ -1,15 +1,15 @@
 # Course Books Missing from Library
 
-_Generated 2026-05-08T15:39:05.013Z_
+_Generated 2026-05-13T16:48:50.461Z_
 
 ## Summary
 
 - Courses scanned: **19**
 - Library texts: **106**
 - Total course readings: **302**
-- Matched to a library text: **204**
-- Missing readings (occurrences): **98**
-- Unique missing titles: **64**
+- Matched to a library text: **207**
+- Missing readings (occurrences): **95**
+- Unique missing titles: **62**
 - Courses with at least one missing book: **19**
 
 Match logic mirrors `app/src/lib/courses/match-course-texts.ts` (fuzzy title + optional author check, threshold ≥ 60).
@@ -35,7 +35,6 @@ Match logic mirrors `app/src/lib/courses/match-course-texts.ts` (fuzzy title + o
 | The Book of the City of Ladies | Christine de Pizan | 2 | — |
 | The Chemical Wedding of Christian Rosenkreutz | — | 2 | — |
 | The Egyptian Book of the Dead | — | 2 | — |
-| The Elementary Forms of Religious Life | — | 2 | — |
 | The Guide for the Perplexed | T117 | 2 | — |
 | The New Testament | Paul's Letters | 2 | — |
 | The Tao Te Ching | — | 2 | — |
@@ -46,7 +45,6 @@ Match logic mirrors `app/src/lib/courses/match-course-texts.ts` (fuzzy title + o
 | Autobiography of Madame Guyon | T137 | 1 | — |
 | E. A. Wallis Budge | — | 1 | — |
 | Edward Tylor | Primitive Culture, Volume I | 1 | — |
-| Émile Durkheim | — | 1 | — |
 | Franz Boas | Tsimshian Mythology, Introduction | 1 | — |
 | Isis Unveiled, Volume 1 | — | 1 | — |
 | James Mooney | The Ghost | 1 | — |
@@ -89,34 +87,6 @@ Match logic mirrors `app/src/lib/courses/match-course-texts.ts` (fuzzy title + o
 
 ## Missing by Course
 
-### Reading the Colonizer's Record
-
-Slug: `c15-reading-the-colonizers-record` · Missing **9** of 11 readings
-
-- **Edward Tylor** — _Primitive Culture, Volume I_
-- **Émile Durkheim** — (The Elementary Forms of Religious Life, Introduction and Book I, Chapter 1)
-- **Franz Boas** — _Tsimshian Mythology, Introduction_
-- **James Mooney** — _The Ghost_
-- **Robert Sutherland Rattray** — (Ashanti, Chapters 1)
-- **Washington Matthews** — _Navaho Legends, Preface and Opening Legends_
-- **Alice Fletcher and Francis La Flesche** — (The Omaha Tribe, Introduction and selected sections)
-- **Lewis Spence** — _The Popol Vuh: The Mythic and Heroic Sagas of the Kichés of Central America_
-- **E. A. Wallis Budge** — (Kebra Nagast (The Glory of Kings), Introduction and selected chapters)
-
-### Symbol, Myth, and Psychotechnology
-
-Slug: `c02-symbol-myth-and-psychotechnology` · Missing **9** of 25 readings
-
-- **The Popol Vuh** — _Creation Narrative_ — (Part I)
-- **I Ching** — _The Receptive_ — (Introduction and Hexagrams 1 (The Creative) and 2)
-- **Sepher Yetzirah** — _Complete Text_
-- **Harmonices Mundi Book V** — (Johannes Kepler, Chapters on Planetary Harmonics)
-- **The Chemical Wedding of Christian Rosenkreutz** — (Johann Valentin Andreae, Days 1)
-- **Magic White and Black** — (Franz Hartmann, Chapters on Sympathetic Magic and the Astral Plane)
-- **Primitive Culture Volume 1** — (Edward Burnett Tylor, Chapters on Animism and Survivals)
-- **Thus Spoke Zarathustra** — _Friedrich Nietzsche, Prologue and "On the Three Metamorphoses"_ — possibly → `Thus Spake Zarathustra: A Book for All and None`
-- **The Elementary Forms of Religious Life** — (Émile Durkheim, Part II Introduction + Selected Chapters on Totemic Symbols)
-
 ### The Women Mystics
 
 Slug: `c11-the-women-mystics` · Missing **9** of 15 readings
@@ -130,6 +100,32 @@ Slug: `c11-the-women-mystics` · Missing **9** of 15 readings
 - **The Life of Teresa of Ávila** — _T038_
 - **Autobiography of Madame Guyon** — _T137_
 - **The Perfect Way** — _Anna Kingsford and Edward Maitland_ — (T140)
+
+### Reading the Colonizer's Record
+
+Slug: `c15-reading-the-colonizers-record` · Missing **8** of 11 readings
+
+- **Edward Tylor** — _Primitive Culture, Volume I_
+- **Franz Boas** — _Tsimshian Mythology, Introduction_
+- **James Mooney** — _The Ghost_
+- **Robert Sutherland Rattray** — (Ashanti, Chapters 1)
+- **Washington Matthews** — _Navaho Legends, Preface and Opening Legends_
+- **Alice Fletcher and Francis La Flesche** — (The Omaha Tribe, Introduction and selected sections)
+- **Lewis Spence** — _The Popol Vuh: The Mythic and Heroic Sagas of the Kichés of Central America_
+- **E. A. Wallis Budge** — (Kebra Nagast (The Glory of Kings), Introduction and selected chapters)
+
+### Symbol, Myth, and Psychotechnology
+
+Slug: `c02-symbol-myth-and-psychotechnology` · Missing **8** of 25 readings
+
+- **The Popol Vuh** — _Creation Narrative_ — (Part I)
+- **I Ching** — _The Receptive_ — (Introduction and Hexagrams 1 (The Creative) and 2)
+- **Sepher Yetzirah** — _Complete Text_
+- **Harmonices Mundi Book V** — (Johannes Kepler, Chapters on Planetary Harmonics)
+- **The Chemical Wedding of Christian Rosenkreutz** — (Johann Valentin Andreae, Days 1)
+- **Magic White and Black** — (Franz Hartmann, Chapters on Sympathetic Magic and the Astral Plane)
+- **Primitive Culture Volume 1** — (Edward Burnett Tylor, Chapters on Animism and Survivals)
+- **Thus Spoke Zarathustra** — _Friedrich Nietzsche, Prologue and "On the Three Metamorphoses"_ — possibly → `Thus Spake Zarathustra: A Book for All and None`
 
 ### Ethics Without Absolutes
 
@@ -188,16 +184,6 @@ Slug: `c09-the-wisdom-of-the-east` · Missing **6** of 16 readings
 - **The Works of Mencius** — _Trans. James Legge_ — (T126)
 - **The I Ching** — _Anonymous_ — (T042)
 
-### Correspondence, Analogy, and Hidden Order
-
-Slug: `c03-correspondence-analogy-and-hidden-order` · Missing **5** of 22 readings
-
-- **The Elementary Forms of Religious Life** — (Émile Durkheim, Introduction and Book I)
-- **I Ching** — _Anonymous_ — (with Jung's foreword to the Wilhelm/Baynes translation)
-- **The World as Will and Representation** — _§§30–36_ — (Arthur Schopenhauer, Volume I, Book III)
-- **Tertium Organum** — (P.D. Ouspensky, Chapters 1)
-- **Harmonices Mundi Book V** — _Johannes Kepler_ — possibly → `The Harmony of the World (Harmonice Mundi)`
-
 ### The Map Is Not the Territory
 
 Slug: `c05-the-map-is-not-the-territory` · Missing **5** of 21 readings
@@ -207,6 +193,15 @@ Slug: `c05-the-map-is-not-the-territory` · Missing **5** of 21 readings
 - **Zhuangzi** — (Chapters 2 and 3)
 - **Creative Evolution** — _opening_ — (Henri Bergson, Introduction and Chapter 1)
 - **Tertium Organum** — (P.D. Ouspensky, Chapters 1)
+
+### Correspondence, Analogy, and Hidden Order
+
+Slug: `c03-correspondence-analogy-and-hidden-order` · Missing **4** of 22 readings
+
+- **I Ching** — _Anonymous_ — (with Jung's foreword to the Wilhelm/Baynes translation)
+- **The World as Will and Representation** — _§§30–36_ — (Arthur Schopenhauer, Volume I, Book III)
+- **Tertium Organum** — (P.D. Ouspensky, Chapters 1)
+- **Harmonices Mundi Book V** — _Johannes Kepler_ — possibly → `The Harmony of the World (Harmonice Mundi)`
 
 ### Islamic Thought
 

@@ -28,6 +28,14 @@ function normalize(value) {
     .trim();
 }
 
+const TITLE_STOPWORDS = new Set(['the', 'a', 'an', 'of', 'and']);
+
+function meaningfulTitleWords(value) {
+  return normalize(value)
+    .split(' ')
+    .filter(word => word && !TITLE_STOPWORDS.has(word));
+}
+
 function stripLeadingArticle(v) {
   return v.replace(/^(the|a|an)\s+/i, '').trim();
 }
@@ -75,6 +83,13 @@ function scoreMatch(candidate, text) {
     else if (tTitle.startsWith(v)) score += 80;
     else if (tTitle.includes(v)) score += 65;
     else if (v.includes(tTitle)) score += 55;
+
+    const tMeaningful = meaningfulTitleWords(text.title).join(' ');
+    const vMeaningful = meaningfulTitleWords(variant).join(' ');
+    if (tMeaningful && tMeaningful === vMeaningful) score += 95;
+    else if (tMeaningful.includes(vMeaningful)) score += 75;
+    else if (vMeaningful.includes(tMeaningful)) score += 60;
+
     const words = v.split(' ').filter(Boolean);
     score += words.filter(w => tTitle.includes(w)).length * 4;
     if (cAuthor && tAuthor) {

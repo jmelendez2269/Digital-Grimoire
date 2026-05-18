@@ -8,6 +8,8 @@ import { DocumentMetadata } from '@/lib/claude-metadata';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { compressPDF, shouldCompressPDF, formatFileSize as formatFileSizeUtil } from '@/lib/utils/pdf-compress';
+import { formatLensName } from '@/lib/utils/formatting';
+import { getLensColorClasses } from '@/lib/utils/lens-colors';
 
 interface SimilarDocument {
   id: string;
@@ -1275,14 +1277,18 @@ export default function AdminUploadPage() {
                             <div>
                               <p className="text-xs text-amber-100/60 mb-2">Convergence Machine Lenses</p>
                               <div className="flex flex-wrap gap-2">
-                                {uploadFile.lenses.map((lens, index) => (
+                                {uploadFile.lenses.map((lens, index) => {
+                                  const lensColor = getLensColorClasses(lens);
+
+                                  return (
                                   <span
                                     key={index}
-                                    className="px-3 py-1.5 bg-amber-600/20 border border-amber-600/40 rounded-md text-xs text-amber-100 font-medium"
+                                    className={`px-3 py-1.5 ${lensColor.bg} border ${lensColor.border} rounded-md text-xs ${lensColor.text} font-medium`}
                                   >
-                                    {lens.replace(/_/g, ' ')}
+                                    {formatLensName(lens)}
                                   </span>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

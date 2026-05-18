@@ -88,6 +88,7 @@ export async function POST(request: Request) {
       chapterCount: parsedText.chapterCount,
       totalLength: parsedText.totalLength,
       parsedAt: new Date().toISOString(),
+      ...(parsedText.extraMetadata || {}),
     };
 
     const { data: updatedDocument, error: updateError } = await supabase

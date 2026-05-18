@@ -92,6 +92,15 @@ export interface CourseContent {
   mode?: string;
   curator_note_public?: string;
   tone_safety?: string;
+  // Phase 2: course family taxonomy (see docs/planning/course_template.md)
+  course_family?: string;
+  track_slug?: string;
+  track_order?: number;
+  recommended_level?: string;
+  entry_point?: boolean;
+  prerequisites?: string[];
+  related_course_slugs?: string[];
+  multi_family?: boolean;
   key_tensions: KeyTension[];
   completion_pathways: CompletionPathway[];
   weeks: CourseWeek[];
@@ -145,8 +154,60 @@ function mapCourseType(arc: string): 'foundational' | 'theme' | 'rotation' {
   return 'foundational';
 }
 
+function parseMetadataBoolean(raw: string | undefined): boolean | undefined {
+  if (raw === undefined) return undefined;
+  const value = raw.trim().toLowerCase();
+  if (!value) return undefined;
+  if (['true', 'yes', '1', 'y'].includes(value)) return true;
+  if (['false', 'no', '0', 'n'].includes(value)) return false;
+  return undefined;
+}
+
+function parseMetadataStringList(raw: string | undefined): string[] | undefined {
+  if (raw === undefined) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  // Accept JSON-like array syntax: ["a", "b"] — fall through to comma split if it fails
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.map((v) => String(v).trim()).filter(Boolean);
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  return trimmed
+    .replace(/^\[|\]$/g, '')
+    .split(/[,;]/)
+    .map((v) => v.replace(/^['"]|['"]$/g, '').trim())
+    .filter(Boolean);
+}
+
 function stripItalics(text: string): string {
   return text.replace(/\*/g, '').trim();
+}
+
+function looksLikePersonName(value: string): boolean {
+  const normalized = value
+    .toLowerCase()
+    .replace(/[.'"]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalized || /^(the|a|an)\s+/.test(normalized)) return false;
+  if (/\b(book|culture|religion|mythology|legends|chapter|volume|part|text|sutra|veda|bible)\b/.test(normalized)) {
+    return false;
+  }
+
+  const words = normalized.split(' ').filter(Boolean);
+  return words.length >= 2 && words.length <= 8;
+}
+
+function looksLikeWorkReference(value: string): boolean {
+  const normalized = value.toLowerCase();
+  return /\b(book|culture|religion|mythology|legends|chapter|volume|part|text|sutra|veda|bible|animism)\b/.test(normalized);
 }
 
 function splitIntoSections(markdown: string): Record<string, string> {
@@ -202,14 +263,32 @@ function parsePipeTable(text: string): Record<string, string>[] {
   return rows;
 }
 
+// Map human-friendly metadata labels to the canonical snake_case keys the
+// parser uses internally. Keeps the markdown template readable while letting
+// the parser keep one shape.
+const METADATA_KEY_ALIASES: Record<string, string> = {
+  family: 'course_family',
+  course_family_slug: 'course_family',
+  track_position: 'track_order',
+  track_index: 'track_order',
+  entry_point_course: 'entry_point',
+  recommended_level_label: 'recommended_level',
+  prereqs: 'prerequisites',
+  related_courses: 'related_course_slugs',
+  related_courses_slugs: 'related_course_slugs',
+  length_modules: 'length_weeks',
+};
+
 function parseMetadataTable(section: string): Record<string, string> {
   const result: Record<string, string> = {};
   const regex = /^\|\s*\*?\*?([^|]+?)\*?\*?\s*\|\s*([^|]+?)\s*\|/gm;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(section)) !== null) {
-    const key = match[1].replace(/\*\*/g, '').trim().toLowerCase().replace(/\s+/g, '_');
-    const value = match[2].replace(/\*\*/g, '').trim();
+    let key = match[1].replace(/\*\*/g, '').trim().toLowerCase().replace(/\s+/g, '_');
+    // Strip wrapping backticks so values like `mythic-imagination` round-trip clean
+    let value = match[2].replace(/\*\*/g, '').trim().replace(/^`+|`+$/g, '').trim();
+    if (METADATA_KEY_ALIASES[key]) key = METADATA_KEY_ALIASES[key];
     if (key && key !== 'field' && !key.startsWith('-')) {
       result[key] = value;
     }
@@ -410,8 +489,12 @@ function parseReadingTitle(headerLine: string): {
   if (dashParts.length > 1) {
     const partBIsSection = /book|chapter|part|verse|section|tractate|\d/i.test(partB);
     const partAIsKnownAuthor = /plato|lao tzu|marcus aurelius|descartes|bacon|rumi|eckhart/i.test(partA);
+    const partALooksLikeAuthor = partAIsKnownAuthor || looksLikePersonName(partA);
 
-    if (partAIsKnownAuthor && !partBIsSection) {
+    if (partALooksLikeAuthor && looksLikeWorkReference(partB)) {
+      author = partA;
+      title = partB;
+    } else if (partAIsKnownAuthor && !partBIsSection) {
       author = partA;
       title = partB;
     } else if (partAIsKnownAuthor && partB.includes(',')) {
@@ -430,7 +513,10 @@ function parseReadingTitle(headerLine: string): {
   }
 
   if (extra) {
-    if (!author && extra.length < 30) {
+    if (!author && looksLikePersonName(title) && looksLikeWorkReference(extra)) {
+      author = title;
+      title = extra;
+    } else if (!author && extra.length < 30) {
       author = extra;
     } else if (!section) {
       section = extra;
@@ -711,12 +797,17 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     const metadataSection = getSection(sections, 'COURSE METADATA', 'Course Metadata');
     const metadata = parseMetadataTable(metadataSection);
 
-    if (!metadata.arc) {
+    // Arc is only meaningful for the core spine. Expansion families (foundation-doors,
+    // esoteric-practice, visual-mathematical) use track_slug/track_order for ordering
+    // instead, so don't warn or auto-default when one of those is set.
+    const familyHint = metadata.course_family?.trim().toLowerCase();
+    const isExpansionFamily = familyHint && familyHint !== 'core-spine';
+    if (!metadata.arc && !isExpansionFamily) {
       warnings.push('No Arc field found in metadata - defaulting to "Foundational Synthesis"');
       metadata.arc = 'Foundational Synthesis';
     }
 
-    const arc = metadata.arc || 'Foundational Synthesis';
+    const arc = metadata.arc || '';
     const arcPosition = parseInt(metadata.arc_position || '1', 10) || 1;
     const durationWeeks = parseInt((metadata.length || metadata.length_weeks || '8').match(/\d+/)?.[0] || '8', 10);
     const levelStr = metadata.level || 'foundational';
@@ -725,6 +816,15 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     const coreQuestion = metadata.core_question || '';
     const orientation = metadata.orientation;
     const mode = metadata.mode;
+    const courseFamily = metadata.course_family?.trim() || undefined;
+    const trackSlug = metadata.track_slug?.trim() || undefined;
+    const trackOrderRaw = metadata.track_order;
+    const trackOrder = trackOrderRaw ? parseInt(trackOrderRaw, 10) : undefined;
+    const recommendedLevel = metadata.recommended_level?.trim() || undefined;
+    const entryPoint = parseMetadataBoolean(metadata.entry_point);
+    const prerequisites = parseMetadataStringList(metadata.prerequisites);
+    const relatedCourseSlugs = parseMetadataStringList(metadata.related_course_slugs);
+    const multiFamily = parseMetadataBoolean(metadata.multi_family);
 
     const premiseSection = getSection(sections, 'COURSE PREMISE', 'Course Premise');
     const premise = premiseSection.trim();
@@ -767,7 +867,8 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     const weeks: CourseWeek[] = [];
 
     for (const [heading, body] of Object.entries(sections)) {
-      const weekMatch = heading.match(/^WEEK\s+(\d+)\s*[—–-]\s*(.+)$/i);
+      // Accept either WEEK (core spine) or MODULE (expansion families like Foundation Doors)
+      const weekMatch = heading.match(/^(?:WEEK|MODULE)\s+(\d+)\s*[—–-]\s*(.+)$/i);
       if (!weekMatch) continue;
 
       const weekNumber = parseInt(weekMatch[1], 10);
@@ -783,7 +884,7 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     }
 
     if (weeks.length === 0) {
-      return { success: false, error: 'No weekly sections found (expected: ## WEEK N - Title)', warnings };
+      return { success: false, error: 'No weekly sections found (expected: ## WEEK N - Title or ## MODULE N - Title)', warnings };
     }
 
     weeks.sort((a, b) => a.week_number - b.week_number);
@@ -802,6 +903,14 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     if (mode) content.mode = mode;
     if (curator_note_public) content.curator_note_public = curator_note_public;
     if (tone_safety) content.tone_safety = tone_safety;
+    if (courseFamily) content.course_family = courseFamily;
+    if (trackSlug) content.track_slug = trackSlug;
+    if (typeof trackOrder === 'number' && !Number.isNaN(trackOrder)) content.track_order = trackOrder;
+    if (recommendedLevel) content.recommended_level = recommendedLevel;
+    if (entryPoint !== undefined) content.entry_point = entryPoint;
+    if (prerequisites && prerequisites.length > 0) content.prerequisites = prerequisites;
+    if (relatedCourseSlugs && relatedCourseSlugs.length > 0) content.related_course_slugs = relatedCourseSlugs;
+    if (multiFamily !== undefined) content.multi_family = multiFamily;
 
     const slug = `${courseIdTag.toLowerCase()}-${slugify(courseTitle)}`;
 

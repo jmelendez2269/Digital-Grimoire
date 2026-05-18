@@ -18,6 +18,7 @@ import {
   Stethoscope,
   TrendingUp,
   Cpu,
+  ClipboardCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -168,6 +169,14 @@ export default function AdminDashboardHub() {
       icon: <Cpu className="w-8 h-8 text-teal-400" />,
       href: "/admin/model-monitor",
       color: "teal",
+      available: true,
+    },
+    {
+      title: "Curator Note Review",
+      description: "Approve, reject, or refine AI-drafted curator notes side-by-side with the live notes they would replace.",
+      icon: <ClipboardCheck className="w-8 h-8 text-amber-400" />,
+      href: "/admin/curator-notes",
+      color: "amber",
       available: true,
     },
   ];

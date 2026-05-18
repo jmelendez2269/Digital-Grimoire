@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logApiUsage } from '@/lib/usage-tracker';
 import { aiOrchestrator } from '@/lib/ai/ai-orchestrator';
+import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
 
 /**
  * POST /api/ai/claude
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     const aiResponse = await aiOrchestrator.chatComplete(messages, {
-      model: 'claude-3-5-sonnet-latest',
+      model: getDefaultOpenRouterModel(),
     });
 
     // Log API usage

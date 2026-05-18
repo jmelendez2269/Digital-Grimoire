@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
+import { formatLensName } from '@/lib/utils/formatting';
+import { getLensColorClasses } from '@/lib/utils/lens-colors';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -438,17 +440,23 @@ function CourseLearnContent() {
                                         </p>
                                     )}
                                     {currentWeek.key_tension && (
-                                        <p className="text-sm text-zinc-500">
-                                            <span className="text-zinc-600">Key tension:</span> {currentWeek.key_tension}
-                                        </p>
+                                        <div className="mt-3 inline-flex max-w-4xl items-center gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-100/90 shadow-[0_0_18px_rgba(245,158,11,0.08)]">
+                                            <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400">Key tension</span>
+                                            <span className="h-1 w-1 rounded-full bg-amber-400/70" />
+                                            <span className="text-amber-100/80">{currentWeek.key_tension}</span>
+                                        </div>
                                     )}
                                     {currentWeek.lens_focus && currentWeek.lens_focus.length > 0 && (
                                         <div className="flex flex-wrap gap-2 mt-3">
-                                            {currentWeek.lens_focus.map((lens, i) => (
-                                                <span key={i} className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border border-white/10 bg-white/5 rounded text-zinc-400">
-                                                    {lens}
+                                            {currentWeek.lens_focus.map((lens, i) => {
+                                                const lensColor = getLensColorClasses(lens);
+
+                                                return (
+                                                <span key={i} className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider border ${lensColor.border} ${lensColor.bg} rounded ${lensColor.text}`}>
+                                                    {formatLensName(lens)}
                                                 </span>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
@@ -560,6 +568,11 @@ function ReadingsSection({
     readingProgress: Record<string, boolean>;
     onToggleComplete: (textId: string) => void;
 }) {
+    const handleReadingCardClick = (textId?: string) => {
+        if (!textId) return;
+        window.location.href = `/library/${textId}`;
+    };
+
     return (
         <div>
             <h3 className="flex items-center gap-2 text-sm font-mono text-zinc-500 uppercase tracking-wider mb-6">
@@ -570,10 +583,22 @@ function ReadingsSection({
             <div className="grid gap-4">
                 {readings?.map((reading, idx) => {
                     const isCompleted = reading.text_id ? !!readingProgress[reading.text_id] : false;
+                    const libraryHref = reading.text_id ? `/library/${reading.text_id}` : undefined;
+
                     return (
                         <div
                             key={idx}
-                            className={`group relative border rounded-lg p-6 transition-all ${isCompleted
+                            role={libraryHref ? 'link' : undefined}
+                            tabIndex={libraryHref ? 0 : undefined}
+                            onClick={() => handleReadingCardClick(reading.text_id)}
+                            onKeyDown={(event) => {
+                                if (!libraryHref) return;
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    handleReadingCardClick(reading.text_id);
+                                }
+                            }}
+                            className={`group relative border rounded-lg p-6 transition-all ${libraryHref ? 'cursor-pointer' : ''} ${isCompleted
                                 ? 'bg-emerald-950/10 border-emerald-500/20 hover:bg-emerald-950/20'
                                 : 'bg-zinc-900/30 border-white/5 hover:border-amber-500/30 hover:bg-zinc-900/50'
                                 }`}
@@ -585,10 +610,10 @@ function ReadingsSection({
                                         {reading.title}
                                     </h4>
                                     {reading.author && (
-                                        <p className="text-sm text-zinc-500 mb-1">{reading.author}</p>
+                                        <p className="text-sm text-amber-300/80 mb-1 font-medium">{reading.author}</p>
                                     )}
                                     {reading.section && (
-                                        <p className="text-xs text-zinc-600 font-mono">{reading.section}</p>
+                                        <p className="inline-flex rounded border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300/85 font-mono">{reading.section}</p>
                                     )}
                                     {reading.selection_rationale && (
                                         <p className="text-sm text-zinc-400 italic mt-2 opacity-70">
@@ -600,21 +625,35 @@ function ReadingsSection({
                                             &ldquo;{reading.notes}&rdquo;
                                         </p>
                                     )}
-                                    {reading.text_id && (
+                                    {libraryHref && (
                                         <div className="mt-4 flex gap-3">
                                             <Link
-                                                href={`/library?text=${reading.text_id}`}
-                                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded text-sm text-zinc-300 transition-colors"
+                                                href={libraryHref}
+                                                onClick={(event) => event.stopPropagation()}
+                                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 rounded text-sm text-amber-200 transition-colors"
                                             >
                                                 <BookOpen className="w-3.5 h-3.5" />
-                                                Open in Library
+                                                Open Book
+                                            </Link>
+                                            <Link
+                                                href={libraryHref}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(event) => event.stopPropagation()}
+                                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/25 rounded text-sm text-cyan-200 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                                New Tab
                                             </Link>
                                         </div>
                                     )}
                                 </div>
 
                                 <button
-                                    onClick={() => reading.text_id && onToggleComplete(reading.text_id)}
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        reading.text_id && onToggleComplete(reading.text_id);
+                                    }}
                                     className={`transition-all duration-300 ${isCompleted
                                         ? 'text-emerald-500 hover:text-emerald-400 scale-110'
                                         : 'text-zinc-600 hover:text-emerald-500'

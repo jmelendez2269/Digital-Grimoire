@@ -1,11 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import OpenAI from 'openai';
 import { logMetadataExtractionUsage } from '@/lib/usage-tracker';
+import { getDefaultOpenRouterMetadataModel, getOpenRouterClient } from '@/lib/ai/openrouter-client';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const MAX_ANALYSIS_CHARS = 10000;
+
+function appendPart(parts: string[], label: string, value: unknown) {
+  if (typeof value === 'string' && value.trim()) {
+    parts.push(`${label}: ${value.trim()}`);
+  }
+}
+
+function buildDocumentDescription(document: any) {
+  const parts: string[] = [];
+  appendPart(parts, 'Title', document.title);
+  appendPart(parts, 'Author', document.author);
+  appendPart(parts, 'Domain', document.domain);
+  appendPart(parts, 'Type', document.type);
+  appendPart(parts, 'Short summary', document.short_summary);
+  appendPart(parts, 'Long summary', document.long_summary);
+
+  if (Array.isArray(document.tags) && document.tags.length > 0) {
+    parts.push(`Tags: ${document.tags.join(', ')}`);
+  }
+
+  if (Array.isArray(document.lenses) && document.lenses.length > 0) {
+    parts.push(`Lenses: ${document.lenses.join(', ')}`);
+  }
+
+  return parts.join('\n').substring(0, MAX_ANALYSIS_CHARS);
+}
+
+async function getChunkSample(supabase: Awaited<ReturnType<typeof createClient>>, textId: string) {
+  const { data: chunks, error } = await supabase
+    .from('text_chunks')
+    .select('content, chunk_index')
+    .eq('text_id', textId)
+    .order('chunk_index', { ascending: true })
+    .limit(5);
+
+  if (error || !chunks?.length) {
+    return '';
+  }
+
+  return chunks
+    .map((chunk: any) => chunk.content)
+    .filter((content: unknown): content is string => typeof content === 'string' && content.trim().length > 0)
+    .join('\n\n---\n\n')
+    .substring(0, MAX_ANALYSIS_CHARS);
+}
+
+async function getContentForAnalysis(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  document: any,
+  textId: string
+) {
+  // For structured text, use chapter content.
+  if (
+    document.metadata?.isStructuredText &&
+    Array.isArray(document.metadata?.chapters) &&
+    document.metadata.chapters.length > 0
+  ) {
+    const sampleChapters = document.metadata.chapters.slice(0, 3);
+    const chapterSample = sampleChapters
+      .map((ch: any) => `${ch.title || 'Untitled chapter'}\n\n${ch.content || ''}`)
+      .join('\n\n---\n\n')
+      .trim();
+
+    if (chapterSample) {
+      return chapterSample.substring(0, MAX_ANALYSIS_CHARS);
+    }
+  }
+
+  if (typeof document.content === 'string' && document.content.trim()) {
+    return document.content.trim().substring(0, MAX_ANALYSIS_CHARS);
+  }
+
+  const chunkSample = await getChunkSample(supabase, textId);
+  if (chunkSample) {
+    return chunkSample;
+  }
+
+  return buildDocumentDescription(document);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,12 +129,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'OpenRouter API key not configured' },
         { status: 500 }
       );
     }
+
+    const openai = getOpenRouterClient();
+    const model = getDefaultOpenRouterMetadataModel();
 
     // Fetch the document
     const { data: document, error: fetchError } = await supabase
@@ -73,24 +153,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get content for analysis
-    let contentToAnalyze = '';
+    const contentToAnalyze = await getContentForAnalysis(supabase, document, textId);
 
-    // For structured text, use chapter content
-    if (document.metadata?.isStructuredText && document.metadata?.chapters) {
-      const chapters = document.metadata.chapters;
-      // Use first 3 chapters or all if fewer
-      const sampleChapters = chapters.slice(0, 3);
-      contentToAnalyze = sampleChapters
-        .map((ch: any) => `${ch.title}\n\n${ch.content}`)
-        .join('\n\n---\n\n')
-        .substring(0, 10000);
-    } else if (document.content) {
-      // Use OCR content
-      contentToAnalyze = document.content.substring(0, 10000);
-    } else {
+    if (!contentToAnalyze) {
       return NextResponse.json(
-        { error: 'No content available for analysis' },
+        { error: 'No document text or descriptive metadata is available for analysis' },
         { status: 400 }
       );
     }
@@ -120,7 +187,7 @@ ${contentToAnalyze}
 Respond with ONLY the curator's note text, no additional explanation or formatting.`;
 
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model,
         messages: [
           {
             role: 'system',
@@ -144,7 +211,7 @@ Respond with ONLY the curator's note text, no additional explanation or formatti
         userId: session.user.id,
         documentId: textId,
         success: true,
-        model: 'gpt-4o',
+        model: completion.model || model,
       });
     } else if (field === 'shortSummary') {
       const prompt = `Write a brief summary (2-3 sentences) of "${title}"${author}.
@@ -160,7 +227,7 @@ ${contentToAnalyze}
 Respond with ONLY the summary text, no additional explanation or formatting.`;
 
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model,
         messages: [
           {
             role: 'system',
@@ -184,7 +251,7 @@ Respond with ONLY the summary text, no additional explanation or formatting.`;
         userId: session.user.id,
         documentId: textId,
         success: true,
-        model: 'gpt-4o',
+        model: completion.model || model,
       });
     } else if (field === 'domain') {
       const prompt = `Analyze "${title}"${author} and determine its primary subject domain.
@@ -206,7 +273,7 @@ Respond with ONLY a single word or short phrase (2-3 words max) representing the
 Do not include any explanation, just the domain name.`;
 
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model,
         messages: [
           {
             role: 'system',
@@ -230,7 +297,7 @@ Do not include any explanation, just the domain name.`;
         userId: session.user.id,
         documentId: textId,
         success: true,
-        model: 'gpt-4o',
+        model: completion.model || model,
       });
     }
 

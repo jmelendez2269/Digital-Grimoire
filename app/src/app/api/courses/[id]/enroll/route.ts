@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { getCourseAccessTier, hasPaidCourseAccess } from '@/lib/courses/access';
 
 export const dynamic = 'force-dynamic';
@@ -34,12 +35,13 @@ export async function GET(
       return NextResponse.json({ success: true, enrolled: false, enrollment: null });
     }
 
-    const course = await resolveCourseId(supabase, idOrSlug);
+    const serviceSupabase = createServiceClient();
+    const course = await resolveCourseId(serviceSupabase, idOrSlug);
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    const { data: enrollment } = await supabase
+    const { data: enrollment } = await serviceSupabase
       .from('course_enrollments')
       .select('*')
       .eq('user_id', user.id)
@@ -64,6 +66,7 @@ export async function POST(
   try {
     const { id: idOrSlug } = await params;
     const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
 
     const {
       data: { user },
@@ -74,12 +77,12 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const course = await resolveCourseId(supabase, idOrSlug);
+    const course = await resolveCourseId(serviceSupabase, idOrSlug);
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await serviceSupabase
       .from('users')
       .select('role, subscription_status')
       .eq('id', user.id)
@@ -96,7 +99,7 @@ export async function POST(
       );
     }
 
-    const { data: existing } = await supabase
+    const { data: existing } = await serviceSupabase
       .from('course_enrollments')
       .select('*')
       .eq('user_id', user.id)
@@ -107,7 +110,7 @@ export async function POST(
       return NextResponse.json({ success: true, enrollment: existing });
     }
 
-    const { data: enrollment, error } = await supabase
+    const { data: enrollment, error } = await serviceSupabase
       .from('course_enrollments')
       .insert({
         user_id: user.id,

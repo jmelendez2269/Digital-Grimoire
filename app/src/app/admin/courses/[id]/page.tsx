@@ -10,6 +10,7 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
+  Download,
   FileText,
   Loader2,
   Save,
@@ -320,6 +321,15 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </button>
                   </div>
                 )}
+
+                <a
+                  href={`/api/admin/courses/${id}/markdown`}
+                  className="flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 transition-all hover:border-zinc-500 hover:text-zinc-100"
+                  title="Download this course as markdown"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download .md
+                </a>
 
                 <button
                   type="button"

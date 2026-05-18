@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { hybridSearch, HybridSearchResult } from '@/lib/parallax/hybrid-retrieval';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
+import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
 
 interface AiSearchResult {
     summary: string;
@@ -265,7 +266,7 @@ Generate the Deep Search response JSON.`;
         let finalResponse: AiSearchResult;
         try {
             const aiResponse = await aiOrchestrator.chatComplete(messages, {
-                model: 'gpt-4o-mini', // Reduced from gpt-4o for 2-3x faster generation
+                model: getDefaultOpenRouterModel(),
                 jsonMode: true,
                 temperature: 0.3 // Keep it relatively focused
             });
