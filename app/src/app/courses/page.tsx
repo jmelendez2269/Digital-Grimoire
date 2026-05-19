@@ -62,7 +62,7 @@ interface EnrolledCourse extends Course {
   enrollment: Enrollment;
 }
 
-type ViewMode = 'catalog' | 'arcs' | 'paths' | 'map';
+type ViewMode = 'arcs' | 'paths' | 'map' | 'catalog';
 
 // ─── Constants / helpers ──────────────────────────────────────────────────────
 
@@ -445,7 +445,7 @@ function ActiveTransmissionsRail({ courses }: { courses: EnrolledCourse[] }) {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
         </span>
-        <span className="text-[10px] uppercase tracking-widest font-mono text-amber-500">
+        <span className="text-xs uppercase tracking-widest font-mono text-amber-500">
           Active Transmissions
         </span>
         <div className="flex-1 h-px bg-amber-500/10" />
@@ -467,15 +467,15 @@ function ActiveTransmissionsRail({ courses }: { courses: EnrolledCourse[] }) {
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-2">
                   {tag && (
-                    <span className="text-[10px] font-mono text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                    <span className="text-xs font-mono text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
                       {tag}
                     </span>
                   )}
-                  <span className="text-[10px] font-mono text-zinc-500">
+                  <span className="text-xs font-mono text-zinc-500">
                     Wk {currentWeek}/{totalWeeks}
                   </span>
                 </div>
-                <h3 className="text-sm font-semibold text-zinc-100 leading-snug mb-3 line-clamp-2">
+                <h3 className="text-base font-semibold text-zinc-100 leading-snug mb-3 line-clamp-2">
                   {course.title}
                 </h3>
                 <div className="h-1 bg-zinc-800 rounded-full mb-3 overflow-hidden">
@@ -486,10 +486,10 @@ function ActiveTransmissionsRail({ courses }: { courses: EnrolledCourse[] }) {
                 </div>
                 <Link
                   href={`/courses/${course.slug}/learn`}
-                  className="flex items-center justify-between w-full text-xs font-mono text-amber-400 hover:text-amber-300 transition-colors"
+                  className="flex items-center justify-between w-full text-sm font-mono text-amber-400 hover:text-amber-300 transition-colors"
                 >
                   <span>Continue</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
@@ -512,7 +512,7 @@ function CoverStack({ texts, compact = false }: { texts?: CourseText[]; compact?
         {visible.map((ct, idx) => (
           <div
             key={ct.id}
-            className={`${compact ? 'w-[18px] h-[26px]' : 'w-7 h-10'} rounded-[2px] bg-zinc-800 border border-white/10 overflow-hidden shadow-md`}
+            className={`${compact ? 'w-6 h-9' : 'w-8 h-11'} rounded-[2px] bg-zinc-800 border border-white/10 overflow-hidden shadow-md`}
             style={{ zIndex: 10 - idx }}
             title={ct.texts?.title}
           >
@@ -520,13 +520,13 @@ function CoverStack({ texts, compact = false }: { texts?: CourseText[]; compact?
               <img src={ct.texts.cover_image_url} alt={ct.texts?.title ?? ''} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-950">
-                <BookOpen className="w-2.5 h-2.5 text-zinc-600" />
+                <BookOpen className="w-3 h-3 text-zinc-600" />
               </div>
             )}
           </div>
         ))}
         {texts.length > limit && (
-          <div className={`${compact ? 'w-[18px] h-[26px] text-[9px]' : 'w-7 h-10 text-[10px]'} rounded-[2px] bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-500 font-mono`}>
+          <div className={`${compact ? 'w-6 h-9 text-[11px]' : 'w-8 h-11 text-xs'} rounded-[2px] bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-500 font-mono`}>
             +{texts.length - limit}
           </div>
         )}
@@ -554,10 +554,10 @@ function ArcSpineView({
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 items-start">
       {/* Left rail */}
       <aside className="lg:sticky lg:top-4">
-        <h5 className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-500 mb-3">
+        <h5 className="text-xs font-mono uppercase tracking-[0.22em] text-zinc-500 mb-4">
           The eight arcs
         </h5>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           {arcs.map((arc) => {
             const active = arc.key === activeArc?.key;
             return (
@@ -565,20 +565,20 @@ function ArcSpineView({
                 key={arc.key}
                 type="button"
                 onClick={() => setActiveArcKey(arc.key)}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] border text-left transition-all ${
+                className={`flex items-center gap-3 px-3.5 py-3 rounded-[10px] border text-left transition-all ${
                   active
                     ? 'border-cyan-500/55 bg-cyan-500/[0.06] shadow-[inset_0_0_24px_rgba(34,211,238,0.08)]'
                     : 'border-white/6 bg-zinc-900/40 hover:border-white/10'
                 }`}
               >
                 <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ background: arc.color, boxShadow: `0 0 8px ${arc.color}` }}
                 />
-                <span className="font-serif text-[15px] leading-tight text-zinc-100 flex-1">
+                <span className="font-serif text-[17px] leading-tight text-zinc-100 flex-1">
                   {arc.name}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-500">{arc.courses.length}</span>
+                <span className="font-mono text-xs text-zinc-500">{arc.courses.length}</span>
               </button>
             );
           })}
@@ -603,16 +603,16 @@ function ArcSpineView({
 
         {/* arc header */}
         {activeArc && (
-          <div className="flex flex-wrap items-end justify-between gap-4 mb-6 pb-3.5 border-b border-white/6">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-7 pb-4 border-b border-white/6">
             <div>
-              <p className="font-serif italic text-2xl text-zinc-100 m-0">{activeArc.name}</p>
+              <p className="font-serif italic text-3xl text-zinc-100 m-0">{activeArc.name}</p>
               {activeArc.courses[0]?.content?.core_question && (
-                <p className="font-serif italic text-amber-400 text-base mt-1.5">
+                <p className="font-serif italic text-amber-400 text-lg mt-2 leading-relaxed">
                   {activeArc.courses[0].content.core_question}
                 </p>
               )}
             </div>
-            <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-zinc-500">
+            <div className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400">
               <b className="text-amber-400 font-medium">{activeArc.courses.length} paths</b>
               {activeArc.totalWeeks > 0 && <> · ~{activeArc.totalWeeks} weeks</>}
             </div>
@@ -678,15 +678,15 @@ function ArcCourseRow({
         }}
       />
 
-      <div className="grid grid-cols-[48px_1fr_180px] gap-5 items-center md:grid-cols-[64px_1fr_220px]">
-        <div className="font-display font-semibold text-[28px] leading-none text-amber-500/70">
+      <div className="grid grid-cols-[56px_1fr_200px] gap-6 items-center md:grid-cols-[72px_1fr_240px]">
+        <div className="font-display font-semibold text-[34px] leading-none text-amber-500/70">
           {positionLabel}
         </div>
 
         <div>
-          <h4 className="font-sans font-semibold text-[17px] text-zinc-100 m-0 group-hover:text-amber-100 transition-colors">
+          <h4 className="font-sans font-semibold text-xl text-zinc-100 m-0 group-hover:text-amber-100 transition-colors leading-snug">
             {tag && (
-              <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-amber-400 bg-amber-500/[0.06] border border-amber-500/25 px-[7px] py-[2px] rounded-[3px] mr-1.5 align-middle">
+              <span className="inline-flex items-center gap-1.5 font-mono text-xs text-amber-400 bg-amber-500/[0.06] border border-amber-500/25 px-2 py-[3px] rounded-[3px] mr-2 align-middle">
                 {tag}
               </span>
             )}
@@ -694,15 +694,15 @@ function ArcCourseRow({
           </h4>
 
           {coreQuestion && (
-            <p className="font-serif italic text-sm text-zinc-400 mt-1 leading-relaxed">
+            <p className="font-serif italic text-base text-zinc-300 mt-2 leading-relaxed">
               “{coreQuestion}”
             </p>
           )}
 
-          <div className="font-mono text-[10px] tracking-wider uppercase text-zinc-500 mt-2 flex flex-wrap gap-3">
+          <div className="font-mono text-xs tracking-wider uppercase text-zinc-400 mt-3 flex flex-wrap gap-4">
             {course.level && (
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: levelDotColor }} />
+                <span className="w-2 h-2 rounded-full" style={{ background: levelDotColor }} />
                 {course.level}
               </span>
             )}
@@ -733,7 +733,7 @@ function ArcCourseRow({
             <CoverStack texts={course.course_texts} compact />
           </div>
           <span
-            className={`font-mono text-[10px] tracking-[0.18em] uppercase inline-flex items-center gap-1.5 ${
+            className={`font-mono text-xs tracking-[0.18em] uppercase inline-flex items-center gap-1.5 ${
               status.state === 'done'
                 ? 'text-amber-400'
                 : status.state === 'current'
@@ -810,20 +810,20 @@ function CatalogView({
   return (
     <div>
       {/* Lens filter rail */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className="font-mono text-[9px] tracking-[0.26em] uppercase text-zinc-500 mr-1.5">
+      <div className="flex flex-wrap items-center gap-2.5 mb-5">
+        <span className="font-mono text-xs tracking-[0.26em] uppercase text-zinc-400 mr-2">
           Lens
         </span>
         <button
           type="button"
           onClick={() => setFilterLens(null)}
-          className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] uppercase px-2.5 py-1 border rounded-full transition-colors ${
+          className={`inline-flex items-center gap-2 font-mono text-xs tracking-[0.16em] uppercase px-3 py-1.5 border rounded-full transition-colors ${
             filterLens === null
               ? 'bg-white/8 border-white/25 text-zinc-100'
               : 'bg-zinc-900/30 border-white/6 text-zinc-400 hover:border-white/15'
           }`}
         >
-          All <span className="text-zinc-500 ml-1 text-[9px]">{courses.length}</span>
+          All <span className="text-zinc-500 ml-1 text-xs">{courses.length}</span>
         </button>
         {LENS_DEFS.map((lens, i) => {
           const active = filterLens === i;
@@ -833,7 +833,7 @@ function CatalogView({
               key={lens.key}
               type="button"
               onClick={() => setFilterLens(active ? null : i)}
-              className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] uppercase px-2.5 py-1 border rounded-full transition-colors`}
+              className={`inline-flex items-center gap-2 font-mono text-xs tracking-[0.16em] uppercase px-3 py-1.5 border rounded-full transition-colors`}
               style={
                 active
                   ? { background: `${lens.color}18`, borderColor: `${lens.color}66`, color: lens.color }
@@ -841,11 +841,11 @@ function CatalogView({
               }
             >
               <span
-                className="w-1.5 h-1.5 rounded-full"
+                className="w-2 h-2 rounded-full"
                 style={{ background: lens.color, boxShadow: `0 0 6px ${lens.color}` }}
               />
               {lens.label}
-              <span className="text-[9px] ml-1" style={{ opacity: 0.7 }}>{ct}</span>
+              <span className="text-xs ml-1" style={{ opacity: 0.7 }}>{ct}</span>
             </button>
           );
         })}
@@ -853,7 +853,7 @@ function CatalogView({
 
       {/* Chip rails */}
       <div className="flex flex-wrap items-center gap-2 mb-7 pb-4 border-b border-white/6">
-        <span className="font-mono text-[9px] tracking-[0.26em] uppercase text-zinc-500 mr-1.5">
+        <span className="font-mono text-xs tracking-[0.26em] uppercase text-zinc-400 mr-2">
           Arc
         </span>
         <Chip active={filterArc === 'all'} onClick={() => setFilterArc('all')}>
@@ -867,7 +867,7 @@ function CatalogView({
 
         <ChipSep />
 
-        <span className="font-mono text-[9px] tracking-[0.26em] uppercase text-zinc-500 mr-1.5">
+        <span className="font-mono text-xs tracking-[0.26em] uppercase text-zinc-400 mr-2">
           Level
         </span>
         {(['all', 'foundational', 'intermediate', 'advanced'] as const).map((lvl) => (
@@ -878,7 +878,7 @@ function CatalogView({
 
         <ChipSep />
 
-        <span className="font-mono text-[9px] tracking-[0.26em] uppercase text-zinc-500 mr-1.5">
+        <span className="font-mono text-xs tracking-[0.26em] uppercase text-zinc-400 mr-2">
           Length
         </span>
         <Chip active={filterLength === 'all'} onClick={() => setFilterLength('all')}>
@@ -897,7 +897,7 @@ function CatalogView({
         <button
           type="button"
           onClick={clearFilters}
-          className="ml-auto font-mono text-[9px] tracking-[0.18em] uppercase text-zinc-500 hover:text-amber-400 px-2 py-1.5 transition-colors"
+          className="ml-auto font-mono text-xs tracking-[0.18em] uppercase text-zinc-500 hover:text-amber-400 px-3 py-2 transition-colors"
         >
           Clear all
         </button>
@@ -906,8 +906,8 @@ function CatalogView({
       {/* Catalog grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-20 border border-white/5 rounded-2xl bg-zinc-900/10">
-          <div className="text-4xl font-mono text-zinc-800 mb-3">∅</div>
-          <p className="text-sm font-mono text-zinc-600 uppercase tracking-wide">
+          <div className="text-5xl font-mono text-zinc-800 mb-3">∅</div>
+          <p className="text-base font-mono text-zinc-500 uppercase tracking-wide">
             No paths match your filters
           </p>
         </div>
@@ -945,7 +945,7 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] uppercase px-2.5 py-1 border rounded-full transition-colors ${
+      className={`inline-flex items-center gap-2 font-mono text-xs tracking-[0.16em] uppercase px-3 py-1.5 border rounded-full transition-colors ${
         active
           ? 'bg-amber-500/[0.08] border-amber-500/40 text-amber-400'
           : 'bg-zinc-900/30 border-white/6 text-zinc-400 hover:border-white/15'
@@ -953,7 +953,7 @@ function Chip({
     >
       {dotColor && (
         <span
-          className="w-1.5 h-1.5 rounded-full"
+          className="w-2 h-2 rounded-full"
           style={{ background: dotColor, boxShadow: `0 0 6px ${dotColor}` }}
         />
       )}
@@ -963,11 +963,11 @@ function Chip({
 }
 
 function Count({ children }: { children: React.ReactNode }) {
-  return <span className="text-zinc-500 ml-1 text-[9px]">{children}</span>;
+  return <span className="text-zinc-500 ml-1 text-xs">{children}</span>;
 }
 
 function ChipSep() {
-  return <span className="w-px h-4 bg-white/8 mx-2" aria-hidden />;
+  return <span className="w-px h-5 bg-white/8 mx-2.5" aria-hidden />;
 }
 
 function CuratorPick({ course, enrollment }: { course: Course; enrollment?: Enrollment }) {
@@ -1088,13 +1088,13 @@ function CatalogCard({
     <button
       type="button"
       onClick={() => router.push(href)}
-      className="relative flex flex-col text-left p-5 min-h-[240px] rounded-[14px] border border-white/6 bg-zinc-900/35 hover:border-amber-500/55 transition-colors"
+      className="relative flex flex-col text-left p-6 min-h-[280px] rounded-[14px] border border-white/6 bg-zinc-900/35 hover:border-amber-500/55 transition-colors"
     >
-      <span className={`absolute top-3 right-3 font-mono text-[9px] tracking-[0.18em] uppercase px-1.5 py-[3px] rounded-[3px] border ${pip.cls}`}>
+      <span className={`absolute top-3.5 right-3.5 font-mono text-xs tracking-[0.18em] uppercase px-2 py-1 rounded-[3px] border ${pip.cls}`}>
         {pip.label}
       </span>
 
-      <div className="flex items-center gap-2 font-mono text-[9px] tracking-[0.22em] uppercase text-amber-500 mb-3.5">
+      <div className="flex items-center gap-2.5 font-mono text-xs tracking-[0.22em] uppercase text-amber-500 mb-4">
         <span className="text-zinc-500">{arcPos ? String(arcPos).padStart(2, '0') : '—'}</span>
         <span>{arc ?? 'Unsorted'}</span>
         <span
@@ -1105,22 +1105,22 @@ function CatalogCard({
         />
       </div>
 
-      <h4 className="font-display font-semibold text-[19px] leading-tight text-zinc-100 m-0 mb-2.5">
+      <h4 className="font-display font-semibold text-[22px] leading-tight text-zinc-100 m-0 mb-3">
         {course.title}
       </h4>
 
       {coreQuestion && (
-        <p className="font-serif italic text-sm leading-relaxed text-amber-400/90 m-0 mb-3.5 flex-grow">
+        <p className="font-serif italic text-base leading-relaxed text-amber-400/90 m-0 mb-4 flex-grow">
           “{coreQuestion}”
         </p>
       )}
 
-      <div className="flex justify-between items-center pt-3 border-t border-dashed border-white/8">
+      <div className="flex justify-between items-center pt-3.5 border-t border-dashed border-white/8">
         <CoverStack texts={course.course_texts} compact />
-        <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-zinc-500 flex items-center gap-3">
+        <div className="font-mono text-xs tracking-[0.18em] uppercase text-zinc-400 flex items-center gap-3">
           {status.state === 'current' ? (
-            <span className="flex items-center gap-1.5 text-amber-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="flex items-center gap-2 text-amber-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
               Active · Wk {enrollment?.current_week ?? 1}
             </span>
           ) : status.state === 'done' ? (
@@ -1160,10 +1160,10 @@ function PathsView({
     <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
       {/* Left rail */}
       <aside className="lg:sticky lg:top-4">
-        <h5 className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-500 mb-3">
+        <h5 className="text-xs font-mono uppercase tracking-[0.22em] text-zinc-500 mb-4">
           {SEED_PATHS.length} paths · seed
         </h5>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           {SEED_PATHS.map((p) => {
             const isActive = p.id === active.id;
             return (
@@ -1171,7 +1171,7 @@ function PathsView({
                 key={p.id}
                 type="button"
                 onClick={() => setActiveId(p.id)}
-                className={`text-left p-3 rounded-[10px] border transition-all ${
+                className={`text-left p-3.5 rounded-[10px] border transition-all ${
                   isActive ? 'bg-zinc-900/60' : 'bg-zinc-900/30 hover:bg-zinc-900/45'
                 }`}
                 style={{
@@ -1179,13 +1179,13 @@ function PathsView({
                   boxShadow: isActive ? `inset 0 0 24px ${p.color}10` : undefined,
                 }}
               >
-                <div className="font-serif text-[15px] leading-tight text-zinc-100 mb-1.5">{p.name}</div>
+                <div className="font-serif text-[17px] leading-tight text-zinc-100 mb-2">{p.name}</div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-zinc-500">
+                  <span className="font-mono text-xs tracking-[0.18em] uppercase text-zinc-500">
                     {p.steps.length} courses
                   </span>
                   <span
-                    className="font-mono text-[8px] tracking-[0.18em] uppercase px-1.5 py-[2px] rounded-[2px]"
+                    className="font-mono text-[11px] tracking-[0.18em] uppercase px-2 py-[3px] rounded-[2px]"
                     style={{ background: `${p.color}18`, color: p.color }}
                   >
                     {p.tag}
@@ -1200,43 +1200,43 @@ function PathsView({
       {/* Main */}
       <section>
         {/* Path header */}
-        <div className="pb-4 mb-4 border-b border-white/6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: active.color, boxShadow: `0 0 8px ${active.color}` }} />
+        <div className="pb-5 mb-5 border-b border-white/6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2 h-2 rounded-full" style={{ background: active.color, boxShadow: `0 0 8px ${active.color}` }} />
             <span
-              className="font-mono text-[9px] tracking-[0.2em] uppercase px-1.5 py-[2px] rounded-[2px]"
+              className="font-mono text-xs tracking-[0.2em] uppercase px-2 py-[3px] rounded-[2px]"
               style={{ background: `${active.color}18`, color: active.color }}
             >
               {active.tag}
             </span>
           </div>
-          <h2 className="font-serif italic text-[28px] text-zinc-100 m-0 mb-2">{active.name}</h2>
-          <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">{active.subtitle}</p>
-          <div className="flex items-center gap-3 mt-3 font-mono text-[10px] tracking-[0.18em] uppercase text-zinc-600">
+          <h2 className="font-serif italic text-[34px] text-zinc-100 m-0 mb-3 leading-tight">{active.name}</h2>
+          <p className="text-base text-zinc-300 leading-relaxed max-w-2xl">{active.subtitle}</p>
+          <div className="flex items-center gap-3 mt-4 font-mono text-xs tracking-[0.18em] uppercase text-zinc-500">
             <span><b className="text-zinc-200 font-medium">{active.steps.length}</b> courses</span>
             <span>·</span>
             <span>~<b className="text-zinc-200 font-medium">{totalWeeks}</b> weeks</span>
             <span>·</span>
-            <span className="text-zinc-700">From completion pathways</span>
+            <span className="text-zinc-600">From completion pathways</span>
           </div>
         </div>
 
         {/* Hub courses */}
         {hubs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-7">
             {hubs.map((h) => {
               const pn = countPathsForCourse(h.code);
               return (
                 <div
                   key={h.code}
-                  className="border rounded-md p-3"
+                  className="border rounded-md p-4"
                   style={{ borderColor: `${active.color}30` }}
                 >
-                  <div className="font-mono text-[9px] tracking-[0.16em] uppercase mb-1" style={{ color: active.color }}>
+                  <div className="font-mono text-xs tracking-[0.16em] uppercase mb-2" style={{ color: active.color }}>
                     {h.code} · hub course
                   </div>
-                  <div className="font-serif italic text-[13px] leading-snug text-zinc-300">{h.title}</div>
-                  <div className="mt-2 font-mono text-[9px] tracking-[0.18em] uppercase" style={{ color: `${active.color}99` }}>
+                  <div className="font-serif italic text-[15px] leading-snug text-zinc-200">{h.title}</div>
+                  <div className="mt-3 font-mono text-xs tracking-[0.18em] uppercase" style={{ color: `${active.color}99` }}>
                     in {pn} of {SEED_PATHS.length} paths
                   </div>
                 </div>
@@ -1252,10 +1252,10 @@ function PathsView({
             const pn = countPathsForCourse(step.code);
             return (
               <div key={step.code + idx}>
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center" style={{ width: 40 }}>
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center" style={{ width: 48 }}>
                     <div
-                      className="w-[28px] h-[28px] rounded-full flex items-center justify-center font-mono text-[10px] font-semibold border-[1.5px]"
+                      className="w-9 h-9 rounded-full flex items-center justify-center font-mono text-xs font-semibold border-[1.5px]"
                       style={{
                         background: `${active.color}18`,
                         borderColor: `${active.color}66`,
@@ -1266,30 +1266,30 @@ function PathsView({
                     </div>
                     {!isLast && (
                       <div
-                        className="w-[1.5px] flex-1 min-h-[18px]"
+                        className="w-[1.5px] flex-1 min-h-[22px]"
                         style={{ background: `${active.color}22` }}
                       />
                     )}
                   </div>
-                  <div className="flex-1 pb-5">
-                    <div className="flex items-center gap-2 font-mono text-[9px] tracking-[0.18em] uppercase text-zinc-500 mb-1">
+                  <div className="flex-1 pb-6">
+                    <div className="flex items-center gap-2.5 font-mono text-xs tracking-[0.18em] uppercase text-zinc-500 mb-1.5">
                       <span>{step.code}</span>
                       {pn > 1 && (
                         <span
-                          className="font-mono text-[8px] tracking-[0.18em] uppercase px-1.5 py-[1px] rounded-[2px]"
-                          style={{ background: 'rgba(255,255,255,0.04)', color: '#71717a', border: '1px solid rgba(255,255,255,0.06)' }}
+                          className="font-mono text-[11px] tracking-[0.18em] uppercase px-2 py-[2px] rounded-[2px]"
+                          style={{ background: 'rgba(255,255,255,0.04)', color: '#a1a1aa', border: '1px solid rgba(255,255,255,0.06)' }}
                         >
                           in {pn} paths
                         </span>
                       )}
                     </div>
-                    <div className="font-sans font-semibold text-[15px] text-zinc-100 mb-1">{step.title}</div>
-                    <p className="font-serif italic text-sm text-zinc-400 leading-relaxed m-0 mb-2 max-w-2xl">
+                    <div className="font-sans font-semibold text-[18px] text-zinc-100 mb-2 leading-snug">{step.title}</div>
+                    <p className="font-serif italic text-base text-zinc-300 leading-relaxed m-0 mb-3 max-w-2xl">
                       {step.why}
                     </p>
-                    <div className="flex items-center gap-3 font-mono text-[10px] tracking-[0.15em] uppercase text-zinc-600">
+                    <div className="flex items-center gap-3 font-mono text-xs tracking-[0.15em] uppercase text-zinc-500">
                       <span
-                        className="w-1.5 h-1.5 rounded-full"
+                        className="w-2 h-2 rounded-full"
                         style={{ background: active.color }}
                       />
                       <span>{step.level}</span>
@@ -1299,7 +1299,7 @@ function PathsView({
                   </div>
                 </div>
                 {!isLast && (
-                  <div className="pl-[40px] pb-3 font-mono text-[9px] tracking-[0.22em] uppercase" style={{ color: `${active.color}40` }}>
+                  <div className="pl-12 pb-3 font-mono text-xs tracking-[0.22em] uppercase" style={{ color: `${active.color}55` }}>
                     ↓ leads to
                   </div>
                 )}
@@ -1309,9 +1309,9 @@ function PathsView({
         </div>
 
         {/* End line */}
-        <div className="flex items-center gap-3 mt-6">
+        <div className="flex items-center gap-3 mt-7">
           <span className="flex-1 h-px bg-white/6" />
-          <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-zinc-700">Path complete</span>
+          <span className="font-mono text-xs tracking-[0.22em] uppercase text-zinc-600">Path complete</span>
           <span className="flex-1 h-px bg-white/6" />
         </div>
       </section>
@@ -1381,27 +1381,27 @@ function MapView() {
   return (
     <div className="border border-white/6 rounded-2xl overflow-hidden bg-zinc-950/40">
       {/* Legend bar */}
-      <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b border-white/6">
-        <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-zinc-500">Arc</span>
+      <div className="flex flex-wrap items-center gap-4 px-6 py-4 border-b border-white/6">
+        <span className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400">Arc</span>
         {(Object.entries(ARC_BAND_META) as Array<[MapSeedNode['arc'], typeof ARC_BAND_META[MapSeedNode['arc']]]>).map(
           ([arc, meta]) => (
-            <span key={arc} className="inline-flex items-center gap-1.5 font-mono text-[10px] text-zinc-400">
-              <span className="w-2 h-2 rounded-full" style={{ background: meta.color, boxShadow: `0 0 6px ${meta.color}` }} />
+            <span key={arc} className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: meta.color, boxShadow: `0 0 6px ${meta.color}` }} />
               {meta.label}
             </span>
           ),
         )}
-        <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-zinc-500 ml-2">Size</span>
-        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-zinc-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" /> 1 path
+        <span className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400 ml-2">Size</span>
+        <span className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
+          <span className="w-2 h-2 rounded-full bg-zinc-500" /> 1 path
         </span>
-        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-zinc-400">
-          <span className="w-2.5 h-2.5 rounded-full bg-zinc-500" /> 3 paths
+        <span className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
+          <span className="w-3 h-3 rounded-full bg-zinc-500" /> 3 paths
         </span>
-        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-zinc-400">
-          <span className="w-3.5 h-3.5 rounded-full bg-zinc-500" /> 5+ paths
+        <span className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
+          <span className="w-4 h-4 rounded-full bg-zinc-500" /> 5+ paths
         </span>
-        <span className="ml-auto font-mono text-[9px] tracking-[0.18em] uppercase text-zinc-600">
+        <span className="ml-auto font-mono text-xs tracking-[0.18em] uppercase text-zinc-500">
           Hover node to explore
         </span>
       </div>
@@ -1421,13 +1421,13 @@ function MapView() {
                   fillOpacity={0.04}
                 />
                 <text
-                  x={10}
-                  y={meta.y - 22}
-                  fontSize={9}
+                  x={12}
+                  y={meta.y - 20}
+                  fontSize={12}
                   fontFamily="var(--font-mono, 'Fira Mono', monospace)"
-                  letterSpacing="1.5"
+                  letterSpacing="1.8"
                   fill={meta.color}
-                  fillOpacity={0.5}
+                  fillOpacity={0.6}
                 >
                   {meta.label.toUpperCase()}
                 </text>
@@ -1480,9 +1480,9 @@ function MapView() {
                 />
                 <text
                   x={pos.x}
-                  y={pos.y + 4}
+                  y={pos.y + 5}
                   textAnchor="middle"
-                  fontSize={r > 12 ? 10 : 9}
+                  fontSize={r > 12 ? 13 : 12}
                   fill={color}
                   fontFamily="var(--font-mono, 'Fira Mono', monospace)"
                   fontWeight={500}
@@ -1498,35 +1498,35 @@ function MapView() {
         {/* Tooltip */}
         {hoverNode && (
           <div
-            className="absolute pointer-events-none border rounded-md px-3 py-2.5 max-w-[240px] bg-zinc-950/95 backdrop-blur"
+            className="absolute pointer-events-none border rounded-md px-4 py-3 max-w-[300px] bg-zinc-950/95 backdrop-blur"
             style={{
               borderColor: `${hoverColor}55`,
               left: `${(positions[hoverNode.id].x / W) * 100}%`,
               top: `${(positions[hoverNode.id].y / H) * 100}%`,
-              transform: 'translate(12px, -100%)',
+              transform: 'translate(14px, -100%)',
               boxShadow: `0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px ${hoverColor}22`,
             }}
           >
-            <div className="font-mono text-[9px] tracking-[0.18em] uppercase mb-1.5" style={{ color: hoverColor }}>
+            <div className="font-mono text-xs tracking-[0.18em] uppercase mb-2" style={{ color: hoverColor }}>
               {hoverNode.id} · {ARC_BAND_META[hoverNode.arc].label}
             </div>
-            <div className="text-[12px] text-zinc-100 leading-snug mb-1.5">{hoverNode.title}</div>
-            <p className="font-serif italic text-[11px] text-zinc-400 leading-snug m-0 mb-2">
+            <div className="text-base text-zinc-100 leading-snug mb-2 font-medium">{hoverNode.title}</div>
+            <p className="font-serif italic text-sm text-zinc-300 leading-snug m-0 mb-3">
               “{hoverNode.q}”
             </p>
             {hoverPaths.length > 0 ? (
-              <div className="font-mono text-[9px] tracking-[0.16em] uppercase text-zinc-500">
+              <div className="font-mono text-xs tracking-[0.16em] uppercase text-zinc-400">
                 In {hoverPaths.length} path{hoverPaths.length !== 1 ? 's' : ''}:
-                <div className="mt-1 flex flex-col gap-0.5">
+                <div className="mt-1.5 flex flex-col gap-1">
                   {hoverPaths.map((p) => (
-                    <span key={p.id} style={{ color: p.color }}>
+                    <span key={p.id} style={{ color: p.color }} className="text-[13px]">
                       {p.name}
                     </span>
                   ))}
                 </div>
               </div>
             ) : (
-              <span className="font-mono text-[9px] tracking-[0.16em] uppercase text-zinc-700">
+              <span className="font-mono text-xs tracking-[0.16em] uppercase text-zinc-600">
                 Not yet in a named path
               </span>
             )}
@@ -1548,8 +1548,8 @@ function CoursesPageContent() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // View toggle (default: catalog)
-  const [viewMode, setViewMode] = useState<ViewMode>('catalog');
+  // View toggle (default: arcs — first tab)
+  const [viewMode, setViewMode] = useState<ViewMode>('arcs');
 
   // Concept A state
   const [activeArcKey, setActiveArcKey] = useState<string | null>(null);
@@ -1649,14 +1649,14 @@ function CoursesPageContent() {
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-px w-8 bg-amber-500/40" />
-                  <span className="text-[10px] uppercase tracking-widest font-mono text-amber-500/80">
+                  <span className="text-xs uppercase tracking-widest font-mono text-amber-500/80">
                     The Convergence Archive
                   </span>
                 </div>
-                <h1 className="text-4xl font-bold text-white tracking-tight mb-2">
+                <h1 className="text-5xl font-bold text-white tracking-tight mb-3">
                   The Paths
                 </h1>
-                <p className="text-zinc-500 max-w-xl text-sm leading-relaxed">
+                <p className="text-zinc-400 max-w-2xl text-base leading-relaxed">
                   Eight arcs of inquiry. Each is a sustained encounter with a domain — read in order, or step in wherever a question calls you.
                 </p>
               </div>
@@ -1664,18 +1664,18 @@ function CoursesPageContent() {
               <div className="flex flex-col items-end gap-2.5">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-amber-500/50" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500/50" />
                   <input
                     type="text"
                     placeholder="SEARCH_PATHS..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-4 py-2 bg-black/40 border border-white/8 rounded-lg text-amber-400 placeholder-amber-500/25 font-mono text-xs focus:outline-none focus:border-amber-500/40 w-72 transition-all tracking-[0.16em]"
+                    className="pl-10 pr-4 py-2.5 bg-black/40 border border-white/8 rounded-lg text-amber-400 placeholder-amber-500/25 font-mono text-sm focus:outline-none focus:border-amber-500/40 w-80 transition-all tracking-[0.16em]"
                   />
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-3.5 font-mono text-[10px] tracking-[0.22em] uppercase text-zinc-500">
+                <div className="flex gap-4 font-mono text-xs tracking-[0.22em] uppercase text-zinc-400">
                   <span>
                     <b className="text-amber-400 font-medium">{courses.length}</b> paths
                   </span>
@@ -1710,12 +1710,12 @@ function CoursesPageContent() {
           {!loading && courses.length > 0 && (
             <div className="flex flex-wrap justify-between items-center gap-4 mb-7 mt-7">
               <div className="inline-flex p-[3px] bg-black/40 border border-white/8 rounded-lg gap-[2px]">
-                {(['catalog', 'arcs', 'paths', 'map'] as const).map((m) => (
+                {(['arcs', 'paths', 'map', 'catalog'] as const).map((m) => (
                   <button
                     key={m}
                     type="button"
                     onClick={() => setViewMode(m)}
-                    className={`font-mono text-[11px] tracking-[0.22em] uppercase px-4 py-2.5 rounded-[5px] transition-colors ${
+                    className={`font-mono text-sm tracking-[0.22em] uppercase px-5 py-3 rounded-[5px] transition-colors ${
                       viewMode === m
                         ? 'bg-cyan-500/10 text-cyan-400'
                         : 'text-zinc-500 hover:text-zinc-300'
@@ -1725,7 +1725,7 @@ function CoursesPageContent() {
                   </button>
                 ))}
               </div>
-              <div className="flex gap-3.5 font-mono text-[10px] tracking-[0.22em] uppercase text-zinc-500">
+              <div className="flex gap-4 font-mono text-xs tracking-[0.22em] uppercase text-zinc-400">
                 <span>
                   <b className="text-amber-400 font-medium">{arcs.length}</b> arc{arcs.length === 1 ? '' : 's'}
                 </span>
@@ -1736,7 +1736,7 @@ function CoursesPageContent() {
                 {(viewMode === 'paths' || viewMode === 'map') && (
                   <>
                     <span>·</span>
-                    <span className="text-zinc-600">Seed data preview</span>
+                    <span className="text-zinc-500">Seed data preview</span>
                   </>
                 )}
               </div>
