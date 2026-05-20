@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, BookOpen, ChevronRight } from 'lucide-react';
+import { Search, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -373,7 +373,7 @@ interface ArcBucket {
 function buildArcs(courses: Course[]): ArcBucket[] {
   const map = new Map<string, Course[]>();
   for (const c of courses) {
-    const key = (c.content?.arc?.trim() || 'Unsorted Paths');
+    const key = (c.content?.arc?.trim() || 'Open Paths');
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(c);
   }
@@ -432,72 +432,6 @@ function courseStatus(course: Course, enrollment: Enrollment | undefined): {
   const pct = Math.min(100, Math.round((week / total) * 100));
   if (week >= total) return { state: 'done', pct: 100, label: '✓ Completed' };
   return { state: 'current', pct, label: `● Week ${week} of ${total} → Continue` };
-}
-
-// ─── Active Transmissions Rail ────────────────────────────────────────────────
-
-function ActiveTransmissionsRail({ courses }: { courses: EnrolledCourse[] }) {
-  if (courses.length === 0) return null;
-  return (
-    <div className="mb-10">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-        </span>
-        <span className="text-xs uppercase tracking-widest font-mono text-amber-500">
-          Active Transmissions
-        </span>
-        <div className="flex-1 h-px bg-amber-500/10" />
-      </div>
-
-      <div className="flex gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {courses.map((course) => {
-          const tag = course.content?.course_id_tag || '';
-          const currentWeek = course.enrollment.current_week || 1;
-          const totalWeeks = course.duration_weeks || 8;
-          const pct = Math.min(100, Math.round((currentWeek / totalWeeks) * 100));
-
-          return (
-            <div
-              key={course.id}
-              className="min-w-[260px] max-w-[300px] flex-shrink-0 bg-zinc-900/60 border border-amber-500/20 rounded-lg p-4 relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
-              <div className="relative z-10">
-                <div className="flex items-start justify-between mb-2">
-                  {tag && (
-                    <span className="text-xs font-mono text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
-                      {tag}
-                    </span>
-                  )}
-                  <span className="text-xs font-mono text-zinc-500">
-                    Wk {currentWeek}/{totalWeeks}
-                  </span>
-                </div>
-                <h3 className="text-base font-semibold text-zinc-100 leading-snug mb-3 line-clamp-2">
-                  {course.title}
-                </h3>
-                <div className="h-1 bg-zinc-800 rounded-full mb-3 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <Link
-                  href={`/courses/${course.slug}/learn`}
-                  className="flex items-center justify-between w-full text-sm font-mono text-amber-400 hover:text-amber-300 transition-colors"
-                >
-                  <span>Continue</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
 }
 
 // ─── Book cover stack (used by both concepts) ────────────────────────────────
@@ -792,7 +726,7 @@ function CatalogView({
   }, [courses]);
 
   const filtered = courses.filter((c) => {
-    if (filterArc !== 'all' && (c.content?.arc?.trim() ?? 'Unsorted Paths') !== filterArc) return false;
+    if (filterArc !== 'all' && (c.content?.arc?.trim() ?? 'Open Paths') !== filterArc) return false;
     if (filterLevel !== 'all' && c.level !== filterLevel) return false;
     if (!inLengthBucket(c.duration_weeks, filterLength)) return false;
     if (filterLens !== null && !(courseLenses.get(c.id) ?? []).includes(filterLens)) return false;
@@ -914,7 +848,7 @@ function CatalogView({
       ) : (
         <div className="grid gap-3.5 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((course) => {
-            const arc = arcs.find((a) => a.key === (course.content?.arc?.trim() ?? 'Unsorted Paths'));
+            const arc = arcs.find((a) => a.key === (course.content?.arc?.trim() ?? 'Open Paths'));
             return (
               <CatalogCard
                 key={course.id}
@@ -1096,7 +1030,7 @@ function CatalogCard({
 
       <div className="flex items-center gap-2.5 font-mono text-xs tracking-[0.22em] uppercase text-amber-500 mb-4">
         <span className="text-zinc-500">{arcPos ? String(arcPos).padStart(2, '0') : '—'}</span>
-        <span>{arc ?? 'Unsorted'}</span>
+        <span>{arc ?? 'Open Paths'}</span>
         <span
           className="flex-1 h-px"
           style={{
@@ -1650,7 +1584,7 @@ function CoursesPageContent() {
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-px w-8 bg-amber-500/40" />
                   <span className="text-xs uppercase tracking-widest font-mono text-amber-500/80">
-                    The Convergence Archive
+                    Prismatic Learning
                   </span>
                 </div>
                 <h1 className="text-5xl font-bold text-white tracking-tight mb-3">
@@ -1694,10 +1628,6 @@ function CoursesPageContent() {
         </div>
 
         <div className="max-w-screen-2xl mx-auto px-6 py-8">
-          {!authLoading && user && enrolledCourses.length > 0 && (
-            <ActiveTransmissionsRail courses={enrolledCourses} />
-          )}
-
           {/* Persistent Curator's Entry — visible above both views */}
           {!loading && courses.length > 0 && (() => {
             const curator = pickCurator(courses, enrollmentMap);
