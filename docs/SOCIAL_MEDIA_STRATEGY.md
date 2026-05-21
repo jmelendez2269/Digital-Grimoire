@@ -1,8 +1,8 @@
-# Convergence — Social Media Content Strategy
+# Project Parallax — Social Media Content Strategy
 
 **Where Hidden Wisdom Reveals Our Unity**
 
-This document covers the full content strategy for Convergence: the live show format, platform playbooks, repurposing pipeline, conversion funnel, and phased launch sequence.
+This document covers the full content strategy for Prismarium: the live show format, platform playbooks, repurposing pipeline, conversion funnel, and phased launch sequence.
 
 ---
 
@@ -34,7 +34,7 @@ Your 90-minute weekly Twitch stream is the "ore." Everything else is refined fro
 
 ## The Live Show Format (Twitch — 90 min)
 
-Your weekly show is a live study session, not a lecture. The hook is watching wisdom traditions get cross-examined in real time through the Convergence Machine.
+Your weekly show is a live study session, not a lecture. The hook is watching wisdom traditions get cross-examined in real time through the Prismatic Search.
 
 ### Stream Rundown
 
@@ -43,13 +43,13 @@ Your weekly show is a live study session, not a lecture. The hook is watching wi
 | Cold open / arrival | 5 min | Starting Soon screen, chat banter, pin the week's `core_question` |
 | Framing the tension | 10 min | Read the week's `key_tension` aloud, run a chat poll on which side they lean |
 | Reading walkthrough | 20 min | Pull course readings from the library on screen, annotate live |
-| **The Lens Session** | 30 min | Run the `core_question` through the Convergence Machine live — start balanced, then dramatically shift sliders and re-run; take a chat-suggested question |
+| **The Lens Session** | 30 min | Run the `core_question` through the Prismatic Search live — start balanced, then dramatically shift sliders and re-run; take a chat-suggested question |
 | Synthesis with chat | 15 min | Hit the `synthesis_prompt`, read live chat responses on air, synthesize |
 | Wrap + funnel | 10 min | Recap, tease next week's tension, point to free course signup |
 
 ### The Lens Session — Your Headline Act
 
-This is the spectacle unique to Convergence. No other creator can do this.
+This is the spectacle unique to Prismarium. No other creator can do this.
 
 1. Take the week's `core_question`
 2. Run it at balanced lens weights
@@ -75,7 +75,7 @@ The Lens Focus Card is critical. Every time it appears on stream, it creates a c
 - **VOD Storage:** Twitch Dashboard → Settings → Stream → Store past broadcasts (enable immediately)
 - **Latency:** Use Low Latency mode for responsive chat Q&A
 - **Multistreaming:** Use [Restream.io](https://restream.io) (~$16/mo) to broadcast simultaneously to Twitch + Facebook Live + YouTube Live — one stream, three audiences, zero extra effort
-- **Pre-stream test:** Queue your exact Convergence Machine queries and run them before going live. An erroring AI mid-stream is your biggest risk.
+- **Pre-stream test:** Queue your exact Prismatic Search queries and run them before going live. An erroring AI mid-stream is your biggest risk.
 
 ---
 
@@ -87,7 +87,7 @@ YouTube is where discovery compounds over time via search. Your dark-academia es
 
 **Three content tiers from one stream:**
 
-1. **Full episode** (60–70 min, edited) — Cut the intro waiting screen and technical difficulties. Heavy use of YouTube Chapters (one per Lens Focus Card = automatic). Titles: *"The Void Through 7 Lenses — Convergence Course: Week 3"*
+1. **Full episode** (60–70 min, edited) — Cut the intro waiting screen and technical difficulties. Heavy use of YouTube Chapters (one per Lens Focus Card = automatic). Titles: *"The Void Through 7 Lenses — Prismarium Course: Week 3"*
 
 2. **Modular lessons** (10–20 min) — Each `lens_exercise` or reading walkthrough becomes a standalone lesson. SEO titles: *"What Buddhism, Quantum Physics, and Hermeticism Agree On About Emptiness"*
 
@@ -105,7 +105,7 @@ The esoteric/spiritual niche is one of TikTok's most active communities. #WitchT
 
 | Format | Description |
 |--------|-------------|
-| The Lens Contrast | *"I asked the AI what 'the void' means — the Scientific and Mystical lenses said basically the same thing"* — screen record the Convergence Machine output, voiceover, on-screen text highlights overlapping phrases |
+| The Lens Contrast | *"I asked the AI what 'the void' means — the Scientific and Mystical lenses said basically the same thing"* — screen record the Prismatic Search output, voiceover, on-screen text highlights overlapping phrases |
 | The Hot Claim | *"Buddhism and Quantum Physics are the same tradition separated by 2,500 years"* — 45 seconds, fast cuts between lens outputs, end on the synthesis quote |
 | The Text Reveal | Film reading from a library text, hit a striking passage, pause — *"this was written in 1580 and describes neuroplasticity exactly"* |
 | The Slider Experiment | Screen record: run a question at default weights, slam Symbolic to 100%, re-run — the change is the content |
@@ -127,14 +127,14 @@ Instagram skews slightly older and more aesthetics-driven than TikTok. Your Dark
 **1. Reels** — Same clips as TikTok. Re-caption them: TikTok captions are punchy/short; Instagram captions can be a thoughtful paragraph. Both audiences exist.
 
 **2. Carousels** — Your highest-engagement format. Design in Canva using dark-academia templates. Ideas:
-- *"The 7 Lenses of Convergence"* — one slide per lens, what it does, example output sentence
+- *"The 7 Lenses of Prismatic Search"* — one slide per lens, what it does, example output sentence
 - *"Week [N] Core Question: [question] — here's how 3 traditions answer it"* (pulled directly from course content, zero extra work)
 - *"Hermetic Principles vs. Quantum Mechanics: A Side-by-Side"* — quote card comparison
 
 **3. Quote cards** — Single image posts. Take the most striking sentence from any lens output, format it in Canva. 4 minutes each. Quote cards get saved and shared more than anything else in the spiritual niche.
 
 **Stories:**
-- Polls that seed the next stream (*"Which should we run through the Machine this week: Emptiness, The Void, or The Abyss?"*)
+- Polls that seed the next stream (*"Which should we run through Prismatic Search this week: Emptiness, The Void, or The Abyss?"*)
 - Behind-the-scenes stream prep
 - Countdown to Twitch live
 
@@ -144,13 +144,13 @@ Instagram skews slightly older and more aesthetics-driven than TikTok. Your Dark
 
 ### Facebook — Your Older Audience and Community Hub
 
-Facebook demographics skew 35–65 — a core Convergence buyer (established income, serious spiritual seekers, willing to pay $15/mo). Don't underestimate this platform.
+Facebook demographics skew 35–65 — a core Prismarium buyer (established income, serious spiritual seekers, willing to pay $15/mo). Don't underestimate this platform.
 
 **Two high-leverage moves:**
 
 **1. Native video uploads on your Page** — Do not just link to YouTube. Upload modular lessons directly to Facebook. Native video gets 3–10x the organic reach of an external link in the feed.
 
-**2. Facebook Group: "Convergence Study Circle"** — This is your highest-leverage long-term asset:
+**2. Facebook Group: "Prismarium Study Circle"** — This is your highest-leverage long-term asset:
 - Free to join
 - Post the week's `synthesis_prompt` as a discussion question
 - Community answers seed your next stream's live chat
@@ -194,18 +194,18 @@ Facebook demographics skew 35–65 — a core Convergence buyer (established inc
 
 ## The Conversion Funnel
 
-Every platform drives toward Convergence. The path:
+Every platform drives toward Prismarium. The path:
 
 ```
 TikTok/Reels (discovery)
     → YouTube (depth + trust)
         → Twitch (live community)
             → Facebook Group (retention)
-                → Convergence signup (free Reader tier)
+                → Prismarium signup (free Reader tier)
                     → Scholar upgrade ($15/mo)
 ```
 
-**The offer at every touchpoint:** Free Reader tier — full library access, 5 AI queries/month, no credit card required. The Convergence Machine demo is what sells the Scholar upgrade. Every clip showing the lens engine is a product demo.
+**The offer at every touchpoint:** Free Reader tier — full library access, 5 AI queries/month, no credit card required. The Prismatic Search demo is what sells the Scholar upgrade. Every clip showing the lens engine is a product demo.
 
 **CTAs by platform:**
 - TikTok/Reels: *"Full course at [link in bio] — free to start"*
@@ -217,9 +217,9 @@ TikTok/Reels (discovery)
 
 ## The Product Generates the Marketing Content
 
-This is the compounding advantage no competitor has: **Convergence Machine outputs are your captions, quote cards, and carousel slides.**
+This is the compounding advantage no competitor has: **Prismatic Search outputs are your captions, quote cards, and carousel slides.**
 
-Before each stream, run 3–5 questions through the Convergence Machine. Screenshot the most striking sentence from each lens output. Paste into Canva. Post. Your AI builds your content library in real time.
+Before each stream, run 3–5 questions through the Prismatic Search. Screenshot the most striking sentence from each lens output. Paste into Canva. Post. Your AI builds your content library in real time.
 
 ---
 
@@ -279,7 +279,7 @@ This is where first real audience growth appears. TikTok is the fastest discover
 
 **Goal:** Activate the high-retention, high-conversion community layer.
 
-- Launch Facebook Group ("Convergence Study Circle")
+- Launch Facebook Group ("Prismarium Study Circle")
 - Seed with existing followers; post first synthesis prompt discussion
 - Set up Buffer or Later for scheduled auto-publishing
 - Lock in the full weekly schedule
