@@ -179,6 +179,14 @@ export default function AdminDashboardHub() {
       color: "amber",
       available: true,
     },
+    {
+      title: "Reading Digest Review",
+      description: "Approve, reject, or refine per-reading digests — long-form substitutes for the source so seekers can do the week's coursework without opening the reading.",
+      icon: <ClipboardCheck className="w-8 h-8 text-amber-400" />,
+      href: "/admin/reading-blurbs",
+      color: "amber",
+      available: true,
+    },
   ];
 
   return (

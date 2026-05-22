@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { getCourseAccessTier, hasPaidCourseAccess, sanitizeCourseForPreview } from '@/lib/courses/access';
 import { attachTextIdsToReadings, matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+import { attachReadingDigests, type ReadingBlurbRow } from '@/lib/courses/attach-reading-digests';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,9 +113,23 @@ export async function GET(request: NextRequest, { params }: Params) {
       Boolean(t && typeof t === 'object' && 'id' in t && 'title' in t)
     );
 
-  const enrichedContent = attachTextIdsToReadings(
+  const textIdContent = attachTextIdsToReadings(
     (course.content as Record<string, unknown> | null) ?? null,
     availableTexts
+  );
+
+  // Attach Reading Digests keyed by each reading's stable reading_id slug.
+  // Seekers see the live digest; admins also get the pending draft so they can
+  // preview it on the real learn surface before promoting it.
+  const { data: blurbs } = await serviceSupabase
+    .from('reading_blurbs')
+    .select('reading_id, blurb_live, blurb_draft, status')
+    .eq('course_slug', course.slug);
+
+  const enrichedContent = attachReadingDigests(
+    textIdContent,
+    (blurbs ?? []) as ReadingBlurbRow[],
+    { includeDrafts: viewer.isAdmin }
   );
 
   const enrichedCourse = {
