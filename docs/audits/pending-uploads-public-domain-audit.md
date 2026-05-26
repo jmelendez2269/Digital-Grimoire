@@ -24,7 +24,7 @@ Author died after 1956 or is contemporary. These would need licensing or replace
 | Title | Author | Section/Edition | # courses | Reasoning |
 |---|---|---|---|---|
 | Psychology and Alchemy | — | Carl Jung, Chapters 1 | 1 | resolved author from text: "carl jung" · author died 1961 (life+70 NOT expired) |
-| The Alchemists | — | Morley, selected biographical chapters | 1 | resolved author from text: "morley" · author is contemporary |
+| Lives of Alchemystical Philosophers | Arthur Edward Waite | selected biographical chapters | 1 | Waite died 1942 — public domain in US and most jurisdictions (life+70 expired). Source: https://www.gutenberg.org/ebooks/68687 |
 | The Structure of Scientific Revolutions | — | Thomas Kuhn, Chapters I | 1 | resolved author from text: "thomas kuhn" · author died 1996 (life+70 NOT expired) |
 
 ## ❓ Needs human review

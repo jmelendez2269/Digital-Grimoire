@@ -111,7 +111,7 @@ Books that the curated plan lists but staging doesn't have AND no probable varia
 | CSV ID | Title | Author | Year | PD | Source URL | Decision |
 |---|---|---|---|---|---|---|
 | T084 | The Theory of Numbers | Thomas Heath | 1910 | Clear | https://archive.org/details/diophantusalex00heatiala | Reframe |
-| T092 | The Alchemists | Morley | 1854 | Clear | https://archive.org/details/livesalchemistic00morl | Reframe |
+| T092 | Lives of Alchemystical Philosophers | Arthur Edward Waite | 1888 | Clear | https://www.gutenberg.org/ebooks/68687 | Reframe |
 | T104 | The Apocryphal New Testament | Montague Rhodes James | 1924 | Clear | — | Keep |
 | T111 | The Incoherence of the Philosophers | Al-Ghazali Van Den Bergh | 1954 | Verify | https://archive.org/ | Reframe |
 

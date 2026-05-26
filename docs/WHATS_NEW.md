@@ -1,190 +1,89 @@
-# 🎉 What's New in Digital Grimoire - Sprint 4
+# What's New in Prismarium
 
-## 📚 Library Enhancements - Complete!
+*Last updated: May 2026*
 
-We've just completed a major enhancement to the library system with three powerful new features:
-
----
-
-## 🔍 Feature 1: PDF Document Viewer
-
-**View your documents in style!**
-
-- 📄 **Full PDF rendering** with interactive controls
-- 🎯 **Page navigation** - Jump to any page, or use prev/next buttons
-- 🔎 **Zoom controls** - Scale from 50% to 300%
-- ⬇️ **Download button** - Save PDFs to your device
-- ⌨️ **Keyboard shortcuts** - Navigate with arrow keys, zoom with +/-
-- 📱 **Responsive design** - Works beautifully on mobile and desktop
-
-**How to use:**
-1. Go to `/library`
-2. Click "View Text" on any document
-3. Use the toolbar to navigate and zoom
-4. Download with one click!
+This is the running changelog of user-visible features in Prismarium (a Project Parallax product). For the editorial naming model, see `docs/planning/PRISMARIUM_RENAME_MATRIX.md`. For older sprint-style notes, see entries under [Earlier Releases](#earlier-releases) and the `docs/archive/` tree.
 
 ---
 
-## 🎛️ Feature 2: Advanced Filtering
+## Spring 2026 — Reading Digests & Prismatic Learning
 
-**Find exactly what you're looking for!**
+### Reading Digests (new)
 
-### Filter by:
-- 🌐 **Domain** - Psychology, Astrology, Anthropology, etc.
-- 📖 **Document Type** - Books, Articles, Commentaries, etc.
-- 📅 **Year Range** - Set min and max publication years
-- 🏷️ **Tags** - Multi-select tag filtering
+Every curated reading in a course or arc now ships with a long-form **Reading Digest** (~600–1,300 words) that distills the source's argument, anchor passages, contradictions, and study prompts.
 
-### Features:
-- ✨ **Collapsible panel** - Keeps your view clean
-- 📊 **Active filter badge** - See how many filters are active
-- 🧹 **Clear all button** - Reset filters with one click
-- 🎯 **Real-time updates** - Results update as you filter
-- 🔄 **Persistent filters** - Stay applied while browsing
+- **Where:** Course detail pages and the per-course learn surface at `/courses/<slug>/learn`.
+- **For admins:** Draft → review → promote queue at `/admin/reading-blurbs`; digests stored in `reading_blurbs`.
+- **Docs:** [User guide](/wiki/reading-digests), [Technical reference](/admin/wiki/reading-digests).
 
----
+### Prismatic Learning (rebrand + 4-tab structure)
 
-## 📄 Feature 3: Smart Pagination
+The Courses surface is now branded **Prismatic Learning** and reorganised around four tabs:
 
-**Navigate large result sets with ease!**
+| Tab | What it is |
+|---|---|
+| **Catalog** | Individual courses you can start today. |
+| **Arcs** | Multi-course bundles around a single throughline. |
+| **Paths** | Long-form, multi-arc study plans. |
+| **Map** | Visual map of how the offerings connect. |
 
-- 📊 **12 items per page** - Optimal loading speed
-- 🔢 **Smart page numbers** - Shows relevant pages with ellipsis
-- ⏮️⏭️ **Quick navigation** - First, Prev, Next, Last buttons
-- 📍 **Results counter** - "Showing 1-12 of 127 results"
-- ⬆️ **Smooth scrolling** - Auto-scroll to top on page change
-- ✨ **Current page highlight** - Always know where you are
+The "Active Transmissions" rail was removed, the tab font sizing was tuned for legibility, and paid courses are clearly marked and gated.
 
----
+- **Docs:** [User guide](/wiki/courses).
 
-## 📋 Document Detail Page
+### Curator Notes — draft workflow
 
-### Three powerful tabs:
+Curator notes and long summaries now move through a **draft → review → promote** lifecycle backed by the OpenRouter client, with a clean OCR pipeline feeding the drafter. Admins review and edit drafts at `/admin/curator-notes` before they go live.
 
-#### 1. 👁️ Viewer Tab
-- Interactive PDF display
-- Full controls and download
-
-#### 2. 📚 Metadata Tab
-Two information cards:
-- **Document Information**: Author, year, publisher, type, domain
-- **Tags & Details**: Tags, file size, upload date
-- **Summary**: AI-generated document summary
-
-#### 3. 📝 Content Tab
-- Full extracted text content
-- Searchable and readable
+- **Docs:** [Technical reference](/admin/wiki/curator-notes); editorial framework in `docs/CURATORS_NOTE_FRAMEWORK.md`.
 
 ---
 
-## 🎨 User Experience
+## Winter 2025–2026 — Corpus Collections & Seven Lenses
 
-### Visual Design
-- Consistent amber/zinc color scheme
-- Smooth transitions and animations
-- Loading states for better feedback
-- Clear status indicators (processing, ready, error)
-- Helpful empty states with guidance
+### Seven Lenses (was: Parallax Engine)
 
-### Responsive Design
-- Mobile-friendly interface
-- Adaptive layouts (1/2/3 column grids)
-- Touch-optimized controls
-- Works on all modern browsers
+The 7-lens AI reasoning surface has been renamed **Seven Lenses** and now lives at `/seven-lenses` (the legacy `/parallax-engine` route is preserved). Desktop nav labels it **Parallax Search**; mobile nav labels it **Seven Lenses**.
 
----
+- **What's new:** Lens-intensity selectors, response-length control, and per-user "Save as Default" for lens calibrations.
+- **Subscription:** Premium feature with a tiered rate limit shown on the page.
+- **Docs:** [User guide](/wiki/parallax-engine), [Technical reference](/admin/wiki/lenses).
 
-## 🚀 Technical Highlights
+### Corpus Collections — nested library shells
 
-### New Components
-- `PDFViewer.tsx` - Reusable PDF display
-- `AdvancedFilters.tsx` - Powerful filtering interface
-- `Pagination.tsx` - Smart page navigation
-- `/library/[id]/page.tsx` - Dynamic document detail page
+Large multi-book corpora now appear as a single library card that expands into grouped sub-books.
 
-### Enhanced Backend
-- Advanced Supabase queries
-- JSONB array filtering for tags
-- Efficient pagination with counts
-- Range-based queries for performance
+- **Shipped shells:** King James Bible (OT / NT groups), Bible Apocrypha.
+- **Pipeline:** Sacred Texts parser detects book-index pages, splits sub-books, and skips redundant AI metadata enhancement on the children; a batch import button on the corpus viewer pulls each linked sub-book. The Puppeteer fallback restores access when Sacred Texts returns a 403.
+- **Uploads:** Plain-text (`.txt`) books are accepted alongside PDFs.
+- **Docs:** [Technical reference](/admin/wiki/corpus-collections).
 
-### Dependencies Added
-```
-react-pdf v10.2.0
-pdfjs-dist v5.4.296
-```
+### Brand: Prismarium / Project Parallax
+
+- **Prismarium** is the live product name; **Project Parallax** is the brand house.
+- Legacy `Parallax` names are retained in internal routes, APIs, and component names per the rename matrix.
+- Canonical domain is now Prismarium-first; Google OAuth and onboarding flows updated accordingly.
 
 ---
 
-## 📖 Documentation
+## Earlier Releases
 
-Comprehensive docs added:
-- **LIBRARY_FEATURES.md** - Complete feature guide
-- **SPRINT_4_LIBRARY_ENHANCEMENTS.md** - Sprint summary
+### Sprint 4 (October 2025) — Library Enhancements
 
----
+Foundational library work: PDF document viewer, advanced filters, smart pagination, and the document detail page with viewer / metadata / content tabs. See `docs/archive/` for the full sprint notes.
 
-## ✅ Quality Assurance
+### Earlier
 
-- ✅ All features tested and working
-- ✅ Production build successful
-- ✅ No TypeScript errors
-- ✅ No linter errors
-- ✅ Cross-browser compatible
-- ✅ Mobile responsive
-- ✅ Fully documented
+- Knowledge Graph migrated to Sigma.js v3 + Graphology with density controls.
+- Text-to-Speech integrated for library reading.
+- AI metadata extraction, OCR fallbacks, and admin interface improvements.
+- Convergence-era brand docs preserved as historical references under `docs/archive/`.
 
 ---
 
-## 🎯 Next Up
+## Where to Read More
 
-Want to enhance the library further? Here are some ideas:
-
-### User Features
-- [ ] Bookmark favorite documents
-- [ ] Track reading progress
-- [ ] Add personal annotations
-- [ ] Create custom collections
-
-### Search & Discovery
-- [ ] Full-text search within PDFs
-- [ ] Saved filter presets
-- [ ] Advanced sorting options
-- [ ] Related documents suggestions
-
-### Performance
-- [ ] Search debouncing
-- [ ] Virtual scrolling
-- [ ] PDF page caching
-- [ ] Progressive loading
-
----
-
-## 🙏 Credits
-
-**Built with:**
-- Next.js 16.0.0
-- React 19
-- Supabase
-- Tailwind CSS
-- react-pdf
-
-**Repository:** [github.com/jmelendez2269/Digital-Grimoire](https://github.com/jmelendez2269/Digital-Grimoire)
-
----
-
-## 🚀 Try It Now!
-
-1. Navigate to `/library`
-2. Try the new search and filters
-3. Browse with pagination
-4. Click any document to view the PDF
-
-**Enjoy the enhanced library experience!** 📚✨
-
----
-
-*Last Updated: October 26, 2025*  
-*Sprint: 4 - Library Enhancements*  
-*Status: 🎉 Complete*
-
+- **User wiki:** `/wiki` (entrypoint for end-user docs).
+- **Technical wiki:** `/admin/wiki` (architecture and admin workflows).
+- **Naming source of truth:** `docs/planning/PRISMARIUM_RENAME_MATRIX.md`.
+- **Roadmap and backlog:** `docs/planning/PROJECT_ROADMAP.md`, `docs/planning/FEATURE_BACKLOG.md`.

@@ -157,7 +157,7 @@ Slug: `c06-the-hermetic-tradition` · Missing **6** of 14 readings
 
 - **The Egyptian Book of the Dead** — (E.A. Wallis Budge translation, selected chapters)
 - **The Hermetic Museum Volume 1** — _Arthur Edward Waite (ed.), selected treatises_ — possibly → `The Hermetic Museum, Vol. I`
-- **The Alchemists** — (Morley, selected biographical chapters)
+- **Lives of Alchemystical Philosophers** — _Arthur Edward Waite (1888, London: George Redway), selected biographical chapters_ · https://www.gutenberg.org/ebooks/68687
 - **The Chemical Wedding of Christian Rosenkreutz** — _Johann Valentin Andreae_
 - **Tertium Organum** — (P.D. Ouspensky, Chapters 1)
 - **Psychology and Alchemy** — (Carl Jung, Chapters 1)
