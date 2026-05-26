@@ -32,7 +32,7 @@ const primaryNav = [
   { name: "Courses", path: "/courses" },
   { name: "Graph", path: "/graph", icon: <Network className="w-3.5 h-3.5" /> },
   { name: "Concept Search", path: "/search", icon: <Search className="w-3.5 h-3.5" /> },
-  { name: "Seven Lenses", path: "/seven-lenses", icon: <Sparkles className="w-3.5 h-3.5" /> },
+  { name: "Parallax Search", path: "/seven-lenses", icon: <Sparkles className="w-3.5 h-3.5" /> },
   { name: "Journal", path: "/journal" },
 ];
 

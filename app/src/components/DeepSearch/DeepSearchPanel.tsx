@@ -540,15 +540,6 @@ export default function DeepSearchPanel({ initialQuery = '', onSearch }: DeepSea
                 </div>
             )}
 
-            {!searched && !loading && (
-                <div className="mt-6 flex flex-col items-center gap-3">
-                    <StelloquyOrb state="listening" size="sm" />
-                    <p className="text-sm text-zinc-400 text-center max-w-md">
-                        Stelloquy is listening. Ask anything — a concept, a tradition, a question
-                        you can&apos;t quite name yet.
-                    </p>
-                </div>
-            )}
         </div>
     );
 }

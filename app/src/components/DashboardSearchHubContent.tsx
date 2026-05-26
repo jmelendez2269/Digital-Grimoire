@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 
 import { Sparkles, BookOpen, Lightbulb } from 'lucide-react';
+import StelloquyOrb from '@/components/ui/StelloquyOrb';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -49,6 +50,15 @@ export default function DashboardSearchHubContent() {
 
     return (
         <div className="w-full max-w-3xl mx-auto">
+            {/* Persistent Stelloquy intro */}
+            <div className="mb-4 flex items-center justify-center gap-2 text-sm text-zinc-400">
+                <StelloquyOrb state="listening" size="sm" />
+                <span>
+                    Stelloquy is ready. Ask anything — a concept, a tradition, a question
+                    you can&apos;t quite name yet.
+                </span>
+            </div>
+
             {/* Tabs */}
             <div className="flex gap-2 mb-6 border-b border-zinc-800 overflow-x-auto">
                 <button
