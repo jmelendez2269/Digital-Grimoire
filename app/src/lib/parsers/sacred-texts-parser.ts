@@ -1922,7 +1922,7 @@ function resolveUrl(baseUrl: string, relativeUrl: string): string {
 // books, each with its own per-book index page (e.g. /bib/apo/bar.htm).
 // Used both for corpus-shell detection on /<section>/index.htm and for book-index
 // detection on /<section>/<basename>.htm (where basename has no 3-digit suffix).
-const SACRED_TEXTS_CURATED_SECTIONS = ['/chr/apo/', '/bib/apo/', '/bib/kjv/'] as const;
+const SACRED_TEXTS_CURATED_SECTIONS = ['/chr/apo/', '/bib/apo/', '/bib/kjv/', '/alc/hermmuse/', '/hin/rigveda/'] as const;
 
 function isApocryphaCorpusIndexUrl(url: string): boolean {
   try {
@@ -1942,9 +1942,20 @@ function escapeRegex(value: string): string {
 function getSacredTextsBookPrefix(url: string): string | null {
   if (!isSacredTextsBookIndex(url)) return null;
   try {
-    const filename = new URL(url).pathname.split('/').pop() || '';
+    const parsed = new URL(url);
+    const filename = parsed.pathname.split('/').pop() || '';
     const match = filename.match(/^([a-z0-9]+)\.htm$/i);
-    return match ? match[1].toLowerCase() : null;
+    if (!match) return null;
+    const raw = match[1].toLowerCase();
+
+    // Rig Veda quirk: book-index pages are `rvi01.htm` … `rvi10.htm` but the
+    // per-hymn chapter pages drop the "i" (`rv01001.htm`, `rv01002.htm`, …).
+    // Strip the "i" so the chapter-filter regex matches.
+    if (parsed.pathname.startsWith('/hin/rigveda/') && /^rvi\d+$/.test(raw)) {
+      return raw.replace(/^rvi/, 'rv');
+    }
+
+    return raw;
   } catch {
     return null;
   }
@@ -2064,6 +2075,88 @@ function getApocryphaCorpus(sourceUrl: string) {
             { title: '3 John', sourceUrl: 'https://sacred-texts.com/bib/kjv/jo3.htm' },
             { title: 'Jude', sourceUrl: 'https://sacred-texts.com/bib/kjv/jde.htm' },
             { title: 'Revelation', sourceUrl: 'https://sacred-texts.com/bib/kjv/rev.htm' },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (path === '/alc/hermmuse/index.htm') {
+    return {
+      slug: 'hermetic-museum',
+      title: 'The Hermetic Museum',
+      metadataTitle: 'The Hermetic Museum',
+      metadataDescription: 'Arthur Edward Waite\'s 1893 English translation of the Musaeum Hermeticum, a curated collection of twenty-three alchemical treatises across two volumes.',
+      sourceUrl,
+      sourceNote: 'The Hermetic Museum index at the Internet Sacred Text Archive is a hub across two volumes of independent alchemical tracts. Each treatise below is preserved as its own importable document.',
+      importStrategy: 'Import this shell once, then import each treatise individually so each becomes its own library item.',
+      groups: [
+        {
+          id: 'volume-1',
+          title: 'Volume I',
+          description: 'Eleven alchemical tracts compiled in the first volume of Waite\'s edition.',
+          items: [
+            { title: 'The Golden Tract Concerning the Stone of the Philosophers', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm104.htm' },
+            { title: 'The Golden Age Restored', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm105.htm' },
+            { title: 'The Sophic Hydrolith', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm106.htm' },
+            { title: 'A Demonstration of Nature', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm107.htm' },
+            { title: 'A Short Tract or Philosophical Summary', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm108.htm' },
+            { title: 'The Only True Way', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm109.htm' },
+            { title: 'The Glory of the World; or, Table of Paradise', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm110.htm' },
+            { title: 'A Tract of Great Price', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm111.htm' },
+            { title: 'The Book of Alze', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm112.htm' },
+            { title: 'The Book of Lambspring', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm113.htm' },
+            { title: 'The Golden Tripod', sourceUrl: 'https://sacred-texts.com/alc/hm1/hm114.htm' },
+          ],
+        },
+        {
+          id: 'volume-2',
+          title: 'Volume II',
+          description: 'Twelve alchemical tracts compiled in the second volume, including the three Philalethes treatises.',
+          items: [
+            { title: 'Believe-Me, or The Ordinal of Alchemy', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm202.htm' },
+            { title: 'The Testament of Cremer', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm203.htm' },
+            { title: 'The New Chemical Light', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm204.htm' },
+            { title: 'The New Chemical Light, Second Treatise', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm205.htm' },
+            { title: 'An Open Entrance to the Closed Palace of the King', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm206.htm' },
+            { title: 'A Subtle Allegory Concerning the Secrets of Alchemy', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm207.htm' },
+            { title: 'The Metamorphosis of Metals', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm209.htm' },
+            { title: 'A Brief Guide to the Celestial Ruby', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm210.htm' },
+            { title: 'The Fount of Chemical Truth', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm211.htm' },
+            { title: 'Helvetius’ Golden Calf', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm212.htm' },
+            { title: 'The All-Wise Doorkeeper or A Fourfold Figure', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm213.htm' },
+            { title: 'Addendum', sourceUrl: 'https://sacred-texts.com/alc/hm2/hm214.htm' },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (path === '/hin/rigveda/index.htm') {
+    return {
+      slug: 'rig-veda',
+      title: 'The Rig Veda',
+      metadataTitle: 'The Rig Veda',
+      metadataDescription: 'Ralph T.H. Griffith\'s 1896 English translation of the Rig Veda, the oldest of the four Vedic sacred texts, organized into ten Mandalas (books) of hymns to the Vedic deities.',
+      sourceUrl,
+      sourceNote: 'The Rig Veda index at the Internet Sacred Text Archive lists each of the ten Mandalas as its own multi-hymn document. Each entry below points to a book index and imports as its own library item.',
+      importStrategy: 'Import this shell once, then import each Mandala individually so each becomes its own multi-hymn library item.',
+      groups: [
+        {
+          id: 'the-ten-mandalas',
+          title: 'The Ten Mandalas',
+          description: 'The ten books (Mandalas) of the Rig Veda. Mandalas II–VII are the oldest "family books" composed by single priestly lineages; Mandalas I and VIII are middle-layer collections; Mandala IX gathers the Soma hymns; Mandala X is the latest, containing the philosophical and cosmogonic hymns including the Purusha Sukta and the Nasadiya Sukta.',
+          items: [
+            { title: 'Mandala I', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi01.htm' },
+            { title: 'Mandala II', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi02.htm' },
+            { title: 'Mandala III', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi03.htm' },
+            { title: 'Mandala IV', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi04.htm' },
+            { title: 'Mandala V', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi05.htm' },
+            { title: 'Mandala VI', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi06.htm' },
+            { title: 'Mandala VII', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi07.htm' },
+            { title: 'Mandala VIII', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi08.htm' },
+            { title: 'Mandala IX', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi09.htm' },
+            { title: 'Mandala X', sourceUrl: 'https://sacred-texts.com/hin/rigveda/rvi10.htm' },
           ],
         },
       ],
