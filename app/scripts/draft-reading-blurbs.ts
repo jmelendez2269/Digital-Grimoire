@@ -101,11 +101,14 @@ const BANNED_PHRASES = [
   'this work explores',
   'foundational text',
   'foundational work',
-  // Self-references — never name the platform.
+  // Self-references — never name the platform. "Convergence" was previously
+  // banned for the same reason but it is a generic English word that legitimate
+  // prose uses ("traditions converge…"), so the brand-specific bans are scoped
+  // narrowly to avoid false positives.
   'prismarium',
   'project parallax',
   'digital grimoire',
-  'convergence',
+  'convergence engine',
   // Stealth-adverb family. User-flagged AI tic.
   'quietly devastating',
   'quietly revising',
@@ -169,6 +172,14 @@ ACCURACY
 
 OUTPUT JSON
 { "digest": "<600-1300 words, flowing prose, paragraphs separated by single blank lines, no headings, no bullet points>" }
+
+JSON ESCAPING — REQUIRED
+The "digest" value is a single JSON string. Inside that string, paragraph
+breaks MUST be the literal two-character sequence \\n\\n (backslash-n
+backslash-n), not raw newlines. Internal quotes MUST be escaped as \\".
+Never emit a raw newline, tab, or unescaped quote inside the string — those
+produce "Bad control character" parse errors. Do not wrap the JSON in
+markdown fences.
 
 BANNED PHRASES (do not use):
 ${BANNED_PHRASES.map((p) => `  - "${p}"`).join('\n')}
@@ -385,21 +396,30 @@ async function main() {
   ];
 
   // Pre-check existing drafts so we don't clobber unless --overwrite-drafts.
+  // Chunk the .in() query — PostgREST encodes IN-lists into the URL and a
+  // single 500+ id call silently returns nothing once it blows the URL limit,
+  // which would re-draft everything. 100/batch keeps the URL well under 8KB.
   if (!args.overwriteDrafts) {
     const ids = tasks.map((t) => t.reading_id);
-    const { data: existing } = await supabase
-      .from('reading_blurbs')
-      .select('reading_id, blurb_draft, status')
-      .in('reading_id', ids);
-    const hasDraft = new Set(
-      (existing ?? [])
-        .filter((r) => r.blurb_draft && r.status === 'draft_pending')
-        .map((r) => r.reading_id),
-    );
+    const CHUNK = 100;
+    const hasDraft = new Set<string>();
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const slice = ids.slice(i, i + CHUNK);
+      const { data: existing, error: precheckError } = await supabase
+        .from('reading_blurbs')
+        .select('reading_id, blurb_draft, status')
+        .in('reading_id', slice);
+      if (precheckError) {
+        console.warn(`  ⚠️ skip pre-check error on chunk ${i}: ${precheckError.message}`);
+        continue;
+      }
+      for (const r of existing ?? []) {
+        if (r.blurb_draft && r.status === 'draft_pending') hasDraft.add(r.reading_id);
+      }
+    }
     const skipped = tasks.filter((t) => hasDraft.has(t.reading_id));
     if (skipped.length > 0) {
       console.log(`Skipping ${skipped.length} reading(s) with existing draft_pending. Pass --overwrite-drafts to redo.`);
-      for (const s of skipped) console.log(`  - ${s.reading_id}`);
       tasks = tasks.filter((t) => !hasDraft.has(t.reading_id));
     }
   }
