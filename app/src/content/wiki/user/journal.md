@@ -1,33 +1,38 @@
 ---
-title: "Magical Journal"
-description: "Your personal space for recording daily insights, dream work, and magical experiments."
+title: "The Journal"
+description: "Your personal space for recording insights, study notes, ritual outcomes, and the long arc of your practice."
 ---
 
-# Magical Journal
+# The Journal
 
-The **Magical Journal** is your dedicated space for documenting your path. Whether you're recording daily reflections, logging dream signs, or detailing the results of a ritual, the Journal provides a secure and organized way to keep track of your progress.
+The **Journal** is your dedicated space for documenting your path within Prismarium. Whether you're recording daily reflections, logging dream signs, capturing a synthesis from [Seven Lenses](/wiki/parallax-engine), or detailing the outcome of a ritual, the Journal keeps the work organised and searchable.
+
+> [!NOTE]
+> You can rename the Journal in your user settings. The default label is **The Journal**; your custom name (for example *Magical Journal*) will appear across the dashboard and nav.
 
 ## Features
 
 ### 1. Creating Entries
 
-- **Daily Logging**: Quickly add a new entry for today.
-- **Rich Text**: Use formatting to organize your thoughts.
-- **Tagging**: Categorize your entries (e.g., #dream, #ritual, #reflection) for easy retrieval later.
+- **Daily logging**: Quickly add a new entry for today.
+- **Rich text**: Format your thoughts.
+- **Tagging**: Categorize entries (e.g., `#dream`, `#ritual`, `#reflection`) for easy retrieval later.
+- **Wiki-links**: Link entries to library texts, course readings, and other journal entries so your notes form a graph rather than a flat list.
 
-### 2. Archiving & Organization
+### 2. Archiving & Organisation
 
-- **Timeline View**: View your entries in chronological order to see your evolution over time.
-- **Search**: Find specific entries by keyword or tag.
+- **Timeline view**: See your entries chronologically.
+- **Search**: Find entries by keyword or tag.
 - **Filtering**: View only entries of a specific type.
 
-### 3. Integration with Workbench
+### 3. Integration with the Rest of Prismarium
 
-- Entries created here can be linked to specific rituals in the **Practitioner Workbench**.
-- Use the Journal to reflect on the outcomes of the work you do in the Ritual Machine.
+- **[Reading Digests](/wiki/reading-digests) and library texts** can be cited directly from a journal entry.
+- **[Seven Lenses](/wiki/parallax-engine) outputs** are easy to capture into the Journal — keep the synthesis you actually want to revisit, drop the rest.
+- **Workbench**: Journal entries can be linked to specific rituals in the **Practitioner Workbench** so you can reflect on the outcomes of the work you do in the Ritual Machine.
 
 ## Tips for Success
 
-- **Consistency is Key**: Even a single line a day builds a powerful record over time.
-- **Be Honest**: This is your private grimoire. Write authentically about your experiences.
-- **Review Regularly**: Look back at past entries to find patterns, recurring dream symbols, or signs of progress you might have missed in the moment.
+- **Consistency is key**: Even a single line a day builds a powerful record over time.
+- **Be honest**: This is your private grimoire. Write authentically about your experiences.
+- **Review regularly**: Look back at past entries to find patterns, recurring dream symbols, or signs of progress you might have missed in the moment.

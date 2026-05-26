@@ -53,7 +53,7 @@ src/app/(home)/
     * **Journal** (`/journal`): Personal notes. Title defaults to "The Journal" or user's custom `journal_name`.
     * **Graph** (`/graph`): Parallax Graph visualization.
     * **Courses** (`/courses`): Learning paths. Includes analytics tracking on click (`/api/track/courses-click`).
-    * **Parallax Engine** (`<ParallaxEngineInfo />`): Link to the AI analysis engine with details on the 7-lens perspective.
+    * **Seven Lenses** (`<ParallaxEngineInfo />`): Link to the 7-lens AI reasoning surface at `/seven-lenses` (the underlying component name still uses the legacy `ParallaxEngine` prefix per the rename matrix). Desktop nav labels this entry **Parallax Search**.
 4. **Extras / Practitioner Tools**:
     * **Ritual Machine** (`/ritual-machine`): Tool for generating ritual protocols.
     * **Workbench** (`/practitioner/rituals`): Ritual management dashboard.

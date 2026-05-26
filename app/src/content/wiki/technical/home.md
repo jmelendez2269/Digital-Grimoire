@@ -21,7 +21,7 @@ src/app/(home)/
 
 * **Purpose**: Provides the root layout structure and metadata for the home route.
 * **Key Features**:
-  * **Metadata**: Defines SEO titles ("Home | Project Parallax"), descriptions, and Open Graph content for social sharing.
+  * **Metadata**: Defines SEO titles ("Home | Prismarium"), descriptions, and Open Graph content for social sharing.
   * **Wrapper**: Renders children directly without wrapping them in extensive UI shell elements (which are likely handled by the root `app/layout.tsx` or the page itself).
 
 ### 2. `page.tsx`
@@ -50,10 +50,11 @@ This is the primary functional component rendered by `page.tsx`. It acts as a "B
     * Wrapped in `Suspense` with a skeleton loader.
 3. **Tools Grid** (Primary Navigation):
     * **Library** (`/library`): Browse text collection.
-    * **Journal** (`/journal`): Personal notes. Title defaults to "Digital Grimoire" or user's custom `journal_name`.
-    * **Graph** (`/graph`): Knowledge graph visualization.
-    * **Courses** (`/courses`): Learning paths. Includes analytics tracking on click (`/api/track/courses-click`).
-    * **Parallax Engine** (`<ParallaxEngineInfo />`): Link to the AI analysis engine with details on the 7-lens perspective.
+    * **Journal** (`/journal`): Personal notes. Title defaults to "The Journal" or the user's custom `journal_name`.
+    * **Graph** (`/graph`): Knowledge graph visualization (legacy alias: `/parallax-graph`).
+    * **Prismatic Learning** (`/courses`): Learning paths organised into Catalog, Arcs, Paths, and Map tabs. Includes analytics tracking on click (`/api/track/courses-click`).
+    * **Seven Lenses** (`<ParallaxEngineInfo />`): Link to the 7-lens AI reasoning surface at `/seven-lenses`. Desktop nav labels it **Parallax Search**.
+    * **Reading Digest surface** (`/courses/[slug]/learn`): Per-course learn page that surfaces long-form **Reading Digests** (~600–1,300 words) for each reading. The admin-side **digest review queue** lives at `/admin/reading-blurbs`; digests are stored in the `reading_blurbs` table.
 4. **Extras / Practitioner Tools**:
     * **Ritual Library** (`/ritual-machine`): Browse curated pre-built ritual protocols.
     * **Workbench** (`/workbench`): 3-tab creation hub — My Rituals, Ritual Machine (curated protocols runner), Deck Forge (AI tarot creation). See [Workbench Technical Reference](/admin/wiki/workbench).

@@ -31,10 +31,10 @@ These are your primary instruments for study and exploration:
 * **[Knowledge Graph](/wiki/graph)**
   See the unseen connections. This visual tool maps how different concepts, authors, and traditions relate to one another.
 
-* **[Courses](/wiki/courses)**
-  Structured learning paths. If you want a guided deep dive into a specific tradition or topic, start here.
+* **[Prismatic Learning](/wiki/courses)**
+  Structured learning paths organised into a **Catalog** of individual courses, multi-course **Arcs**, longer **Paths**, and a **Map** view that shows how the offerings connect. Start here for a guided deep dive into a tradition or topic.
 
-* **[Prismarium Lens Engine](/wiki/parallax-engine)**
+* **[Seven Lenses](/wiki/parallax-engine)**
   The engine of insight. This advanced AI tool analyzes any text or topic through 7 distinct analytical lenses:
   1. Scientific
   2. Psychological
@@ -43,9 +43,13 @@ These are your primary instruments for study and exploration:
   5. Historical/Anthropological
   6. Symbolic/Occult
   7. Mathematical
+  Open it from the **Seven Lenses** / **Parallax Search** nav entry (path: `/seven-lenses`).
 
 * **[Concept Search](/wiki/library-search-bar)**
   Follow an idea across books and traditions. This is especially useful when you want to compare how one concept appears in different intellectual or spiritual lineages.
+
+* **[Reading Digests](/wiki/reading-digests)**
+  Every reading in a course or arc has a long-form **Reading Digest** (~600–1,300 words) that distills the source's argument, key passages, and study prompts. Use the digest as a doorway into the original text.
 
 ## Tips for Success
 
