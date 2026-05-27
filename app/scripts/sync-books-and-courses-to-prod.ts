@@ -213,8 +213,18 @@ async function syncTexts(staging: SupabaseClient, prod: SupabaseClient, apply: b
   console.log(`   pass 1 wrote: ${wrote1}`);
 
   console.log(`   writing pass 2 (parent_id)…`);
-  const wrote2 = await chunkedUpsert(prod, 'texts', parentUpdates, 'id');
-  console.log(`   pass 2 wrote: ${wrote2}`);
+  let wrote2 = 0;
+  let failed2 = 0;
+  for (const row of parentUpdates) {
+    const { error } = await prod.from('texts').update({ parent_id: row.parent_id }).eq('id', row.id);
+    if (error) {
+      failed2 += 1;
+      console.warn(`     ❌ ${row.id}: ${error.message}`);
+    } else {
+      wrote2 += 1;
+    }
+  }
+  console.log(`   pass 2 wrote: ${wrote2}${failed2 ? `, failed: ${failed2}` : ''}`);
 }
 
 async function syncCourses(staging: SupabaseClient, prod: SupabaseClient, apply: boolean) {
@@ -251,11 +261,16 @@ async function syncReadingBlurbs(staging: SupabaseClient, prod: SupabaseClient, 
 
 async function printCounts(staging: SupabaseClient, prod: SupabaseClient) {
   console.log(`\n📊 Final counts`);
-  const tables = ['texts', 'courses', 'reading_blurbs', 'course_texts'];
-  for (const t of tables) {
+  const tables: { name: string; pk: string }[] = [
+    { name: 'texts', pk: 'id' },
+    { name: 'courses', pk: 'id' },
+    { name: 'reading_blurbs', pk: 'reading_id' },
+    { name: 'course_texts', pk: 'id' },
+  ];
+  for (const { name: t, pk } of tables) {
     const [s, p] = await Promise.all([
-      staging.from(t).select('id', { count: 'exact', head: true }),
-      prod.from(t).select('id', { count: 'exact', head: true }),
+      staging.from(t).select(pk, { count: 'exact', head: true }),
+      prod.from(t).select(pk, { count: 'exact', head: true }),
     ]);
     const stagingCount = s.error ? `err(${s.error.message})` : String(s.count);
     const prodCount = p.error ? `err(${p.error.message})` : String(p.count);
