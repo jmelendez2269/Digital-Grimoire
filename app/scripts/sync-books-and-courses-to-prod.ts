@@ -154,7 +154,7 @@ async function syncTexts(staging: SupabaseClient, prod: SupabaseClient, apply: b
     .select(stagingColumns)
     .order('parent_id', { ascending: true, nullsFirst: true });
   if (stagingErr) throw new Error(`staging texts: ${stagingErr.message}`);
-  const stagingTexts = (stagingTextsRaw ?? []) as Record<string, unknown>[];
+  const stagingTexts = (stagingTextsRaw ?? []) as unknown as Record<string, unknown>[];
   console.log(`   staging texts: ${stagingTexts.length}`);
 
   // 3. Find which staging ids already exist in prod — those rows we want to preserve
@@ -231,7 +231,13 @@ async function syncCourses(staging: SupabaseClient, prod: SupabaseClient, apply:
   console.log(`\n🎓 Syncing courses…`);
   const { data, error } = await staging.from('courses').select('*');
   if (error) throw new Error(`staging courses: ${error.message}`);
-  const rows = (data ?? []) as Record<string, unknown>[];
+  // Strip `id` so the upsert lets prod keep its existing id on slug-match (preserves
+  // course_texts and course_enrollments FKs) and assigns a fresh id to newly inserted
+  // courses. `slug` is the stable natural key — reading_blurbs.course_slug uses it.
+  const rows = (data ?? []).map((r) => {
+    const { id: _id, ...rest } = r as Record<string, unknown>;
+    return rest;
+  });
   console.log(`   staging courses: ${rows.length}`);
 
   if (!apply) {
@@ -239,7 +245,7 @@ async function syncCourses(staging: SupabaseClient, prod: SupabaseClient, apply:
     return;
   }
 
-  const wrote = await chunkedUpsert(prod, 'courses', rows, 'id');
+  const wrote = await chunkedUpsert(prod, 'courses', rows, 'slug');
   console.log(`   wrote: ${wrote}`);
 }
 
