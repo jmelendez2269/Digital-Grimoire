@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllLenses } from "@/lib/parallax/lenses";
+import { getLensColorClasses } from "@/lib/utils/lens-colors";
 
 export const metadata: Metadata = {
   title: "AI Disclaimer & Discernment Guide | Prismarium",
@@ -104,15 +105,22 @@ export default function AIDisclaimerPage() {
             </p>
 
             <div className="space-y-6 mt-4">
-              {lenses.map((lens) => (
-                <div key={lens.id} className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold text-amber-200 mb-2">{lens.name}</h4>
+              {lenses.map((lens) => {
+                const lensColor = getLensColorClasses(lens.id);
+
+                return (
+                <div key={lens.id} className={`bg-zinc-900/50 border ${lensColor.border} rounded-lg p-4`}>
+                  <h4 className={`text-lg font-semibold ${lensColor.text} mb-2 flex items-center gap-2`}>
+                    <span className={`h-2.5 w-2.5 rounded-full ${lensColor.dot}`} />
+                    <span>{lens.name}</span>
+                  </h4>
                   <p className="text-sm text-zinc-400 mb-3 italic">{lens.description}</p>
                   <div className="bg-zinc-950/50 rounded p-3 border border-zinc-800">
                     <p className="text-sm text-zinc-300 whitespace-pre-line">{lens.systemPrompt}</p>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">Response Generation Process</h3>

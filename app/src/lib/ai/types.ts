@@ -1,12 +1,14 @@
-export type AIProvider = 'openai' | 'anthropic' | 'google';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter';
 
-export type AIModel =
+export type KnownAIModel =
     | 'gpt-4o'
     | 'gpt-4o-mini'
     | 'claude-3-5-sonnet-latest'
     | 'claude-3-opus-20240229'
     | 'gemini-1-5-pro'
     | 'gemini-1-5-flash';
+
+export type AIModel = KnownAIModel | (string & {});
 
 export interface ChatMessage {
     role: 'user' | 'assistant' | 'system';

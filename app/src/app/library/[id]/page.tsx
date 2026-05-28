@@ -27,7 +27,8 @@ import CollectionsPanel from '@/components/CollectionsPanel';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TableOfContents, { TOCItem } from '@/components/TableOfContents';
-import { formatFileSize, formatDate, cleanHtmlText } from '@/lib/utils/formatting';
+import { formatFileSize, formatDate, cleanHtmlText, formatLensName } from '@/lib/utils/formatting';
+import { getLensColorClasses } from '@/lib/utils/lens-colors';
 import { extractPDFText } from '@/lib/utils/pdf-text-extractor';
 import { useAuth } from '@/contexts/AuthContext';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -117,10 +118,300 @@ interface TextDocument {
     lineCount?: number;
     metadataFileKey?: string;
     isStructuredText?: boolean;
+    isCorpusCollection?: boolean;
+    corpus?: CorpusCollectionMetadata;
     chapters?: Chapter[];
     format?: 'html' | 'markdown' | 'plaintext';
     sourceUrl?: string;
   };
+}
+
+interface CorpusCollectionItem {
+  title: string;
+  subtitle?: string;
+  sourceUrl: string;
+  textId?: string;
+  expectedSections?: number;
+}
+
+interface CorpusCollectionGroup {
+  id: string;
+  title: string;
+  description?: string;
+  items: CorpusCollectionItem[];
+}
+
+interface CorpusCollectionMetadata {
+  slug: string;
+  title: string;
+  sourceUrl?: string;
+  sourceNote?: string;
+  importStrategy?: string;
+  groups: CorpusCollectionGroup[];
+}
+
+function normalizeCorpusUrlKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.hash = '';
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+const BATCH_IMPORT_DELAY_MS = 5000;
+
+function CorpusCollectionViewer({ corpus }: { corpus: CorpusCollectionMetadata }) {
+  const [resolvedTextIds, setResolvedTextIds] = useState<Record<string, string>>({});
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number; current?: string } | null>(null);
+  const [batchSummary, setBatchSummary] = useState<{ success: number; failures: { title: string; error: string }[] } | null>(null);
+  const cancelBatchRef = useRef(false);
+
+  useEffect(() => {
+    const urls = corpus.groups
+      .flatMap(group => group.items.map(item => item.sourceUrl))
+      .filter((url): url is string => typeof url === 'string' && url.length > 0);
+
+    if (urls.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch('/api/texts/by-source-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls }),
+        });
+        if (!response.ok) return;
+        const { matches } = await response.json();
+        if (cancelled || !matches) return;
+        const map: Record<string, string> = {};
+        for (const [url, info] of Object.entries(matches as Record<string, { id: string }>)) {
+          if (info?.id) map[url] = info.id;
+        }
+        setResolvedTextIds(map);
+      } catch (err) {
+        console.warn('[CorpusCollectionViewer] Failed to resolve textIds:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [corpus]);
+
+  const resolveTextId = (item: CorpusCollectionItem): string | undefined => {
+    if (item.textId) return item.textId;
+    return resolvedTextIds[normalizeCorpusUrlKey(item.sourceUrl)];
+  };
+
+  const totalItems = corpus.groups.reduce((sum, group) => sum + group.items.length, 0);
+  const linkedItems = corpus.groups.reduce(
+    (sum, group) => sum + group.items.filter(item => resolveTextId(item)).length,
+    0
+  );
+  const unlinkedItems = corpus.groups.flatMap(g => g.items).filter(item => !resolveTextId(item));
+
+  const importAllUnlinked = async () => {
+    if (unlinkedItems.length === 0 || batchRunning) return;
+    cancelBatchRef.current = false;
+    setBatchSummary(null);
+    setBatchRunning(true);
+
+    const failures: { title: string; error: string }[] = [];
+    let success = 0;
+
+    for (let i = 0; i < unlinkedItems.length; i++) {
+      if (cancelBatchRef.current) break;
+      const item = unlinkedItems[i];
+      setBatchProgress({ done: i, total: unlinkedItems.length, current: item.title });
+
+      try {
+        const resp = await fetch('/api/import-sacred-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: item.sourceUrl, useAI: false }),
+        });
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          failures.push({ title: item.title, error: data?.error || `HTTP ${resp.status}` });
+        } else {
+          const data = await resp.json();
+          if (data?.textId) {
+            setResolvedTextIds(prev => ({
+              ...prev,
+              [normalizeCorpusUrlKey(item.sourceUrl)]: data.textId,
+            }));
+          }
+          success++;
+        }
+      } catch (err) {
+        failures.push({ title: item.title, error: err instanceof Error ? err.message : 'Unknown error' });
+      }
+
+      if (i < unlinkedItems.length - 1 && !cancelBatchRef.current) {
+        await new Promise(r => setTimeout(r, BATCH_IMPORT_DELAY_MS));
+      }
+    }
+
+    setBatchProgress(null);
+    setBatchRunning(false);
+    setBatchSummary({ success, failures });
+  };
+
+  const cancelBatch = () => {
+    cancelBatchRef.current = true;
+  };
+
+  return (
+    <div className="h-full overflow-y-auto rounded-lg border border-amber-900/20 bg-zinc-900/50">
+      <div className="p-6 md:p-8">
+        <div className="mb-8 border-b border-amber-900/20 pb-6">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="rounded border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-300">
+              Corpus
+            </span>
+            <span className="rounded border border-amber-600/30 bg-amber-600/10 px-2.5 py-1 text-xs text-amber-300">
+              {corpus.groups.length} groups
+            </span>
+            <span className="rounded border border-amber-600/30 bg-amber-600/10 px-2.5 py-1 text-xs text-amber-300">
+              {totalItems} works
+            </span>
+            {linkedItems > 0 && (
+              <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
+                {linkedItems} linked
+              </span>
+            )}
+          </div>
+          <h2 className="mb-3 text-3xl font-bold text-amber-100">{corpus.title}</h2>
+          {corpus.sourceNote && (
+            <p className="max-w-3xl text-sm leading-relaxed text-amber-100/75">
+              {corpus.sourceNote}
+            </p>
+          )}
+          {corpus.importStrategy && (
+            <p className="mt-3 max-w-3xl text-xs leading-relaxed text-amber-100/50">
+              {corpus.importStrategy}
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {unlinkedItems.length > 0 && !batchRunning && (
+              <button
+                type="button"
+                onClick={importAllUnlinked}
+                className="inline-flex items-center justify-center rounded border border-amber-500/60 bg-amber-500/15 px-4 py-2 text-sm font-medium text-amber-100 transition-colors hover:bg-amber-500/25"
+              >
+                Import all unlinked ({unlinkedItems.length})
+              </button>
+            )}
+            {batchRunning && batchProgress && (
+              <>
+                <span className="inline-flex items-center gap-2 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+                  Importing {batchProgress.done + 1} of {batchProgress.total}
+                  {batchProgress.current ? `: ${batchProgress.current}` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={cancelBatch}
+                  className="inline-flex items-center rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-200 hover:bg-red-500/20"
+                >
+                  Cancel after current
+                </button>
+              </>
+            )}
+            {batchSummary && !batchRunning && (
+              <div className="w-full rounded border border-amber-700/30 bg-zinc-950/60 p-3 text-sm text-amber-100/80">
+                <div className="font-medium">
+                  Batch complete: {batchSummary.success} imported
+                  {batchSummary.failures.length > 0 ? `, ${batchSummary.failures.length} failed` : ''}.
+                </div>
+                {batchSummary.failures.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-red-300">
+                    {batchSummary.failures.map((f, idx) => (
+                      <li key={idx}>
+                        <span className="font-medium">{f.title}:</span> {f.error}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {corpus.groups.map((group) => (
+            <section
+              key={group.id}
+              className="rounded-lg border border-amber-900/20 bg-zinc-950/50 p-5"
+            >
+              <div className="mb-4">
+                <h3 className="text-xl font-semibold text-amber-100">{group.title}</h3>
+                {group.description && (
+                  <p className="mt-2 text-sm leading-relaxed text-amber-100/60">
+                    {group.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-3">
+                {group.items.map((item) => (
+                  <div
+                    key={`${group.id}-${item.title}`}
+                    className="flex flex-col gap-3 rounded border border-white/10 bg-zinc-900/70 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium text-amber-100">{item.title}</div>
+                      {item.subtitle && (
+                        <div className="mt-1 text-xs text-amber-100/50">{item.subtitle}</div>
+                      )}
+                      {item.expectedSections && (
+                        <div className="mt-1 text-xs text-amber-100/40">
+                          Expected sections: {item.expectedSections}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      {(() => {
+                        const linkedId = resolveTextId(item);
+                        return linkedId ? (
+                          <Link
+                            href={`/library/${linkedId}`}
+                            className="inline-flex items-center justify-center rounded border border-amber-600/40 bg-amber-600/15 px-3 py-1.5 text-xs font-medium text-amber-200 transition-colors hover:bg-amber-600/25"
+                          >
+                            Open Text
+                          </Link>
+                        ) : null;
+                      })()}
+                      {!resolveTextId(item) && (
+                        <span className="inline-flex items-center justify-center rounded border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-400">
+                          Not linked yet
+                        </span>
+                      )}
+                      <a
+                        href={item.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-1 rounded border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition-colors hover:bg-cyan-500/20"
+                      >
+                        Source
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function DocumentDetailPage() {
@@ -680,18 +971,23 @@ export default function DocumentDetailPage() {
         return;
       }
 
-      console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key, 'Source format:', data.source_format);
+      console.log('[DocumentDetailPage] Document loaded:', data.title, 'Status:', data.status, 'Has S3 key:', !!data.s3_key, 'Source format:', data.source_format, 's3_key:', data.s3_key);
       setDocument(data as TextDocument);
 
-      // Check if this is an HTML file (not structured text, source_format is html)
-      // Fallback: if source_format is null, check file extension from s3_key
-      let isHtmlFile = data.source_format === 'html' && !data.metadata?.isStructuredText;
+      // Check if this is an HTML or TXT file (not structured text). Both render
+      // through the HTML proxy route — TXT is served wrapped in a <pre> shell.
+      let isHtmlFile =
+        (data.source_format === 'html' || data.source_format === 'txt') &&
+        !data.metadata?.isStructuredText;
 
       // Fallback detection: check file extension when source_format is null
       if (!isHtmlFile && !data.source_format && data.s3_key && !data.metadata?.isStructuredText) {
         const filename = data.s3_key.split('/').pop() || '';
         const fileExtension = filename.split('.').pop()?.toLowerCase() || '';
-        isHtmlFile = fileExtension === 'html' || fileExtension === 'htm';
+        isHtmlFile =
+          fileExtension === 'html' ||
+          fileExtension === 'htm' ||
+          fileExtension === 'txt';
       }
 
       // If document has S3 key, fetch the signed URL from R2
@@ -865,7 +1161,7 @@ export default function DocumentDetailPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to re-import content');
+        throw new Error(error.details || error.error || 'Failed to re-import content');
       }
 
       const data = await response.json();
@@ -1438,8 +1734,10 @@ export default function DocumentDetailPage() {
                         </div>
                       </div>
                     )}
-                    {/* Show ChapterViewer for structured text documents */}
-                    {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                    {/* Show CorpusCollectionViewer for curated one-off collection hubs */}
+                    {document.metadata?.isCorpusCollection && document.metadata.corpus ? (
+                      <CorpusCollectionViewer corpus={document.metadata.corpus} />
+                    ) : document.metadata?.isStructuredText && document.metadata.chapters ? (
                       <ChapterViewer
                         chapters={document.metadata.chapters}
                         documentTitle={document.title}
@@ -1532,14 +1830,18 @@ export default function DocumentDetailPage() {
                           <div>
                             <dt className="text-sm text-amber-100/60 mb-2">Lenses</dt>
                             <dd className="flex flex-wrap gap-2">
-                              {document.lenses.map((lens, index) => (
+                              {document.lenses.map((lens, index) => {
+                                const lensColor = getLensColorClasses(lens);
+
+                                return (
                                 <span
                                   key={index}
-                                  className="px-3 py-1 bg-purple-600/10 text-purple-400 rounded-full text-xs font-medium border border-purple-600/20"
+                                  className={`px-3 py-1 ${lensColor.bg} ${lensColor.text} rounded-full text-xs font-medium border ${lensColor.border}`}
                                 >
-                                  {lens.replace(/_/g, ' ')}
+                                  {formatLensName(lens)}
                                 </span>
-                              ))}
+                                );
+                              })}
                             </dd>
                           </div>
                         )}
@@ -1574,7 +1876,15 @@ export default function DocumentDetailPage() {
                             <dd className="text-amber-100">{document.type.replace(/_/g, ' ')}</dd>
                           </div>
                         )}
-                        {document.metadata?.isStructuredText && document.metadata.chapters ? (
+                        {document.metadata?.isCorpusCollection && document.metadata.corpus ? (
+                          <div>
+                            <dt className="text-sm text-amber-100/60 mb-1">Corpus</dt>
+                            <dd className="text-amber-100">
+                              {document.metadata.corpus.groups.length} groups /{' '}
+                              {document.metadata.corpus.groups.reduce((sum, group) => sum + group.items.length, 0)} works
+                            </dd>
+                          </div>
+                        ) : document.metadata?.isStructuredText && document.metadata.chapters ? (
                           <div>
                             <dt className="text-sm text-amber-100/60 mb-1">Chapters</dt>
                             <dd className="text-amber-100">{document.metadata.chapters.length} chapters</dd>
@@ -1661,16 +1971,18 @@ export default function DocumentDetailPage() {
 
 
                 {/* Table of Contents */}
-                <TableOfContents
-                  items={tocItems}
-                  activeItemId={activeTOCItemId}
-                  onItemClick={handleTOCItemClick}
-                  chapters={document?.metadata?.isStructuredText ? document.metadata.chapters : undefined}
-                  documentTitle={document?.title}
-                  textId={documentId}
-                  isAdmin={isAdmin}
-                  onItemsUpdate={handleTOCItemsUpdate}
-                />
+                {!document.metadata?.isCorpusCollection && (
+                  <TableOfContents
+                    items={tocItems}
+                    activeItemId={activeTOCItemId}
+                    onItemClick={handleTOCItemClick}
+                    chapters={document?.metadata?.isStructuredText ? document.metadata.chapters : undefined}
+                    documentTitle={document?.title}
+                    textId={documentId}
+                    isAdmin={isAdmin}
+                    onItemsUpdate={handleTOCItemsUpdate}
+                  />
+                )}
 
                 <CollectionsPanel textId={documentId} />
               </div>
@@ -1678,7 +1990,7 @@ export default function DocumentDetailPage() {
           </div>
 
           {/* Floating Audio Player for TTS */}
-          {document && document.status === 'ready' && (
+          {document && document.status === 'ready' && !document.metadata?.isCorpusCollection && (
             <AudioPlayer
               documentId={documentId}
               ocrText={fullText || (document.content ? cleanHtmlText(document.content) : '')}

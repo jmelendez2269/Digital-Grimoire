@@ -11,7 +11,7 @@
 
 | Field | Description | Example |
 |-------|-------------|---------|
-| `course_id` | Unique identifier (C##) | C01 |
+| `course_id` | Unique identifier (C##) — omit for expansion-family courses | C01 |
 | `title` | Course name | How Humans Know What They Know |
 | `core_question` | The engine — a question, never a topic | "What counts as truth — and who decides?" |
 | `arc` | Which curriculum arc this belongs to | Foundational Synthesis / Transformation & Inner Work / Convergence & Modern Application |
@@ -20,6 +20,23 @@
 | `level` | Difficulty / prerequisite level | Foundational–Intermediate |
 | `orientation` | Positioning between rigor and insight | Bridge between academic rigor and esoteric insight |
 | `mode` | Experiential tone | Reflective, analytical, initiatory |
+
+#### Course Family Taxonomy (Phase 2)
+
+These fields place the course inside the family-and-spine model defined in `docs/planning/Prismarium_Course_Family_Taxonomy_v1.md`. All are optional for backwards compatibility; new courses should populate them.
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `course_family` | Primary family slug | `core-spine`, `foundation-doors`, `esoteric-practice`, `visual-mathematical` |
+| `track_slug` | The track within the family, if applicable | `arc-1-foundational`, `beginner-sequence`, `entry-point` |
+| `track_order` | Position within the suggested track sequence | `1`, `2`, `3` |
+| `recommended_level` | Public-facing difficulty signal | `No background needed`, `Some prior courses recommended`, `Arc 1 required` |
+| `entry_point` | Designed as a first encounter with the platform | `true`, `false` |
+| `prerequisites` | Comma-separated course slugs or family slugs that prepare for this course | `c01, c02` or `arc-1` |
+| `related_course_slugs` | Courses that pair well without strict prerequisite relationship | `c13, form-number-vision` |
+| `multi_family` | Belongs to more than one family (flag for Phase 5) | `true`, `false` |
+
+> Notes: list fields accept comma-separated values OR a JSON array (`["c01", "c02"]`). Booleans accept `true`/`false`/`yes`/`no`. Slugs should be lowercase-hyphenated.
 
 ### Course Premise
 > 2–4 sentences. Why this course exists. What gap it fills. Written in the platform voice — calm, precise, invitational. Not a sales pitch.

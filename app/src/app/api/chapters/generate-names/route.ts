@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { createClient } from '@/lib/supabase/server';
 import { logApiUsage } from '@/lib/usage-tracker';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getDefaultOpenRouterMetadataModel, getOpenRouterClient } from '@/lib/ai/openrouter-client';
 
 interface Chapter {
   id: string;
@@ -39,12 +35,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'OpenRouter API key not configured' },
         { status: 500 }
       );
     }
+
+    const openai = getOpenRouterClient();
+    const model = getDefaultOpenRouterMetadataModel();
 
     // Group chapters by volume
     const scienceChapters = chapters.filter((ch: Chapter) => 
@@ -96,7 +95,7 @@ Return a JSON object with this exact format:
 The array should have exactly ${volumeChapters.length} titles, one for each chapter in order.`;
 
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model,
         messages: [
           {
             role: 'system',
@@ -164,7 +163,7 @@ The array should have exactly ${volumeChapters.length} titles, one for each chap
           outputTokens: totalOutputTokens,
           chapterCount: chapters.length,
           documentTitle,
-          model: 'gpt-4o',
+          model,
         },
         success: true,
       });

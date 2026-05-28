@@ -1,10 +1,6 @@
-import OpenAI from 'openai';
 import { createClient } from '@/lib/supabase/server';
 import { logApiUsage } from '@/lib/usage-tracker';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getDefaultOpenRouterModel, getOpenRouterClient } from '@/lib/ai/openrouter-client';
 
 export interface Concept {
   id: string;
@@ -37,8 +33,8 @@ export async function scoreConceptsWithAI(
   concepts: Concept[],
   userId?: string
 ): Promise<RelevanceScore[]> {
-  if (!process.env.OPENAI_API_KEY) {
-    console.warn('[AI Relevance] OpenAI API key not configured, skipping AI scoring');
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.warn('[AI Relevance] OpenRouter API key not configured, skipping AI scoring');
     return concepts.map((c) => ({ conceptId: c.id, score: 0 }));
   }
 
@@ -82,8 +78,10 @@ Return a JSON object with this exact format:
 The array should have exactly ${conceptsToScore.length} entries, one for each concept in order.`;
 
   try {
+    const openai = getOpenRouterClient();
+    const model = getDefaultOpenRouterModel();
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Use mini for cost efficiency
+      model,
       messages: [
         {
           role: 'system',
@@ -113,7 +111,7 @@ The array should have exactly ${conceptsToScore.length} entries, one for each co
           outputTokens,
           query,
           conceptCount: conceptsToScore.length,
-          model: 'gpt-4o-mini',
+          model: completion.model || model,
         },
         success: true,
       });

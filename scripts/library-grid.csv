@@ -1,0 +1,147 @@
+ID,Title,Author / Translator,Year,Tradition,Domain,Priority,Layer,Status,Public Domain Status,Source URL,Core Lenses,Secondary Lenses,Convergence Score,Convergence Statement,Why Chosen,Review Notes,Keep / Reframe / Remove,Original Type,Original Status
+T001,The Kybalion,Three Initiates,1908,Hermeticism,Hermeticism,P1,Core,Approved,Clear,https://www.sacred-texts.com/eso/kyb/index.htm,,,5,,,,Keep,book_esoteric,Uploaded
+T002,On the Origin of Species,Charles Darwin,1859,Science / Evolution,Evolution,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/1228,,,5,,,,Keep,book_science,Uploaded
+T003,The Interpretation of Dreams,Sigmund Freud,1900,Depth Psychology,Psychoanalysis,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/56657,,,5,,,,Keep,book_psychology,Uploaded
+T004,Meditations,Marcus Aurelius,180,Stoicism,Stoicism,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/2680,,,5,,,,Keep,book_philosophical,Uploaded
+T005,The Bhagavad Gita,Vyasa,500BCE,Hindu / Indian,Hindu Philosophy,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/2388,,,5,,,,Keep,book_spiritual,Uploaded
+T006,The Elements Book I,Euclid,300BCE,Mathematics / Geometry,Geometry,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/21076,,,5,,,,Keep,reference_table,Uploaded
+T007,The Golden Bough,James George Frazer,1890,Comparative Religion,Comparative Religion,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/3623,,,5,,,,Keep,anthropology,Uploaded
+T008,The Tao Te Ching,Lao Tzu,600BCE,Daoist / Chinese,Daoism,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/216,,,5,,,,Keep,book_spiritual,Uploaded
+T009,The Republic,Plato,380BCE,Greek Philosophy,Political Philosophy,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/1497,,,5,,,,Keep,book_philosophical,Uploaded
+T010,The Secret Teachings of All Ages,Manly P. Hall,1928,Western Esotericism,Mystery Traditions,P1,Core,Approved,Verify,https://www.sacred-texts.com/eso/sta/index.htm,,,5,,,,Keep,book_esoteric,Uploaded
+T011,Thus Spoke Zarathustra,Friedrich Nietzsche,1883,Western Philosophy,Existentialism,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/1998,,,5,,,,Keep,book_philosophical,Uploaded
+T012,The Varieties of Religious Experience,William James,1902,Psychology of Religion,Religious Psychology,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/621,,,5,,,,Keep,book_psychology,Uploaded
+T013,The Emerald Tablet,Hermes Trismegistus,150CE,Hermeticism,Hermeticism,P1,Core,Approved,Clear,https://www.sacred-texts.com/alc/emerald.htm,,,5,,,,Keep,book_esoteric,Uploaded
+T014,Cosmic Consciousness,Richard Maurice Bucke,1901,Consciousness Studies,Consciousness,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/8819,,,5,,,,Keep,book_psychology,Uploaded
+T015,The Confessions,St. Augustine,397,Christian,Christianity,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/3296,,,5,,,,Keep,book_spiritual,Uploaded
+T016,The Upanishads,Various Sages,800BCE,Hindu / Indian,Hindu Philosophy,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/3283,,,5,,,,Keep,book_spiritual,Uploaded
+T017,Isis Unveiled Volume 1,Helena Blavatsky,1877,Theosophy,Theosophy,P1,Core,Approved,Clear,https://www.sacred-texts.com/the/iu/index.htm,,,5,,,,Keep,book_esoteric,Uploaded
+T018,The Principles of Psychology Vol 1,William James,1890,Psychology,Psychology,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/57628,,,5,,,,Keep,book_psychology,Uploaded
+T019,Relativity: The Special and General Theory,Albert Einstein,1920,Science / Physics,Physics,P1,Core,Approved,Clear,https://www.gutenberg.org/ebooks/5001,,,5,,,,Keep,book_science,Uploaded
+T020,The Book of the Sacred Magic of Abramelin,Abraham of Worms,1458,Western Esotericism,Ceremonial Magic,P1,Core,Approved,Clear,https://www.sacred-texts.com/grim/abr/index.htm,,,5,,,,Keep,ritual_guide,Uploaded
+T021,Transcendental Magic,Eliphas Levi,1856,Western Esotericism,Ceremonial Magic,P2,Core,Approved,Clear,https://www.sacred-texts.com/eso/tm/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T022,The Descent of Man,Charles Darwin,1871,Science / Evolution,Evolution,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/2300,,,4,,,,Keep,book_science,Uploaded
+T023,Psychology of the Unconscious,Carl Jung,1912,Depth Psychology,Depth Psychology,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/47942,,,4,,,,Keep,book_psychology,Uploaded
+T024,The Chemical Wedding of Christian Rosenkreutz,Johann Valentin Andreae,1616,Rosicrucian,Rosicrucianism,P2,Core,Approved,Clear,https://www.sacred-texts.com/sro/rhr/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T025,Beyond Good and Evil,Friedrich Nietzsche,1886,Western Philosophy,Existentialism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/4363,,,4,,,,Keep,book_philosophical,Uploaded
+T026,The Dhammapada,Buddha,500BCE,Buddhist,Buddhism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/2017,,,4,,,,Keep,book_spiritual,Uploaded
+T027,Sepher Yetzirah,Rabbi Akiba ben Joseph,200CE,Jewish / Kabbalah,Qabalah / Kabbalah,P2,Core,Approved,Clear,https://www.sacred-texts.com/jud/yetzirah.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T028,The Voyage of the Beagle,Charles Darwin,1839,Natural History,Natural History,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/944,,,4,,,,Keep,book_science,Uploaded
+T029,The Enneads,Plotinus,270,Neoplatonism,Neoplatonism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/55317,,,4,,,,Keep,book_philosophical,Uploaded
+T030,The Analects,Confucius,500BCE,Confucian / Chinese,Confucianism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/3330,,,4,,,,Keep,book_philosophical,Uploaded
+T031,The Kabbalah Unveiled,S.L. MacGregor Mathers,1887,Jewish / Kabbalah,Qabalah / Kabbalah,P2,Core,Approved,Clear,https://www.sacred-texts.com/jud/tku/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T032,Tetrabiblos,Claudius Ptolemy,150,Astrology,Astrology,P2,Core,Approved,Clear,https://www.sacred-texts.com/astro/ptb/index.htm,,,4,,,,Keep,reference_table,Uploaded
+T033,The Ego and the Id,Sigmund Freud,1923,Depth Psychology,Psychoanalysis,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/52694,,,4,,,,Keep,book_psychology,Uploaded
+T034,The World as Will and Representation,Arthur Schopenhauer,1818,Western Philosophy,Idealism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/40097,,,4,,,,Keep,book_philosophical,Uploaded
+T035,Myths and Legends of Ancient Greece and Rome,E.M. Berens,1880,Greco-Roman Mythology,Greco-Roman Mythology,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/22381,,,4,,,,Keep,mythology,Uploaded
+T036,The Pictorial Key to the Tarot,Arthur Edward Waite,1910,Tarot,Tarot,P2,Core,Approved,Clear,https://www.sacred-texts.com/tarot/pkt/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T037,Harmonices Mundi Book V,Johannes Kepler,1619,Science / Astronomy,Astronomy,P2,Core,Approved,Clear,https://archive.org/details/ioanniskeplerisah00kepl,,,4,,,,Keep,book_science,Uploaded
+T038,"The Life of St. Teresa of Jesus, of the Order of Our Lady of Carmel",St. Teresa of Avila,1565,Christian Mysticism,Christian Mysticism,P2,Core,Approved,Clear,https://www.sacred-texts.com/chr/teresa/lsa/index.htm,,,4,,,,Keep,book_spiritual,Uploaded
+T039,The Interior Castle,Teresa of Avila,1577,Mysticism,Mysticism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/8120,,,4,,,,Keep,book_spiritual,Uploaded
+T040,Self-Reliance and Other Essays,Ralph Waldo Emerson,1844,Transcendentalism,Transcendentalism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/16643,,,4,,,,Keep,book_philosophical,Uploaded
+T041,The Art of War,Sun Tzu,500BCE,Strategy / Political Thought,Strategy,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/132,,,4,,,,Keep,book_philosophical,Uploaded
+T042,I Ching,Anonymous,1000BCE,Divination,Divination,P2,Core,Approved,Clear,https://www.sacred-texts.com/ich/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T043,The Hermetic Museum Volume 1,Arthur Edward Waite,1893,Alchemy,Alchemy,P2,Core,Approved,Clear,https://www.sacred-texts.com/alc/hm1/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T044,The Tarot of the Bohemians,Papus,1889,Tarot,Tarot,P2,Core,Approved,Clear,https://www.sacred-texts.com/tarot/tob/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T045,Magic White and Black,Franz Hartmann,1888,Occultism,Occultism,P2,Core,Needs Review,Clear,https://www.sacred-texts.com/eso/mwb/index.htm,,,4,,,,Keep,book_esoteric,Needs Digitizing
+T046,Christian Astrology,William Lilly,1647,Astrology,Astrology,P2,Core,Approved,Clear,https://www.sacred-texts.com/astro/ca/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T047,The Symposium,Plato,385BCE,Ethics,Ethics,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/1600,,,4,,,,Keep,book_philosophical,Uploaded
+T048,The Discourses,Epictetus,108,Stoicism,Stoicism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/871,,,4,,,,Keep,book_philosophical,Uploaded
+T049,Ethics,Baruch Spinoza,1677,Western Philosophy,Rationalism,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/3800,,,4,,,,Keep,book_philosophical,Uploaded
+T050,The Problems of Philosophy,Bertrand Russell,1912,Epistemology,Epistemology,P2,Core,Approved,Clear,https://www.gutenberg.org/ebooks/5827,,,4,,,,Keep,book_philosophical,Uploaded
+T051,The Secret Doctrine Volume 1,Helena Blavatsky,1888,Theosophy,Theosophy,P2,Core,Approved,Clear,https://www.sacred-texts.com/the/sd/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T052,The Zohar Volume 1,Moses de Leon,1290,Jewish / Kabbalah,Qabalah / Kabbalah,P2,Core,Approved,Clear,https://www.sacred-texts.com/jud/zdm/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T053,The Metaphysics,Aristotle,350BCE,Metaphysics,Metaphysics,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/54448,,,3,,,,Reframe,book_philosophical,Uploaded
+T054,Beyond the Pleasure Principle,Sigmund Freud,1920,Depth Psychology,Psychoanalysis,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/44565,,,3,,,,Reframe,book_psychology,Uploaded
+T055,The Gay Science,Friedrich Nietzsche,1882,Western Philosophy,Existentialism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/52914,,,3,,,,Reframe,book_philosophical,Uploaded
+T056,The Nature of the Physical World,Arthur Eddington,1928,Science / Physics,Physics,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/48934,,,3,,,,Reframe,book_science,Uploaded
+T057,Man's Place in Nature,Thomas Huxley,1863,Science / Evolution,Evolution,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/2931,,,3,,,,Reframe,book_science,Uploaded
+T058,The Divine Pymander,Hermes Trismegistus,300CE,Hermeticism,Hermeticism,P3,Core,Needs Review,Clear,https://www.sacred-texts.com/eso/pym/index.htm,,,3,,,,Reframe,book_esoteric,Uploaded
+T059,The Yoga Sutras of Patanjali,Patanjali,400BCE,Yoga / Indian,Yoga,P3,Core,Needs Review,Clear,https://www.sacred-texts.com/hin/yogasutr.htm,,,3,,,,Reframe,book_spiritual,Uploaded
+T060,Mysticism,Evelyn Underhill,1911,Mysticism,Mysticism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/18428,,,3,,,,Reframe,book_spiritual,Uploaded
+T061,The Art of Worldly Wisdom,Baltasar Gracian,1647,Practical Philosophy,Practical Philosophy,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/5690,,,3,,,,Reframe,book_philosophical,Uploaded
+T062,Bulfinch's Mythology,Thomas Bulfinch,1855,Comparative Mythology,Comparative Mythology,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/4928,,,3,,,,Reframe,mythology,Uploaded
+T063,The Age of Fable,Thomas Bulfinch,1855,Greco-Roman Mythology,Greco-Roman Mythology,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/3327,,,3,,,,Reframe,mythology,Uploaded
+T064,Primitive Culture Volume 1,Edward Burnett Tylor,1871,Anthropology,Cultural Anthropology,P3,Core,Needs Review,Clear,https://archive.org/details/primitiveculture01tylouoft,,,3,,,,Reframe,anthropology,Uploaded
+T065,Human Nature and Conduct,John Dewey,1922,Pragmatism,Pragmatism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/41386,,,3,,,,Reframe,book_psychology,Uploaded
+T066,The Principles of Light and Color,Edwin Babbitt,1878,Science / Optics,Optics,P3,Core,Needs Review,Clear,https://www.sacred-texts.com/eso/ihas/index.htm,,,3,,,,Reframe,book_science,Uploaded
+T067,The Tibetan Book of the Dead,Padmasambhava,800,Tibetan Buddhist,Tibetan Buddhism,P3,Core,Needs Review,Clear,https://www.sacred-texts.com/bud/tib/index.htm,,,3,,,,Reframe,book_spiritual,Uploaded
+T068,The Gospel of Buddha,Paul Carus,1894,Buddhist,Buddhism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/48361,,,3,,,,Reframe,book_spiritual,Uploaded
+T069,The Conference of the Birds,Farid ud-Din Attar,1177,Sufi / Islamic Mysticism,Sufism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/28688,,,3,,,,Reframe,book_spiritual,Uploaded
+T070,Totem and Taboo,Sigmund Freud,1913,Depth Psychology,Psychoanalysis,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/41214,,,3,,,,Reframe,book_psychology,Uploaded
+T071,The Elementary Forms of Religious Life,Emile Durkheim,1912,Sociology Of Religion,Sociology Of Religion,P3,Core,Needs Review,Clear,https://archive.org/details/elementaryformso00durk,,,3,,,,Reframe,anthropology,Uploaded
+T072,The Cloud of Unknowing,Anonymous,1370,Mysticism,Mysticism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/9347,,,3,,,,Reframe,book_spiritual,Uploaded
+T073,The Imitation of Christ,Thomas a Kempis,1418,Christian,Christianity,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/1653,,,3,,,,Reframe,book_spiritual,Uploaded
+T074,Magic and Religion,Andrew Lang,1901,Comparative Religion,Comparative Religion,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/37811,,,3,,,,Reframe,anthropology,Uploaded
+T075,The Egyptian Book of the Dead,E.A. Wallis Budge,1895,Egyptian Religion,Egyptian Religion,P3,Core,Needs Review,Clear,https://www.sacred-texts.com/egy/ebod/index.htm,,,3,,,,Reframe,book_spiritual,Uploaded
+T076,The Masnavi Book 1,Jalal ad-Din Rumi,1258,Sufi / Islamic Mysticism,Sufism,P3,Core,Needs Review,Clear,https://www.sacred-texts.com/isl/masnavi/index.htm,,,3,,,,Reframe,book_spiritual,Uploaded
+T077,The Alchemy of Happiness,Al-Ghazali,1105,Sufi / Islamic Mysticism,Sufism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/48206,,,3,,,,Reframe,book_spiritual,Uploaded
+T078,The Mystics of Islam,Reynold Nicholson,1914,Sufi / Islamic Mysticism,Sufism,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/45166,,,3,,,,Reframe,book_spiritual,Uploaded
+T079,The Way of a Pilgrim,Anonymous,1884,Eastern Christian,Eastern Christianity,P3,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/53425,,,3,,,,Reframe,book_spiritual,Uploaded
+T080,The Mechanism of the Heavens,Mary Somerville,1831,Science / Astronomy,Astronomy,P3,Core,Needs Review,Clear,https://archive.org/details/mechanismofheave00some,,,3,,,,Reframe,book_science,Uploaded
+T081,Science and the Modern World,Alfred North Whitehead,1925,Philosophy of Science,Philosophy of Science,P3,Core,Needs Review,Clear,https://archive.org/details/sciencemodernwor00whit,,,3,,,,Reframe,book_science,Uploaded
+T082,The Divine Proportion,Luca Pacioli,1509,Sacred Geometry,Sacred Geometry,P3,Core,Needs Review,Clear,https://archive.org/details/divinaproportion00paci,,,3,,,,Reframe,reference_table,Uploaded
+T083,A Treatise on the Circle and the Sphere,Julian Coolidge,1916,Mathematics / Geometry,Geometry,P3,Core,Needs Review,Clear,https://archive.org/details/treatiseoncircle00cooluoft,,,3,,,,Reframe,reference_table,Uploaded
+T084,The Theory of Numbers,Thomas Heath,1910,Mathematics / Number Theory,Number Theory,P3,Core,Needs Review,Clear,https://archive.org/details/diophantusalex00heatiala,,,3,,,,Reframe,reference_table,queued
+T085,Jewish Magic and Superstition,Joshua Trachtenberg,1939,Jewish,Judaism,P3,Source Corpus,Archived,Verify,https://www.sacred-texts.com/jud/jms/index.htm,,,2,,,,Remove,anthropology,Uploaded
+T086,Prolegomena to Any Future Metaphysics,Immanuel Kant,1783,Epistemology,Epistemology,P4,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/52821,,,2,,,,Reframe,book_philosophical,Uploaded
+T087,The Natural History of Religion,David Hume,1757,Philosophy of Religion,Philosophy of Religion,P4,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/4583,,,2,,,,Reframe,book_philosophical,Uploaded
+T088,An Enquiry Concerning Human Understanding,David Hume,1748,Epistemology,Epistemology,P4,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/9662,,,2,,,,Reframe,book_philosophical,Uploaded
+T089,The Apology,Plato,399BCE,Ethics,Ethics,P4,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/1656,,,2,,,,Reframe,book_philosophical,Uploaded
+T090,Phaedo,Plato,380BCE,Metaphysics,Metaphysics,P4,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/1658,,,2,,,,Reframe,book_philosophical,Uploaded
+T091,The Nichomachean Ethics,Aristotle,350BCE,Ethics,Ethics,P4,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/8438,,,2,,,,Reframe,book_philosophical,Uploaded
+T092,Lives of Alchemystical Philosophers,Arthur Edward Waite,1888,Alchemy,Alchemy,P4,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/68687,,,2,,,,Reframe,historical,queued
+T093,The Book of Ceremonial Magic,Arthur Edward Waite,1911,Grimoires,Grimoires,P4,Core,Needs Review,Clear,https://www.sacred-texts.com/grim/bcm/index.htm,,,2,,,,Reframe,book_esoteric,Uploaded
+T094,The Rosicrucians,Hargrave Jennings,1870,Rosicrucian,Rosicrucianism,P4,Core,Needs Review,Clear,https://www.sacred-texts.com/sro/rhr/index.htm,,,2,,,,Reframe,historical,Uploaded
+T095,The Comte de Gabalis,Montfaucon de Villars,1670,Western Esotericism,Elemental Beings,P4,Core,Needs Review,Clear,https://www.sacred-texts.com/eso/cdg/index.htm,,,2,,,,Reframe,book_esoteric,Uploaded
+T096,The Practice of Magical Evocation,Franz Bardon,1956,Western Esotericism,Ceremonial Magic,P4,Source Corpus,Needs Review,Verify,https://archive.org/details/practiceofmagica00bard,,,2,,,,Reframe,ritual_guide,Uploaded
+T097,The Science of Breath,Yogi Ramacharaka,1904,Yoga / Indian,Yoga,P4,Core,Needs Review,Clear,https://www.sacred-texts.com/hin/sob/index.htm,,,2,,,,Reframe,book_spiritual,Uploaded
+T098,Light on the Path,Mabel Collins,1885,Theosophy,Theosophy,P4,Core,Needs Review,Clear,https://www.sacred-texts.com/the/lop/index.htm,,,2,,,,Reframe,book_spiritual,Uploaded
+T099,The Voice of the Silence,Helena Blavatsky,1889,Theosophy,Theosophy,P4,Core,Needs Review,Clear,https://www.sacred-texts.com/the/vos/index.htm,,,2,,,,Reframe,book_spiritual,Uploaded
+T100,The Gateless Gate,Ekai Mumon,1228,Zen Buddhist,Zen Buddhism,P4,Core,Needs Review,Clear,https://www.sacred-texts.com/bud/zen/mumonkan.htm,,,2,,,,Reframe,book_spiritual,Uploaded
+T101,The Mathematicall Praeface to Elements of Geometrie of Euclid of Megara,John Dee,1570,Sacred Geometry,Sacred Geometry,P2,Core,Needs Review,Clear,,,,4,,,,Keep,,
+T102,"The Life of St. Teresa of Jesus, of the Order of Our Lady of Carmel",St. Teresa of Avila,1565,Christian Mysticism,Christian Mysticism,P1,Core,Needs Review,Clear,https://www.gutenberg.org/ebooks/8120,,,5,,,Possible duplicate of T038; review before importing.,Reframe,book_spiritual,Uploaded
+T103,Pistis Sophia,G.R.S. Mead,1896,Gnostic,Gnosticism,P2,Core,Approved,Clear,https://www.sacred-texts.com/chr/ps/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T104,The Apocryphal New Testament,Montague Rhodes James,1924,Gnostic,Gnosticism,P1,Core,Needs Review,Clear,,,,5,,,Verify source availability and digitization status.,Keep,book_spiritual,queued
+T105,"Initiation, Human and Solar",Alice A. Bailey,1922,Theosophy,Theosophy,P1,Core,Approved,Clear,https://www.lucistrust.org/online_books/initiation_human_and_solar,,,5,,,,Keep,book_spiritual,Uploaded
+T106,The Real History of the Rosicrucians,Arthur Edward Waite,1887,Rosicrucian,Rosicrucianism,P2,Core,Approved,Clear,https://www.sacred-texts.com/sro/rhr/index.htm,,,4,,,,Keep,book_esoteric,Uploaded
+T107,The Quran (Pickthall translation),Marmaduke Pickthall,1930,Islamic,Islam,P2,Core,Approved,Verify,https://sacred-texts.com/isl/pick/,,,4,,,,Keep,,Uploaded
+T109,"The Mathnawi, Books II-VI",Rumi Nicholson,1925,Sufi / Islamic Mysticism,Sufism,P1,Core,Approved,Verify,https://archive.org/,,,5,,,,Keep,,
+T110,The Bezels of Wisdom (Fusus al-Hikam),Ibn Arabi,1230,Sufi / Islamic Mysticism,Sufism,P1,Core,Approved,Clear,https://archive.org/,,,5,,,,Keep,,Uploaded
+T111,The Incoherence of the Philosophers,Al-Ghazali Van Den Bergh,1954,Islamic Philosophy,Islamic Philosophy,P2,Core,Needs Review,Verify,https://archive.org/,,,3,,,,Reframe,,queued
+T112,The Incoherence of the Incoherence,Averroes Van Den Bergh,1180,Islamic Philosophy,Islamic Philosophy,P3,Core,Needs Review,Verify,https://archive.org/,,,3,,,,Reframe,,Uploaded
+T113,The Book of Healing (selections),Avicenna,1027,Islamic Philosophy,Islamic Philosophy,P2,Core,Needs Review,Clear,https://archive.org/,,,4,,,,Keep,,
+T115,The Niche for Lights (Mishkat al-Anwar),Al-Ghazali / W.H.T. Gairdner,1924,Sufi / Islamic Mysticism,Sufism,P2,Core,Approved,Clear,https://sacred-texts.com/isl/mishkat/,,,4,,,,Keep,,
+T116,A Moslem Saint of the Twentieth Century / The Tarjuman al-Ashwaq,Ibn Arabi/Nicholson,1911,Sufi / Islamic Mysticism,Sufism,P4,Source Corpus,Needs Review,Clear,,,,2,,,,Reframe,,
+T117,The Guide for the Perplexed,Maimonides/Friedlander,1881,Jewish Philosophy,Judaism,P1,Core,Approved,Clear,https://sacred-texts.com/jud/gfp/,,,5,,,,Keep,,
+T118,The Works of Philo of Alexandria,Philo/C.D. Yonge,1854,Hellenistic Jewish Philosophy,Judaism,P2,Core,Approved,Clear,https://earlychristianwritings.com,,,4,,,,Keep,,
+T119,Selections from the Talmud,Rodkinson,1903,Jewish,Judaism,P3,Source Corpus,Needs Review,Clear,https://sacred-texts.com/jud/t01/,,,3,,,,Reframe,,
+T121,Hasidic Tales (Buber early),Martin Buber,1928,Jewish / Hasidic,Judaism,P4,Source Corpus,Needs Review,Verify,,,,2,,,,Reframe,,
+T122,The Rig Veda,Trans. Ralph T.H. Griffith,1896,Hindu / Vedic,Hindu Philosophy,P1,Core,Approved,Clear,https://sacred-texts.com/hin/rigveda/,,,5,,,,Keep,,
+T123,The Lotus Sutra (Saddharma-Pundarika),Trans. Max Muller / H. Kern,1884,Mahayana Buddhist,Buddhism,P2,Core,Approved,Clear,https://sacred-texts.com/bud/lotus/,,,4,,,,Keep,,
+T124,The Laws of Manu,Trans. G. Buhler,1886,Hindu / Indian,Hindu Philosophy,P4,Source Corpus,Needs Review,Clear,https://sacred-texts.com/hin/manu.htm,,,2,,,,Reframe,,
+T125,The Mahabharata (selections Ganguli translation),Trans. K.M. Ganguli,1883,Hindu / Indian,Hindu Philosophy,P2,Core,Approved,Clear,https://sacred-texts.com/hin/maha/,,,4,,,,Keep,,
+T126,The Works of Mencius,Trans. James Legge,1895,Confucian / Chinese,Confucianism,P2,Core,Approved,Clear,https://sacred-texts.com/cfu/menc/,,,4,,,,Keep,,
+T127,Zhuangzi (Chuang Tzu),Trans. Herbert A. Giles,1889,Daoist / Chinese,Daoism,P1,Core,Approved,Clear,https://sacred-texts.com/tao/ctz/,,,5,,,,Keep,,
+T128,The Great Learning & Doctrine of the Mean,Trans. James Legge,1885,Confucian / Chinese,Confucianism,P3,Core,Needs Review,Clear,https://sacred-texts.com/cfu/conf3.htm,,,3,,,,Reframe,,
+T129,The Book of Songs (Shi Jing),Trans. James Legge,1876,Chinese Classics,Chinese Classics,P4,Source Corpus,Needs Review,Clear,https://sacred-texts.com/cfu/sbe03/,,,2,,,,Reframe,,
+T131,The Zend-Avesta,Trans. James Darmesteter,1880,Zoroastrian,Zoroastrianism,P3,Core,Needs Review,Clear,https://sacred-texts.com/zor/sbe04/,,,3,,,,Reframe,,
+T132,Selections from the Sacred Writings of the Sikhs,Trans. M.A. Macauliffe,1909,Sikh,Sikhism,P3,Core,Needs Review,Clear,https://sacred-texts.com/skh/,,,3,,,,Reframe,,
+T133,Revelations of Divine Love,Julian of Norwich,1395,Christian Mysticism,Christian Mysticism,P1,Core,Approved,Clear,https://ccel.org/ccel/julian/revelations,,,5,,,,Keep,,
+T134,Scivias (selections),Hildegard of Bingen,1151,Christian Mysticism,Christian Mysticism,P2,Core,Approved,Clear,https://sacred-texts.com,,,4,,,,Keep,,
+T135,The Flowing Light of the Godhead (selections),Mechthild of Magdeburg,1265,Christian Mysticism,Christian Mysticism,P2,Core,Approved,Clear,https://archive.org,,,4,,,,Keep,,
+T136,The Book of Margery Kempe,Margery Kempe,1436,Christian Mysticism,Christian Mysticism,P3,Core,Needs Review,Clear,https://ccel.org,,,3,,,,Reframe,,
+T137,Autobiography of Madame Guyon,Jeanne Guyon,1690,Christian Mysticism,Christian Mysticism,P2,Core,Approved,Clear,https://ccel.org/ccel/guyon,,,4,,,,Keep,,
+T138,The Book of the City of Ladies,Christine de Pizan,1405,Medieval Philosophy,Philosophy,P3,Core,Needs Review,Clear,https://archive.org,,,3,,,,Reframe,,
+T139,Thought Forms,Annie Besant & C.W. Leadbeater,1901,Theosophy,Theosophy,P3,Core,Needs Review,Clear,https://sacred-texts.com,,,3,,,,Reframe,,
+T140,The Perfect Way,Anna Kingsford & Edward Maitland,1882,Esoteric Christianity,Theosophy,P3,Core,Needs Review,Clear,https://sacred-texts.com,,,3,,,,Reframe,,
+T141,The Popol Vuh,Trans. Lewis Spence,1908,Mayan,Maya,P3,Source Corpus,Archived,Clear,https://sacred-texts.com/nam/maya/pvuheng.htm,,,3,,,,Reframe,,
+T147,The Kebra Nagast,Trans. E.A. Wallis Budge,1922,Ethiopian Christian,Ethiopian Christianity,P2,Core,Approved,Clear,https://sacred-texts.com/afr/kn/,,,4,,,,Keep,,
+T149,The New Testament (KJV),,1611,Christian,Christianity,P1,Core,Approved,Clear,https://gutenberg.org,,,5,,,,Keep,,
+T150,The Hebrew Bible (JPS 1917),Jewish Publication Society,1917,Jewish / Biblical,Judaism,P2,Core,Needs Review,Clear,https://sacred-texts.com/bib/jps/,,,3,,,,Reframe,,
+T151,The Didache,Trans. Charles Hoole,1894,Early Christian,Early Christianity,P3,Source Corpus,Needs Review,Clear,https://earlychristianwritings.com,,,3,,,,Reframe,,
+T152,The Shepherd of Hermas,Various older translations,180,Early Christian,Early Christianity,P3,Core,Needs Review,Clear,https://earlychristianwritings.com,,,3,,,,Reframe,,
+T153,Augustine - City of God,Trans. Marcus Dods,1871,Christian,Christianity,P1,Core,Approved,Clear,https://ccel.org/ccel/schaff/npnf102,,,5,,,,Keep,,
+T154,Tertium Organum,P.D. Ouspensky,1912,Western Esotericism,Fourth Way,P3,Core,Needs Review,Clear,https://archive.org,,,3,,,,Reframe,,
+T155,An Outline of Occult Science,Rudolf Steiner,1909,Anthroposophy,Anthroposophy,P4,Source Corpus,Needs Review,Clear,https://rsarchive.org,,,2,,,,Reframe,,
+T156,Creative Evolution,Henri Bergson,1907,Western Philosophy,Philosophy,P1,Core,Approved,Clear,https://gutenberg.org,,,5,,,,Keep,,

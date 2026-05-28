@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getR2Client, DeleteObjectCommand, PutObjectCommand, GetObjectCommand } from '@/lib/storage/r2-client';
-import { performOCR } from '@/lib/azure-ocr';
-import { extractMetadata } from '@/lib/claude-metadata';
+import { performOCR } from '@/lib/ocr';
+import { extractMetadata, type DocumentMetadata } from '@/lib/claude-metadata';
 import { scrapeCover } from '@/lib/cover-scraper';
 import { generateBookCover } from '@/lib/getimg-cover';
 import { logStorageUpload, logUserActivity, logOcrUsage } from '@/lib/usage-tracker';
@@ -37,6 +37,50 @@ function sanitizeMetadataValue(value: string): string {
     // Collapse multiple spaces into one
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function createMinimalMetadata(filename: string, ocrText?: string): DocumentMetadata {
+  const title = filename.replace(/\.[^/.]+$/, '') || 'Untitled Document';
+  const baseId = title
+    .replace(/[^a-z0-9]/gi, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .toLowerCase() || 'untitled_document';
+  const hasText = Boolean(ocrText?.trim());
+
+  return {
+    title,
+    author: undefined,
+    year: undefined,
+    publisher: undefined,
+    type: 'misc',
+    domain: 'general',
+    standardizedId: `doc_${baseId}_${Date.now()}`,
+    tags: [],
+    lenses: [],
+    confidence: 'speculative',
+    shortSummary: hasText
+      ? 'Metadata extraction was temporarily unavailable. The document uploaded successfully and can be enriched later.'
+      : 'The document uploaded successfully without extracted text. Metadata can be enriched later.',
+    longSummary: hasText
+      ? 'AI metadata extraction was temporarily unavailable during upload, so Prismarium saved this document with conservative filename-derived metadata. Use the admin edit screen to regenerate the title, summaries, tags, lenses, and curator note.'
+      : 'Prismarium saved this document with conservative filename-derived metadata because no extracted text was available during upload. Use the admin edit screen to enrich the metadata later.',
+  };
+}
+
+function shouldFallbackToMinimalMetadata(error: unknown): boolean {
+  const status = typeof error === 'object' && error !== null && 'status' in error
+    ? Number((error as { status?: number }).status)
+    : undefined;
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
+  return status === 429 ||
+    status === 503 ||
+    message.includes('429') ||
+    message.includes('rate limit') ||
+    message.includes('provider returned error') ||
+    message.includes('openrouter') ||
+    message.includes('empty response');
 }
 
 export async function POST(request: NextRequest) {
@@ -125,10 +169,14 @@ export async function POST(request: NextRequest) {
     const isHtmlByMimeType = mimeType === 'text/html' || mimeType === 'application/xhtml+xml';
     const isHtmlFile = isHtmlByExtension && isHtmlByMimeType;
 
+    // Plain text — either by extension or MIME type is enough
+    const isPlainTextFile =
+      fileExtension === 'txt' || mimeType === 'text/plain';
+
     console.log('Starting document processing for:', key);
     console.log('File extension:', fileExtension);
     console.log('MIME type:', mimeType);
-    console.log('Detected type:', isHtmlFile ? 'HTML' : 'PDF/Image');
+    console.log('Detected type:', isHtmlFile ? 'HTML' : isPlainTextFile ? 'TXT' : 'PDF/Image');
 
     // If extension says HTML but MIME type says PDF, it's likely a misnamed file - use OCR
     if (isHtmlByExtension && !isHtmlByMimeType && mimeType === 'application/pdf') {
@@ -215,6 +263,27 @@ export async function POST(request: NextRequest) {
         console.error('HTML text extraction failed:', htmlError);
         throw new Error(`HTML processing failed: ${htmlError instanceof Error ? htmlError.message : 'Unknown error'}`);
       }
+    } else if (isPlainTextFile) {
+      // For .txt files: Decode buffer as UTF-8 — no OCR, no tag stripping
+      console.log('Step 1: Reading plain text file...');
+      try {
+        // Strip a UTF-8 BOM if present
+        extractedText = fileBuffer.toString('utf-8').replace(/^﻿/, '');
+
+        const lineCount = extractedText.split(/\r?\n/).length;
+        const pageCount = Math.max(1, Math.ceil(extractedText.length / 3000));
+
+        ocrResult = {
+          text: extractedText,
+          lineCount,
+          pageCount,
+        };
+
+        console.log(`TXT extraction complete: ${ocrResult.lineCount} lines, estimated ${ocrResult.pageCount} pages`);
+      } catch (txtError) {
+        console.error('TXT extraction failed:', txtError);
+        throw new Error(`TXT processing failed: ${txtError instanceof Error ? txtError.message : 'Unknown error'}`);
+      }
     } else {
       // For PDF/Images: Perform OCR (unless skipped)
       if (skipOCR) {
@@ -244,39 +313,32 @@ export async function POST(request: NextRequest) {
                 pageCount: localResult.pageCount
               };
               localPdfSucceeded = true;
-              console.log('✅ Used local PDF extraction successfully. Bypassing Azure OCR.');
+              console.log('✅ Used local PDF extraction successfully. Bypassing image OCR.');
             } else {
-              console.log('⚠️ Local PDF extraction returned insufficient text (likely a scanned PDF). Falling back to Azure OCR.');
+              console.log('⚠️ Local PDF extraction returned insufficient text (likely a scanned PDF). Falling back to Tesseract OCR.');
             }
           } catch (e) {
-            console.error('⚠️ Local PDF extraction failed. Falling back to Azure OCR:', e);
+            console.error('⚠️ Local PDF extraction failed. Falling back to Tesseract OCR:', e);
           }
         }
         
         if (!localPdfSucceeded) {
           const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
 
-          if (isPDF && fileSizeMB > 50) {
-            throw new Error(
-              `File size (${fileSizeMB.toFixed(2)}MB) exceeds Azure Document Intelligence limit of 50MB for PDFs. ` +
-              `Please compress the file or split it into smaller parts, or use "Skip OCR" option.`
-            );
-          }
-
           console.log(`File size: ${fileSizeMB.toFixed(2)}MB, MIME type: ${mimeType}`);
 
-          // 2. Try Azure OCR
+          // 2. Try image OCR (Tesseract via performOCR for image URLs; throws for scanned PDFs)
           try {
-            console.log('Step 1.5: Running Azure OCR...');
+            console.log('Step 1.5: Running Tesseract OCR...');
             ocrResult = await performOCR(fileUrl, userId);
             console.log(`OCR complete: ${ocrResult.lineCount} lines, ${ocrResult.pageCount} pages`);
           } catch (ocrError) {
-            console.error('⚠️ Azure OCR failed:', ocrError);
-            
-            // 3. Fallback to Tesseract.js for Images
+            console.error('⚠️ Tesseract OCR failed:', ocrError);
+
+            // 3. Direct-buffer Tesseract fallback for images (skips the URL fetch)
             const isImage = mimeType.startsWith('image/');
             if (isImage) {
-               console.log('Step 1.6: Attempting Tesseract local OCR fallback for image...');
+               console.log('Step 1.6: Attempting direct-buffer Tesseract fallback for image...');
                try {
                    const localImageResult = await performLocalImageOCR(fileBuffer);
                    ocrResult = {
@@ -284,10 +346,10 @@ export async function POST(request: NextRequest) {
                        lineCount: localImageResult.text.split('\n').length,
                        pageCount: 1
                    };
-                   console.log('✅ Tesseract local OCR fallback successful.');
+                   console.log('✅ Direct-buffer Tesseract fallback successful.');
                } catch (localOcrError) {
-                   console.error('Tesseract local OCR failed:', localOcrError);
-                   throw new Error(`Azure OCR and local Tesseract fallback both failed. Azure Error: ${ocrError instanceof Error ? ocrError.message : 'Unknown'}, Local Error: ${localOcrError instanceof Error ? localOcrError.message : 'Unknown'}`);
+                   console.error('Direct-buffer Tesseract failed:', localOcrError);
+                   throw new Error(`OCR failed. URL OCR: ${ocrError instanceof Error ? ocrError.message : 'Unknown'}. Buffer OCR: ${localOcrError instanceof Error ? localOcrError.message : 'Unknown'}`);
                }
                // Cannot use tesseract fallback for PDFs easily without canvas/ghostscript
                console.error(`OCR processing failed and local fallback is not supported for PDFs. Error: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
@@ -310,17 +372,7 @@ export async function POST(request: NextRequest) {
       if (skipOCR && !ocrResult.text) {
         // If OCR was skipped, create minimal metadata from filename
         console.log('Creating minimal metadata from filename (OCR was skipped)');
-        metadata = {
-          title: filename.replace(/\.[^/.]+$/, '') || 'Untitled Document',
-          author: undefined,
-          year: undefined,
-          publisher: undefined,
-          type: 'document_other',
-          domain: 'general',
-          standardizedId: `doc_${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
-          tags: [],
-          confidence: 'low',
-        };
+        metadata = createMinimalMetadata(filename, ocrResult.text);
         rawAiOutput = 'Metadata created from filename (OCR skipped)';
         console.log('Minimal metadata created:', metadata.title);
       } else {
@@ -331,21 +383,11 @@ export async function POST(request: NextRequest) {
       }
     } catch (metadataError) {
       console.error('Metadata extraction failed:', metadataError);
-      // If metadata extraction fails but OCR was skipped, create minimal metadata
-      if (skipOCR) {
+      // OpenRouter free providers can temporarily rate-limit. Keep the upload usable.
+      if (skipOCR || shouldFallbackToMinimalMetadata(metadataError)) {
         console.log('Metadata extraction failed, creating minimal metadata from filename');
-        metadata = {
-          title: filename.replace(/\.[^/.]+$/, '') || 'Untitled Document',
-          author: undefined,
-          year: undefined,
-          publisher: undefined,
-          type: 'document_other',
-          domain: 'general',
-          standardizedId: `doc_${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`,
-          tags: [],
-          confidence: 'low',
-        };
-        rawAiOutput = 'Metadata created from filename (extraction failed)';
+        metadata = createMinimalMetadata(filename, ocrResult.text);
+        rawAiOutput = `Metadata created from filename because AI extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`;
       } else {
         throw new Error(`Metadata extraction failed: ${metadataError instanceof Error ? metadataError.message : 'Unknown error'}`);
       }
@@ -444,7 +486,11 @@ export async function POST(request: NextRequest) {
     // Step 3.5: Rename file in R2 based on metadata
     // For HTML files, we can skip renaming if it fails (non-critical)
     console.log('Step 3.5: Renaming file in R2 based on metadata...');
-    const finalExtension = isHtmlFile ? (fileExtension || 'html') : (fileExtension || 'pdf');
+    const finalExtension = isHtmlFile
+      ? (fileExtension || 'html')
+      : isPlainTextFile
+        ? 'txt'
+        : (fileExtension || 'pdf');
     const desiredNewKey = `library/${metadata.standardizedId}.${finalExtension}`;
     console.log(`Renaming: ${key} -> ${desiredNewKey}`);
 
@@ -486,7 +532,7 @@ export async function POST(request: NextRequest) {
         const sanitized = sanitizeMetadataValue(metadata.domain).substring(0, 1024);
         if (sanitized) r2Metadata['domain'] = sanitized;
       }
-      if (metadata.tags.length > 0) {
+      if (metadata.tags?.length) {
         const sanitized = sanitizeMetadataValue(metadata.tags.join(',')).substring(0, 1024);
         if (sanitized) r2Metadata['tags'] = sanitized;
       }
@@ -507,7 +553,7 @@ export async function POST(request: NextRequest) {
         Bucket: bucketName,
         Key: desiredNewKey,
         Body: fileBuffer,
-        ContentType: mimeType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+        ContentType: mimeType || (isHtmlFile ? 'text/html' : isPlainTextFile ? 'text/plain' : 'application/pdf'),
         Metadata: r2Metadata,
       });
 
@@ -529,7 +575,7 @@ export async function POST(request: NextRequest) {
               Bucket: bucketName,
               Key: desiredNewKey,
               Body: fileBuffer,
-              ContentType: mimeType || (isHtmlFile ? 'text/html' : 'application/pdf'),
+              ContentType: mimeType || (isHtmlFile ? 'text/html' : isPlainTextFile ? 'text/plain' : 'application/pdf'),
               // No Metadata field
             });
             await s3Client.send(putCommandWithoutMetadata);
@@ -539,8 +585,8 @@ export async function POST(request: NextRequest) {
           } catch (retryError) {
             console.error('PutObjectCommand retry failed:', retryError);
             // Continue to original error handling
-            if (isHtmlFile) {
-              console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+            if (isHtmlFile || isPlainTextFile) {
+              console.warn('⚠️ Failed to rename text file, continuing with original key');
               newKey = key;
               renameSucceeded = false;
             } else {
@@ -548,9 +594,9 @@ export async function POST(request: NextRequest) {
             }
           }
         } else {
-          // For HTML files, allow processing to continue with original key
-          if (isHtmlFile) {
-            console.warn('⚠️ Failed to rename HTML file, continuing with original key');
+          // For HTML/TXT files, allow processing to continue with original key
+          if (isHtmlFile || isPlainTextFile) {
+            console.warn('⚠️ Failed to rename text file, continuing with original key');
             newKey = key; // Keep original key
             renameSucceeded = false;
           } else {
@@ -582,9 +628,9 @@ export async function POST(request: NextRequest) {
       console.error('Error stack:', r2Error instanceof Error ? r2Error.stack : 'No stack trace');
       console.error('Error name:', r2Error instanceof Error ? r2Error.name : 'Unknown');
 
-      // For HTML files, skip rename and continue with original key
-      if (isHtmlFile) {
-        console.warn('⚠️ R2 rename failed for HTML file, continuing with original key');
+      // For HTML/TXT files, skip rename and continue with original key
+      if (isHtmlFile || isPlainTextFile) {
+        console.warn('⚠️ R2 rename failed for text file, continuing with original key');
         newKey = key; // Use original key
         renameSucceeded = false;
       } else {
@@ -646,7 +692,7 @@ export async function POST(request: NextRequest) {
         cover_source: coverSource,
         status: 'ready',
         uploaded_by: userId || null,
-        source_format: isHtmlFile ? 'html' : null, // Set source format for HTML files
+        source_format: isHtmlFile ? 'html' : isPlainTextFile ? 'txt' : null, // Set source format for HTML/TXT files
         metadata: {
           standardizedId: metadata.standardizedId,
           pageCount: ocrResult.pageCount,

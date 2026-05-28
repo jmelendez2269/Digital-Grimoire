@@ -92,6 +92,7 @@ function CourseDetailContent() {
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [enrollmentLoading, setEnrollmentLoading] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState<string | null>(null);
 
   const slug = params?.slug as string;
 
@@ -148,6 +149,8 @@ function CourseDetailContent() {
   }, [course, user, authLoading, slug]);
 
   const handleEnroll = async () => {
+    setEnrollmentError(null);
+
     if (!user) {
       router.push(`/login?redirect=/courses/${slug}`);
       return;
@@ -162,9 +165,14 @@ function CourseDetailContent() {
         router.push(`/courses/${slug}/learn`);
       } else if (res.status === 402 || data.code === 'UPGRADE_REQUIRED') {
         router.push('/profile?tab=subscription');
+      } else if (res.status === 401) {
+        router.push(`/login?redirect=/courses/${slug}`);
+      } else {
+        setEnrollmentError(data.message || data.error || 'Could not initialize this course. Please try again.');
       }
     } catch (err) {
       console.error('Enrollment failed:', err);
+      setEnrollmentError(err instanceof Error ? err.message : 'Could not initialize this course. Please try again.');
     } finally {
       setIsEnrolling(false);
     }
@@ -287,21 +295,21 @@ function CourseDetailContent() {
                 </h1>
 
                 {coreQuestion && (
-                  <p className="text-lg text-amber-400/70 italic leading-relaxed">
+                  <p className="text-lg text-amber-300 italic leading-relaxed">
                     {coreQuestion}
                   </p>
                 )}
 
-                <div className="flex items-center gap-6 text-xs text-zinc-500 font-mono mt-6 pt-6 border-t border-white/10">
+                <div className="flex items-center gap-6 text-xs text-zinc-300 font-mono mt-6 pt-6 border-t border-white/10">
                   {course.duration_weeks && (
                     <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-zinc-600" />
+                      <Clock className="w-3.5 h-3.5 text-amber-400" />
                       <span>{course.duration_weeks} WEEKS</span>
                     </div>
                   )}
                   {course.level && (
                     <div className="flex items-center gap-2">
-                      <GraduationCap className="w-3.5 h-3.5 text-zinc-600" />
+                      <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
                       <span>{getLevelLabel(course.level)}</span>
                     </div>
                   )}
@@ -346,34 +354,64 @@ function CourseDetailContent() {
                   {/* Core Texts Section */}
                   {course.course_texts && course.course_texts.length > 0 && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-6">Core Texts</h2>
+                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-6">Core Texts</h2>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {course.course_texts.map((ct) => (
                           <Link
                             key={ct.id}
                             href={`/library/${ct.text_id}`}
-                            className="group flex gap-4 p-3 bg-zinc-900/30 border border-white/5 rounded-xl hover:border-amber-500/30 transition-all"
+                            className="group relative flex gap-4 p-3 bg-zinc-900/40 border border-white/10 rounded-xl transition-all duration-200 ease-out hover:border-amber-500/50 focus-visible:border-amber-500/60 hover:bg-zinc-900/70"
                           >
-                            <div className="w-16 h-24 flex-shrink-0 bg-zinc-800 rounded-lg overflow-hidden border border-white/10 shadow-lg group-hover:scale-105 transition-transform">
-                              {ct.texts?.cover_image_url ? (
-                                <img
-                                  src={ct.texts.cover_image_url}
-                                  alt={ct.texts.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <BookOpen className="w-6 h-6 text-zinc-700" />
-                                </div>
-                              )}
+                            <div className="w-16 h-24 flex-shrink-0">
+                              <div className="h-full w-full bg-zinc-800 rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                                {ct.texts?.cover_image_url ? (
+                                  <img
+                                    src={ct.texts.cover_image_url}
+                                    alt={ct.texts.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <BookOpen className="w-6 h-6 text-zinc-500" />
+                                  </div>
+                                )}
+                              </div>
                             </div>
                             <div className="flex flex-col justify-center py-1">
-                              <h3 className="text-sm font-bold text-zinc-200 line-clamp-2 group-hover:text-amber-400 transition-colors">
+                              <h3 className="text-sm font-bold text-zinc-100 line-clamp-2 group-hover:text-amber-300 transition-colors">
                                 {ct.texts?.title}
                               </h3>
-                              <p className="text-xs text-zinc-500 font-mono mt-1">
+                              <p className="text-xs text-zinc-300 font-mono mt-1">
                                 {ct.texts?.author || 'Unknown Author'}
                               </p>
+                            </div>
+
+                            {/* Full-screen spotlight preview on hover */}
+                            <div
+                              aria-hidden="true"
+                              className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300 motion-reduce:transition-none motion-reduce:group-hover:opacity-0 motion-reduce:group-focus-visible:opacity-0"
+                            >
+                              <div className="flex flex-col items-center gap-6 scale-95 group-hover:scale-100 group-focus-visible:scale-100 transition-transform duration-300 ease-out motion-reduce:transform-none">
+                                {ct.texts?.cover_image_url ? (
+                                  <img
+                                    src={ct.texts.cover_image_url}
+                                    alt=""
+                                    className="h-[70vh] max-h-[640px] w-auto rounded-xl border border-amber-500/30 shadow-[0_30px_80px_-20px_rgba(245,158,11,0.45)]"
+                                  />
+                                ) : (
+                                  <div className="h-[70vh] max-h-[640px] aspect-[2/3] flex items-center justify-center bg-zinc-900 rounded-xl border border-amber-500/30">
+                                    <BookOpen className="w-24 h-24 text-zinc-600" />
+                                  </div>
+                                )}
+                                <div className="text-center max-w-2xl px-6">
+                                  <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                                    {ct.texts?.title}
+                                  </h3>
+                                  <p className="mt-2 text-sm font-mono uppercase tracking-wider text-amber-300">
+                                    {ct.texts?.author || 'Unknown Author'}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           </Link>
                         ))}
@@ -383,49 +421,49 @@ function CourseDetailContent() {
 
                   {renderedContent && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">Syllabus</h2>
+                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-4">Syllabus</h2>
                       <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: renderedContent }} />
                     </div>
                   )}
 
                   {previewWeeks.length > 0 && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-4">Public Syllabus</h2>
+                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-4">Public Syllabus</h2>
                       <div className="space-y-3">
                         {previewWeeks.map((week) => {
                           const summary = week.description || week.week_summary;
                           return (
                             <div
                               key={`${week.week_number}-${week.title}`}
-                              className="rounded-lg border border-white/5 bg-zinc-900/25 p-4"
+                              className="rounded-lg border border-white/10 bg-zinc-900/40 p-4"
                             >
                               <div className="mb-2 flex flex-wrap items-center gap-2">
                                 {week.week_number && (
-                                  <span className="font-mono text-[10px] uppercase tracking-wider text-amber-400">
+                                  <span className="font-mono text-[10px] uppercase tracking-wider text-amber-300">
                                     Week {week.week_number}
                                   </span>
                                 )}
                                 {week.key_tension && (
-                                  <span className="font-mono text-[10px] text-zinc-600">
+                                  <span className="font-mono text-[10px] text-zinc-300">
                                     {week.key_tension}
                                   </span>
                                 )}
                               </div>
-                              <h3 className="text-sm font-semibold text-zinc-200">
+                              <h3 className="text-sm font-semibold text-zinc-100">
                                 {week.title || `Week ${week.week_number}`}
                               </h3>
                               {week.core_question && (
-                                <p className="mt-1 text-sm italic text-amber-300/70">
+                                <p className="mt-1 text-sm italic text-amber-300">
                                   {week.core_question}
                                 </p>
                               )}
                               {summary && (
-                                <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                                <p className="mt-2 text-sm leading-relaxed text-zinc-300">
                                   {summary}
                                 </p>
                               )}
                               {week.readings && week.readings.length > 0 && (
-                                <p className="mt-3 text-xs font-mono text-zinc-600">
+                                <p className="mt-3 text-xs font-mono text-zinc-400">
                                   {week.readings.length} public reading reference{week.readings.length === 1 ? '' : 's'}
                                 </p>
                               )}
@@ -516,6 +554,12 @@ function CourseDetailContent() {
                                 </>
                               )}
                             </button>
+
+                            {enrollmentError && (
+                              <p className="mt-3 rounded-md border border-red-500/20 bg-red-950/20 px-3 py-2 text-xs leading-relaxed text-red-300">
+                                {enrollmentError}
+                              </p>
+                            )}
 
                             {!user && (
                               <p className="text-[10px] text-zinc-600 text-center mt-2 font-mono">

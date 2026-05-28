@@ -8,6 +8,8 @@ import { DocumentMetadata } from '@/lib/claude-metadata';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { compressPDF, shouldCompressPDF, formatFileSize as formatFileSizeUtil } from '@/lib/utils/pdf-compress';
+import { formatLensName } from '@/lib/utils/formatting';
+import { getLensColorClasses } from '@/lib/utils/lens-colors';
 
 interface SimilarDocument {
   id: string;
@@ -181,6 +183,7 @@ export default function AdminUploadPage() {
       // Documents
       'application/pdf',
       'text/html',
+      'text/plain',
       // Images (existing)
       'image/png',
       'image/jpeg',
@@ -206,8 +209,11 @@ export default function AdminUploadPage() {
       file.type.startsWith('video/') ||
       file.type.startsWith('image/');
 
-    if (!allowedTypes.includes(file.type) && !isAllowedGenericType) {
-      return 'Only PDF, HTML, image, audio, and video files are allowed';
+    // Some browsers report .txt as empty string or application/octet-stream — also allow by extension
+    const isTxtByExtension = /\.txt$/i.test(file.name);
+
+    if (!allowedTypes.includes(file.type) && !isAllowedGenericType && !isTxtByExtension) {
+      return 'Only PDF, HTML, TXT, image, audio, and video files are allowed';
     }
 
     if (file.size > maxSize) {
@@ -299,6 +305,7 @@ export default function AdminUploadPage() {
       // Documents
       'application/pdf': ['.pdf'],
       'text/html': ['.html', '.htm'],
+      'text/plain': ['.txt'],
       // Images
       'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg'],
@@ -811,7 +818,7 @@ export default function AdminUploadPage() {
             or click to browse your computer
           </p>
           <p className="text-xs text-amber-100/40">
-            Supported formats: PDF, PNG, JPG, HTML • Max size: 50MB per file (8MB recommended for OCR processing)
+            Supported formats: PDF, PNG, JPG, HTML, TXT • Max size: 50MB per file (8MB recommended for OCR processing)
           </p>
           {fileRejections.length > 0 && (
             <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-md">
@@ -1270,14 +1277,18 @@ export default function AdminUploadPage() {
                             <div>
                               <p className="text-xs text-amber-100/60 mb-2">Convergence Machine Lenses</p>
                               <div className="flex flex-wrap gap-2">
-                                {uploadFile.lenses.map((lens, index) => (
+                                {uploadFile.lenses.map((lens, index) => {
+                                  const lensColor = getLensColorClasses(lens);
+
+                                  return (
                                   <span
                                     key={index}
-                                    className="px-3 py-1.5 bg-amber-600/20 border border-amber-600/40 rounded-md text-xs text-amber-100 font-medium"
+                                    className={`px-3 py-1.5 ${lensColor.bg} border ${lensColor.border} rounded-md text-xs ${lensColor.text} font-medium`}
                                   >
-                                    {lens.replace(/_/g, ' ')}
+                                    {formatLensName(lens)}
                                   </span>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

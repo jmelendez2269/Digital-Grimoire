@@ -3,24 +3,53 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { AIProvider, AIModel, ChatMessage, CompletionOptions, AIResponse } from './types';
+import { getDefaultOpenRouterModel, getOpenRouterClient } from './openrouter-client';
 
 export { type AIProvider, type AIModel, type ChatMessage, type CompletionOptions, type AIResponse };
 
 class AIOrchestrator {
-    private openai: OpenAI;
-    private anthropic: Anthropic;
-    private google: GoogleGenerativeAI;
+    private openai: OpenAI | null = null;
+    private anthropic: Anthropic | null = null;
+    private google: GoogleGenerativeAI | null = null;
 
-    constructor() {
-        this.openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
+    private getOpenAIClient(): OpenAI {
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OpenAI API key not configured. Add OPENAI_API_KEY to .env.local');
+        }
 
-        this.anthropic = new Anthropic({
-            apiKey: process.env.ANTHROPIC_API_KEY,
-        });
+        if (!this.openai) {
+            this.openai = new OpenAI({
+                apiKey: process.env.OPENAI_API_KEY,
+            });
+        }
 
-        this.google = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || '');
+        return this.openai;
+    }
+
+    private getAnthropicClient(): Anthropic {
+        if (!process.env.ANTHROPIC_API_KEY) {
+            throw new Error('Anthropic API key not configured. Add ANTHROPIC_API_KEY to .env.local');
+        }
+
+        if (!this.anthropic) {
+            this.anthropic = new Anthropic({
+                apiKey: process.env.ANTHROPIC_API_KEY,
+            });
+        }
+
+        return this.anthropic;
+    }
+
+    private getGoogleClient(): GoogleGenerativeAI {
+        if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+            throw new Error('Google Generative AI API key not configured. Add GOOGLE_GENERATIVE_AI_API_KEY to .env.local');
+        }
+
+        if (!this.google) {
+            this.google = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+        }
+
+        return this.google;
     }
 
     /**
@@ -30,18 +59,20 @@ class AIOrchestrator {
         if (model.startsWith('gpt-')) return 'openai';
         if (model.startsWith('claude-')) return 'anthropic';
         if (model.startsWith('gemini-')) return 'google';
-        return 'openai'; // Default
+        return 'openrouter'; // Default non-native models through OpenRouter
     }
 
     /**
      * Generate a completion using the specified model/provider
      */
     async chatComplete(messages: ChatMessage[], options: CompletionOptions = {}): Promise<AIResponse> {
-        const model = options.model || 'gpt-4o';
+        const model = options.model || getDefaultOpenRouterModel();
         const provider = this.getProviderForModel(model);
 
         try {
             switch (provider) {
+                case 'openrouter':
+                    return await this.openRouterChat(messages, { ...options, model });
                 case 'openai':
                     return await this.openaiChat(messages, options);
                 case 'anthropic':
@@ -54,18 +85,39 @@ class AIOrchestrator {
         } catch (error: any) {
             console.error(`AI Error (${model} / ${provider}):`, error);
 
-            // Fallback to GPT-4o if the specific model fails (e.g. 404 model not found)
-            // But verify we aren't already trying GPT-4o to avoid infinite loops if OpenAI is down
-            if (model !== 'gpt-4o') {
-                console.warn(`Falling back to gpt-4o due to error with ${model}`);
-                return this.openaiChat(messages, { ...options, model: 'gpt-4o' });
+            // Prefer a free OpenRouter fallback before touching paid provider defaults.
+            const fallbackModel = getDefaultOpenRouterModel();
+            if (model !== fallbackModel) {
+                console.warn(`Falling back to ${fallbackModel} due to error with ${model}`);
+                return this.openRouterChat(messages, { ...options, model: fallbackModel });
             }
             throw error;
         }
     }
 
+    private async openRouterChat(messages: ChatMessage[], options: CompletionOptions): Promise<AIResponse> {
+        const response = await getOpenRouterClient().chat.completions.create({
+            model: options.model || getDefaultOpenRouterModel(),
+            messages: messages.map(m => ({ role: m.role, content: m.content })),
+            temperature: options.temperature ?? 0.7,
+            max_tokens: options.maxTokens,
+            response_format: options.jsonMode ? { type: 'json_object' } : undefined,
+        });
+
+        return {
+            content: response.choices[0].message.content || '',
+            usage: {
+                promptTokens: response.usage?.prompt_tokens || 0,
+                completionTokens: response.usage?.completion_tokens || 0,
+                totalTokens: response.usage?.total_tokens || 0,
+            },
+            model: response.model,
+            provider: 'openrouter',
+        };
+    }
+
     private async openaiChat(messages: ChatMessage[], options: CompletionOptions): Promise<AIResponse> {
-        const response = await this.openai.chat.completions.create({
+        const response = await this.getOpenAIClient().chat.completions.create({
             model: options.model || 'gpt-4o',
             messages: messages.map(m => ({ role: m.role, content: m.content })),
             temperature: options.temperature ?? 0.7,
@@ -89,7 +141,7 @@ class AIOrchestrator {
         const systemMessage = messages.find(m => m.role === 'system')?.content;
         const userMessages = messages.filter(m => m.role !== 'system');
 
-        const response = await this.anthropic.messages.create({
+        const response = await this.getAnthropicClient().messages.create({
             model: (options.model as any) || 'claude-3-5-sonnet-latest',
             system: systemMessage,
             messages: userMessages.map(m => ({
@@ -116,7 +168,7 @@ class AIOrchestrator {
 
     private async googleChat(messages: ChatMessage[], options: CompletionOptions): Promise<AIResponse> {
         const modelId = options.model || 'gemini-1-5-pro';
-        const model = this.google.getGenerativeModel({ model: modelId });
+        const model = this.getGoogleClient().getGenerativeModel({ model: modelId });
 
         const systemMessage = messages.find(m => m.role === 'system')?.content;
         const chatHistory = messages
@@ -163,7 +215,7 @@ class AIOrchestrator {
      * Run multiple models in parallel and synthesize their results
      */
     async consensusChat(messages: ChatMessage[]): Promise<AIResponse & { individualResponses: Record<string, string> }> {
-        const models: AIModel[] = ['gpt-4o', 'claude-3-5-sonnet-latest', 'gemini-1-5-pro'];
+        const models: AIModel[] = [getDefaultOpenRouterModel()];
 
         // Execute all models in parallel
         const responses = await Promise.allSettled(
@@ -187,9 +239,9 @@ class AIOrchestrator {
             }
         });
 
-        // Use GPT-4o for synthesis
+        // Use OpenRouter free routing for synthesis
         const synthesisPrompt = `
-You are a master orchestrator synthesizing insights from three top-tier AI models: GPT-4o, Claude 3.5 Sonnet, and Gemini 1.5 Pro.
+You are a master orchestrator synthesizing insights from available AI model responses.
 
 USER QUERY:
 "${messages[messages.length - 1].content}"
@@ -206,10 +258,10 @@ TASK:
 Format your output beautifully using Markdown with clear headings.
 `;
 
-        const synthesisResult = await this.openaiChat([
+        const synthesisResult = await this.openRouterChat([
             { role: 'system', content: 'You are a master research synthesizer. Provide a comprehensive, clear, and objective synthesis of multiple AI perspectives.' },
             { role: 'user', content: synthesisPrompt }
-        ], { model: 'gpt-4o', temperature: 0.3 });
+        ], { model: getDefaultOpenRouterModel(), temperature: 0.3 });
 
         return {
             content: synthesisResult.content,
@@ -220,7 +272,7 @@ Format your output beautifully using Markdown with clear headings.
                 totalTokens: totalPromptTokens + totalCompletionTokens + synthesisResult.usage.totalTokens,
             },
             model: 'consensus',
-            provider: 'openai',
+            provider: 'openrouter',
         };
     }
 }

@@ -21,6 +21,15 @@ const PUBLIC_CONTENT_KEYS = [
   'tone_safety',
   'key_tensions',
   'completion_pathways',
+  // Phase 2: course family taxonomy — catalog-level metadata, safe to expose
+  'course_family',
+  'track_slug',
+  'track_order',
+  'recommended_level',
+  'entry_point',
+  'prerequisites',
+  'related_course_slugs',
+  'multi_family',
 ];
 
 const PUBLIC_WEEK_KEYS = [

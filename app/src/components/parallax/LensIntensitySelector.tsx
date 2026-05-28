@@ -1,6 +1,8 @@
 'use client';
 
 import { Sliders } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import { getLensColorClasses, getLensColorStyle } from '@/lib/utils/lens-colors';
 
 export type IntensityLevel = 'off' | 'minimal' | 'standard' | 'boosted' | 'dominant';
 
@@ -53,12 +55,15 @@ export default function LensIntensitySelector({
   disabled = false,
 }: LensIntensitySelectorProps) {
   const currentLevel = getIntensityLevel(value);
+  const lensColor = getLensColorClasses(lensId);
+  const lensStyle = getLensColorStyle(lensId);
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label htmlFor={lensId} className="text-sm font-medium text-amber-100/80">
-          {lensName}
+        <label htmlFor={lensId} className="flex items-center gap-2 text-sm font-medium text-amber-100/80">
+          <span className={`h-2.5 w-2.5 rounded-full ${lensColor.dot} shadow-[0_0_12px_currentColor]`} />
+          <span>{lensName}</span>
         </label>
       </div>
 
@@ -73,9 +78,10 @@ export default function LensIntensitySelector({
                 onClick={() => !disabled && onChange(intensity.value)}
                 disabled={disabled}
                 className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-all ${isActive
-                    ? 'bg-cyan-600 text-white border-2 border-cyan-400'
+                    ? `${lensColor.bgStrong} ${lensColor.text} border-2 ${lensColor.borderStrong} shadow-[0_0_16px_var(--lens-glow)]`
                     : 'bg-zinc-800/50 text-amber-100/60 border-2 border-zinc-700 hover:border-zinc-600'
                   } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                style={isActive ? { '--lens-glow': lensStyle.glow } as CSSProperties : undefined}
                 title={`${intensity.label}: ${intensity.description} (${intensity.value}%)`}
               >
                 {intensity.label}
@@ -87,7 +93,7 @@ export default function LensIntensitySelector({
           type="button"
           onClick={() => onChange(value > 0 ? 0 : getIntensityValue('standard'))}
           disabled={disabled}
-          className="p-1.5 text-zinc-400 hover:text-cyan-400 transition-colors disabled:opacity-50"
+          className={`p-1.5 ${value > 0 ? lensColor.text : 'text-zinc-400'} ${lensColor.hoverBg} transition-colors disabled:opacity-50`}
           title={value > 0 ? 'Disable lens' : 'Enable lens (Standard)'}
         >
           <Sliders className="w-4 h-4" />

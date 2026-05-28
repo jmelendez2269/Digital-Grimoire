@@ -57,10 +57,14 @@ export async function GET(request: NextRequest) {
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, errorDescription)
+    const providerExchangeFailed =
+      errorDescription?.includes('external code: 4/0A') ?? false
     const errorMessage =
       error === 'access_denied'
         ? 'Sign-in was cancelled'
-        : errorDescription || 'Authentication failed'
+        : providerExchangeFailed
+          ? 'Google sign-in reached Supabase, but Google rejected the code exchange. In Supabase Auth > Providers > Google, make sure the Client ID and Secret are from the same Google OAuth client whose Authorized redirect URI is your Supabase /auth/v1/callback URL.'
+          : errorDescription || 'Authentication failed'
 
     return NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(errorMessage)}`, request.url)

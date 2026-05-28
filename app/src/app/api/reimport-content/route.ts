@@ -8,6 +8,8 @@ import { parseWebText } from '@/lib/parsers/sacred-texts-parser';
  * 
  * Request body: { textId: string }
  */
+export const maxDuration = 300;
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -86,6 +88,7 @@ export async function POST(request: Request) {
       chapterCount: parsedText.chapterCount,
       totalLength: parsedText.totalLength,
       parsedAt: new Date().toISOString(),
+      ...(parsedText.extraMetadata || {}),
     };
 
     const { data: updatedDocument, error: updateError } = await supabase
@@ -118,10 +121,11 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('[Reimport] Error:', error);
+    const details = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { 
-        error: 'Failed to re-import content',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: details || 'Failed to re-import content',
+        details,
       },
       { status: 500 }
     );

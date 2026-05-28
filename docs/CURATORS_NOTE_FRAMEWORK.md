@@ -1,5 +1,5 @@
 # Curator's Note Framework
-**Convergence Library Collection**
+**Prismarium** (a Project Parallax product)
 
 **Version:** 1.0  
 **Last Updated:** November 2025  
@@ -9,7 +9,7 @@
 
 ## Introduction
 
-This framework provides polished curator's note content for the Convergence Library. Each section addresses key questions about the collection's purpose, selection philosophy, and approach to knowledge synthesis. Use these sections as building blocks for curator's notes in the library interface, documentation, and marketing materials.
+This framework provides polished curator's note content for Prismarium. Each section addresses key questions about the collection's purpose, selection philosophy, and approach to knowledge synthesis. Use these sections as building blocks for curator's notes in the library interface, documentation, and marketing materials.
 
 ---
 
@@ -17,7 +17,7 @@ This framework provides polished curator's note content for the Convergence Libr
 
 **What drives this collection?**
 
-I began building Convergence from a place of deep curiosity and genuine frustration. As someone exploring wisdom traditions across cultures, I found that the most profound texts were scattered across static PDFs, rare archives, and shallow consumer apps. There was no single place where I could explore how Buddhist emptiness relates to quantum physics, or how Hermetic principles echo in modern psychology.
+I began building Prismarium from a place of deep curiosity and genuine frustration. As someone exploring wisdom traditions across cultures, I found that the most profound texts were scattered across static PDFs, rare archives, and shallow consumer apps. There was no single place where I could explore how Buddhist emptiness relates to quantum physics, or how Hermetic principles echo in modern psychology.
 
 This collection is born from the conviction that hidden wisdom—whether esoteric, religious, philosophical, or scientific—deserves to be accessible, searchable, and interconnected. I believe that when we synthesize knowledge across traditions, we reveal patterns that no single perspective can show alone.
 
@@ -99,11 +99,11 @@ We actively seek balance across multiple dimensions:
 
 **How is this different from a comprehensive archive like Project Gutenberg or Internet Archive?**
 
-Convergence is not an archive—it's a curated synthesis.
+Prismarium is not an archive—it's a curated synthesis.
 
 **Archives aim for completeness:** They collect as much as possible, organized by availability and public domain status.
 
-**Convergence aims for convergence:** We select texts that serve our mission of revealing how wisdom paths meet. We prioritize:
+**Prismarium aims for convergence:** We select texts that serve our mission of revealing how wisdom paths meet. We prioritize:
 - Texts that bridge multiple perspectives
 - Works that have influenced other traditions
 - Books that demonstrate cross-tradition patterns
@@ -115,7 +115,7 @@ Convergence is not an archive—it's a curated synthesis.
 - **Interconnected structure** (wikilinks, correspondence tables, convergence graph)
 - **AI-powered synthesis** (seven-lens reasoning, semantic search)
 
-**Think of it this way:** An archive is a library. Convergence is a reading list with a specific purpose—revealing how all wisdom paths converge.
+**Think of it this way:** An archive is a library. Prismarium is a reading list with a specific purpose—revealing how all wisdom paths converge.
 
 ---
 
@@ -135,13 +135,13 @@ Our intention is threefold:
 - Seven-lens framework showing how different perspectives illuminate the same truths
 - Cross-tradition connections (e.g., Buddhist emptiness ↔ Quantum zero-point field)
 - Correspondence tables showing traditional esoteric relationships
-- Convergence graph visualizing conceptual unity
+- Parallax Graph visualizing conceptual unity
 
 **3. Support Personal Research**
 - Study Journal for documenting discoveries as you read
 - Wiki-links for building personal knowledge networks
 - Export capabilities (Markdown, HTML, PDF, Notion)
-- AI assistance through both popular models and specialized Convergence Machine
+- AI assistance through both popular models and specialized Parallax Engine
 
 **We are not:** A comprehensive archive, an academic institution, or a source of authoritative truth.
 
@@ -190,7 +190,7 @@ We acknowledge several significant gaps:
 
 **How will this collection evolve?**
 
-Convergence is a living collection that grows in three dimensions:
+Prismarium is a living collection that grows in three dimensions:
 
 **1. Content Expansion**
 - **Priority-based additions:** We add texts systematically, starting with foundational works
@@ -201,7 +201,7 @@ Convergence is a living collection that grows in three dimensions:
 **2. Feature Development**
 - **Phase 1 (Current):** Library, Study Journal, basic search
 - **Phase 2 (Roadmap):** Correspondence Tables, enhanced AI search
-- **Phase 3 (Roadmap):** Convergence Graph, visual knowledge networks
+- **Phase 3 (Roadmap):** Parallax Graph, visual knowledge networks
 - **Ongoing:** Improved metadata, better OCR, enhanced search
 
 **3. Community Involvement**
@@ -210,7 +210,7 @@ Convergence is a living collection that grows in three dimensions:
 - **Token economy:** Future reward system for contributors
 - **Governance:** Community input on collection priorities
 
-**Our commitment:** We will never "complete" this collection. We will continue growing, refining, and improving as long as Convergence serves seekers of wisdom.
+**Our commitment:** We will never "complete" this collection. We will continue growing, refining, and improving as long as Prismarium serves seekers of wisdom.
 
 ---
 
@@ -220,7 +220,7 @@ Convergence is a living collection that grows in three dimensions:
 
 **We claim no authority over truth.**
 
-Convergence presents knowledge for exploration, not as authoritative fact. We are:
+Prismarium presents knowledge for exploration, not as authoritative fact. We are:
 - **A platform, not a source of truth**
 - **A curator, not an arbiter**
 - **A tool for discovery, not a final answer**
@@ -245,7 +245,7 @@ Convergence presents knowledge for exploration, not as authoritative fact. We ar
 
 **Why does this collection matter?**
 
-Convergence matters because:
+Prismarium matters because:
 
 **1. Hidden Wisdom Deserves Accessibility**
 - Sacred texts shouldn't be locked in rare archives
@@ -277,7 +277,7 @@ Convergence matters because:
 - Community contributions should be rewarded
 - We're building a platform owned by its users
 
-**The bottom line:** Convergence matters because we're making hidden wisdom accessible, revealing how all paths converge, and providing tools for personal discovery—all while maintaining scholarly rigor and ethical principles.
+**The bottom line:** Prismarium matters because we're making hidden wisdom accessible, revealing how all paths converge, and providing tools for personal discovery—all while maintaining scholarly rigor and ethical principles.
 
 ---
 
@@ -294,7 +294,7 @@ Every text is tagged with one or more lenses, allowing users to see how the same
 - **Philosophical lens:** Taoist Wu (non-being)
 - **Symbolic/Occult lens:** Kabbalistic Ain (nothingness)
 
-**2. Convergence Graph (Phase 3)**
+**2. Parallax Graph (Phase 3)**
 Visual network showing conceptual unity:
 - **Emptiness/Void Cluster:** Buddhist Śūnyatā ↔ Taoist Wu ↔ Quantum Zero-Point Field
 - **Unity/Oneness Cluster:** Vedantic Brahman ↔ Islamic Tawhid ↔ Neoplatonic The One
@@ -313,7 +313,7 @@ Our collection includes texts that explicitly bridge traditions:
 - **The Secret Teachings of All Ages** (Hall): Encyclopedia of cross-tradition symbolism
 
 **5. AI-Powered Synthesis**
-The Convergence Machine uses seven lenses to answer questions, showing how different perspectives illuminate the same inquiry.
+The Parallax Engine uses seven lenses to answer questions, showing how different perspectives illuminate the same inquiry.
 
 **Our approach:** We don't force connections—we reveal patterns that already exist. When you search across traditions, you discover that wisdom paths converge naturally.
 
@@ -323,13 +323,13 @@ The Convergence Machine uses seven lenses to answer questions, showing how diffe
 
 **How should users engage with this collection?**
 
-Convergence is designed to support multiple journey paths:
+Prismarium is designed to support multiple journey paths:
 
 **The Explorer:**
 - Browse the library by lens, domain, or era
 - Discover texts serendipitously through search
 - Follow wiki-links to related concepts
-- Use the Convergence Graph to find connections
+- Use the Parallax Graph to find connections
 
 **The Researcher:**
 - Search semantically across all texts
@@ -342,7 +342,7 @@ Convergence is designed to support multiple journey paths:
 - Find texts relevant to your practice
 - Use Correspondence Tables for ritual planning
 - Build personal grimoires in Study Journal
-- Access Convergence Machine for deep inquiry
+- Access Parallax Engine for deep inquiry
 
 **The Scholar:**
 - Access full-text search with citations
@@ -356,7 +356,7 @@ Convergence is designed to support multiple journey paths:
 - Follow guided paths through related texts
 - Build understanding gradually
 
-**Our commitment:** No matter where you start, Convergence provides tools and content to support your journey. Whether you're exploring casually, researching deeply, or building a practice, the platform adapts to your needs.
+**Our commitment:** No matter where you start, Prismarium provides tools and content to support your journey. Whether you're exploring casually, researching deeply, or building a practice, the platform adapts to your needs.
 
 ---
 
@@ -392,7 +392,8 @@ These sections can be:
 
 ---
 
-**Prepared by:** Convergence Curatorial Team  
+**Prepared by:** Project Parallax Curatorial Team  
+**Product:** Prismarium  
 **Based on:** CSV analysis of LIBRARY_SEED_100_TEXTS_BALANCED.csv  
 **Mission:** Making hidden wisdom accessible while maintaining scholarly rigor
 

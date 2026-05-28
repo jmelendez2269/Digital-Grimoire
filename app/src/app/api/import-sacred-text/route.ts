@@ -20,8 +20,8 @@ interface ImportRequestBody {
   };
 }
 
-// Increase timeout for this route (60 seconds for large imports)
-export const maxDuration = 60;
+// Increase timeout for large index imports that may need reader fallbacks.
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {
@@ -98,11 +98,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // AI-enhanced metadata extraction (if enabled)
+    // AI-enhanced metadata extraction (if enabled).
+    // Skip for curated corpus collection shells: their title, description,
+    // and structure are authored, and the only chapter ("Corpus Guide") would
+    // mislead the AI into renaming the library item after it.
+    const isCorpusCollection = (parsedText.extraMetadata as any)?.isCorpusCollection === true;
     let aiMetadata = null;
     let aiWarning = null;
-    
-    if (useAI) {
+
+    if (useAI && !isCorpusCollection) {
       try {
         console.log('[Import API] Running AI metadata extraction...');
         
@@ -149,8 +153,31 @@ export async function POST(request: Request) {
       curatorNote: aiMetadata?.curatorNote || null,
     };
 
+    // Detect parent corpus shell: if this URL appears inside an already-imported
+    // corpus shell's items, this new text nests under it in the library grid.
+    let parentId: string | null = null;
+    const importedSourceUrl = normalizeUrlForCorpus(parsedText.metadata.sourceUrl);
+    if (importedSourceUrl) {
+      const { data: shells, error: shellsError } = await supabase
+        .from('texts')
+        .select('id, metadata')
+        .filter('metadata->>isCorpusCollection', 'eq', 'true');
+
+      if (shellsError) {
+        console.warn('[Import API] Failed to query corpus shells:', shellsError.message);
+      } else {
+        for (const shell of shells || []) {
+          if (corpusReferencesUrl((shell.metadata as any)?.corpus, importedSourceUrl)) {
+            parentId = shell.id;
+            console.log('[Import API] Auto-nested under corpus shell:', shell.id);
+            break;
+          }
+        }
+      }
+    }
+
     // Prepare text record for database
-    const textRecord = {
+    const textRecord: any = {
       title: finalMetadata.title,
       author: finalMetadata.author || null,
       year: finalMetadata.year || null,
@@ -178,8 +205,10 @@ export async function POST(request: Request) {
         totalLength: parsedText.totalLength,
         longSummary: finalMetadata.longSummary,
         aiEnhanced: useAI && aiMetadata !== null,
+        ...(parsedText.extraMetadata || {}),
       },
       uploaded_by: session.user.id,
+      parent_id: parentId,
     };
 
     // Check metadata size
@@ -276,6 +305,24 @@ export async function POST(request: Request) {
 
     console.log('[Import API] Successfully imported text:', insertedText.id);
 
+    // If this import is itself a corpus shell, re-parent any already-imported
+    // texts whose source URLs appear inside it (and that are still top-level).
+    if (isCorpusCollection && insertedText?.id) {
+      const referencedUrls = collectCorpusItemSourceUrls((parsedText.extraMetadata as any)?.corpus);
+      if (referencedUrls.length > 0) {
+        const { error: reparentError, count: reparentedCount } = await supabase
+          .from('texts')
+          .update({ parent_id: insertedText.id }, { count: 'exact' } as any)
+          .in('metadata->>sourceUrl', referencedUrls)
+          .is('parent_id', null);
+        if (reparentError) {
+          console.warn('[Import API] Failed to re-parent children:', reparentError.message);
+        } else if (reparentedCount && reparentedCount > 0) {
+          console.log(`[Import API] Re-parented ${reparentedCount} existing texts under new shell ${insertedText.id}`);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       textId: insertedText.id,
@@ -369,12 +416,48 @@ export async function GET(request: Request) {
 
   } catch (error) {
     return NextResponse.json(
-      { 
-        error: 'Failed to validate URL', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        error: 'Failed to validate URL',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
   }
 }
 
+function normalizeUrlForCorpus(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    parsed.hash = '';
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+function corpusReferencesUrl(corpus: any, normalizedUrl: string): boolean {
+  if (!corpus || !Array.isArray(corpus.groups)) return false;
+  for (const group of corpus.groups) {
+    if (!group || !Array.isArray(group.items)) continue;
+    for (const item of group.items) {
+      if (normalizeUrlForCorpus(item?.sourceUrl) === normalizedUrl) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function collectCorpusItemSourceUrls(corpus: any): string[] {
+  if (!corpus || !Array.isArray(corpus.groups)) return [];
+  const urls: string[] = [];
+  for (const group of corpus.groups) {
+    if (!group || !Array.isArray(group.items)) continue;
+    for (const item of group.items) {
+      const normalized = normalizeUrlForCorpus(item?.sourceUrl);
+      if (normalized) urls.push(normalized);
+    }
+  }
+  return Array.from(new Set(urls));
+}

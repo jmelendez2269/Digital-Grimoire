@@ -1,5 +1,6 @@
-import OpenAI from 'openai';
 import { logMetadataExtractionUsage } from './usage-tracker';
+import { parseOrRepairAiJsonObject } from './ai/json';
+import { getDefaultOpenRouterMetadataModel, getOpenRouterClient } from './ai/openrouter-client';
 
 export interface DocumentMetadata {
   title: string;
@@ -17,6 +18,61 @@ export interface DocumentMetadata {
   curatorNote?: string; // Explanation of why this document is significant
 }
 
+function toStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+  }
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+  return [];
+}
+
+const VALID_CONFIDENCE: ReadonlyArray<DocumentMetadata['confidence']> = [
+  'established', 'interpretive', 'speculative', 'tradition',
+];
+
+export function normalizeDocumentMetadata(raw: Partial<DocumentMetadata> | null | undefined): DocumentMetadata {
+  const source = (raw ?? {}) as Partial<DocumentMetadata> & Record<string, unknown>;
+  const confidence = VALID_CONFIDENCE.includes(source.confidence as DocumentMetadata['confidence'])
+    ? (source.confidence as DocumentMetadata['confidence'])
+    : 'interpretive';
+
+  return {
+    title: typeof source.title === 'string' ? source.title : 'Untitled',
+    standardizedId: typeof source.standardizedId === 'string' ? source.standardizedId : '',
+    author: typeof source.author === 'string' ? source.author : undefined,
+    year: typeof source.year === 'number' ? source.year : undefined,
+    publisher: typeof source.publisher === 'string' ? source.publisher : undefined,
+    type: typeof source.type === 'string' ? source.type : 'misc',
+    domain: typeof source.domain === 'string' ? source.domain : undefined,
+    tags: toStringArray(source.tags),
+    lenses: toStringArray(source.lenses),
+    confidence,
+    shortSummary: typeof source.shortSummary === 'string' ? source.shortSummary : '',
+    longSummary: typeof source.longSummary === 'string' ? source.longSummary : '',
+    curatorNote: typeof source.curatorNote === 'string' ? source.curatorNote : undefined,
+  };
+}
+
+function isRetryableOpenRouterError(error: unknown): boolean {
+  const status = typeof error === 'object' && error !== null && 'status' in error
+    ? Number((error as { status?: number }).status)
+    : undefined;
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
+  return status === 429 ||
+    status === 503 ||
+    message.includes('429') ||
+    message.includes('rate limit') ||
+    message.includes('provider returned error') ||
+    message.includes('temporarily unavailable');
+}
+
+async function wait(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function extractMetadata(
   ocrText: string,
   filename: string = 'document',
@@ -25,21 +81,16 @@ export async function extractMetadata(
   knownTitle?: string,
   knownAuthor?: string
 ): Promise<{ metadata: DocumentMetadata; rawOutput: string }> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const openai = getOpenRouterClient();
+  const model = getDefaultOpenRouterMetadataModel();
 
-  if (!apiKey) {
-    throw new Error('OpenAI API key not configured. Add OPENAI_API_KEY to .env.local');
-  }
+  console.log(`🤖 Calling OpenRouter (${model}) for metadata extraction...`);
 
-  const openai = new OpenAI({ apiKey });
-
-  console.log('🤖 Calling OpenAI GPT-4 for metadata extraction...');
-
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o',
+  const completionRequest = {
+    model,
     messages: [
       {
-        role: 'system',
+        role: 'system' as const,
         content: `You are a document metadata extraction expert. Extract metadata from OCR text and classify documents into these 20 types:
 book_esoteric, book_spiritual, book_psychology, book_science, article_scholarly, 
 anthropology, reference_table, historical, mythology, medical_overview, commentary, 
@@ -59,7 +110,7 @@ Documents can (and often should) relate to multiple lenses.
 Always respond with valid JSON only.`
       },
       {
-        role: 'user',
+        role: 'user' as const,
         content: `Extract metadata and return JSON for the following document.
 ${knownTitle ? `\nKNOWN TITLE (Priority): "${knownTitle}"` : ''}
 ${knownAuthor ? `\nKNOWN AUTHOR (Priority): "${knownAuthor}"` : ''}
@@ -100,21 +151,46 @@ Respond with valid JSON only, no markdown code blocks.`
     ],
     temperature: 0.3,
     max_tokens: 2000,
-    response_format: { type: "json_object" }
-  });
+    response_format: { type: "json_object" as const }
+  };
+
+  let completion;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      completion = await openai.chat.completions.create(completionRequest);
+      break;
+    } catch (error) {
+      if (attempt === 3 || !isRetryableOpenRouterError(error)) {
+        throw error;
+      }
+
+      const delayMs = attempt === 1 ? 1000 : 2500;
+      console.warn(`OpenRouter metadata attempt ${attempt} failed with a retryable provider error. Retrying in ${delayMs}ms...`);
+      await wait(delayMs);
+    }
+  }
+
+  if (!completion) {
+    throw new Error('OpenRouter metadata extraction did not return a completion');
+  }
 
   const responseText = completion.choices[0].message.content;
   if (!responseText) {
-    throw new Error('Empty response from OpenAI');
+    throw new Error('Empty response from OpenRouter');
   }
 
-  console.log('✅ OpenAI GPT-4 response received');
+  console.log('✅ OpenRouter metadata response received');
   console.log('📄 LLM Raw Output:');
   console.log('='.repeat(80));
   console.log(responseText);
   console.log('='.repeat(80));
 
-  const metadata = JSON.parse(responseText);
+  const parsed = await parseOrRepairAiJsonObject<DocumentMetadata>(responseText, {
+    client: openai,
+    model,
+    label: 'OpenRouter metadata extraction',
+  });
+  const metadata = normalizeDocumentMetadata(parsed);
   console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
 
   // Log token usage for tracking
@@ -124,7 +200,7 @@ Respond with valid JSON only, no markdown code blocks.`
     userId,
     documentId,
     success: true,
-    model: 'gpt-4o',
+    model: completion.model || model,
   });
 
   return { metadata, rawOutput: responseText };

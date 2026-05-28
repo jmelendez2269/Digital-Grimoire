@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { extractMetadata } from '@/lib/claude-metadata';
 import { getR2Client, GetObjectCommand } from '@/lib/storage/r2-client';
-import { performOCR } from '@/lib/azure-ocr';
+import { performOCR } from '@/lib/ocr';
 import { extractPdfTextLocally, isTextSubstantial } from '@/lib/utils/server-pdf-extractor';
 
 function getRescanMetadataError(error: unknown) {
@@ -12,15 +12,15 @@ function getRescanMetadataError(error: unknown) {
   if (normalized.includes('429') || normalized.includes('quota') || normalized.includes('rate limit')) {
     return {
       status: 429,
-      error: 'AI metadata rescan is currently unavailable because the OpenAI quota or rate limit has been exceeded. Check billing or try again later.',
+      error: 'AI metadata rescan is currently unavailable because the AI provider quota or rate limit has been exceeded. Check billing or try again later.',
       details,
     };
   }
 
-  if (normalized.includes('openai api key not configured')) {
+  if (normalized.includes('openrouter api key not configured') || normalized.includes('openai api key not configured')) {
     return {
       status: 500,
-      error: 'AI metadata rescan is not configured because the OpenAI API key is missing.',
+      error: 'AI metadata rescan is not configured because the OpenRouter API key is missing.',
       details,
     };
   }
@@ -70,9 +70,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'OpenRouter API key not configured' },
         { status: 500 }
       );
     }
@@ -122,10 +122,10 @@ export async function POST(request: NextRequest) {
                 reExtractedText = localResult.text;
                 console.log('[Rescan] ✅ Local PDF extraction succeeded');
               } else {
-                console.log('[Rescan] Local PDF text insufficient, falling back to Azure OCR...');
+                console.log('[Rescan] Local PDF text insufficient, falling back to local OCR...');
               }
             } catch (e) {
-              console.log('[Rescan] Local PDF extraction failed, falling back to Azure OCR...');
+              console.log('[Rescan] Local PDF extraction failed, falling back to local OCR...');
             }
           }
 
@@ -134,9 +134,9 @@ export async function POST(request: NextRequest) {
             try {
               const ocrResult = await performOCR(fileUrl, session.user.id);
               reExtractedText = ocrResult.text;
-              console.log(`[Rescan] ✅ Azure OCR succeeded: ${ocrResult.lineCount} lines`);
+              console.log(`[Rescan] ✅ local OCR succeeded: ${ocrResult.lineCount} lines`);
             } catch (ocrError) {
-              console.error('[Rescan] Azure OCR failed:', ocrError);
+              console.error('[Rescan] local OCR failed:', ocrError);
             }
           }
 

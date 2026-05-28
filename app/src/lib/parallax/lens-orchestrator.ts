@@ -1,7 +1,7 @@
 import { Lens, LensType, getLens, getActiveLenses, getAllLenses } from './lenses';
 import { hybridSearch, HybridSearchResult } from './hybrid-retrieval';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
-import { AIModel } from '@/lib/ai/types';
+import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
 import { LensWeights, ResponseLength, ResponseLengthConfig, LensResponse, MultiLensResponse, TokenUsage } from './types';
 
 export { type LensWeights, type ResponseLength, type ResponseLengthConfig, type LensResponse, type MultiLensResponse, type TokenUsage };
@@ -313,7 +313,7 @@ Provide a brief summary from the ${lens.name} perspective.`;
       { role: 'user', content: userPrompt },
     ];
 
-    const model = lens.defaultModel || 'gpt-4o-mini';
+    const model = process.env.PARALLAX_LENS_MODEL || getDefaultOpenRouterModel();
     const completion = await aiOrchestrator.chatComplete(messages, {
       model,
       temperature: 0.7,
@@ -376,7 +376,7 @@ Please answer the question from the ${lens.name} perspective.`;
       { role: 'user', content: userPrompt },
     ];
 
-    const model = lens.defaultModel || 'gpt-4o-mini';
+    const model = process.env.PARALLAX_LENS_MODEL || getDefaultOpenRouterModel();
     const completion = await aiOrchestrator.chatComplete(messages, {
       model,
       temperature: 0.7,
@@ -544,7 +544,7 @@ AVOID: "It is important to note that..." / "In conclusion..." / "The truth is...
     ];
 
     const completion = await aiOrchestrator.chatComplete(messages, {
-      model: 'gpt-4o',
+      model: process.env.PARALLAX_SYNTHESIS_MODEL || getDefaultOpenRouterModel(),
       temperature: 0.7,
       maxTokens: lengthConfig.synthesisMaxTokens,
     });
@@ -766,7 +766,7 @@ AVOID: "It is important to note that..." / "In conclusion..." / "The truth is...
     ];
 
     const completion = await aiOrchestrator.chatComplete(messages, {
-      model: 'gpt-4o',
+      model: process.env.PARALLAX_SYNTHESIS_MODEL || getDefaultOpenRouterModel(),
       temperature: 0.7,
       maxTokens,
     });

@@ -4,10 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Edit, ShoppingCart, Maximize2, X } from 'lucide-react';
+import { BookOpen, Edit, ShoppingCart, Maximize2, X, Layers } from 'lucide-react';
 import BookmarkButton from '@/components/BookmarkButton';
 import type { Text } from '@/hooks/useLibrary';
 import { generateTrackedLink } from '@/lib/utils/affiliate';
+import { formatLensName } from '@/lib/utils/formatting';
+import { getLensColorClasses } from '@/lib/utils/lens-colors';
 
 interface LibraryGridProps {
   texts: Text[];
@@ -26,7 +28,17 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
   return (
     <div className="h-full overflow-y-auto pb-20">
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 p-1">
-        {texts.map((text) => (
+        {texts.map((text) => {
+          const corpus = (text.metadata as any)?.corpus;
+          const isCorpus = Boolean((text.metadata as any)?.isCorpusCollection && corpus);
+          const corpusWorksCount = isCorpus && Array.isArray(corpus?.groups)
+            ? corpus.groups.reduce(
+              (sum: number, group: any) => sum + (Array.isArray(group?.items) ? group.items.length : 0),
+              0
+            )
+            : 0;
+
+          return (
           <div
             key={text.id}
             className="group relative flex flex-col h-full bg-transparent rounded-lg overflow-hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] hover:scale-[1.02] hover:z-10"
@@ -48,8 +60,21 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-zinc-900 text-zinc-700 gap-2">
-                    <BookOpen className="w-14 h-14 opacity-50" />
-                    <span className="text-sm text-center font-mono opacity-50 line-clamp-2">{text.title}</span>
+                    {isCorpus ? (
+                      <Layers className="w-14 h-14 opacity-50" />
+                    ) : (
+                      <BookOpen className="w-14 h-14 opacity-50" />
+                    )}
+                    <span className="text-sm text-center font-mono opacity-50 line-clamp-2">
+                      {text.title}
+                    </span>
+                  </div>
+                )}
+
+                {isCorpus && (
+                  <div className="absolute left-2 top-2 z-30 inline-flex items-center gap-1 rounded border border-cyan-500/40 bg-black/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-cyan-300 backdrop-blur-sm">
+                    <Layers className="h-3 w-3" />
+                    Corpus
                   </div>
                 )}
 
@@ -66,16 +91,25 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
 
                     {/* Meta Tags */}
                     <div className="flex flex-wrap gap-2">
+                      {isCorpus && (
+                        <span className="px-2.5 py-1 text-sm border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 rounded uppercase tracking-wider font-medium">
+                          {corpusWorksCount} works
+                        </span>
+                      )}
                       {text.domain && (
                         <span className="px-2.5 py-1 text-sm border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 rounded uppercase tracking-wider font-medium">
                           {text.domain}
                         </span>
                       )}
-                      {text.lenses?.slice(0, 4).map(lens => (
-                        <span key={lens} className="px-2.5 py-1 text-sm border border-white/10 bg-white/5 text-zinc-400 rounded">
-                          {lens}
+                      {text.lenses?.slice(0, 4).map(lens => {
+                        const lensColor = getLensColorClasses(lens);
+
+                        return (
+                        <span key={lens} className={`px-2.5 py-1 text-sm border ${lensColor.border} ${lensColor.bg} ${lensColor.text} rounded`}>
+                          {formatLensName(lens)}
                         </span>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Summary */}
@@ -134,20 +168,29 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
                       </div>
                     </div>
                     <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1 group-hover:text-zinc-300 transition-colors">
-                      Access
+                      {isCorpus ? 'Open Corpus' : 'Access'}
                     </span>
                   </div>
                 </div>
               </Link>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Expanded Card Modal */}
       {expandedCardId && (() => {
         const expandedText = texts.find(t => t.id === expandedCardId);
         if (!expandedText) return null;
+        const expandedCorpus = (expandedText.metadata as any)?.corpus;
+        const expandedIsCorpus = Boolean((expandedText.metadata as any)?.isCorpusCollection && expandedCorpus);
+        const expandedCorpusWorksCount = expandedIsCorpus && Array.isArray(expandedCorpus?.groups)
+          ? expandedCorpus.groups.reduce(
+            (sum: number, group: any) => sum + (Array.isArray(group?.items) ? group.items.length : 0),
+            0
+          )
+          : 0;
 
         return (
           <div
@@ -191,16 +234,25 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
 
               {/* Meta Tags */}
               <div className="flex flex-wrap gap-2 mb-6">
+                {expandedIsCorpus && (
+                  <span className="px-3 py-1.5 text-base border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 rounded uppercase tracking-wider font-medium">
+                    {expandedCorpusWorksCount} works
+                  </span>
+                )}
                 {expandedText.domain && (
                   <span className="px-3 py-1.5 text-base border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 rounded uppercase tracking-wider font-medium">
                     {expandedText.domain}
                   </span>
                 )}
-                {expandedText.lenses?.map(lens => (
-                  <span key={lens} className="px-3 py-1.5 text-base border border-white/10 bg-white/5 text-zinc-400 rounded">
-                    {lens}
+                {expandedText.lenses?.map(lens => {
+                  const lensColor = getLensColorClasses(lens);
+
+                  return (
+                  <span key={lens} className={`px-3 py-1.5 text-base border ${lensColor.border} ${lensColor.bg} ${lensColor.text} rounded`}>
+                    {formatLensName(lens)}
                   </span>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Summary */}
@@ -225,7 +277,7 @@ export default function LibraryGrid({ texts, isAdmin = false, onDelete }: Librar
                   onClick={() => router.push(`/library/${expandedText.id}`)}
                   className="px-6 py-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 rounded-lg transition-colors font-medium"
                 >
-                  View Full Text
+                  {expandedIsCorpus ? 'Open Corpus' : 'View Full Text'}
                 </button>
                 <button
                   onClick={() => window.open(generateTrackedLink(expandedText.title, expandedText.author || undefined, 'Library_Modal'), '_blank', 'noopener,noreferrer')}

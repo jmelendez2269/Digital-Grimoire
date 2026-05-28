@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { LensWeights } from '@/lib/parallax/lens-orchestrator';
 import { getActiveLenses } from '@/lib/parallax/lenses';
+import { getLensColorStyle } from '@/lib/utils/lens-colors';
 
 interface LensWeightsChartProps {
   lensWeights: LensWeights;
@@ -60,13 +61,6 @@ export default function LensWeightsChart({
   const startY = 20;
   const labelWidth = 50;
 
-  // Color gradient based on weight
-  const getBarColor = (weight: number) => {
-    if (weight >= 60) return '#06b6d4'; // Cyan (high)
-    if (weight >= 30) return '#22d3ee'; // Light cyan (medium)
-    return '#67e8f9'; // Lighter cyan (low)
-  };
-
   return (
     <div className="inline-block">
       <svg
@@ -91,7 +85,7 @@ export default function LensWeightsChart({
         {chartData.map((lens, index) => {
           const y = startY + index * config.spacing;
           const barLength = lens.normalized * barWidth;
-          const color = getBarColor(lens.weight);
+          const color = getLensColorStyle(lens.id).hex;
 
           return (
             <g key={lens.id}>
@@ -100,7 +94,7 @@ export default function LensWeightsChart({
                 <text
                   x={0}
                   y={y + config.barHeight / 2 + config.fontSize / 3}
-                  className="fill-amber-100/90"
+                  fill={color}
                   fontSize={config.fontSize}
                   fontWeight="500"
                 >

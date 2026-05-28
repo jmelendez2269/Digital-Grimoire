@@ -130,6 +130,17 @@ const nextConfig: NextConfig = {
         destination: '/concept-map',
         permanent: true,
       },
+      // Course slug correction: Reading the Colonizer's Record moved from C15 to C16
+      {
+        source: '/courses/c15-reading-the-colonizers-record',
+        destination: '/courses/c16-reading-the-colonizers-record',
+        permanent: true,
+      },
+      {
+        source: '/courses/c15-reading-the-colonizers-record/:path*',
+        destination: '/courses/c16-reading-the-colonizers-record/:path*',
+        permanent: true,
+      },
     ];
   },
   // Compress output

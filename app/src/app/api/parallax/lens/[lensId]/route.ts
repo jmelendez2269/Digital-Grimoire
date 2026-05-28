@@ -4,6 +4,7 @@ import { generateLensResponse, getResponseLengthConfig, ResponseLength } from '@
 import { hybridSearch } from '@/lib/parallax/hybrid-retrieval';
 import { getLens } from '@/lib/parallax/lenses';
 import { logApiUsage } from '@/lib/usage-tracker';
+import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
 
 /**
  * POST /api/parallax/lens/[lensId]
@@ -89,7 +90,7 @@ export async function POST(
         userId: user.id,
         requestMetadata: {
           lensId,
-          model: 'gpt-4o-mini',
+          model: process.env.PARALLAX_LENS_MODEL || getDefaultOpenRouterModel(),
           inputTokens: lensResponse.tokenUsage.inputTokens,
           outputTokens: lensResponse.tokenUsage.outputTokens,
           query: query.substring(0, 100)

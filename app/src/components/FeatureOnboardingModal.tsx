@@ -95,7 +95,7 @@ const features = [
     id: "parallax",
     Icon: Zap,
     label: "Seven Lenses",
-    href: "/parallax-engine",
+    href: "/seven-lenses",
     wikiHref: "/wiki/parallax-engine",
     accentColor: "text-amber-400",
     accentBg: "bg-amber-500/10",
@@ -184,7 +184,7 @@ const workflowSteps = [
   {
     Icon: Zap,
     label: "Seven Lenses",
-    href: "/parallax-engine",
+    href: "/seven-lenses",
     color: "text-amber-400",
     bg: "bg-amber-500/10",
     border: "border-amber-500/30",

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { getCourseAccessTier, hasPaidCourseAccess, sanitizeCourseForPreview } from '@/lib/courses/access';
-import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+import { attachTextIdsToReadings, matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+import { attachReadingDigests, type ReadingBlurbRow } from '@/lib/courses/attach-reading-digests';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,15 +98,45 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 });
   }
 
-  const enrichedCourse = Array.isArray(course.course_texts) && course.course_texts.length > 0
-    ? course
-    : {
-        ...course,
-        course_texts: await matchCourseTextsFromContent(
-          serviceSupabase,
-          (course.content as Record<string, unknown> | null) ?? null
-        ),
-      };
+  const courseTexts = Array.isArray(course.course_texts) && course.course_texts.length > 0
+    ? course.course_texts
+    : await matchCourseTextsFromContent(
+        serviceSupabase,
+        (course.content as Record<string, unknown> | null) ?? null
+      );
+
+  const availableTexts = (courseTexts || [])
+    .flatMap((ct: { texts?: unknown }) =>
+      Array.isArray(ct?.texts) ? ct.texts : ct?.texts ? [ct.texts] : []
+    )
+    .filter((t: unknown): t is { id: string; title: string; author: string | null; cover_image_url: string | null } =>
+      Boolean(t && typeof t === 'object' && 'id' in t && 'title' in t)
+    );
+
+  const textIdContent = attachTextIdsToReadings(
+    (course.content as Record<string, unknown> | null) ?? null,
+    availableTexts
+  );
+
+  // Attach Reading Digests keyed by each reading's stable reading_id slug.
+  // Seekers see the live digest; admins also get the pending draft so they can
+  // preview it on the real learn surface before promoting it.
+  const { data: blurbs } = await serviceSupabase
+    .from('reading_blurbs')
+    .select('reading_id, blurb_live, blurb_draft, status')
+    .eq('course_slug', course.slug);
+
+  const enrichedContent = attachReadingDigests(
+    textIdContent,
+    (blurbs ?? []) as ReadingBlurbRow[],
+    { includeDrafts: viewer.isAdmin }
+  );
+
+  const enrichedCourse = {
+    ...course,
+    course_texts: courseTexts,
+    content: enrichedContent,
+  };
 
   const accessTier = getCourseAccessTier(course);
   const paidCourseUnlocked = accessTier === 'free' || viewer.hasPaidAccess;

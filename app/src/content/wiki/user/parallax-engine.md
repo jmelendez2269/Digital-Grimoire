@@ -1,41 +1,48 @@
-# User Guide: Prismarium Lens Engine
+# User Guide: Seven Lenses
 
 > [!NOTE]
-> The feature is publicly described as the **Prismarium Lens Engine**. Some routes and internal technical namespaces still use the historical `parallax` name, including `/parallax-engine`.
+> The feature is now publicly called **Seven Lenses** and lives at `/seven-lenses`. Some older copy and the legacy route `/parallax-engine` still appear in places, and the desktop nav labels the entry **Parallax Search**. All three names point to the same experience.
 
 ## Overview
 
-The **Prismarium Lens Engine** is the heart of the product's AI capabilities. It is designed to analyze any text, concept, or question through **7 distinct lenses**, providing a multi-dimensional understanding of wisdom.
+**Seven Lenses** is the heart of Prismarium's AI capabilities. It analyzes any text, concept, or question through **7 distinct lenses**, producing a multi-dimensional reading instead of a single flat answer.
 
-Instead of giving you a single, flat answer, the engine fragments the topic into its component perspectives, allowing you to see the hidden geometry of an idea.
+Rather than collapsing the question into one perspective, Seven Lenses fragments it into its component perspectives so you can see the hidden geometry of the idea.
 
 ## The 7 Lenses
 
-Each document in the Library is tagged with one or more of these lenses, and the AI uses them to structure its analysis:
+Each document in the Library is tagged with one or more lenses, and the AI uses them to structure its analysis:
 
-1. **Scientific**: Focuses on empirical evidence, physics, biology, cosmology, and the scientific method.
-2. **Psychological**: Explores the mind, Jungian archetypes, cognitive science, shadow work, and the subconscious.
-3. **Philosophical**: Examines ethics, metaphysics, epistemology, logic, and the nature of reality.
-4. **Religious/Spiritual**: Looks at theology, mysticism, sacred texts, divine revelation, and spiritual practice.
-5. **Historical/Anthropological**: Considers cultural context, mythology, human history, societal evolution, and folklore.
-6. **Symbolic/Occult**: Decodes correspondences, alchemy, astrology, tarot, and esoteric symbolism.
-7. **Mathematical**: Analyzes patterns, sacred geometry, numerology, probability, and universal ratios.
+1. **Scientific** – Empirical evidence, physics, biology, cosmology, the scientific method.
+2. **Psychological** – Mind, Jungian archetypes, cognitive science, shadow work, the subconscious.
+3. **Philosophical** – Ethics, metaphysics, epistemology, logic, the nature of reality.
+4. **Religious/Spiritual** – Theology, mysticism, sacred texts, divine revelation, spiritual practice.
+5. **Historical/Anthropological** – Cultural context, mythology, human history, societal evolution, folklore.
+6. **Symbolic/Occult** – Correspondences, alchemy, astrology, tarot, esoteric symbolism.
+7. **Mathematical** – Patterns, sacred geometry, numerology, probability, universal ratios.
 
 ## How to Use It
 
-1. **Navigate to the Engine**: Click on **Prismarium Lens Engine** from the dashboard search menu or visit the lens engine experience directly.
-2. **Enter a Query**: Type a question, a concept such as "The nature of time", or paste a segment of text.
-3. **Analyze**: The engine will process your input and generate a report broken down by the 7 lenses.
-4. **Explore**: Read through the different perspectives. You may find that a spiritual concept has fascinating scientific parallels, or that a historical event has deep psychological significance.
+1. **Open Seven Lenses.** Click **Seven Lenses** (mobile) or **Parallax Search** (desktop) in the top nav, or go directly to `/seven-lenses`.
+2. **Tune the lenses.** Each lens has an intensity selector. Boost the lenses that matter for the question; mute the ones that don't. Logged-in users can **Save as Default** so the calibration persists across sessions.
+3. **Set the response length.** A slider above the lens controls trades brevity for depth.
+4. **Enter a query.** Ask a question ("What does *initiation* mean across traditions?"), name a concept ("the nature of time"), or paste a passage.
+5. **Analyze.** The engine streams a synthesis structured by your weighted lenses, pulling supporting texts from the Library.
+6. **Explore.** Read across the lenses, follow citations into the Library, and capture insights to the Journal.
 
 ## Integration with the Library
 
-The Prismarium Lens Engine doesn't just think, it **reads**. When you run an analysis, the engine searches the Prismarium Library for texts that match your concept and the specific lenses.
+Seven Lenses doesn't just reason; it **reads**. Each analysis searches the Prismarium Library for texts that match the concept and the active lenses.
 
 * If you ask about *Alchemy*, the **Symbolic** lens will pull from alchemical treatises, while the **Psychological** lens might reference Jung's *Psychology and Alchemy*.
 
+## Subscription & Rate Limits
+
+Seven Lenses is a Premium feature with a tiered rate limit. The page shows your remaining quota and reset date. Free users see a preview and a prompt to upgrade.
+
 ## Tips
 
-* **Be Specific**: The more specific your concept, the more detailed the lens breakdown will be.
-* **Look for Conflicts**: Sometimes the Scientific lens and the Religious lens will disagree. These points of tension are often where the deepest insights lie.
-* **Use it for Research**: Use the engine to generate an outline or a reading list for a topic you want to study.
+* **Be specific.** Sharper concepts produce sharper lens breakdowns.
+* **Look for tension.** Where Scientific and Religious diverge is often where the deepest insight lives.
+* **Use it for research.** Treat the output as a reading list and outline, not the final word.
+* **Pair it with the Journal.** Drop synthesis notes into the [Journal](/wiki/journal) so insights compound over time.

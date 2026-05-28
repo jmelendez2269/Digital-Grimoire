@@ -1,20 +1,23 @@
 ---
-title: The 7 Parallax Lenses
+title: Seven Lenses (Lens Engine)
 type: architecture
 status: stable
 audience: developer
-description: Technical specification for the 7 Lenses feature and tagging system.
+description: Technical specification for the Seven Lenses feature, the lens-tagging system, and the lens engine that powers `/seven-lenses`.
 ---
 
-# The 7 Parallax Lenses Feature
+# Seven Lenses — Feature & Engine
 
-**Date:** October 26, 2025  
-**Status:** ✅ Implemented  
-**Version:** 1.0
+**Last reviewed:** May 2026
+**Status:** ✅ Live in production
+**Canonical route:** `/seven-lenses` (legacy alias: `/parallax-engine`)
+**Nav labels:** *Seven Lenses* (mobile), *Parallax Search* (desktop)
 
 ## Overview
 
-The 7 Parallax Lenses feature connects the Library with The Parallax Engine by tagging each document with the perspectives through which it can be understood. This enables users to filter the library by perspective and creates a foundation for the AI reasoning system.
+**Seven Lenses** connects the Library with Prismarium's AI reasoning surface by tagging every document with the perspectives through which it can be understood. Users can filter the library by lens, and the lens tags feed the reasoning surface at `/seven-lenses`, which lets users tune lens intensities and run lens-weighted synthesis over the corpus.
+
+> Naming note: in older code and docs the public feature is called the *Parallax Engine* or *Prismarium Lens Engine*. **Seven Lenses** is the current public name; the internal namespace (`parallax`, `lib/parallax`, component prefixes) is intentionally retained per the Prismarium rename matrix.
 
 ## The 7 Lenses
 
@@ -247,26 +250,20 @@ if (filterValues.lenses.length > 0) {
 2. Filter by domain: "alchemy"
 3. Sort by year to see chronological development
 
-## Connection to The Parallax Engine
+## Connection to the Seven Lenses Engine (`/seven-lenses`)
 
-The lenses feature creates a foundation for The Parallax Engine (Phase 4):
+The lens tags feed the reasoning surface at `/seven-lenses`:
 
-### Future Integration
-
-1. **Lens-Weighted Retrieval:** When users query The Parallax Engine and adjust lens weights, the system can prioritize documents tagged with those lenses
-
-2. **Perspective-Aware Search:** "Ask from a psychological perspective" → retrieves documents tagged with `psychological` lens
-
-3. **Cross-Lens Synthesis:** The AI can synthesize answers by pulling from documents across multiple lens categories
-
-4. **Lens Coverage Analysis:** Show users which lenses are represented in their search results
+1. **Lens-Weighted Retrieval:** Users adjust per-lens **intensity selectors** on `/seven-lenses`; the engine prioritises documents tagged with the boosted lenses. Authenticated users can **Save as Default** to persist their calibration.
+2. **Perspective-Aware Search:** "Ask from a psychological perspective" → retrieves documents tagged with `psychological` lens.
+3. **Cross-Lens Synthesis:** The engine streams a synthesis structured by the active lenses, pulling supporting passages from the Library.
+4. **Lens Coverage Analysis:** The response surfaces which lenses contributed to the answer.
+5. **Premium gating:** The engine is a Premium feature with a tiered rate limit (`RateLimitDisplay` on the page); free users see a preview and an upgrade prompt.
 
 ### Roadmap Connection
 
-**Current (Phase 1):** ✅ Document tagging with lenses  
-**Phase 4:** AI queries reference lens-tagged documents  
-**Phase 5:** Community can suggest lens assignments  
-**Phase 6:** Advanced lens analytics and recommendations
+**Shipped:** ✅ Document tagging, lens filtering in `/library`, lens-weighted synthesis at `/seven-lenses`, per-user default lens calibration, response-length control.
+**Next:** Community lens suggestions, lens-confidence scores, lens analytics across the library, lens-preset sharing.
 
 ## Testing
 
@@ -363,13 +360,13 @@ The lenses feature creates a foundation for The Parallax Engine (Phase 4):
 
 ## Related Documentation
 
-- **Feature Backlog:** `docs/planning/FEATURE_BACKLOG.md` - Lens weight sliders (Phase 4)
-- **Branding:** `docs/BRANDING.md` - The 7 lenses definitions
-- **Technical Plan:** `docs/source/Complete_Technical_Implementation_Plan.md` - Parallax Engine
-- **Library Features:** `docs/LIBRARY_FEATURES.md` - Advanced filtering system
+- **User Guide:** [`/wiki/parallax-engine`](/wiki/parallax-engine) — public-facing Seven Lenses guide
+- **Branding:** [`/wiki/branding`](/admin/wiki/branding) — Prismarium / Project Parallax naming model and the seven lenses
+- **Library Features:** [`/wiki/library-features`](/admin/wiki/library-features) — advanced filtering, lens facets
+- **Rename Matrix:** `docs/planning/PRISMARIUM_RENAME_MATRIX.md` — source of truth for product, brand, and engine naming
 
 ---
 
-**Last Updated:** October 26, 2025  
-**Status:** Production Ready  
-**Next Steps:** Test with real documents, gather user feedback on lens assignments
+**Last Updated:** May 2026
+**Status:** Production
+**Recent changes:** Renamed `Parallax Engine` → **Seven Lenses** in public UX (route `/seven-lenses`); added response-length control and per-user default lens calibration.

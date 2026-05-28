@@ -1,6 +1,7 @@
-import OpenAI from 'openai';
 import { logMetadataExtractionUsage } from './usage-tracker';
 import { DocumentMetadata } from './claude-metadata';
+import { parseOrRepairAiJsonObject } from './ai/json';
+import { getDefaultOpenRouterMetadataModel, getOpenRouterClient } from './ai/openrouter-client';
 
 export interface MediaMetadata extends DocumentMetadata {
   // Media-specific fields are stored in metadata JSONB in database
@@ -18,8 +19,8 @@ export interface MediaFileInfo {
 
 /**
  * Extract metadata from media files using AI
- * For photos: Uses GPT-4 Vision to analyze image content
- * For audio/video: Uses GPT-4 to analyze transcript and file metadata
+ * For photos: Uses OpenRouter-compatible vision models to analyze image content
+ * For audio/video: Uses OpenRouter-compatible text models to analyze transcript and file metadata
  */
 export async function extractMediaMetadata(
   mediaType: 'audio' | 'video' | 'photo',
@@ -29,24 +30,19 @@ export async function extractMediaMetadata(
   userId?: string,
   documentId?: string
 ): Promise<{ metadata: MediaMetadata; rawOutput: string }> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const openai = getOpenRouterClient();
+  const model = getDefaultOpenRouterMetadataModel();
 
-  if (!apiKey) {
-    throw new Error('OpenAI API key not configured. Add OPENAI_API_KEY to .env.local');
-  }
-
-  const openai = new OpenAI({ apiKey });
-
-  console.log(`🤖 Calling OpenAI GPT-4${mediaType === 'photo' ? ' Vision' : ''} for ${mediaType} metadata extraction...`);
+  console.log(`🤖 Calling OpenRouter (${model}) for ${mediaType} metadata extraction...`);
 
   if (mediaType === 'photo') {
-    // Use GPT-4 Vision for photo analysis
+    // Use a vision-capable OpenRouter route for photo analysis
     if (!transcriptOrImageUrl) {
       throw new Error('Image URL is required for photo metadata extraction');
     }
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model,
       messages: [
         {
           role: 'system',
@@ -117,16 +113,20 @@ Respond with valid JSON only, no markdown code blocks.`
 
     const responseText = completion.choices[0].message.content;
     if (!responseText) {
-      throw new Error('Empty response from OpenAI');
+      throw new Error('Empty response from OpenRouter');
     }
 
-    console.log('✅ OpenAI GPT-4 Vision response received');
+    console.log('✅ OpenRouter vision metadata response received');
     console.log('📄 LLM Raw Output:');
     console.log('='.repeat(80));
     console.log(responseText);
     console.log('='.repeat(80));
 
-    const metadata = JSON.parse(responseText);
+    const metadata = await parseOrRepairAiJsonObject<MediaMetadata>(responseText, {
+      client: openai,
+      model,
+      label: `OpenRouter ${mediaType} metadata extraction`,
+    });
     console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
 
     // Log token usage for tracking
@@ -136,18 +136,18 @@ Respond with valid JSON only, no markdown code blocks.`
       userId,
       documentId,
       success: true,
-      model: 'gpt-4o',
+      model: completion.model || model,
     });
 
     return { metadata, rawOutput: responseText };
   } else {
-    // Use GPT-4 for audio/video transcript analysis
+    // Use an OpenRouter text model for audio/video transcript analysis
     if (!transcriptOrImageUrl) {
       throw new Error('Transcript is required for audio/video metadata extraction');
     }
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model,
       messages: [
         {
           role: 'system',
@@ -211,16 +211,20 @@ Respond with valid JSON only, no markdown code blocks.`
 
     const responseText = completion.choices[0].message.content;
     if (!responseText) {
-      throw new Error('Empty response from OpenAI');
+      throw new Error('Empty response from OpenRouter');
     }
 
-    console.log(`✅ OpenAI GPT-4 response received for ${mediaType}`);
+    console.log(`✅ OpenRouter metadata response received for ${mediaType}`);
     console.log('📄 LLM Raw Output:');
     console.log('='.repeat(80));
     console.log(responseText);
     console.log('='.repeat(80));
 
-    const metadata = JSON.parse(responseText);
+    const metadata = await parseOrRepairAiJsonObject<MediaMetadata>(responseText, {
+      client: openai,
+      model,
+      label: `OpenRouter ${mediaType} metadata extraction`,
+    });
     console.log('📋 Parsed Metadata:', JSON.stringify(metadata, null, 2));
 
     // Log token usage for tracking
@@ -230,7 +234,7 @@ Respond with valid JSON only, no markdown code blocks.`
       userId,
       documentId,
       success: true,
-      model: 'gpt-4o',
+      model: completion.model || model,
     });
 
     return { metadata, rawOutput: responseText };
