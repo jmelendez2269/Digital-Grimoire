@@ -172,7 +172,7 @@ async function syncTexts(staging: SupabaseClient, prod: SupabaseClient, apply: b
   //    Pass 1: insert with parent_id = NULL so children don't fail FK before parents land.
   //    Pass 2: update parent_id from staging values.
   let unmappedUploaders = 0;
-  const pass1Rows = stagingTexts.map((row) => {
+  const pass1Rows = stagingTexts.map((row): Record<string, unknown> => {
     const stagingUploader = (row.uploaded_by as string | null) ?? null;
     const mappedUploader = mapUploader(stagingUploader);
     if (stagingUploader && !mappedUploader) unmappedUploaders += 1;
@@ -199,7 +199,7 @@ async function syncTexts(staging: SupabaseClient, prod: SupabaseClient, apply: b
   console.log(`   pass 2 rows (parent_id):    ${parentUpdates.length}`);
 
   if (verbose) {
-    const sample = pass1Rows.slice(0, 3).map((r) => ({ id: r.id, title: r.title, uploaded_by: r.uploaded_by }));
+    const sample = pass1Rows.slice(0, 3).map((r) => ({ id: r['id'], title: r['title'], uploaded_by: r['uploaded_by'] }));
     console.log(`   sample: ${JSON.stringify(sample, null, 2)}`);
   }
 
