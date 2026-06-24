@@ -117,12 +117,15 @@ The earlier "not feasible" verdict (no shared join key) and the bundle re-import
 - **Benefit:** populates the 1,418 bare live entities with rich properties (material, musical_note, planets, deities…), directly enriching The Working's palettes and giving deities/planets their intention claims.
 - **Do NOT** run a blind `DELETE` or a full bundle import. Recover first via the targeted script, then clean orphans. After recovery, re-run migration 041's backfill so `entity_intentions` picks up the newly-attached intention claims.
 
-### Phase 2 — Assembly endpoint
-- [ ] `POST /api/working/assemble` — intention (or free text → resolved intention) → palette.
-- [ ] Match via `entity_intentions`; one-hop traversal via `correspondence_relationships` for timing/deity.
-- [ ] Group by category; balanced selection (1–2 per category) weighted by `weight`/`confidence`.
-- [ ] Attach each entity's approved `description` as grounding.
-- [ ] Output: structured palette (category → {name, narrative, tradition, confidence}).
+### Phase 2 — Assembly endpoint ✅ DONE (June 2026)
+- [x] `POST /api/working/assemble` — auth-gated; body `{ intention }` (slug or free text).
+- [x] Core logic in `app/src/lib/working/assemble.ts` (reusable by Phase 3 harness).
+- [x] Intention resolution: whole phrase → per-word (stopword-filtered, longest-first) → fuzzy; honors aliases (e.g. "attract prosperity" → money via the prosperity alias).
+- [x] Union match across intention + aliases via `entity_intentions`; chunked `.in()` to avoid header overflow.
+- [x] One-hop traversal via `correspondence_relationships` → patron beings (deities/planets).
+- [x] Grouped into Timing / Materials / Symbols / Energetics / Patrons & Beings / Other; ranked (narrative-first, then match count) and capped at 8/group.
+- [x] Each item carries its approved `description` (grounding for synthesis).
+- [x] Verified against production: "protection" 244→37, "healing grief"→healing 242→37, "attract prosperity"→money — all groups populated, patrons resolved.
 
 ### Phase 3 — Model test harness (the comparison)
 - [ ] OpenRouter provider via AI SDK; `OPENROUTER_API_KEY` env var.
