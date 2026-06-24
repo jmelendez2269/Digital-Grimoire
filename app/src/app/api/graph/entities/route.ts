@@ -139,6 +139,30 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Layer 2 dedup: also check by normalized name (parentheticals stripped,
+    // alphanumeric-only) so we catch parenthetical-variant imports like
+    // "Amber (gently)" colliding with "Amber". Matches the DB-level
+    // (category, normalized_name) unique index so callers get a friendly 409
+    // before the constraint fires.
+    if (!existingEntity && resolvedCategory) {
+      const normalized = name
+        .toLowerCase()
+        .replace(/\([^)]*\)/g, " ")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+      if (normalized.length > 0) {
+        const { data: normMatch } = await svc
+          .from("correspondences")
+          .select("id, name, slug, category")
+          .eq("category", resolvedCategory)
+          .eq("normalized_name", normalized)
+          .maybeSingle();
+        if (normMatch) {
+          existingEntity = normMatch;
+        }
+      }
+    }
+
     // If entity already exists, return error with existing entity info
     if (existingEntity) {
       return NextResponse.json(

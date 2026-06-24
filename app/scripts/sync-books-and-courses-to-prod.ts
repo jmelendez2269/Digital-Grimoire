@@ -251,7 +251,7 @@ async function syncCourses(staging: SupabaseClient, prod: SupabaseClient, apply:
 
 async function syncReadingBlurbs(staging: SupabaseClient, prod: SupabaseClient, apply: boolean) {
   console.log(`\n📖 Syncing reading_blurbs…`);
-  const { data, error } = await staging.from('reading_blurbs').select('*');
+  const { data, error } = await staging.from('reading_blurbs').select('*').eq('status', 'live');
   if (error) throw new Error(`staging reading_blurbs: ${error.message}`);
   const rows = (data ?? []) as Record<string, unknown>[];
   console.log(`   staging reading_blurbs: ${rows.length}`);
