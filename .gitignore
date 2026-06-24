@@ -33,3 +33,6 @@ reader-digests/
 # Local book/PDF files
 docs/nonPD books/
 
+
+# Orphan-claim recovery backups (local artifacts)
+graph-bundles/orphan-claims-backup-*.json
