@@ -30,3 +30,6 @@ reader-digests/
 # Playwright MCP session data
 .playwright-mcp/
 
+# Local book/PDF files
+docs/nonPD books/
+
