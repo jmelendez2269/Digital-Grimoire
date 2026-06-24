@@ -1,0 +1,9 @@
+# Drafting-only snippets from copyrighted modern sources are LOCAL ONLY.
+# They are read by draft-entity-narratives.ts to ground category gaps the
+# public-domain library does not cover (modern Wicca, contemporary
+# correspondence work, etc.), but they MUST NOT enter git, the DB, or
+# production. Only original synthesis derived from them ships.
+#
+# Ignore every category file; keep README + this gitignore tracked.
+*.md
+!README.md

@@ -19,3 +19,14 @@ unlighthouse-reports/
 .DS_Store
 Thumbs.db
 
+# Working/temp files
+app/*-merge-plan.json
+app/prod-leftover-audit.json
+narrative-drafts-*.md
+courses-survey.json
+pdf-extract-report.json
+reader-digests/
+
+# Playwright MCP session data
+.playwright-mcp/
+
