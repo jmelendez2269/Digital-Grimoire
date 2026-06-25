@@ -4,7 +4,7 @@ import { memo, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { Network, Search, Sparkles } from "lucide-react";
+import { Network, Sparkles } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import FeedbackModal from "./FeedbackModal";
@@ -27,22 +27,35 @@ interface HeaderProps {
   librarySearch?: LibrarySearchProps;
 }
 
-const primaryNav = [
+type NavItem = {
+  name: string;
+  path: string;
+  icon?: React.ReactNode;
+  matchPaths?: string[];
+};
+
+const primaryNav: NavItem[] = [
   { name: "Library", path: "/library" },
   { name: "Courses", path: "/courses" },
-  { name: "Graph", path: "/graph", icon: <Network className="w-3.5 h-3.5" /> },
-  { name: "Concept Search", path: "/search", icon: <Search className="w-3.5 h-3.5" /> },
-  { name: "Parallax Search", path: "/seven-lenses", icon: <Sparkles className="w-3.5 h-3.5" /> },
-  { name: "Journal", path: "/journal" },
+  {
+    name: "Explore",
+    path: "/explore",
+    icon: <Network className="w-3.5 h-3.5" />,
+    matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
+  },
+  {
+    name: "Workbench",
+    path: "/workbench",
+    icon: <Sparkles className="w-3.5 h-3.5" />,
+    matchPaths: ["/workbench", "/journal"],
+  },
 ];
 
-const mobileNav = [
+const mobileNav: NavItem[] = [
   { name: "Library", path: "/library", icon: "📚" },
   { name: "Courses", path: "/courses", icon: "🎓" },
-  { name: "Graph", path: "/graph", icon: "🕸️" },
-  { name: "Concept Search", path: "/search", icon: "💡" },
-  { name: "Seven Lenses", path: "/seven-lenses", icon: "✨" },
-  { name: "Journal", path: "/journal", icon: "📝" },
+  { name: "Explore", path: "/explore", icon: "🕸️", matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"] },
+  { name: "Workbench", path: "/workbench", icon: "✨", matchPaths: ["/workbench", "/journal"] },
 ];
 
 function Header({ librarySearch }: HeaderProps = {}) {
@@ -69,7 +82,10 @@ function Header({ librarySearch }: HeaderProps = {}) {
     router.refresh();
   };
 
-  const isActive = (path: string) => pathname === path || pathname?.startsWith(`${path}/`);
+  const isActive = (item: NavItem) => {
+    const paths = item.matchPaths ?? [item.path];
+    return paths.some((p) => pathname === p || pathname?.startsWith(`${p}/`));
+  };
 
   const adminLinks = [
     { label: "Admin Panel", icon: "🔐", href: "/admin" },
@@ -115,7 +131,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
               key={item.path}
               href={item.path}
               className={`relative px-5 py-2 text-lg font-medium transition-all duration-300 rounded-md border border-transparent ${
-                isActive(item.path)
+                isActive(item)
                   ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
                   : "text-zinc-400 hover:text-cyan-200 hover:bg-white/5"
               }`}
@@ -124,7 +140,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 {item.icon}
                 {item.name}
               </div>
-              {isActive(item.path) && (
+              {isActive(item) && (
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></div>
               )}
             </Link>
@@ -281,7 +297,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                       href={item.path}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`p-3 rounded-lg flex flex-col items-center justify-center text-center gap-1 ${
-                        isActive(item.path)
+                        isActive(item)
                           ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
                           : "bg-black/30 border border-white/5 text-zinc-300 hover:bg-white/5"
                       }`}

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ScrollText, Wand2, Sparkles } from 'lucide-react';
+import { ScrollText, Wand2, Sparkles, BookOpen, FlaskConical } from 'lucide-react';
 import Header from '@/components/Header';
 
 export default function WorkbenchLayout({
@@ -13,10 +13,11 @@ export default function WorkbenchLayout({
     const pathname = usePathname();
 
     const tabs = [
-        { name: 'My Rituals', href: '/workbench/rituals', icon: ScrollText },
+        { name: 'The Working', href: '/workbench/the-working', icon: FlaskConical },
+        { name: 'Journal', href: '/journal', icon: BookOpen },
+        { name: 'Tarot', href: '/workbench/tarot', icon: Wand2 },
         { name: 'Ritual Machine', href: '/workbench/machine', icon: Sparkles },
-        { name: 'Deck Forge', href: '/workbench/tarot', icon: Wand2 },
-        // Future: { name: 'Sigil Maker', href: '/workbench/sigils', icon: Hexagon },
+        { name: 'My Rituals', href: '/workbench/rituals', icon: ScrollText },
     ];
 
     return (
