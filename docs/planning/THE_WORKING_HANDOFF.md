@@ -15,16 +15,21 @@ Brand language (user-facing): product = **Prismarium**, AI = **Parallax Engine**
 | 2 — Assembly endpoint | ✅ |
 | 2.5 — Semantic intent resolution | ✅ |
 | 3 — Synthesis + model choice (**Haiku 4.5**) | ✅ |
-| **4 — Workings as experiments (persistence)** | ⏭ NEXT |
-| 5 — Practitioner UI | ⏭ |
+| **4 — Workings as experiments (persistence)** | ✅ |
+| **5 — Practitioner UI** | ⏭ NEXT |
 | 6 — Community sharing | ⏭ |
 
 ## Key files (all under `app/`)
 - `src/lib/working/assemble.ts` — palette assembly. `assemblePalette(supabase, input)` (deterministic) + `assemblePaletteForSlugs(supabase, slugs, intention)` (slug-set core) + `resolveIntention()` (deterministic resolver). Groups: Timing / Materials / Symbols / Energetics / Patrons & Beings / Other; cap 8/group; one-hop traversal for patron deities/planets.
 - `src/lib/working/resolve-intent.ts` — `resolveIntentSemantic()` (Phase 2.5): deterministic → Haiku fallback → canonical slug set.
 - `src/lib/working/synthesize.ts` — `buildSynthesisPrompt(palette)` (THE canonical prompt — the real asset) + `synthesizeRitual(palette)`. Model: `WORKING_SYNTHESIS_MODEL = "claude-haiku-4-5"`.
+- `src/lib/working/conditions.ts` — `stampConditions(castAt)` → `WorkingConditions` (moon phase via Meeus reference, planetary day-ruler, season). Pure TS, no deps.
 - `src/app/api/working/assemble/route.ts` — `POST` palette only.
 - `src/app/api/working/generate/route.ts` — `POST {intention}` → `{palette, ritual, interpretation?}`. Deterministic → semantic fallback → assemble → synthesize. `maxDuration = 60`.
+- `src/app/api/working/route.ts` — `GET` → list user's workings (no palette in list; fetch by id for full record).
+- `src/app/api/working/save/route.ts` — `POST {intent_text, palette, ritual, model_used, status?}` → `{id, created_at}`. Creates a working as draft.
+- `src/app/api/working/[id]/route.ts` — `GET` full record; `PATCH {intent_text}` to update the hypothesis text.
+- `src/app/api/working/[id]/cast/route.ts` — `POST {cast_at?}` → stamps conditions, sets status=cast. Idempotent.
 - `scripts/working-model-bakeoff.ts` — CLI bake-off; imports `buildSynthesisPrompt` so it never drifts. `--models a,b,c` (prefix `anthropic:` for direct Claude), `--prod`/`--via-merge-plans`/`--execute` belong to the *other* script below.
 - `scripts/recover-claims-from-bundle.ts` — orphan-claim recovery (already run; keep for reference).
 
@@ -49,13 +54,24 @@ Brand language (user-facing): product = **Prismarium**, AI = **Parallax Engine**
 ## How to test the engine quickly
 Create a temp script in `app/scripts/_tmp_*.ts` that loads `.env.local`, makes a Supabase client from `PROD_SUPABASE_URL`/`PROD_SUPABASE_SERVICE_KEY`, calls `assemblePalette` / `resolveIntentSemantic` / `synthesizeRitual`, prints, then delete it. (Pattern used throughout this build.) The `/api/working/generate` route is auth-gated, so the lib path is the easy test surface.
 
-## NEXT: Phase 4 — Workings as experiments (persistence)
-Decisions of record (from the plan):
-- **Dedicated `workings` table** (NOT extend `journal_pages`). Structured experiment fields get real columns; free-form follow-up notes link to journal entries.
-- Proposed columns: `id`, `user_id`, `intent_text` (the hypothesis, in their words), `palette` (jsonb), `ritual` (jsonb/text), `model_used`, `status` (`draft|cast|shared`), `cast_at`, `conditions` (jsonb — auto-stamp moon phase / planetary day-ruler / season from `cast_at`), `shared_at`, `created_at`, `updated_at`. RLS owner-private by default.
-- Auto-stamp `conditions` from the same astronomical/correspondence data the graph uses for timing.
-- Follow-up log = journal entries linked to a working (timestamped, searchable) — reuse journal infra (`015_add_journal_pages_SAFE.sql`, `034_enhance_journal_pages_for_workbooks.sql`).
-- Then Phase 5 UI: intent → palette → ritual → cast (writes hypothesis + conditions) → follow-up; Phase 6 community sharing.
+## Phase 4 complete — what was built
+
+- **`workings` table** (staging + prod): `id / user_id / intent_text / palette (jsonb) / ritual / model_used / status (draft|cast|shared) / cast_at / conditions (jsonb) / shared_at / created_at / updated_at`. RLS owner-private. `updated_at` auto-trigger.
+- **`journal_pages.working_id`** (nullable FK → workings): follow-up journal entries link here. `on delete set null`.
+- **`src/lib/working/conditions.ts`** — `stampConditions(castAt)` → `WorkingConditions`: moon phase (8-phase, Meeus Jan 6 2000 reference), planetary day-ruler (Sun→Sat), season (NH), ISO cast_date.
+- **API surface** — all auth-gated, service client for DB:
+  - `GET /api/working` — list (no palette blob; 100 cap)
+  - `POST /api/working/save` — create draft
+  - `GET /api/working/[id]` — full record
+  - `PATCH /api/working/[id]` — update intent_text
+  - `POST /api/working/[id]/cast` — stamp conditions, set status=cast
+
+**Migration file:** `src/lib/supabase/migrations/20260625000000_add_workings.sql`
+
+---
+
+## NEXT: Phase 5 — Practitioner UI
+Phase 5 UI: intent → palette → ritual → cast (writes hypothesis + conditions) → follow-up journal entries; Phase 6 community sharing (add `shared` status + public RLS policy).
 
 ## Git
 - Branch `develop`. Latest relevant commits: 040/041 + recovery, Phase 2 assembly, Phase 3 synthesis, Phase 2.5 semantic resolver. Commit messages end with the Co-Authored-By line. Push to `origin/develop`.
