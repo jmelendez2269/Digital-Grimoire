@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     if (exchangeError) {
       console.error('Code exchange error:', exchangeError)
       const errorMessage = exchangeError.message.includes('external code: 4/0A')
-        ? 'Google sign-in reached Supabase, but Google rejected the code exchange. In Supabase Auth > Providers > Google, make sure the Client ID and Secret are from the same Google OAuth client whose Authorized redirect URI is your Supabase /auth/v1/callback URL.'
+        ? 'Google sign-in is redirecting directly to the app instead of Supabase Auth. In Google Cloud, set the OAuth Authorized redirect URI to your Supabase callback URL, then try again.'
         : exchangeError.message
 
       return redirectWithCookies(
