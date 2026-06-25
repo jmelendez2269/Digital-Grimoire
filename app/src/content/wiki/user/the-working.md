@@ -12,6 +12,9 @@ A *working* is practitioner language for an active operation: distinct from stud
 > [!NOTE]
 > The Working is intent-driven and **generated**, not browsed. If you'd rather pick from pre-written rituals, see the [Ritual Library](/wiki/ritual-machine). The two are complementary — a Working you like can be saved as your own ritual.
 
+> [!NOTE] **What's available now**
+> The generator is live: **type any intention in plain words and receive a complete, graph-grounded ritual.** The *experiment* parts of this page — saving a working, auto-stamped casting conditions, the follow-up log, and community sharing — are on the way and described below as the intended experience.
+
 ---
 
 ## How it differs from the Ritual Library
