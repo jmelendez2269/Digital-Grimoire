@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { assemblePalette } from "@/lib/working/assemble";
+import { assemblePalette, assemblePaletteForSlugs } from "@/lib/working/assemble";
+import { resolveIntentSemantic } from "@/lib/working/resolve-intent";
 import { synthesizeRitual } from "@/lib/working/synthesize";
 
 /**
@@ -29,17 +30,34 @@ export async function POST(req: Request) {
     }
 
     const supabase = createServiceClient();
-    const palette = await assemblePalette(supabase, intention);
+
+    // Deterministic first; fall back to the semantic resolver (Phase 2.5) so
+    // modern free-text intents ("a new job aligned with my highest timeline")
+    // map onto the curated vocabulary.
+    let palette = await assemblePalette(supabase, intention);
+    let interpretation: string | undefined;
+    if (!palette) {
+      const resolved = await resolveIntentSemantic(supabase, intention);
+      if (resolved) {
+        interpretation = resolved.interpretation;
+        palette = await assemblePaletteForSlugs(supabase, resolved.slugs, {
+          slug: resolved.slugs[0],
+          label: resolved.label,
+          aliases: resolved.slugs.slice(1),
+          matchedFrom: "fuzzy",
+        });
+      }
+    }
     if (!palette) {
       return NextResponse.json(
-        { error: `No intention matched "${intention}". Try a different word.` },
+        { error: `Could not map "${intention}" to the correspondence graph. Try different words.` },
         { status: 404 },
       );
     }
 
     const ritual = await synthesizeRitual(palette);
 
-    const res = NextResponse.json({ palette, ritual });
+    const res = NextResponse.json({ palette, ritual, interpretation });
     res.headers.set("Cache-Control", "no-store");
     return res;
   } catch (error: any) {

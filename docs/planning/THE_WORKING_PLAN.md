@@ -127,6 +127,12 @@ The earlier "not feasible" verdict (no shared join key) and the bundle re-import
 - [x] Each item carries its approved `description` (grounding for synthesis).
 - [x] Verified against production: "protection" 244→37, "healing grief"→healing 242→37, "attract prosperity"→money — all groups populated, patrons resolved.
 
+### Phase 2.5 — Semantic intent resolution ✅ DONE (June 2026)
+- [x] `app/src/lib/working/resolve-intent.ts` — `resolveIntentSemantic()`: deterministic fast-path, then Haiku fallback that maps free text → 1–4 canonical slugs (unioned). No embeddings/pgvector; reuses the Anthropic key.
+- [x] `assemble.ts` refactored: `assemblePaletteForSlugs(supabase, slugs, intention)` is the reusable slug-set core; `assemblePalette(input)` delegates to it.
+- [x] `/api/working/generate` wired: deterministic → semantic fallback → assemble across the union; returns `interpretation` when the LLM path is used.
+- [x] Verified live: "getting a new job that aligns with my highest timeline" → {success, opportunities, purpose}; "help me let go of an ex" → {release, heartbreak, healing}; "protection" still hits the free fast-path.
+
 ### Phase 3 — Model test harness (the comparison) ✅ DONE (June 2026)
 - [x] CLI bake-off harness `app/scripts/working-model-bakeoff.ts` (instead of a website page — faster to iterate; chosen with the user).
 - [x] Compared Kimi / Qwen / DeepSeek (OpenRouter) **and** Sonnet 4.6 / Haiku 4.5 (direct Anthropic) on the same palette + prompt.

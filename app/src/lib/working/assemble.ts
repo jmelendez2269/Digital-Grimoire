@@ -159,7 +159,20 @@ export async function assemblePalette(
 
   // Union the canonical intention with its aliases.
   const unionSlugs = Array.from(new Set([intention.slug, ...intention.aliases]));
+  return assemblePaletteForSlugs(supabase, unionSlugs, intention);
+}
 
+/**
+ * Assemble a palette from an explicit set of canonical intention slugs.
+ * Used by the deterministic path (intention + aliases) and the semantic
+ * resolver (Phase 2.5 — several canonical slugs that together capture a
+ * free-text intent).
+ */
+export async function assemblePaletteForSlugs(
+  supabase: SupabaseClient,
+  unionSlugs: string[],
+  intention: ResolvedIntention,
+): Promise<AssembledPalette | null> {
   const { data: intentionRows, error: intErr } = await supabase
     .from("intentions")
     .select("id, slug, label")
