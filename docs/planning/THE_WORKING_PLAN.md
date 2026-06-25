@@ -127,12 +127,15 @@ The earlier "not feasible" verdict (no shared join key) and the bundle re-import
 - [x] Each item carries its approved `description` (grounding for synthesis).
 - [x] Verified against production: "protection" 244→37, "healing grief"→healing 242→37, "attract prosperity"→money — all groups populated, patrons resolved.
 
-### Phase 3 — Model test harness (the comparison)
-- [ ] OpenRouter provider via AI SDK; `OPENROUTER_API_KEY` env var.
-- [ ] Admin-gated dev route: intention → palette → run same prompt through Kimi / Qwen / DeepSeek in parallel → side-by-side output.
-- [ ] Keep synthesis prompt model-agnostic (only the model id varies).
-- [ ] Store nothing — this exists to choose a voice.
-- [ ] **Outcome:** pick the production model.
+### Phase 3 — Model test harness (the comparison) ✅ DONE (June 2026)
+- [x] CLI bake-off harness `app/scripts/working-model-bakeoff.ts` (instead of a website page — faster to iterate; chosen with the user).
+- [x] Compared Kimi / Qwen / DeepSeek (OpenRouter) **and** Sonnet 4.6 / Haiku 4.5 (direct Anthropic) on the same palette + prompt.
+- [x] Iterated the prompt into the real asset: **structure · voice · holism · way-in · permission · petition · record**. Full record in `docs/planning/working-model-bakeoff-success.md`.
+- [x] Key finding: holism/quality is *promptable* — the gap between models narrowed sharply once the prompt carried it. So the choice became voice + speed + cost.
+- [x] **Production model chosen: `claude-haiku-4-5`** (direct Anthropic). Best balance — ~0.7¢/ritual, ~17–20s, voice nearly indistinguishable from Sonnet with this prompt. Sonnet 4.6 kept in mind as a future "deepen this" premium option.
+- [x] Canonical prompt + synthesis live in `app/src/lib/working/synthesize.ts` (`buildSynthesisPrompt` + `synthesizeRitual`); the bake-off imports the same prompt so they never drift.
+- [x] `POST /api/working/generate` — intention → palette → ritual in one call (auth-gated). Verified live: "protection for my home" → grounded Haiku working in ~20s.
+- [ ] (Deferred) Optional multi-model "compare voices" feature for practitioners — revisit post-MVP.
 
 ### Phase 4 — Workings persistence
 - [ ] Migration: `workings` table — `intent_text`, `palette` (jsonb), `ritual` (jsonb), `model_used`, `cast_at`, `conditions` (jsonb), `status` (draft|cast|shared), `shared_at`, RLS (owner-private by default).
