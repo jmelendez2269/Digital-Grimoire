@@ -27,11 +27,19 @@ interface HeaderProps {
   librarySearch?: LibrarySearchProps;
 }
 
+type DropdownItem = {
+  name: string;
+  path: string;
+  description?: string;
+  comingSoon?: boolean;
+};
+
 type NavItem = {
   name: string;
   path: string;
   icon?: React.ReactNode;
   matchPaths?: string[];
+  dropdownItems?: DropdownItem[];
 };
 
 const primaryNav: NavItem[] = [
@@ -42,12 +50,22 @@ const primaryNav: NavItem[] = [
     path: "/explore",
     icon: <Network className="w-3.5 h-3.5" />,
     matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
+    dropdownItems: [
+      { name: "Knowledge Graph", path: "/graph", description: "Traverse correspondence connections" },
+      { name: "Concept Search", path: "/search", description: "Semantic search across the corpus" },
+      { name: "Parallax Engine", path: "/seven-lenses", description: "Seven interpretive lenses" },
+    ],
   },
   {
     name: "Workbench",
-    path: "/workbench",
+    path: "/journal",
     icon: <Sparkles className="w-3.5 h-3.5" />,
     matchPaths: ["/workbench", "/journal"],
+    dropdownItems: [
+      { name: "Journal", path: "/journal", description: "Your study journal" },
+      { name: "The Working", path: "/workbench/the-working", description: "Intent-driven ritual generator" },
+      { name: "Tarot", path: "/workbench/tarot", description: "Deck Forge", comingSoon: true },
+    ],
   },
 ];
 
@@ -55,7 +73,7 @@ const mobileNav: NavItem[] = [
   { name: "Library", path: "/library", icon: "📚" },
   { name: "Courses", path: "/courses", icon: "🎓" },
   { name: "Explore", path: "/explore", icon: "🕸️", matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"] },
-  { name: "Workbench", path: "/workbench", icon: "✨", matchPaths: ["/workbench", "/journal"] },
+  { name: "Workbench", path: "/journal", icon: "✨", matchPaths: ["/workbench", "/journal"] },
 ];
 
 function Header({ librarySearch }: HeaderProps = {}) {
@@ -66,6 +84,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [mounted, setMounted] = useState(typeof window !== "undefined");
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
 
   void librarySearch;
 
@@ -127,23 +146,58 @@ function Header({ librarySearch }: HeaderProps = {}) {
 
         <div className="hidden items-center gap-1 md:flex ml-8">
           {primaryNav.map((item) => (
-            <Link
+            <div
               key={item.path}
-              href={item.path}
-              className={`relative px-5 py-2 text-lg font-medium transition-all duration-300 rounded-md border border-transparent ${
-                isActive(item)
-                  ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
-                  : "text-zinc-400 hover:text-cyan-200 hover:bg-white/5"
-              }`}
+              className="relative"
+              onMouseEnter={() => setHoveredNav(item.name)}
+              onMouseLeave={() => setHoveredNav(null)}
             >
-              <div className="flex items-center gap-2">
+              <Link
+                href={item.path}
+                className={`relative flex items-center gap-2 px-5 py-2 text-lg font-medium transition-all duration-300 rounded-md border border-transparent ${
+                  isActive(item)
+                    ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                    : "text-zinc-400 hover:text-cyan-200 hover:bg-white/5"
+                }`}
+              >
                 {item.icon}
                 {item.name}
-              </div>
-              {isActive(item) && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></div>
+                {isActive(item) && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]" />
+                )}
+              </Link>
+
+              {item.dropdownItems && hoveredNav === item.name && (
+                <div className="absolute top-full left-0 pt-3 w-64 z-[9999]">
+                  <div className="bg-zinc-950 border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.9)] overflow-hidden">
+                    {item.dropdownItems.map((sub) =>
+                      sub.comingSoon ? (
+                        <div
+                          key={sub.path}
+                          className="flex items-center justify-between px-4 py-3.5 opacity-40 cursor-default select-none"
+                        >
+                          <div>
+                            <div className="text-base font-medium text-zinc-300">{sub.name}</div>
+                            {sub.description && <div className="text-xs text-zinc-500 mt-0.5">{sub.description}</div>}
+                          </div>
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Soon</span>
+                        </div>
+                      ) : (
+                        <Link
+                          key={sub.path}
+                          href={sub.path}
+                          onClick={() => setHoveredNav(null)}
+                          className="flex flex-col px-4 py-3.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                        >
+                          <span className="text-base font-medium text-zinc-100">{sub.name}</span>
+                          {sub.description && <span className="text-xs text-zinc-500 mt-0.5">{sub.description}</span>}
+                        </Link>
+                      )
+                    )}
+                  </div>
+                </div>
               )}
-            </Link>
+            </div>
           ))}
         </div>
 
