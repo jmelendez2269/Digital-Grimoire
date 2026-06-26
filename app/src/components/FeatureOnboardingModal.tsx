@@ -85,10 +85,10 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Trace a concept across the corpus to find where ideas recur, mutate, or bridge traditions. It is built for thematic discovery rather than simple keyword lookup.",
+      "Trace a concept across the corpus to find where ideas recur, mutate, or bridge traditions. Rooted in the library's own books — not the open web.",
     bullets: [
       "Search for ideas, not just titles",
-      "Surface related books and passages",
+      "Results drawn from the library's curated texts",
       "Reveal recurring themes across traditions",
       "Ideal companion to the Knowledge Graph",
     ],
@@ -105,10 +105,10 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Enter a question, concept, or passage and analyze it through seven distinct epistemological lenses at once, grounded in the library's texts.",
+      "Enter a question, concept, or passage and analyze it through seven distinct epistemological lenses at once. Powered by frontier AI models running rigorous, purpose-built prompts — not generic chatbot responses.",
     bullets: [
       "Seven-lens simultaneous analysis",
-      "Grounded in the curated library",
+      "Frontier AI models with purpose-built prompts per lens",
       "Adjustable lens weighting",
       "Built for comparison, not dogma",
     ],
@@ -125,12 +125,12 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Your private research space for notes, clipped passages, reflections, and synthesis. Over time it becomes your personal map of understanding.",
+      "Your private research space for notes, clipped passages, reflections, and synthesis. Course work, saved outputs, and highlights all archive here — your personal map of understanding over time.",
     bullets: [
       "Rich editor with wiki-links",
       "Clip passages from the Library",
       "Save outputs from Seven Lenses",
-      "A private synthesis space that persists",
+      "Archived synthesis and highlights from your courses",
     ],
   },
   {
@@ -145,12 +145,12 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Two graph modes: a Parallax concept map (ideas by tradition and similarity) and a Correspondences archive (symbols, plants, stones, planets across traditions). Click any node for a full structured dossier.",
+      "Two graph modes grounded in the library's texts and a curated set of ethically sourced correspondence references. A Parallax concept map connects ideas across traditions. A Correspondences archive maps symbols, plants, stones, and planets as a living network.",
     bullets: [
+      "Rooted in library sources and ethically sourced reference works",
       "Parallax graph: cross-tradition concept similarity",
       "Correspondences: the symbolic archive as a living network",
-      "Focused mode picks a random constellation to start",
-      "Node click opens a full correspondence profile",
+      "Focused mode opens a random constellation — or pick your own starting node",
     ],
   },
   {
@@ -165,12 +165,12 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "State an intention in plain language. The Parallax Engine assembles a correspondence palette from the knowledge graph and synthesizes a complete ritual. Cast it, record conditions, watch what unfolds.",
+      "A ritual generator. Describe what you're working toward in plain language — a job, a decision, a transition — and the engine pulls correspondences from the knowledge graph (symbols, plants, stones, planets, timing) and builds a complete, personalized ritual around your intention.",
     bullets: [
-      "Intention-driven ritual synthesis",
-      "Correspondence palette drawn from the knowledge graph",
-      "Conditions stamped at the moment of casting",
-      "A living record of what you worked and what followed",
+      "Tell it your intention in plain language — it builds the ritual",
+      "Correspondence palette drawn live from the knowledge graph",
+      "Record conditions when you cast it; watch what follows",
+      "Share completed workings to the community",
     ],
   },
 ];
