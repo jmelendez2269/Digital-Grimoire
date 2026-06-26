@@ -50,6 +50,7 @@ const features = [
       "Arcs, Paths, and Map for navigating the full curriculum",
       "Per-reading Digests and Explorations on the learn page",
       "Ends in a synthesis artifact you build",
+      "Share your synthesis to the Community pool after you write it",
     ],
   },
   {
@@ -248,7 +249,7 @@ function StepWelcome() {
       </div>
 
       <p className="text-zinc-300 max-w-xl leading-relaxed">
-        Prismarium is built for deep study. The goal is not just to access profound texts, but to understand them in relation to each other and to your own questions.
+        You don't have to choose between rigorous inquiry and genuine mystery. Prismarium is built for people who want both — a place to read deeply, think comparatively, and build your own understanding over time.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl text-left">
@@ -261,7 +262,7 @@ function StepWelcome() {
           },
           {
             label: "What this is",
-            items: ["A disciplined environment for inquiry", "A set of tools for comparative understanding"],
+            items: ["A place to hold many traditions at once", "A method for building your own map"],
             color: "border-amber-500/30 text-amber-200",
             labelColor: "text-amber-400",
           },
