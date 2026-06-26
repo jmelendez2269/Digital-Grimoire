@@ -48,7 +48,7 @@ const features = [
     bullets: [
       "Catalog filtered by any of the 7 lenses",
       "Arcs, Paths, and Map for navigating the full curriculum",
-      "Per-reading Digests and Explorations on the learn page",
+      "Reading digests, lens exercises, and hands-on activities using the platform's tools",
       "Ends in a synthesis artifact you build",
       "Share your synthesis to the Community pool after you write it",
     ],
