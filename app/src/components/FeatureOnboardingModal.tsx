@@ -455,6 +455,11 @@ function StepWorkflow() {
         </div>
       </div>
 
+      {/* Independent use note */}
+      <p className="text-sm text-zinc-500 text-center max-w-xl mx-auto leading-relaxed">
+        Every tool works independently too — browse the Library on your own, run a Seven Lenses analysis on any question, or use the Knowledge Graph to follow your own threads. The course structure is a recommendation, not a requirement.
+      </p>
+
       {/* The Working — standalone */}
       <div className="flex items-center gap-3 mt-1">
         <div className="flex-1 h-px border-t border-dashed border-zinc-700" />
