@@ -85,7 +85,7 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Trace a concept across the corpus to find where ideas recur, mutate, or bridge traditions. Rooted in the library's own books — not the open web.",
+      "Trace a concept across the full collection of texts to find where ideas recur, mutate, or bridge traditions. Rooted in the library's own books — not the open web.",
     bullets: [
       "Search for ideas, not just titles",
       "Results drawn from the library's curated texts",
@@ -240,7 +240,7 @@ function StepWelcome() {
           <BookOpen className="w-8 h-8 text-amber-400" />
         </div>
         <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70">Prismarium</p>
-        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 leading-tight max-w-lg">
+        <h2 className="text-4xl sm:text-5xl font-serif text-amber-100 leading-tight max-w-lg">
           A curated body of wisdom, a method for understanding it, and tools for carrying that method into your own work.
         </h2>
         <p className="text-sm font-mono text-zinc-500 tracking-widest mt-1">
@@ -248,7 +248,7 @@ function StepWelcome() {
         </p>
       </div>
 
-      <p className="text-zinc-300 max-w-xl leading-relaxed">
+      <p className="text-base text-zinc-300 max-w-xl leading-relaxed">
         You don't have to choose between rigorous inquiry and genuine mystery. Prismarium is built for people who want both — a place to read deeply, think comparatively, and build your own understanding over time.
       </p>
 
@@ -275,9 +275,9 @@ function StepWelcome() {
         ].map((col) => (
           <div key={col.label} className={`rounded-lg border p-4 ${col.color} bg-black/20`}>
             <p className={`text-xs font-mono uppercase tracking-widest mb-3 ${col.labelColor}`}>{col.label}</p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {col.items.map((item) => (
-                <li key={item} className="text-sm flex gap-2">
+                <li key={item} className="text-base flex gap-2">
                   <span className="opacity-50 shrink-0">-</span>
                   <span>{item}</span>
                 </li>
@@ -295,8 +295,8 @@ function StepPhilosophy() {
     <div className="flex flex-col gap-8 py-2">
       <div className="text-center">
         <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-3">Prismatic Learning</p>
-        <h2 className="text-2xl sm:text-3xl font-serif text-amber-100 mb-3">Seven Ways of Knowing</h2>
-        <p className="text-zinc-400 max-w-2xl mx-auto text-sm leading-relaxed">
+        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-3">Seven Ways of Knowing</h2>
+        <p className="text-zinc-400 max-w-2xl mx-auto text-base leading-relaxed">
           Reality is not accessed through a single mode of inquiry. Prismarium compares claims through seven distinct lenses so that no single framework quietly becomes absolute.
         </p>
       </div>
@@ -304,8 +304,8 @@ function StepPhilosophy() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {lenses.slice(0, 4).map((lens) => (
           <div key={lens.label} className={`rounded-xl border p-4 ${lens.bg} ${lens.border} flex flex-col gap-2`}>
-            <span className="text-2xl">{lens.emoji}</span>
-            <p className={`font-medium text-sm ${lens.color}`}>{lens.label}</p>
+            <span className="text-3xl">{lens.emoji}</span>
+            <p className={`font-medium text-base ${lens.color}`}>{lens.label}</p>
           </div>
         ))}
       </div>
@@ -313,14 +313,14 @@ function StepPhilosophy() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {lenses.slice(4).map((lens) => (
           <div key={lens.label} className={`rounded-xl border p-4 ${lens.bg} ${lens.border} flex flex-col gap-2`}>
-            <span className="text-2xl">{lens.emoji}</span>
-            <p className={`font-medium text-sm ${lens.color}`}>{lens.label}</p>
+            <span className="text-3xl">{lens.emoji}</span>
+            <p className={`font-medium text-base ${lens.color}`}>{lens.label}</p>
           </div>
         ))}
       </div>
 
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 text-center max-w-2xl mx-auto">
-        <p className="text-amber-200 text-sm leading-relaxed">
+        <p className="text-amber-200 text-base leading-relaxed">
           <span className="font-medium">Synthesis is not agreement.</span> It is the discipline of holding multiple perspectives long enough to understand what each one reveals.
         </p>
       </div>
@@ -337,8 +337,8 @@ function StepFeatureTour() {
     <div className="flex flex-col gap-4 py-2">
       <div className="text-center">
         <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-2">Your Toolkit</p>
-        <h2 className="text-2xl sm:text-3xl font-serif text-amber-100 mb-2">The Platform&apos;s Tools</h2>
-        <p className="text-zinc-400 text-sm max-w-xl mx-auto">
+        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-2">The Platform&apos;s Tools</h2>
+        <p className="text-zinc-400 text-base max-w-xl mx-auto">
           Select a tool to see what it does and how it fits into the overall workflow.
         </p>
       </div>
@@ -373,17 +373,17 @@ function StepFeatureTour() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h3 className={`text-lg font-semibold ${selected.accentColor}`}>{selected.label}</h3>
+                <h3 className={`text-xl font-semibold ${selected.accentColor}`}>{selected.label}</h3>
                 {selected.badge && <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${selected.badgeColor}`}>{selected.badge}</span>}
               </div>
-              <p className="text-zinc-300 text-sm leading-relaxed">{selected.description}</p>
+              <p className="text-zinc-300 text-base leading-relaxed">{selected.description}</p>
             </div>
           </div>
 
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {selected.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-start gap-2 text-sm text-zinc-400">
-                <ArrowRight className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${selected.accentColor}`} />
+              <li key={bullet} className="flex items-start gap-2 text-base text-zinc-400">
+                <ArrowRight className={`w-3.5 h-3.5 shrink-0 mt-1 ${selected.accentColor}`} />
                 {bullet}
               </li>
             ))}
@@ -413,8 +413,8 @@ function StepWorkflow() {
     <div className="flex flex-col gap-8 py-2">
       <div className="text-center">
         <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-3">The Recommended Path</p>
-        <h2 className="text-2xl sm:text-3xl font-serif text-amber-100 mb-3">How the Tools Work Together</h2>
-        <p className="text-zinc-400 text-sm max-w-2xl mx-auto leading-relaxed">
+        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-3">How the Tools Work Together</h2>
+        <p className="text-zinc-400 text-base max-w-2xl mx-auto leading-relaxed">
           Each feature is useful on its own, but together they create a study loop from question to synthesis.
         </p>
       </div>
@@ -428,8 +428,8 @@ function StepWorkflow() {
                 <div className={`w-10 h-10 rounded-full ${step.bg} border ${step.border} flex items-center justify-center`}>
                   <Icon className={`w-5 h-5 ${step.color}`} />
                 </div>
-                <p className={`font-semibold text-sm ${step.color}`}>{step.label}</p>
-                <p className="text-xs text-zinc-500 leading-snug">{step.description}</p>
+                <p className={`font-semibold text-base ${step.color}`}>{step.label}</p>
+                <p className="text-sm text-zinc-500 leading-snug">{step.description}</p>
               </div>
               {index < workflowSteps.length - 1 && <ArrowRight className="w-5 h-5 text-zinc-600 mx-2 shrink-0 rotate-90 sm:rotate-0" />}
             </div>
@@ -438,7 +438,7 @@ function StepWorkflow() {
       </div>
 
       <div className="rounded-xl border border-zinc-700/50 bg-zinc-900/30 p-5 text-center max-w-2xl mx-auto">
-        <p className="text-zinc-300 text-sm leading-relaxed">
+        <p className="text-zinc-300 text-base leading-relaxed">
           Start with a course or a question, follow the threads through the library, compare them through Concept Search and Seven Lenses, then capture what matters in your Journal.
         </p>
       </div>
@@ -454,7 +454,7 @@ function StepReady({ onClose }: { onClose: () => void }) {
           <BookOpen className="w-8 h-8 text-amber-400" />
         </div>
         <h2 className="text-3xl sm:text-4xl font-serif text-amber-100">The door is open.</h2>
-        <p className="text-zinc-400 max-w-md text-sm leading-relaxed">
+        <p className="text-zinc-400 max-w-md text-base leading-relaxed">
           Here are a few good ways to begin.
         </p>
       </div>
@@ -482,7 +482,7 @@ function StepReady({ onClose }: { onClose: () => void }) {
           {
             Icon: Lightbulb,
             label: "Search Concepts",
-            description: "Follow an idea across the corpus",
+            description: "Follow an idea across the full collection of texts",
             href: "/search",
             color: "text-emerald-400",
             bg: "bg-emerald-500/10",
@@ -496,14 +496,14 @@ function StepReady({ onClose }: { onClose: () => void }) {
             className={`group flex flex-col items-center gap-2 p-5 rounded-xl border ${border} ${bg} hover:opacity-90 transition-all hover:-translate-y-0.5 text-center`}
           >
             <Icon className={`w-6 h-6 ${color}`} />
-            <p className={`font-medium text-sm ${color}`}>{label}</p>
-            <p className="text-xs text-zinc-500 leading-snug">{description}</p>
+            <p className={`font-medium text-base ${color}`}>{label}</p>
+            <p className="text-sm text-zinc-500 leading-snug">{description}</p>
           </Link>
         ))}
       </div>
 
       <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/30 p-5 max-w-lg w-full">
-        <p className="text-zinc-400 text-sm mb-3">
+        <p className="text-zinc-400 text-base mb-3">
           Need orientation on a feature? The wiki explains how the study surfaces work and how they connect.
         </p>
         <Link href="/wiki" onClick={onClose} className="inline-flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 font-medium transition-colors">
