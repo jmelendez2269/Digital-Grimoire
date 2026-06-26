@@ -257,8 +257,8 @@ function StepWelcome() {
           {
             label: "What this is not",
             items: ["A university program", "A mystery cult", "A belief replacement system", "A content dump"],
-            color: "border-zinc-700 text-zinc-500",
-            labelColor: "text-zinc-500",
+            color: "border-zinc-500 text-zinc-300",
+            labelColor: "text-zinc-300",
           },
           {
             label: "What this is",
