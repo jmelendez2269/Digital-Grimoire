@@ -409,38 +409,65 @@ function StepFeatureTour() {
 }
 
 function StepWorkflow() {
+  const coreTools = [
+    { Icon: Library, label: "Library", description: "Read the assigned texts", color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
+    { Icon: Lightbulb, label: "Concept Search", description: "Trace patterns and themes", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+    { Icon: Zap, label: "Seven Lenses", description: "Analyze through multiple lenses", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+    { Icon: Book, label: "Journal", description: "Capture your synthesis", color: "text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/30" },
+  ];
+
   return (
-    <div className="flex flex-col gap-8 py-2">
+    <div className="flex flex-col gap-5 py-2">
       <div className="text-center">
         <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-3">The Recommended Path</p>
         <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-3">How the Tools Work Together</h2>
         <p className="text-zinc-400 text-base max-w-2xl mx-auto leading-relaxed">
-          Each feature is useful on its own, but together they create a study loop from question to synthesis.
+          Start with a course. The tools branch from there — each one feeds into the next. The Working sits alongside the ecosystem as its own thing.
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-0">
-        {workflowSteps.map((step, index) => {
-          const { Icon } = step;
-          return (
-            <div key={step.label} className="flex flex-col sm:flex-row items-center">
-              <div className={`flex flex-col items-center gap-2 p-4 rounded-xl border ${step.border} ${step.bg} w-40 text-center`}>
-                <div className={`w-10 h-10 rounded-full ${step.bg} border ${step.border} flex items-center justify-center`}>
-                  <Icon className={`w-5 h-5 ${step.color}`} />
-                </div>
-                <p className={`font-semibold text-base ${step.color}`}>{step.label}</p>
-                <p className="text-sm text-zinc-500 leading-snug">{step.description}</p>
-              </div>
-              {index < workflowSteps.length - 1 && <ArrowRight className="w-5 h-5 text-zinc-600 mx-2 shrink-0 rotate-90 sm:rotate-0" />}
+      {/* Entry: Courses */}
+      <div className="flex flex-col items-center gap-0">
+        <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-xl border border-blue-500/40 bg-blue-500/10 text-center w-56">
+          <GraduationCap className="w-6 h-6 text-blue-400" />
+          <p className="font-semibold text-base text-blue-400">Courses</p>
+          <p className="text-sm text-zinc-500 leading-snug">Start with a core question</p>
+        </div>
+
+        {/* Branch stem */}
+        <div className="flex flex-col items-center">
+          <div className="w-px h-4 bg-zinc-700" />
+          <div className="w-48 h-px bg-zinc-700" />
+          <div className="flex justify-between w-48">
+            {coreTools.map(() => <div key={Math.random()} className="w-px h-4 bg-zinc-700" />)}
+          </div>
+        </div>
+
+        {/* 4 parallel tools */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+          {coreTools.map(({ Icon, label, description, color, bg, border }) => (
+            <div key={label} className={`flex flex-col items-center gap-2 p-4 rounded-xl border ${border} ${bg} text-center`}>
+              <Icon className={`w-5 h-5 ${color}`} />
+              <p className={`font-semibold text-sm ${color}`}>{label}</p>
+              <p className="text-xs text-zinc-500 leading-snug">{description}</p>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-700/50 bg-zinc-900/30 p-5 text-center max-w-2xl mx-auto">
-        <p className="text-zinc-300 text-base leading-relaxed">
-          Start with a course or a question, follow the threads through the library, compare them through Concept Search and Seven Lenses, then capture what matters in your Journal.
-        </p>
+      {/* The Working — standalone */}
+      <div className="flex items-center gap-3 mt-1">
+        <div className="flex-1 h-px border-t border-dashed border-zinc-700" />
+        <p className="text-xs font-mono text-zinc-600 uppercase tracking-widest shrink-0">standalone · part of the ecosystem</p>
+        <div className="flex-1 h-px border-t border-dashed border-zinc-700" />
+      </div>
+
+      <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 text-center w-72">
+          <FlaskConical className="w-5 h-5 text-amber-400" />
+          <p className="font-semibold text-base text-amber-400">The Working</p>
+          <p className="text-sm text-zinc-500 leading-snug">A ritual generator — draws from the knowledge graph, used on its own terms</p>
+        </div>
       </div>
     </div>
   );
