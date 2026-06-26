@@ -8,7 +8,7 @@ export interface RateLimitResult {
   resetDate: Date;
 }
 
-const FREE_TIER_LIMIT = 5;
+const FREE_TIER_LIMIT = 1; // Lifetime trial — 1 query ever, no monthly reset
 const STUDENT_TIER_LIMIT = 5; // Same as free for now (unlimited journals is the value)
 const SCHOLAR_TIER_LIMIT = 25; // Start conservative, may increase to 50
 const ADEPT_TIER_LIMIT = 50; // Start conservative, may increase to 100
@@ -70,11 +70,11 @@ export function getTierLimit(tier: SubscriptionTier): number {
 
 /**
  * Check if user has exceeded rate limit for Parallax Engine queries
- * Free tier: 5 queries per month (calendar month)
+ * Free tier: 1 lifetime trial query (no reset — upgrade to use more)
  * Student tier: 5 queries per billing period (unlimited journals is the value)
  * Scholar tier: 25-50 queries per billing period (beta - may adjust)
  * Adept tier: 50-100 queries per billing period (beta - may adjust)
- * 
+ *
  * @param userId - User ID to check
  * @returns Rate limit status
  */
@@ -165,8 +165,8 @@ export async function checkPremiumStatus(userId: string): Promise<boolean> {
  */
 async function getPeriodStart(userId: string, isPremium: boolean): Promise<Date> {
   if (!isPremium) {
-    // Free tier: use calendar month
-    return getMonthStart();
+    // Free tier: count all queries ever (lifetime trial — no monthly reset)
+    return new Date(0);
   }
 
   const supabase = await createClient();
@@ -210,8 +210,8 @@ async function getPeriodStart(userId: string, isPremium: boolean): Promise<Date>
  */
 async function getPeriodEnd(userId: string, isPremium: boolean): Promise<Date> {
   if (!isPremium) {
-    // Free tier: use next calendar month
-    return getNextMonthStart();
+    // Free tier: no reset — far future sentinel so resetDate in UI is not misleading
+    return new Date('2099-01-01T00:00:00Z');
   }
 
   const supabase = await createClient();

@@ -46,7 +46,7 @@ const primaryNav: NavItem[] = [
   { name: "Library", path: "/library" },
   { name: "Courses", path: "/courses" },
   {
-    name: "Explore",
+    name: "Tools",
     path: "/explore",
     icon: <Network className="w-3.5 h-3.5" />,
     matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
@@ -68,13 +68,15 @@ const primaryNav: NavItem[] = [
       { name: "Tarot", path: "/workbench/tarot", description: "Deck Forge", comingSoon: true },
     ],
   },
+  { name: "Wiki", path: "/wiki" },
 ];
 
 const mobileNav: NavItem[] = [
   { name: "Library", path: "/library", icon: "📚" },
   { name: "Courses", path: "/courses", icon: "🎓" },
-  { name: "Explore", path: "/explore", icon: "🕸️", matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"] },
+  { name: "Tools", path: "/explore", icon: "🕸️", matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"] },
   { name: "Workbench", path: "/journal", icon: "✨", matchPaths: ["/workbench", "/journal"] },
+  { name: "Wiki", path: "/wiki", icon: "📖" },
 ];
 
 function Header({ librarySearch }: HeaderProps = {}) {

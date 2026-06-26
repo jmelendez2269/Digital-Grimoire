@@ -75,12 +75,21 @@ export default function RateLimitDisplay({
         />
       </div>
 
-      <p className="text-xs text-amber-100/60 mt-2">
-        Resets on {new Date(resetDate).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric'
-        })}
-      </p>
+      {tier === 'free' ? (
+        <p className="text-xs text-amber-100/60 mt-2">
+          Trial query used.{' '}
+          <Link href="/profile?tab=subscription" className="text-amber-400 underline hover:text-amber-300">
+            Upgrade to continue
+          </Link>
+        </p>
+      ) : (
+        <p className="text-xs text-amber-100/60 mt-2">
+          Resets on {new Date(resetDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+          })}
+        </p>
+      )}
     </div>
   );
 }

@@ -17,6 +17,8 @@ import EntityNode from "@/components/PublicEntityCard";
 import ComparativeTable from "@/components/parallax/ComparativeTable";
 import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import ConceptDetailModal from "@/components/parallax/ConceptDetailModal";
+import GraphNodeGate from "@/components/graph/GraphNodeGate";
+import { useAuth } from "@/contexts/AuthContext";
 import { isSentenceLikeEntityName } from "@/lib/graph/entity-utils";
 import { CorrespondenceEntity, GraphType, ParallaxConcept, ParallaxRelationship } from "@/lib/types";
 
@@ -274,6 +276,7 @@ function buildFocusedCorrespondenceGraph(
 function GraphPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   const [graphType, setGraphType] = useState<GraphType>((searchParams.get("type") as GraphType) || "correspondences");
   const [viewMode, setViewMode] = useState<"cards" | "graph" | "table">("graph");
@@ -282,6 +285,7 @@ function GraphPageContent() {
   const [loading, setLoading] = useState(true);
   const [selectedParallaxConcept, setSelectedParallaxConcept] = useState<ParallaxConcept | null>(null);
   const [selectedCorrespondenceEntity, setSelectedCorrespondenceEntity] = useState<CorrespondenceEntity | null>(null);
+  const [gateEntity, setGateEntity] = useState<ParallaxConcept | CorrespondenceEntity | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTradition, setSelectedTradition] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -550,6 +554,10 @@ function GraphPageContent() {
   };
 
   const handleSelectEntity = (entity: ParallaxConcept | CorrespondenceEntity) => {
+    if (!user) {
+      setGateEntity(entity);
+      return;
+    }
     if (graphType === "parallax") {
       setSelectedParallaxConcept(entity as ParallaxConcept);
     } else {
@@ -855,6 +863,14 @@ function GraphPageContent() {
             graphType={graphType}
             onClose={() => setSelectedCorrespondenceEntity(null)}
             readOnly={true}
+          />
+        )}
+
+        {gateEntity && (
+          <GraphNodeGate
+            entity={gateEntity}
+            graphType={graphType}
+            onClose={() => setGateEntity(null)}
           />
         )}
       </main>

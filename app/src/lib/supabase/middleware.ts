@@ -196,7 +196,7 @@ export async function updateSession(request: NextRequest) {
     // Continue without user - will redirect to login if needed
   }
 
-  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/graph", "/knowledge-graph", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/graph", "/api/stripe/webhook"];
+  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/graph", "/knowledge-graph", "/workings", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/graph", "/api/stripe/webhook"];
   const devOnlyPublicRoutes =
     process.env.NODE_ENV === "development"
       ? []
