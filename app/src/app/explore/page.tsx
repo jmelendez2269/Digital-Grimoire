@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Network, Search, Sparkles, ArrowRight } from "lucide-react";
+import { Network, Search, Sparkles, ArrowRight, FlaskConical } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -30,12 +30,21 @@ const tools = [
     icon: Sparkles,
     accent: "amber",
   },
+  {
+    name: "Shared Workings",
+    description:
+      "Workings cast and shared by practitioners — intentions stated, rituals synthesized, conditions stamped at the moment of casting. A living record of practice.",
+    href: "/explore/workings",
+    icon: FlaskConical,
+    accent: "emerald",
+  },
 ];
 
 const accentMap: Record<string, { border: string; icon: string; arrow: string; glow: string }> = {
-  cyan:   { border: "border-cyan-500/20 hover:border-cyan-500/50",   icon: "text-cyan-400",   arrow: "text-cyan-400",   glow: "group-hover:shadow-[0_0_30px_rgba(6,182,212,0.08)]"   },
-  violet: { border: "border-violet-500/20 hover:border-violet-500/50", icon: "text-violet-400", arrow: "text-violet-400", glow: "group-hover:shadow-[0_0_30px_rgba(139,92,246,0.08)]" },
-  amber:  { border: "border-amber-500/20 hover:border-amber-500/50",  icon: "text-amber-400",  arrow: "text-amber-400",  glow: "group-hover:shadow-[0_0_30px_rgba(245,158,11,0.08)]"  },
+  cyan:    { border: "border-cyan-500/20 hover:border-cyan-500/50",    icon: "text-cyan-400",    arrow: "text-cyan-400",    glow: "group-hover:shadow-[0_0_30px_rgba(6,182,212,0.08)]"   },
+  violet:  { border: "border-violet-500/20 hover:border-violet-500/50", icon: "text-violet-400",  arrow: "text-violet-400",  glow: "group-hover:shadow-[0_0_30px_rgba(139,92,246,0.08)]" },
+  amber:   { border: "border-amber-500/20 hover:border-amber-500/50",   icon: "text-amber-400",   arrow: "text-amber-400",   glow: "group-hover:shadow-[0_0_30px_rgba(245,158,11,0.08)]"  },
+  emerald: { border: "border-emerald-500/20 hover:border-emerald-500/50", icon: "text-emerald-400", arrow: "text-emerald-400", glow: "group-hover:shadow-[0_0_30px_rgba(16,185,129,0.08)]" },
 };
 
 export default function ExplorePage() {

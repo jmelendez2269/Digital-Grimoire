@@ -54,6 +54,7 @@ const primaryNav: NavItem[] = [
       { name: "Knowledge Graph", path: "/graph", description: "Traverse correspondence connections" },
       { name: "Concept Search", path: "/search", description: "Semantic search across the corpus" },
       { name: "Parallax Engine", path: "/seven-lenses", description: "Seven interpretive lenses" },
+      { name: "Shared Workings", path: "/explore/workings", description: "Community ritual experiments" },
     ],
   },
   {
