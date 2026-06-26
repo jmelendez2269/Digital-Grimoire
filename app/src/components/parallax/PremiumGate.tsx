@@ -14,7 +14,7 @@ export default function PremiumGate({
   children,
   isPremium,
   rateLimitRemaining,
-  limit = 5,
+  limit = 1,
 }: PremiumGateProps) {
   // If premium or has remaining queries, show content
   if (isPremium || rateLimitRemaining > 0) {
@@ -34,23 +34,19 @@ export default function PremiumGate({
       </h2>
 
       <p className="text-lg text-amber-100/70 mb-2 max-w-md">
-        You've used all {limit} free queries this month.
+        You've used your free trial query.
       </p>
 
       <p className="text-sm text-amber-100/60 mb-8 max-w-md">
-        Upgrade to premium for unlimited access to the 7-lens AI reasoning system.
+        Upgrade to Scholar or Adept for ongoing access to the 7-lens AI reasoning system.
       </p>
 
       <Link
         href="/profile?tab=subscription"
         className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors"
       >
-        Upgrade to Premium
+        Upgrade to Continue
       </Link>
-
-      <p className="text-xs text-amber-100/40 mt-6">
-        Queries reset on the first of each month
-      </p>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  FlaskConical,
   GraduationCap,
   Library,
   Lightbulb,
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 
 const TOTAL_STEPS = 5;
-const STORAGE_KEY = "hasSeenOnboardingV2";
+const STORAGE_KEY = "hasSeenOnboardingV3";
 
 const lenses = [
   { emoji: "🔭", label: "Scientific", color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20" },
@@ -43,11 +44,11 @@ const features = [
     badge: "Recommended starting point",
     badgeColor: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
     description:
-      "Courses are the heart of the platform. Each one is built around a core question and guides you through readings, exercises, and synthesis work.",
+      "Courses are the heart of the platform. Browse by lens, follow curated Paths, trace the Arcs, or explore the course Map. Each course guides you through readings, exercises, and a synthesis artifact.",
     bullets: [
-      "Structured around a central question",
-      "Each week emphasizes a particular lens",
-      "Assigned readings with rationale",
+      "Catalog filtered by any of the 7 lenses",
+      "Arcs, Paths, and Map for navigating the full curriculum",
+      "Per-reading Digests and Explorations on the learn page",
       "Ends in a synthesis artifact you build",
     ],
   },
@@ -143,12 +144,32 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "A visual layer for exploring how ideas, books, and traditions interconnect across the library.",
+      "Two graph modes: a Parallax concept map (ideas by tradition and similarity) and a Correspondences archive (symbols, plants, stones, planets across traditions). Click any node for a full structured dossier.",
     bullets: [
-      "Interactive concept visualization",
-      "Cross-tradition pattern discovery",
-      "Navigate clusters of related ideas",
-      "See the architecture beneath the texts",
+      "Parallax graph: cross-tradition concept similarity",
+      "Correspondences: the symbolic archive as a living network",
+      "Focused mode picks a random constellation to start",
+      "Node click opens a full correspondence profile",
+    ],
+  },
+  {
+    id: "working",
+    Icon: FlaskConical,
+    label: "The Working",
+    href: "/workbench/the-working",
+    wikiHref: "/wiki/the-working",
+    accentColor: "text-amber-400",
+    accentBg: "bg-amber-500/10",
+    accentBorder: "border-amber-500/30",
+    badge: null,
+    badgeColor: "",
+    description:
+      "State an intention in plain language. The Parallax Engine assembles a correspondence palette from the knowledge graph and synthesizes a complete ritual. Cast it, record conditions, watch what unfolds.",
+    bullets: [
+      "Intention-driven ritual synthesis",
+      "Correspondence palette drawn from the knowledge graph",
+      "Conditions stamped at the moment of casting",
+      "A living record of what you worked and what followed",
     ],
   },
 ];
@@ -198,6 +219,15 @@ const workflowSteps = [
     bg: "bg-indigo-500/10",
     border: "border-indigo-500/30",
     description: "Capture your synthesis",
+  },
+  {
+    Icon: FlaskConical,
+    label: "The Working",
+    href: "/workbench/the-working",
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/30",
+    description: "Take it into practice",
   },
 ];
 
