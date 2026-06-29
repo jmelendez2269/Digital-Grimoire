@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import type { ForceGraphMethods, NodeObject, LinkObject } from "react-force-graph-2d";
 import { buildGraphologyGraph, GraphEntity, GraphEdge, GraphLayoutDensity } from "@/lib/graph/graphology-adapter";
 
-// Loaded client-side only — the lib references window
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 export type ConstellationLayoutEngine = "clusters" | "organic";
@@ -27,7 +26,6 @@ interface FGNode extends NodeObject {
   size: number;
   category?: string;
   originalData: GraphEntity;
-  // pre-computed cluster positions
   fx?: number;
   fy?: number;
   x?: number;
@@ -52,6 +50,7 @@ function hexToRgb(hex: string) {
 function drawGlowNode(
   ctx: CanvasRenderingContext2D,
   node: FGNode,
+  globalScale: number,
   isHovered: boolean,
   isNeighbor: boolean,
   hasActive: boolean,
@@ -61,31 +60,31 @@ function drawGlowNode(
   const r = node.size ?? 4;
   const { r: cr, g: cg, b: cb } = hexToRgb(node.color);
 
-  if (hasActive && !isHovered && !isNeighbor) return; // hidden
+  // Non-connected nodes disappear when something is active
+  if (hasActive && !isHovered && !isNeighbor) return;
 
   ctx.save();
 
   if (isHovered) {
     // Outer corona
-    const corona = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 4.5);
-    corona.addColorStop(0, `rgba(${cr},${cg},${cb},0.28)`);
-    corona.addColorStop(0.4, `rgba(${cr},${cg},${cb},0.10)`);
+    const corona = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 5);
+    corona.addColorStop(0, `rgba(${cr},${cg},${cb},0.30)`);
+    corona.addColorStop(0.4, `rgba(${cr},${cg},${cb},0.12)`);
     corona.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
     ctx.beginPath();
-    ctx.arc(x, y, r * 4.5, 0, Math.PI * 2);
+    ctx.arc(x, y, r * 5, 0, Math.PI * 2);
     ctx.fillStyle = corona;
     ctx.fill();
 
     // Inner glow ring
     ctx.beginPath();
     ctx.arc(x, y, r * 2.2, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.5)`;
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.55)`;
+    ctx.lineWidth = 1.5 / globalScale;
     ctx.stroke();
   } else if (isNeighbor) {
-    // Soft halo for neighbors
     const halo = ctx.createRadialGradient(x, y, r, x, y, r * 3);
-    halo.addColorStop(0, `rgba(${cr},${cg},${cb},0.18)`);
+    halo.addColorStop(0, `rgba(${cr},${cg},${cb},0.20)`);
     halo.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
     ctx.beginPath();
     ctx.arc(x, y, r * 3, 0, Math.PI * 2);
@@ -93,36 +92,43 @@ function drawGlowNode(
     ctx.fill();
   }
 
-  // Core glow (all visible nodes)
-  const core = ctx.createRadialGradient(x, y, 0, x, y, r * 1.4);
+  // Core radial glow
   const alpha = isHovered ? 1 : isNeighbor ? 0.9 : 0.75;
-  core.addColorStop(0, `rgba(255,255,255,${alpha * 0.9})`);
-  core.addColorStop(0.35, `rgba(${cr},${cg},${cb},${alpha})`);
+  const core = ctx.createRadialGradient(x, y, 0, x, y, r * 1.5);
+  core.addColorStop(0, `rgba(255,255,255,${alpha * 0.95})`);
+  core.addColorStop(0.4, `rgba(${cr},${cg},${cb},${alpha})`);
   core.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
   ctx.beginPath();
-  ctx.arc(x, y, r * 1.4, 0, Math.PI * 2);
+  ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
   ctx.fillStyle = core;
   ctx.fill();
 
-  // Solid center
+  // Solid center pinpoint
   ctx.beginPath();
-  ctx.arc(x, y, r * 0.65, 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(255,255,255,${isHovered ? 1 : 0.85})`;
+  ctx.arc(x, y, r * 0.55, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255,255,255,${isHovered ? 1 : 0.9})`;
   ctx.fill();
 
-  // Label — shown for hovered node, its neighbors, or large-degree anchors at rest
+  // Label — scaled by 1/globalScale so it stays a consistent pixel size
   const showLabel = isHovered || isNeighbor || (!hasActive && r >= 8);
   if (showLabel && node.label) {
-    const labelY = y + r * 1.8 + 4;
-    const fontSize = isHovered ? 13 : 10;
+    const px = isHovered ? 13 : 10; // desired screen pixels
+    const fontSize = px / globalScale;
+    const labelY = y + r * 1.6 + 4 / globalScale;
+
     ctx.font = `${isHovered ? "600" : "400"} ${fontSize}px Cinzel, 'Palatino Linotype', serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
 
-    // Glow shadow
-    ctx.shadowColor = isHovered ? `rgba(${cr},${cg},${cb},0.7)` : "rgba(0,0,0,0.9)";
-    ctx.shadowBlur = isHovered ? 12 : 8;
-    ctx.fillStyle = isHovered ? "#ffffff" : `rgba(${cr},${cg},${cb},0.9)`;
+    // Shadow pass
+    ctx.shadowColor = "rgba(0,0,0,0.95)";
+    ctx.shadowBlur = 10 / globalScale;
+    ctx.fillStyle = isHovered ? "#ffffff" : `rgba(${cr},${cg},${cb},0.92)`;
+    ctx.fillText(node.label, x, labelY);
+
+    // Glow pass
+    ctx.shadowColor = isHovered ? `rgba(${cr},${cg},${cb},0.6)` : "rgba(0,0,0,0)";
+    ctx.shadowBlur = isHovered ? 8 / globalScale : 0;
     ctx.fillText(node.label, x, labelY);
 
     // Crisp pass
@@ -138,12 +144,12 @@ function StarField({ width, height }: { width: number; height: number }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !width || !height) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     canvas.width = width;
     canvas.height = height;
-    const stars = Array.from({ length: 120 }, () => ({
+    const stars = Array.from({ length: 140 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
       r: Math.random() * 0.9 + 0.15,
@@ -178,28 +184,31 @@ export default function ConstellationGraph({
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
   const [width, setWidth] = useState(900);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Refs for hover/selected so paint callbacks never go stale between renders
+  const activeIdRef = useRef<string | null>(null);
+  const neighborSetRef = useRef<Set<string>>(new Set());
+
+  // Keep a local state copy just to trigger re-registration of callbacks
+  // when the active node changes (fgRef.current?.refresh() isn't always enough)
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const obs = new ResizeObserver(([entry]) => {
-      setWidth(entry.contentRect.width);
-    });
+    const obs = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
     obs.observe(el);
     setWidth(el.offsetWidth);
     return () => obs.disconnect();
   }, []);
 
-  // Build positions from graphology adapter (same cluster layout)
   const { nodes, links, neighborMap } = useMemo(() => {
     if (entities.length === 0) return { nodes: [], links: [], neighborMap: new Map<string, Set<string>>() };
 
     const graph = buildGraphologyGraph(entities, edges, minSimilarity, layoutDensity);
     const fgNodes: FGNode[] = [];
     const fgLinks: FGLink[] = [];
-    const neighborMap = new Map<string, Set<string>>();
+    const nMap = new Map<string, Set<string>>();
 
     graph.forEachNode((nodeId) => {
       const attrs = graph.getNodeAttributes(nodeId);
@@ -212,13 +221,12 @@ export default function ConstellationGraph({
         size: Math.max((attrs.size as number) ?? 4, 3),
         category: (attrs.originalData as GraphEntity)?.category ?? undefined,
         originalData: attrs.originalData as GraphEntity,
-        // Pin positions for cluster mode; unpin for organic
         fx: layoutEngine === "clusters" ? x : undefined,
         fy: layoutEngine === "clusters" ? y : undefined,
         x,
         y,
       });
-      neighborMap.set(nodeId, new Set());
+      nMap.set(nodeId, new Set());
     });
 
     graph.forEachEdge((_, attrs, source, target) => {
@@ -226,41 +234,42 @@ export default function ConstellationGraph({
         source,
         target,
         color: attrs.color as string,
-        width: attrs.size as number,
+        width: (attrs.size as number) ?? 1.5,
         edgeType: attrs.edgeType as string,
       });
-      neighborMap.get(source)?.add(target);
-      neighborMap.get(target)?.add(source);
+      nMap.get(source)?.add(target);
+      nMap.get(target)?.add(source);
     });
 
-    return { nodes: fgNodes, links: fgLinks, neighborMap };
+    return { nodes: fgNodes, links: fgLinks, neighborMap: nMap };
   }, [entities, edges, minSimilarity, layoutDensity, layoutEngine]);
 
   const graphData = useMemo(() => ({ nodes, links }), [nodes, links]);
 
-  const activeId = hoveredId ?? selectedId;
-  const activeNeighbors = activeId ? (neighborMap.get(activeId) ?? new Set<string>()) : new Set<string>();
-
+  // Stable paint callbacks — read from refs, never recreated on hover change
   const paintNode = useCallback(
-    (node: NodeObject, ctx: CanvasRenderingContext2D) => {
+    (node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const n = node as FGNode;
-      const isHovered = n.id === activeId;
-      const isNeighbor = activeId ? activeNeighbors.has(n.id) : false;
-      drawGlowNode(ctx, n, isHovered, isNeighbor, activeId !== null);
+      const aid = activeIdRef.current;
+      const isHovered = n.id === aid;
+      const isNeighbor = aid ? neighborSetRef.current.has(n.id) : false;
+      drawGlowNode(ctx, n, globalScale, isHovered, isNeighbor, aid !== null);
     },
-    [activeId, activeNeighbors],
+    [], // no deps — reads from refs
   );
 
   const paintLink = useCallback(
-    (link: LinkObject, ctx: CanvasRenderingContext2D) => {
+    (link: LinkObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const l = link as FGLink;
+      const aid = activeIdRef.current;
+      if (!aid) return;
+
       const sourceId = typeof l.source === "string" ? l.source : (l.source as FGNode).id;
       const targetId = typeof l.target === "string" ? l.target : (l.target as FGNode).id;
-      const isActive = activeId && (sourceId === activeId || targetId === activeId);
-      if (!isActive) return; // don't draw at rest
+      if (sourceId !== aid && targetId !== aid) return;
 
-      const sourceNode = typeof l.source === "object" ? l.source as FGNode : null;
-      const targetNode = typeof l.target === "object" ? l.target as FGNode : null;
+      const sourceNode = typeof l.source === "object" ? (l.source as FGNode) : null;
+      const targetNode = typeof l.target === "object" ? (l.target as FGNode) : null;
       if (!sourceNode || !targetNode) return;
 
       const sx = sourceNode.x ?? 0;
@@ -271,35 +280,39 @@ export default function ConstellationGraph({
       const isDerived = l.edgeType === "shares_correspondence_with";
       const isAssociative = l.edgeType === "associated_with";
       const edgeColor = isDerived
-        ? "rgba(94, 234, 212, 0.9)"
+        ? "rgba(94,234,212,0.9)"
         : isAssociative
-          ? "rgba(96, 165, 250, 0.8)"
-          : "rgba(255, 240, 160, 0.85)";
+          ? "rgba(96,165,250,0.85)"
+          : "rgba(255,240,160,0.9)";
 
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(sx, sy);
       ctx.lineTo(tx, ty);
       ctx.strokeStyle = edgeColor;
-      ctx.lineWidth = Math.max(l.width * 1.5, 2);
+      ctx.lineWidth = Math.max(l.width * 1.6, 2 / globalScale);
       ctx.shadowColor = edgeColor;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 6 / globalScale;
       ctx.stroke();
       ctx.restore();
     },
-    [activeId],
+    [],
   );
 
-  const handleNodeHover = useCallback((node: NodeObject | null) => {
-    setHoveredId(node ? (node as FGNode).id : null);
-  }, []);
+  const handleNodeHover = useCallback(
+    (node: NodeObject | null) => {
+      const id = node ? (node as FGNode).id : null;
+      activeIdRef.current = id;
+      neighborSetRef.current = id ? (neighborMap.get(id) ?? new Set()) : new Set();
+      setActiveId(id); // triggers re-render so ForceGraph picks up new paint callbacks
+    },
+    [neighborMap],
+  );
 
   const handleNodeClick = useCallback(
     (node: NodeObject) => {
       const n = node as FGNode;
-      setSelectedId((prev) => (prev === n.id ? null : n.id));
       onSelectEntity(n.originalData);
-      // Zoom toward clicked node
       if (fgRef.current) {
         fgRef.current.centerAt(n.x ?? 0, n.y ?? 0, 400);
         fgRef.current.zoom(3.5, 400);
@@ -309,13 +322,13 @@ export default function ConstellationGraph({
   );
 
   const handleBackgroundClick = useCallback(() => {
-    setSelectedId(null);
-    if (fgRef.current) {
-      fgRef.current.zoomToFit(400, 40);
-    }
+    activeIdRef.current = null;
+    neighborSetRef.current = new Set();
+    setActiveId(null);
+    fgRef.current?.zoomToFit(400, 40);
   }, []);
 
-  // Fit to view on load
+  // Fit on first load
   useEffect(() => {
     if (!fgRef.current || nodes.length === 0) return;
     const t = setTimeout(() => fgRef.current?.zoomToFit(600, 40), 300);
@@ -335,13 +348,15 @@ export default function ConstellationGraph({
     );
   }
 
+  // Suppress "activeId" lint warning — it's used only to trigger re-render
+  void activeId;
+
   return (
     <div
       ref={containerRef}
-      className="relative overflow-hidden"
+      className="relative overflow-hidden group/graph"
       style={{ borderRadius: 12, border: "1px solid rgba(120,80,20,0.25)", background: "#070503", height }}
     >
-      {/* Deep space gradient */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -353,10 +368,10 @@ export default function ConstellationGraph({
       <StarField width={width} height={height} />
 
       {/* Corner markers */}
-      {(["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"] as const).map((pos, i) => (
+      {([0, 1, 2, 3] as const).map((i) => (
         <div
           key={i}
-          className={`absolute ${pos} pointer-events-none`}
+          className={`absolute pointer-events-none ${i < 2 ? "top-0" : "bottom-0"} ${i % 2 === 0 ? "left-0" : "right-0"}`}
           style={{
             width: 18, height: 18, margin: 8,
             borderTop: i < 2 ? "1px solid rgba(160,110,30,0.35)" : "none",
@@ -374,6 +389,8 @@ export default function ConstellationGraph({
           width={width}
           height={height}
           backgroundColor="transparent"
+          // Disable all built-in rendering — we own the canvas entirely
+          nodeLabel=""
           nodeCanvasObject={paintNode}
           nodeCanvasObjectMode={() => "replace"}
           linkCanvasObject={paintLink}
@@ -381,19 +398,17 @@ export default function ConstellationGraph({
           onNodeHover={handleNodeHover}
           onNodeClick={handleNodeClick}
           onBackgroundClick={handleBackgroundClick}
-          // In cluster mode pins hold positions; in organic the sim runs
           cooldownTicks={layoutEngine === "clusters" ? 0 : 120}
           d3AlphaDecay={layoutEngine === "organic" ? 0.03 : 1}
           d3VelocityDecay={0.4}
           nodeRelSize={1}
           enableZoomInteraction
           enablePanInteraction
-          minZoom={0.1}
-          maxZoom={12}
+          minZoom={0.05}
+          maxZoom={14}
         />
       </div>
 
-      {/* Hint bar */}
       <div className="pointer-events-none absolute bottom-4 right-4 z-20 flex gap-2 opacity-0 transition-opacity duration-700 group-hover/graph:opacity-100">
         {["Scroll / Zoom", "Drag / Pan", "Click / Open"].map((hint) => (
           <div
