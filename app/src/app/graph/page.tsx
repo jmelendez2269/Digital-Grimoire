@@ -37,6 +37,7 @@ type CorrespondenceRelationship = {
 type CorrespondenceRelationshipLayer = "corresponds_to" | "associated_with" | "shares_correspondence_with" | "refines";
 type CorrespondenceRelationshipFilters = Record<CorrespondenceRelationshipLayer, boolean>;
 type CorrespondenceLayoutDensity = "compact" | "balanced" | "expanded";
+type CorrespondenceLayoutEngine = "clusters" | "organic";
 
 type FocusedCorrespondenceGraph = {
   entities: CorrespondenceEntity[];
@@ -296,6 +297,8 @@ function GraphPageContent() {
     useState<CorrespondenceRelationshipFilters>(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
   const [correspondenceLayoutDensity, setCorrespondenceLayoutDensity] =
     useState<CorrespondenceLayoutDensity>("expanded");
+  const [correspondenceLayoutEngine, setCorrespondenceLayoutEngine] =
+    useState<CorrespondenceLayoutEngine>("clusters");
 
   useEffect(() => {
     let cancelled = false;
@@ -548,6 +551,7 @@ function GraphPageContent() {
     setCorrespondenceGraphScope("focused");
     setCorrespondenceRelationshipFilters(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
     setCorrespondenceLayoutDensity("expanded");
+    setCorrespondenceLayoutEngine("clusters");
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     router.replace(`/graph?${params.toString()}`, { scroll: false });
@@ -566,29 +570,6 @@ function GraphPageContent() {
   };
 
   const isParallaxGraphView = graphType === "parallax" && viewMode === "graph";
-  const correspondenceRelationshipCounts = useMemo(() => {
-    if (graphType !== "correspondences") {
-      return {
-        corresponds_to: 0,
-        associated_with: 0,
-        shares_correspondence_with: 0,
-        refines: 0,
-      };
-    }
-
-    return (relationships as CorrespondenceRelationship[]).reduce(
-      (counts, relationship) => {
-        counts[getCorrespondenceRelationshipType(relationship)] += 1;
-        return counts;
-      },
-      {
-        corresponds_to: 0,
-        associated_with: 0,
-        shares_correspondence_with: 0,
-        refines: 0,
-      } as Record<CorrespondenceRelationshipLayer, number>,
-    );
-  }, [graphType, relationships]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-900/30">
@@ -695,18 +676,12 @@ function GraphPageContent() {
                 graphScope={correspondenceGraphScope}
                 onGraphScopeChange={setCorrespondenceGraphScope}
                 showGraphScopeControls={viewMode === "graph"}
-                relationshipFilters={correspondenceRelationshipFilters}
-                onRelationshipFilterChange={(layer, value) =>
-                  setCorrespondenceRelationshipFilters((current) => ({
-                    ...current,
-                    [layer]: value,
-                  }))
-                }
-                relationshipCounts={correspondenceRelationshipCounts}
-                showRelationshipFilters={viewMode === "graph"}
                 layoutDensity={correspondenceLayoutDensity}
                 onLayoutDensityChange={setCorrespondenceLayoutDensity}
                 showLayoutDensityControls={viewMode === "graph"}
+                layoutEngine={correspondenceLayoutEngine}
+                onLayoutEngineChange={setCorrespondenceLayoutEngine}
+                showLayoutEngineControls={viewMode === "graph"}
               />
             </div>
           )}
@@ -803,6 +778,7 @@ function GraphPageContent() {
                     onSelectConcept={(entity: ParallaxConcept | CorrespondenceEntity) => handleSelectEntity(entity)}
                     minSimilarity={minSimilarity}
                     layoutDensity={correspondenceLayoutDensity}
+                    layoutEngine={correspondenceLayoutEngine}
                   />
                 </div>
                 {graphType === "correspondences" &&
