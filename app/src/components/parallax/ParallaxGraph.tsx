@@ -10,6 +10,11 @@ const ConstellationGraph = dynamic(
   { ssr: false, loading: () => <ParallaxLoader /> },
 );
 
+const ConstellationGraph3D = dynamic(
+  () => import("@/components/graph/ConstellationGraph3D"),
+  { ssr: false, loading: () => <ParallaxLoader /> },
+);
+
 interface ParallaxGraphProps {
   concepts: (ParallaxConcept | CorrespondenceEntity)[];
   relationships: (ParallaxRelationship | GraphEdge)[];
@@ -17,6 +22,7 @@ interface ParallaxGraphProps {
   minSimilarity: number;
   layoutDensity?: "compact" | "balanced" | "expanded";
   layoutEngine?: "clusters" | "organic";
+  graphDimension?: "2d" | "3d";
 }
 
 export default function ParallaxGraph({
@@ -26,16 +32,20 @@ export default function ParallaxGraph({
   minSimilarity,
   layoutDensity = "expanded",
   layoutEngine = "clusters",
+  graphDimension = "2d",
 }: ParallaxGraphProps) {
-  return (
-    <ConstellationGraph
-      entities={concepts as unknown as GraphEntity[]}
-      edges={relationships as unknown as GraphEdge[]}
-      onSelectEntity={(entity) => onSelectConcept(entity as unknown as ParallaxConcept | CorrespondenceEntity)}
-      minSimilarity={minSimilarity}
-      height={700}
-      layoutDensity={layoutDensity}
-      layoutEngine={layoutEngine}
-    />
-  );
+  const sharedProps = {
+    entities: concepts as unknown as GraphEntity[],
+    edges: relationships as unknown as GraphEdge[],
+    onSelectEntity: (entity: GraphEntity) =>
+      onSelectConcept(entity as unknown as ParallaxConcept | CorrespondenceEntity),
+    minSimilarity,
+    height: 700,
+    layoutDensity,
+    layoutEngine,
+  };
+
+  return graphDimension === "3d"
+    ? <ConstellationGraph3D {...sharedProps} />
+    : <ConstellationGraph {...sharedProps} />;
 }

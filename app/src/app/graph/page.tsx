@@ -38,6 +38,7 @@ type CorrespondenceRelationshipLayer = "corresponds_to" | "associated_with" | "s
 type CorrespondenceRelationshipFilters = Record<CorrespondenceRelationshipLayer, boolean>;
 type CorrespondenceLayoutDensity = "compact" | "balanced" | "expanded";
 type CorrespondenceLayoutEngine = "clusters" | "organic";
+type CorrespondenceGraphDimension = "2d" | "3d";
 
 type FocusedCorrespondenceGraph = {
   entities: CorrespondenceEntity[];
@@ -299,6 +300,8 @@ function GraphPageContent() {
     useState<CorrespondenceLayoutDensity>("expanded");
   const [correspondenceLayoutEngine, setCorrespondenceLayoutEngine] =
     useState<CorrespondenceLayoutEngine>("clusters");
+  const [correspondenceGraphDimension, setCorrespondenceGraphDimension] =
+    useState<CorrespondenceGraphDimension>("2d");
 
   useEffect(() => {
     let cancelled = false;
@@ -552,6 +555,7 @@ function GraphPageContent() {
     setCorrespondenceRelationshipFilters(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
     setCorrespondenceLayoutDensity("expanded");
     setCorrespondenceLayoutEngine("clusters");
+    setCorrespondenceGraphDimension("2d");
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     router.replace(`/graph?${params.toString()}`, { scroll: false });
@@ -682,6 +686,9 @@ function GraphPageContent() {
                 layoutEngine={correspondenceLayoutEngine}
                 onLayoutEngineChange={setCorrespondenceLayoutEngine}
                 showLayoutEngineControls={viewMode === "graph"}
+                graphDimension={correspondenceGraphDimension}
+                onGraphDimensionChange={setCorrespondenceGraphDimension}
+                showGraphDimensionControls={viewMode === "graph"}
               />
             </div>
           )}
@@ -779,6 +786,7 @@ function GraphPageContent() {
                     minSimilarity={minSimilarity}
                     layoutDensity={correspondenceLayoutDensity}
                     layoutEngine={correspondenceLayoutEngine}
+                    graphDimension={correspondenceGraphDimension}
                   />
                 </div>
                 {graphType === "correspondences" &&
