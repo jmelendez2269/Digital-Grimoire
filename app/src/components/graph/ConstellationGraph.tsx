@@ -24,6 +24,8 @@ interface FGNode extends NodeObject {
   label: string;
   color: string;
   size: number;
+  degree: number;
+  isAnchor: boolean;
   category?: string;
   originalData: GraphEntity;
   fx?: number;
@@ -54,87 +56,93 @@ function drawGlowNode(
   isHovered: boolean,
   isNeighbor: boolean,
   hasActive: boolean,
+  twinkle: number, // 0..1 multiplier from animation loop
 ) {
   const x = node.x ?? 0;
   const y = node.y ?? 0;
-  const r = node.size ?? 4;
+  const baseR = node.size ?? 5;
+  // Anchors render at 1.5× the base radius for visual weight
+  const r = node.isAnchor ? baseR * 1.5 : baseR;
   const { r: cr, g: cg, b: cb } = hexToRgb(node.color);
 
-  // Non-connected nodes disappear when something is active
   if (hasActive && !isHovered && !isNeighbor) return;
 
   ctx.save();
 
   if (isHovered) {
-    // Outer corona
-    const corona = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 5);
-    corona.addColorStop(0, `rgba(${cr},${cg},${cb},0.30)`);
-    corona.addColorStop(0.4, `rgba(${cr},${cg},${cb},0.12)`);
+    const corona = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 6);
+    corona.addColorStop(0, `rgba(${cr},${cg},${cb},0.35)`);
+    corona.addColorStop(0.4, `rgba(${cr},${cg},${cb},0.14)`);
     corona.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
     ctx.beginPath();
-    ctx.arc(x, y, r * 5, 0, Math.PI * 2);
+    ctx.arc(x, y, r * 6, 0, Math.PI * 2);
     ctx.fillStyle = corona;
     ctx.fill();
 
-    // Inner glow ring
     ctx.beginPath();
-    ctx.arc(x, y, r * 2.2, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.55)`;
+    ctx.arc(x, y, r * 2.5, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.6)`;
     ctx.lineWidth = 1.5 / globalScale;
     ctx.stroke();
   } else if (isNeighbor) {
-    const halo = ctx.createRadialGradient(x, y, r, x, y, r * 3);
-    halo.addColorStop(0, `rgba(${cr},${cg},${cb},0.20)`);
+    const halo = ctx.createRadialGradient(x, y, r, x, y, r * 3.5);
+    halo.addColorStop(0, `rgba(${cr},${cg},${cb},0.22)`);
     halo.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
     ctx.beginPath();
-    ctx.arc(x, y, r * 3, 0, Math.PI * 2);
+    ctx.arc(x, y, r * 3.5, 0, Math.PI * 2);
     ctx.fillStyle = halo;
+    ctx.fill();
+  } else if (node.isAnchor && !hasActive) {
+    // Anchors have a persistent soft halo so they read as category landmarks
+    const anchorHalo = ctx.createRadialGradient(x, y, r, x, y, r * 4);
+    anchorHalo.addColorStop(0, `rgba(${cr},${cg},${cb},0.18)`);
+    anchorHalo.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+    ctx.beginPath();
+    ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+    ctx.fillStyle = anchorHalo;
     ctx.fill();
   }
 
-  // Core radial glow
-  const alpha = isHovered ? 1 : isNeighbor ? 0.9 : 0.75;
-  const core = ctx.createRadialGradient(x, y, 0, x, y, r * 1.5);
-  core.addColorStop(0, `rgba(255,255,255,${alpha * 0.95})`);
-  core.addColorStop(0.4, `rgba(${cr},${cg},${cb},${alpha})`);
-  core.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+  // Core glow — twinkle gently varies opacity and size
+  const baseAlpha = isHovered ? 1 : isNeighbor ? 0.92 : node.isAnchor ? 0.92 : 0.70 + twinkle * 0.22;
+  const twinkleR  = r * (1 + twinkle * 0.18);
+  const core = ctx.createRadialGradient(x, y, 0, x, y, twinkleR * 2.2);
+  core.addColorStop(0,    `rgba(255,255,255,${baseAlpha})`);
+  core.addColorStop(0.25, `rgba(${cr},${cg},${cb},${baseAlpha})`);
+  core.addColorStop(0.65, `rgba(${cr},${cg},${cb},${baseAlpha * 0.35})`);
+  core.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`);
   ctx.beginPath();
-  ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
+  ctx.arc(x, y, twinkleR * 2.2, 0, Math.PI * 2);
   ctx.fillStyle = core;
   ctx.fill();
 
-  // Solid center pinpoint
+  // Bright pinpoint centre
   ctx.beginPath();
-  ctx.arc(x, y, r * 0.55, 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(255,255,255,${isHovered ? 1 : 0.9})`;
+  ctx.arc(x, y, r * 0.5, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255,255,255,${isHovered ? 1 : 0.92})`;
   ctx.fill();
 
-  // Labels only appear on interaction — at rest the graph reads as a pure
-  // constellation of glowing dots. Labels reveal when you hover or zoom in
-  // far enough that the node fills meaningful screen real-estate.
+  // Labels — anchor nodes always labeled; others reveal at screenRadius >= 8
   const screenRadius = r * globalScale;
-  const showLabel = isHovered || isNeighbor || (!hasActive && screenRadius >= 18);
+  const showLabel = isHovered || isNeighbor || node.isAnchor || (!hasActive && screenRadius >= 8);
   if (showLabel && node.label) {
-    const px = isHovered ? 13 : 11;
+    const px = isHovered ? 13 : node.isAnchor ? 11 : 10;
     const fontSize = px / globalScale;
-    const labelY = y + r * 1.6 + 4 / globalScale;
+    const labelY = y + r * 2 + 4 / globalScale;
 
-    ctx.font = `${isHovered ? "600" : "400"} ${fontSize}px Cinzel, 'Palatino Linotype', serif`;
+    ctx.font = `${isHovered || node.isAnchor ? "600" : "400"} ${fontSize}px Cinzel, 'Palatino Linotype', serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
 
-    // Shadow pass
     ctx.shadowColor = "rgba(0,0,0,0.95)";
     ctx.shadowBlur = 10 / globalScale;
-    ctx.fillStyle = isHovered ? "#ffffff" : `rgba(${cr},${cg},${cb},0.92)`;
+    ctx.fillStyle = isHovered ? "#ffffff" : `rgba(${cr},${cg},${cb},0.95)`;
     ctx.fillText(node.label, x, labelY);
 
-    // Glow pass
-    ctx.shadowColor = isHovered ? `rgba(${cr},${cg},${cb},0.6)` : "rgba(0,0,0,0)";
-    ctx.shadowBlur = isHovered ? 8 / globalScale : 0;
+    ctx.shadowColor = `rgba(${cr},${cg},${cb},0.55)`;
+    ctx.shadowBlur = 6 / globalScale;
     ctx.fillText(node.label, x, labelY);
 
-    // Crisp pass
     ctx.shadowBlur = 0;
     ctx.fillText(node.label, x, labelY);
   }
@@ -191,6 +199,10 @@ export default function ConstellationGraph({
   // Refs for hover/selected so paint callbacks never go stale between renders
   const activeIdRef = useRef<string | null>(null);
   const neighborSetRef = useRef<Set<string>>(new Set());
+  // Twinkle: nodeId → { phase, speed } for animation loop
+  const twinkleRef = useRef<Map<string, { phase: number; speed: number }>>(new Map());
+  const twinkleMapRef = useRef<Map<string, number>>(new Map()); // current twinkle value 0..1
+  const rafRef = useRef<number>(0);
 
   // Keep a local state copy just to trigger re-registration of callbacks
   // when the active node changes (fgRef.current?.refresh() isn't always enough)
@@ -214,16 +226,22 @@ export default function ConstellationGraph({
     const nMap = new Map<string, Set<string>>();
 
     graph.forEachNode((nodeId) => {
-      const attrs = graph.getNodeAttributes(nodeId);
-      const x = (attrs.x as number) ?? 0;
-      const y = (attrs.y as number) ?? 0;
+      const attrs  = graph.getNodeAttributes(nodeId);
+      const entity = attrs.originalData as GraphEntity;
+      const x      = (attrs.x as number) ?? 0;
+      const y      = (attrs.y as number) ?? 0;
+      const deg    = (attrs.degree as number) ?? graph.degree(nodeId) ?? 0;
+      const cat    = entity?.category ?? "";
+      const isAnchor = cat === "issue_intention_power" || deg >= 10;
       fgNodes.push({
         id: nodeId,
-        label: attrs.label as string,
-        color: attrs.color as string,
-        size: Math.max((attrs.size as number) ?? 4, 3),
-        category: (attrs.originalData as GraphEntity)?.category ?? undefined,
-        originalData: attrs.originalData as GraphEntity,
+        label:    attrs.label as string,
+        color:    attrs.color as string,
+        size:     Math.max((attrs.size as number) ?? 5, 5),
+        degree:   deg,
+        isAnchor,
+        category: cat || undefined,
+        originalData: entity,
         fx: layoutEngine === "clusters" ? x : undefined,
         fy: layoutEngine === "clusters" ? y : undefined,
         x,
@@ -244,19 +262,46 @@ export default function ConstellationGraph({
       nMap.get(target)?.add(source);
     });
 
+    // Seed twinkle animation for non-anchor nodes
+    const tMap = new Map<string, { phase: number; speed: number }>();
+    fgNodes.forEach((n) => {
+      if (!n.isAnchor) tMap.set(n.id, { phase: Math.random() * Math.PI * 2, speed: 0.3 + Math.random() * 0.9 });
+    });
+    twinkleRef.current = tMap;
+    twinkleMapRef.current = new Map();
+
     return { nodes: fgNodes, links: fgLinks, neighborMap: nMap };
   }, [entities, edges, minSimilarity, layoutDensity, layoutEngine]);
 
   const graphData = useMemo(() => ({ nodes, links }), [nodes, links]);
 
+  // Twinkle animation loop — updates per-node brightness values and redraws
+  useEffect(() => {
+    if (nodes.length === 0) return;
+    const tick = () => {
+      const now = performance.now() / 1000;
+      let changed = false;
+      twinkleRef.current.forEach(({ phase, speed }, id) => {
+        const t   = (Math.sin(now * speed + phase) + 1) / 2; // 0..1
+        const old = twinkleMapRef.current.get(id) ?? 0;
+        if (Math.abs(t - old) > 0.005) { twinkleMapRef.current.set(id, t); changed = true; }
+      });
+      void changed; // library redraws every frame via its own RAF loop
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [nodes]);
+
   // Stable paint callbacks — read from refs, never recreated on hover change
   const paintNode = useCallback(
     (node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const n = node as FGNode;
-      const aid = activeIdRef.current;
-      const isHovered = n.id === aid;
+      const n        = node as FGNode;
+      const aid      = activeIdRef.current;
+      const isHovered  = n.id === aid;
       const isNeighbor = aid ? neighborSetRef.current.has(n.id) : false;
-      drawGlowNode(ctx, n, globalScale, isHovered, isNeighbor, aid !== null);
+      const twinkle    = twinkleMapRef.current.get(n.id) ?? 0;
+      drawGlowNode(ctx, n, globalScale, isHovered, isNeighbor, aid !== null, twinkle);
     },
     [], // no deps — reads from refs
   );
