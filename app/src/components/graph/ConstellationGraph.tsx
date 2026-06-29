@@ -109,10 +109,13 @@ function drawGlowNode(
   ctx.fillStyle = `rgba(255,255,255,${isHovered ? 1 : 0.9})`;
   ctx.fill();
 
-  // Label — scaled by 1/globalScale so it stays a consistent pixel size
-  const showLabel = isHovered || isNeighbor || (!hasActive && r >= 8);
+  // Labels only appear on interaction — at rest the graph reads as a pure
+  // constellation of glowing dots. Labels reveal when you hover or zoom in
+  // far enough that the node fills meaningful screen real-estate.
+  const screenRadius = r * globalScale;
+  const showLabel = isHovered || isNeighbor || (!hasActive && screenRadius >= 18);
   if (showLabel && node.label) {
-    const px = isHovered ? 13 : 10; // desired screen pixels
+    const px = isHovered ? 13 : 11;
     const fontSize = px / globalScale;
     const labelY = y + r * 1.6 + 4 / globalScale;
 
@@ -328,10 +331,10 @@ export default function ConstellationGraph({
     fgRef.current?.zoomToFit(400, 40);
   }, []);
 
-  // Fit on first load
+  // Fit on first load — generous padding so nodes aren't flush with the edge
   useEffect(() => {
     if (!fgRef.current || nodes.length === 0) return;
-    const t = setTimeout(() => fgRef.current?.zoomToFit(600, 40), 300);
+    const t = setTimeout(() => fgRef.current?.zoomToFit(800, 80), 350);
     return () => clearTimeout(t);
   }, [nodes]);
 
