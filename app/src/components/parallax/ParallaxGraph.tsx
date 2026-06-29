@@ -1,10 +1,14 @@
 "use client";
 
-import SigmaGraph from "@/components/graph/SigmaGraph";
+import dynamic from "next/dynamic";
+import ParallaxLoader from "@/components/ui/ParallaxLoader";
 import { ParallaxConcept, ParallaxRelationship, CorrespondenceEntity } from "@/lib/types";
 import { GraphEntity, GraphEdge } from "@/lib/graph/graphology-adapter";
 
-console.log("[GraphDebug] ParallaxGraph.tsx module loaded");
+const ConstellationGraph = dynamic(
+  () => import("@/components/graph/ConstellationGraph"),
+  { ssr: false, loading: () => <ParallaxLoader /> },
+);
 
 interface ParallaxGraphProps {
   concepts: (ParallaxConcept | CorrespondenceEntity)[];
@@ -15,10 +19,6 @@ interface ParallaxGraphProps {
   layoutEngine?: "clusters" | "organic";
 }
 
-/**
- * ParallaxGraph — thin wrapper around SigmaGraph.
- * Keeps the same prop interface as before so /parallax-graph/page.tsx needs no changes.
- */
 export default function ParallaxGraph({
   concepts,
   relationships,
@@ -28,12 +28,12 @@ export default function ParallaxGraph({
   layoutEngine = "clusters",
 }: ParallaxGraphProps) {
   return (
-    <SigmaGraph
+    <ConstellationGraph
       entities={concepts as unknown as GraphEntity[]}
       edges={relationships as unknown as GraphEdge[]}
       onSelectEntity={(entity) => onSelectConcept(entity as unknown as ParallaxConcept | CorrespondenceEntity)}
       minSimilarity={minSimilarity}
-      height={600}
+      height={700}
       layoutDensity={layoutDensity}
       layoutEngine={layoutEngine}
     />

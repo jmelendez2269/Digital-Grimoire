@@ -31,7 +31,7 @@ type GraphSummary = {
 };
 
 const LAYOUT_STORAGE_PREFIX = "digital-grimoire:sigma-layout:";
-const LAYOUT_VERSION = "category-clusters-v4-engine-split";
+const LAYOUT_VERSION = "category-clusters-v5-per-category-colors";
 const MIN_LAYOUT_SPAN_BY_DENSITY: Record<GraphLayoutDensity, number> = {
   compact: 900,
   balanced: 1200,
@@ -291,13 +291,18 @@ function drawNodeLabel(
   const x = data.x;
   const y = data.y + data.size + 4;
 
-  context.shadowColor = "rgba(0, 0, 0, 0.95)";
-  context.shadowBlur = 8;
-  context.shadowOffsetX = 0;
-  context.shadowOffsetY = 0;
+  // Deep shadow pass for legibility
+  context.shadowColor = "rgba(0, 0, 0, 0.98)";
+  context.shadowBlur = 14;
   context.fillStyle = color;
   context.fillText(data.label, x, y);
 
+  // Warm glow pass
+  context.shadowColor = "rgba(245, 200, 80, 0.35)";
+  context.shadowBlur = 10;
+  context.fillText(data.label, x, y);
+
+  // Crisp top pass
   context.shadowBlur = 0;
   context.fillStyle = color;
   context.fillText(data.label, x, y);
@@ -629,9 +634,10 @@ export default function SigmaGraph({
           return {
             ...reducedData,
             zIndex: 12,
-            size: baseSize * (hoveredNode ? 2 : 1.75),
-            color: "#f5e6b0",
+            size: baseSize * (hoveredNode ? 2.4 : 2),
+            color: "#ffffff",
             forceLabel: true,
+            highlighted: true,
           };
         }
 
@@ -639,17 +645,18 @@ export default function SigmaGraph({
           return {
             ...reducedData,
             zIndex: 7,
-            size: baseSize * (isDenseGraph ? 1.08 : 1.15),
+            size: baseSize * 1.5,
             color: data.color ?? "#c8882a",
-            forceLabel: !isDenseGraph || isAnchor || (degree ?? 0) >= 4,
+            forceLabel: true,
             label: data.label,
           };
         }
 
+        // Hide completely when something is hovered/selected — the constellation
+        // reads much better when unrelated nodes drop away rather than dim.
         return {
           ...reducedData,
-          size: Math.max(reducedData.size * (isDenseGraph ? (isVeryDenseGraph ? 0.5 : 0.65) : 0.82), 1.8),
-          color: withAlpha(data.color, BACKGROUND_NODE_DIM_ALPHA),
+          hidden: true,
           label: "",
           forceLabel: false,
         };
@@ -659,27 +666,28 @@ export default function SigmaGraph({
         const edgeData = graph.getEdgeAttribute(edge, "originalData") as GraphEdge | undefined;
         const edgeType = edgeData?.relationship_type?.slug ?? edgeData?.type;
         const isDerived = edgeType === "shares_correspondence_with";
+        const isAssociative = edgeType === "associated_with";
 
+        // Always hide edges at rest — reveals on hover only
         if (!activeNode) {
-          return {
-            ...data,
-            hidden: true,
-          };
+          return { ...data, hidden: true };
         }
 
         if (graph.hasExtremity(edge, activeNode)) {
           return {
             ...data,
-            color: isDerived ? "rgba(94, 234, 212, 0.95)" : "#e0b85d",
-            size: Math.max((data.size ?? 1.8) * (isDerived ? 1.9 : 1.65), isDerived ? 3.1 : 2.4),
+            hidden: false,
+            color: isDerived
+              ? "rgba(94, 234, 212, 1)"
+              : isAssociative
+                ? "rgba(96, 165, 250, 0.9)"
+                : "rgba(255, 240, 160, 0.95)",
+            size: Math.max((data.size ?? 1.8) * 2.2, isDerived ? 3.5 : 2.8),
             zIndex: 10,
           };
         }
 
-        return {
-          ...data,
-          hidden: true,
-        };
+        return { ...data, hidden: true };
       });
 
       renderer.refresh();
