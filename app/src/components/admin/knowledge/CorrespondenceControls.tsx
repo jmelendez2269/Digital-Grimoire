@@ -2,7 +2,6 @@
 
 type CorrespondenceLayoutDensity = "compact" | "balanced" | "expanded";
 type CorrespondenceLayoutEngine = "clusters" | "organic";
-type CorrespondenceGraphDimension = "2d" | "3d";
 
 interface CorrespondenceControlsProps {
     searchQuery: string;
@@ -19,9 +18,6 @@ interface CorrespondenceControlsProps {
     layoutEngine?: CorrespondenceLayoutEngine;
     onLayoutEngineChange?: (value: CorrespondenceLayoutEngine) => void;
     showLayoutEngineControls?: boolean;
-    graphDimension?: CorrespondenceGraphDimension;
-    onGraphDimensionChange?: (value: CorrespondenceGraphDimension) => void;
-    showGraphDimensionControls?: boolean;
 }
 
 export default function CorrespondenceControls({
@@ -39,9 +35,6 @@ export default function CorrespondenceControls({
     layoutEngine = "clusters",
     onLayoutEngineChange,
     showLayoutEngineControls = false,
-    graphDimension = "2d",
-    onGraphDimensionChange,
-    showGraphDimensionControls = false,
 }: CorrespondenceControlsProps) {
     return (
         <div className="flex flex-wrap items-center gap-4 bg-zinc-900/30 border border-amber-900/20 rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
@@ -150,28 +143,6 @@ export default function CorrespondenceControls({
                                 }`}
                             >
                                 {option.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {showGraphDimensionControls && onGraphDimensionChange && (
-                <div className="min-w-[140px]">
-                    <label className="block text-xs text-amber-100/60 mb-1">Dimension</label>
-                    <div className="flex items-center gap-1 rounded-lg border border-amber-900/30 bg-zinc-800 p-1">
-                        {(["2d", "3d"] as const).map((dim) => (
-                            <button
-                                key={dim}
-                                type="button"
-                                onClick={() => onGraphDimensionChange(dim)}
-                                className={`flex-1 rounded-md px-3 py-2 text-[11px] uppercase tracking-[0.18em] transition-colors ${
-                                    graphDimension === dim
-                                        ? "bg-amber-500/20 text-amber-200"
-                                        : "text-amber-100/55 hover:text-amber-100"
-                                }`}
-                            >
-                                {dim}
                             </button>
                         ))}
                     </div>

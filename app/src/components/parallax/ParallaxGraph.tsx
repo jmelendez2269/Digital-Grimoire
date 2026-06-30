@@ -1,19 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import ParallaxLoader from "@/components/ui/ParallaxLoader";
+import SigmaGraph from "@/components/graph/SigmaGraph";
 import { ParallaxConcept, ParallaxRelationship, CorrespondenceEntity } from "@/lib/types";
 import { GraphEntity, GraphEdge } from "@/lib/graph/graphology-adapter";
 
-const ConstellationGraph = dynamic(
-  () => import("@/components/graph/ConstellationGraph"),
-  { ssr: false, loading: () => <ParallaxLoader /> },
-);
-
-const ConstellationGraph3D = dynamic(
-  () => import("@/components/graph/ConstellationGraph3D"),
-  { ssr: false, loading: () => <ParallaxLoader /> },
-);
+console.log("[GraphDebug] ParallaxGraph.tsx module loaded");
 
 interface ParallaxGraphProps {
   concepts: (ParallaxConcept | CorrespondenceEntity)[];
@@ -22,9 +13,12 @@ interface ParallaxGraphProps {
   minSimilarity: number;
   layoutDensity?: "compact" | "balanced" | "expanded";
   layoutEngine?: "clusters" | "organic";
-  graphDimension?: "2d" | "3d";
 }
 
+/**
+ * ParallaxGraph — thin wrapper around SigmaGraph.
+ * Keeps the same prop interface as before so /parallax-graph/page.tsx needs no changes.
+ */
 export default function ParallaxGraph({
   concepts,
   relationships,
@@ -32,20 +26,16 @@ export default function ParallaxGraph({
   minSimilarity,
   layoutDensity = "expanded",
   layoutEngine = "clusters",
-  graphDimension = "2d",
 }: ParallaxGraphProps) {
-  const sharedProps = {
-    entities: concepts as unknown as GraphEntity[],
-    edges: relationships as unknown as GraphEdge[],
-    onSelectEntity: (entity: GraphEntity) =>
-      onSelectConcept(entity as unknown as ParallaxConcept | CorrespondenceEntity),
-    minSimilarity,
-    height: 700,
-    layoutDensity,
-    layoutEngine,
-  };
-
-  return graphDimension === "3d"
-    ? <ConstellationGraph3D {...sharedProps} />
-    : <ConstellationGraph {...sharedProps} />;
+  return (
+    <SigmaGraph
+      entities={concepts as unknown as GraphEntity[]}
+      edges={relationships as unknown as GraphEdge[]}
+      onSelectEntity={(entity) => onSelectConcept(entity as unknown as ParallaxConcept | CorrespondenceEntity)}
+      minSimilarity={minSimilarity}
+      height={600}
+      layoutDensity={layoutDensity}
+      layoutEngine={layoutEngine}
+    />
+  );
 }

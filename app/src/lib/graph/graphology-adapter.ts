@@ -13,40 +13,16 @@ const TRADITION_COLORS: Record<string, string> = {
   Other: "#6B7280",
 };
 
-// Per-category hues so each constellation cluster is visually distinct.
-// Anchors (issue/intention/power) stay warm gold — they're the center of gravity.
-const CORRESPONDENCE_CATEGORY_COLORS: Record<string, string> = {
-  issue_intention_power:  "#f5d084", // warm gold — central anchor
-  color:                  "#e879f9", // violet/fuchsia
-  zodiac_sign:            "#60a5fa", // sky blue
-  planetary_body:         "#f97316", // orange
-  tree:                   "#4ade80", // green
-  stone:                  "#a78bfa", // purple
-  herb:                   "#34d399", // emerald
-  element:                "#fb923c", // amber-orange
-  tarot:                  "#818cf8", // indigo
-  deity:                  "#fbbf24", // amber
-  number:                 "#f472b6", // pink
-  metal:                  "#94a3b8", // slate
-  animal:                 "#2dd4bf", // teal
-  direction:              "#facc15", // yellow
-  day:                    "#c084fc", // purple
-  season:                 "#86efac", // light green
-  chakra:                 "#f43f5e", // rose
-  angel:                  "#7dd3fc", // light blue
-  demon:                  "#fb7185", // red-pink
-  rune:                   "#e2e8f0", // near-white
-};
 const CORRESPONDENCE_ANCHOR_COLOR = "#f5d084";
 const CORRESPONDENCE_NODE_COLOR = "#c8882a";
 
 const DEFAULT_NODE_COLOR = "#22D3EE";
-const DEFAULT_EDGE_COLOR = "rgba(168, 120, 36, 0.12)";
+const DEFAULT_EDGE_COLOR = "rgba(168, 120, 36, 0.16)";
 const EDGE_TYPE_COLORS: Record<string, string> = {
-  corresponds_to: "rgba(232, 176, 72, 0.15)",
-  associated_with: "rgba(79, 185, 255, 0.12)",
-  refines: "rgba(158, 110, 255, 0.15)",
-  shares_correspondence_with: "rgba(45, 212, 191, 0.18)",
+  corresponds_to: "rgba(232, 176, 72, 0.18)",
+  associated_with: "rgba(79, 185, 255, 0.14)",
+  refines: "rgba(158, 110, 255, 0.18)",
+  shares_correspondence_with: "rgba(45, 212, 191, 0.22)",
 };
 
 export interface GraphEntity {
@@ -102,10 +78,8 @@ export function resolveNodeColor(entity: GraphEntity): string {
   // (issues / intentions / powers) are slightly brighter to hold the eye.
   if (isCorrespondenceEntity(entity)) {
     const slug = resolveCorrespondenceSlug(entity);
-    if (CORRESPONDENCE_CATEGORY_COLORS[slug]) return CORRESPONDENCE_CATEGORY_COLORS[slug];
-    // Fuzzy fallback for slugs that contain a known keyword
-    for (const [key, color] of Object.entries(CORRESPONDENCE_CATEGORY_COLORS)) {
-      if (slug.includes(key) || key.includes(slug)) return color;
+    if (slug === "issue_intention_power" || slug.includes("intention") || slug.includes("power")) {
+      return CORRESPONDENCE_ANCHOR_COLOR;
     }
     return CORRESPONDENCE_NODE_COLOR;
   }
@@ -132,12 +106,12 @@ function resolveEdgeColor(edge: GraphEdge) {
 function getCorrespondenceClusterLayout(density: GraphLayoutDensity) {
   switch (density) {
     case "compact":
-      return { radius: 1000, nodeSpread: 260, coreSpread: 190 };
+      return { radius: 400, nodeSpread: 104, coreSpread: 76 };
     case "expanded":
-      return { radius: 1600, nodeSpread: 390, coreSpread: 280 };
+      return { radius: 640, nodeSpread: 156, coreSpread: 112 };
     case "balanced":
     default:
-      return { radius: 1250, nodeSpread: 320, coreSpread: 230 };
+      return { radius: 500, nodeSpread: 128, coreSpread: 92 };
   }
 }
 
