@@ -103,47 +103,49 @@ function drawGlowNode(
     ctx.fill();
   }
 
-  // Core glow — twinkle gently varies opacity and size
-  const baseAlpha = isHovered ? 1 : isNeighbor ? 0.92 : node.isAnchor ? 0.92 : 0.70 + twinkle * 0.22;
-  const twinkleR  = r * (1 + twinkle * 0.18);
-  const core = ctx.createRadialGradient(x, y, 0, x, y, twinkleR * 2.2);
-  core.addColorStop(0,    `rgba(255,255,255,${baseAlpha})`);
-  core.addColorStop(0.25, `rgba(${cr},${cg},${cb},${baseAlpha})`);
-  core.addColorStop(0.65, `rgba(${cr},${cg},${cb},${baseAlpha * 0.35})`);
+  // Core glow — reduced brightness, twinkle varies gently
+  const baseAlpha = isHovered ? 0.90 : isNeighbor ? 0.80 : node.isAnchor ? 0.78 : 0.48 + twinkle * 0.18;
+  const twinkleR  = r * (1 + twinkle * 0.14);
+  const core = ctx.createRadialGradient(x, y, 0, x, y, twinkleR * 1.8);
+  core.addColorStop(0,    `rgba(255,255,255,${baseAlpha * 0.85})`);
+  core.addColorStop(0.20, `rgba(${cr},${cg},${cb},${baseAlpha})`);
+  core.addColorStop(0.55, `rgba(${cr},${cg},${cb},${baseAlpha * 0.28})`);
   core.addColorStop(1,    `rgba(${cr},${cg},${cb},0)`);
   ctx.beginPath();
-  ctx.arc(x, y, twinkleR * 2.2, 0, Math.PI * 2);
+  ctx.arc(x, y, twinkleR * 1.8, 0, Math.PI * 2);
   ctx.fillStyle = core;
   ctx.fill();
 
-  // Bright pinpoint centre
+  // Pinpoint centre
   ctx.beginPath();
-  ctx.arc(x, y, r * 0.5, 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(255,255,255,${isHovered ? 1 : 0.92})`;
+  ctx.arc(x, y, r * 0.45, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255,255,255,${isHovered ? 1 : 0.85})`;
   ctx.fill();
 
   // Labels — anchor nodes always labeled; others reveal at screenRadius >= 8
   const screenRadius = r * globalScale;
   const showLabel = isHovered || isNeighbor || node.isAnchor || (!hasActive && screenRadius >= 8);
   if (showLabel && node.label) {
-    const px = isHovered ? 13 : node.isAnchor ? 11 : 10;
+    const px       = isHovered ? 13 : node.isAnchor ? 11 : 10;
     const fontSize = px / globalScale;
-    const labelY = y + r * 2 + 4 / globalScale;
+    // Keep labels a full glow-radius below the node so they don't sit inside the glow
+    const labelY   = y + twinkleR * 1.8 + 3 / globalScale;
 
     ctx.font = `${isHovered || node.isAnchor ? "600" : "400"} ${fontSize}px Cinzel, 'Palatino Linotype', serif`;
-    ctx.textAlign = "center";
+    ctx.textAlign    = "center";
     ctx.textBaseline = "top";
 
-    ctx.shadowColor = "rgba(0,0,0,0.95)";
-    ctx.shadowBlur = 10 / globalScale;
-    ctx.fillStyle = isHovered ? "#ffffff" : `rgba(${cr},${cg},${cb},0.95)`;
-    ctx.fillText(node.label, x, labelY);
+    // Solid dark background pill — prevents glow bleed from making text look blurry
+    const metrics  = ctx.measureText(node.label);
+    const tw       = metrics.width;
+    const th       = fontSize * 1.2;
+    const pad      = 2 / globalScale;
+    ctx.fillStyle  = "rgba(4,3,1,0.72)";
+    ctx.fillRect(x - tw / 2 - pad, labelY - pad, tw + pad * 2, th + pad * 2);
 
-    ctx.shadowColor = `rgba(${cr},${cg},${cb},0.55)`;
-    ctx.shadowBlur = 6 / globalScale;
-    ctx.fillText(node.label, x, labelY);
-
+    // Single crisp text pass — no shadow passes that bleed into each other
     ctx.shadowBlur = 0;
+    ctx.fillStyle  = isHovered ? "#ffffff" : `rgba(${cr},${cg},${cb},0.96)`;
     ctx.fillText(node.label, x, labelY);
   }
 

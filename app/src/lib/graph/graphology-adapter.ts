@@ -132,12 +132,12 @@ function resolveEdgeColor(edge: GraphEdge) {
 function getCorrespondenceClusterLayout(density: GraphLayoutDensity) {
   switch (density) {
     case "compact":
-      return { radius: 400, nodeSpread: 104, coreSpread: 76 };
+      return { radius: 1000, nodeSpread: 260, coreSpread: 190 };
     case "expanded":
-      return { radius: 640, nodeSpread: 156, coreSpread: 112 };
+      return { radius: 1600, nodeSpread: 390, coreSpread: 280 };
     case "balanced":
     default:
-      return { radius: 500, nodeSpread: 128, coreSpread: 92 };
+      return { radius: 1250, nodeSpread: 320, coreSpread: 230 };
   }
 }
 

@@ -60,13 +60,13 @@ function getGlowTexture(hex: string): THREE.CanvasTexture {
   const ctx = canvas.getContext("2d")!;
   const c = sz / 2;
 
-  // Tight star glow: bright pinpoint centre, fast falloff, faint outer halo
+  // Star glow: bright pinpoint, moderate falloff — not overblown
   const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
-  grad.addColorStop(0,    "rgba(255,255,255,1)");
-  grad.addColorStop(0.06, "rgba(255,255,255,0.95)");
-  grad.addColorStop(0.18, `rgba(${r},${g},${b},1)`);
-  grad.addColorStop(0.38, `rgba(${r},${g},${b},0.45)`);
-  grad.addColorStop(0.65, `rgba(${r},${g},${b},0.10)`);
+  grad.addColorStop(0,    "rgba(255,255,255,0.92)");
+  grad.addColorStop(0.08, "rgba(255,255,255,0.75)");
+  grad.addColorStop(0.22, `rgba(${r},${g},${b},0.72)`);
+  grad.addColorStop(0.45, `rgba(${r},${g},${b},0.22)`);
+  grad.addColorStop(0.72, `rgba(${r},${g},${b},0.05)`);
   grad.addColorStop(1,    "rgba(0,0,0,0)");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, sz, sz);
@@ -216,7 +216,7 @@ export default function ConstellationGraph3D({
     const mat = new THREE.SpriteMaterial({
       map:         getGlowTexture(node.color),
       transparent: true,
-      opacity:     node.isAnchor ? 1 : 0.82,
+      opacity:     node.isAnchor ? 0.78 : 0.60,
       blending:    THREE.AdditiveBlending,
       depthWrite:  false,
     });
@@ -253,7 +253,7 @@ export default function ConstellationGraph3D({
         const glow  = group.getObjectByName("glow") as THREE.Sprite | undefined;
         if (!glow) return;
         const t    = Math.sin(now * speed + phase);  // -1..1
-        const alpha = 0.55 + t * 0.28;               // 0.27..0.83
+        const alpha = 0.38 + t * 0.18;               // 0.20..0.56
         const scale = 1 + t * 0.18;
         (glow.material as THREE.SpriteMaterial).opacity = alpha;
         const node = nodes.find(n => n.id === id);
@@ -292,7 +292,7 @@ export default function ConstellationGraph3D({
         break;
       case "rest":
         glow.scale.set(baseScale, baseScale, 1);
-        (glow.material as THREE.SpriteMaterial).opacity = node.isAnchor ? 1 : 0.82;
+        (glow.material as THREE.SpriteMaterial).opacity = node.isAnchor ? 0.78 : 0.60;
         group.children.forEach(c => {
           if (c !== glow) ((c as THREE.Sprite).material as THREE.SpriteMaterial).opacity = 1;
         });
