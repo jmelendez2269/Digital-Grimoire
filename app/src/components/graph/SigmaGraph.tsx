@@ -577,6 +577,38 @@ export default function SigmaGraph({
     let selectedNode: string | null = null;
     let neighbors = new Set<string>();
 
+    // Magnet animation — tracks the node that triggered the pull so the
+    // out-animation can restore positions even after hoveredNode is cleared.
+    let magnetAnchorNode: string | null = null;
+    let magnetAnchorNeighbors = new Set<string>();
+    const magnetAnim = { progress: 0, direction: "in" as "in" | "out", rafId: 0 };
+
+    const tickMagnet = () => {
+      magnetAnim.progress =
+        magnetAnim.direction === "in"
+          ? Math.min(1, magnetAnim.progress + 0.052)
+          : Math.max(0, magnetAnim.progress - 0.052);
+      renderer.refresh({ skipIndexation: true });
+      if (magnetAnim.progress > 0 && magnetAnim.progress < 1) {
+        magnetAnim.rafId = requestAnimationFrame(tickMagnet);
+      } else {
+        magnetAnim.rafId = 0;
+        if (magnetAnim.progress === 0) {
+          magnetAnchorNode = null;
+          magnetAnchorNeighbors = new Set();
+          renderer.refresh({ skipIndexation: true });
+        }
+      }
+    };
+
+    const startMagnet = (direction: "in" | "out") => {
+      magnetAnim.direction = direction;
+      if (!magnetAnim.rafId) {
+        const should = direction === "in" ? magnetAnim.progress < 1 : magnetAnim.progress > 0;
+        if (should) magnetAnim.rafId = requestAnimationFrame(tickMagnet);
+      }
+    };
+
     const applyInteractionState = () => {
       const activeNode = hoveredNode ?? selectedNode;
       const activeNeighbors = activeNode ? new Set(graph.neighbors(activeNode)) : new Set<string>();
@@ -622,6 +654,27 @@ export default function SigmaGraph({
         };
 
         if (!activeNode) {
+          // Magnet out-animation: restore pulled positions and fade non-neighbors back in
+          if (magnetAnchorNode && magnetAnim.progress > 0) {
+            if (magnetAnchorNeighbors.has(candidateNode)) {
+              const ax = graph.getNodeAttribute(magnetAnchorNode, "x") as number | undefined ?? 0;
+              const ay = graph.getNodeAttribute(magnetAnchorNode, "y") as number | undefined ?? 0;
+              const nx = typeof data.x === "number" ? data.x : 0;
+              const ny = typeof data.y === "number" ? data.y : 0;
+              const pull = 0.42 * magnetAnim.progress;
+              return { ...reducedData, x: nx + (ax - nx) * pull, y: ny + (ay - ny) * pull };
+            }
+            if (candidateNode !== magnetAnchorNode) {
+              const alpha = BACKGROUND_NODE_DIM_ALPHA * (1 - magnetAnim.progress);
+              return {
+                ...reducedData,
+                hidden: magnetAnim.progress >= 0.92,
+                color: withAlpha(data.color, Math.max(0, alpha)),
+                label: "",
+                forceLabel: false,
+              };
+            }
+          }
           return reducedData;
         }
 
@@ -636,8 +689,16 @@ export default function SigmaGraph({
         }
 
         if (activeNeighbors.has(candidateNode)) {
+          // Pull neighbor toward the hovered node
+          const ax = graph.getNodeAttribute(activeNode, "x") as number | undefined ?? 0;
+          const ay = graph.getNodeAttribute(activeNode, "y") as number | undefined ?? 0;
+          const nx = typeof data.x === "number" ? data.x : 0;
+          const ny = typeof data.y === "number" ? data.y : 0;
+          const pull = 0.42 * magnetAnim.progress;
           return {
             ...reducedData,
+            x: nx + (ax - nx) * pull,
+            y: ny + (ay - ny) * pull,
             zIndex: 7,
             size: baseSize * (isDenseGraph ? 1.08 : 1.15),
             color: data.color ?? "#c8882a",
@@ -646,10 +707,13 @@ export default function SigmaGraph({
           };
         }
 
+        // Non-neighbor: fade to invisible as magnet engages
+        const bgAlpha = BACKGROUND_NODE_DIM_ALPHA * (1 - magnetAnim.progress);
         return {
           ...reducedData,
+          hidden: magnetAnim.progress >= 0.92,
           size: Math.max(reducedData.size * (isDenseGraph ? (isVeryDenseGraph ? 0.5 : 0.65) : 0.82), 1.8),
-          color: withAlpha(data.color, BACKGROUND_NODE_DIM_ALPHA),
+          color: withAlpha(data.color, Math.max(0, bgAlpha)),
           label: "",
           forceLabel: false,
         };
@@ -713,6 +777,8 @@ export default function SigmaGraph({
 
     renderer.on("enterNode", ({ node }) => {
       hoveredNode = node;
+      magnetAnchorNode = node;
+      magnetAnchorNeighbors = new Set(graph.neighbors(node));
       if (isVeryDenseGraph) setExploredGraphKey(layoutKey);
       neighbors = new Set(graph.neighbors(node));
       const attrs = graph.getNodeAttributes(node);
@@ -720,6 +786,7 @@ export default function SigmaGraph({
         name: typeof attrs.label === "string" ? attrs.label : "Unknown",
         connections: neighbors.size,
       });
+      startMagnet("in");
       applyInteractionState();
     });
 
@@ -727,6 +794,7 @@ export default function SigmaGraph({
       hoveredNode = null;
       neighbors.clear();
       setHoveredSummary(null);
+      startMagnet("out");
       applyInteractionState();
     });
 
@@ -749,6 +817,7 @@ export default function SigmaGraph({
 
     return () => {
       if (twinkleRafId) cancelAnimationFrame(twinkleRafId);
+      if (magnetAnim.rafId) cancelAnimationFrame(magnetAnim.rafId);
       resizeObserver.disconnect();
       camera.removeListener("updated", handleCameraUpdate);
       setViewportActions({
