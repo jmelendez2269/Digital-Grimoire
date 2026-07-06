@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { sanitizeCourseForPreview } from '@/lib/courses/access';
-import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+import { matchAndPersistCourseTexts } from '@/lib/courses/match-course-texts';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,8 +126,9 @@ export async function GET(request: NextRequest) {
                 const existingCourseTexts = Array.isArray(course.course_texts) ? course.course_texts : [];
                 if (existingCourseTexts.length > 0) return course;
 
-                const fallbackCourseTexts = await matchCourseTextsFromContent(
+                const fallbackCourseTexts = await matchAndPersistCourseTexts(
                     serviceSupabase,
+                    String(course.id),
                     (course.content as Record<string, unknown> | null) ?? null
                 );
 

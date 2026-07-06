@@ -234,25 +234,25 @@ const workflowSteps = [
 
 function StepWelcome() {
   return (
-    <div className="flex flex-col items-center text-center gap-8 py-4 px-2">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-1">
-          <BookOpen className="w-8 h-8 text-amber-400" />
+    <div className="flex flex-col items-center text-center gap-4 px-2">
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-1">
+          <BookOpen className="w-6 h-6 text-amber-400" />
         </div>
         <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70">Prismarium</p>
-        <h2 className="text-4xl sm:text-5xl font-serif text-amber-100 leading-tight max-w-lg">
+        <h2 className="text-2xl sm:text-3xl font-serif text-amber-100 leading-tight max-w-lg">
           A curated body of wisdom, a method for understanding it, and tools for carrying that method into your own work.
         </h2>
-        <p className="text-sm font-mono text-zinc-500 tracking-widest mt-1">
+        <p className="text-xs font-mono text-zinc-500 tracking-widest">
           Prismatic Learning · Seven Lenses · Synthesis as Discipline
         </p>
       </div>
 
-      <p className="text-base text-zinc-300 max-w-xl leading-relaxed">
+      <p className="text-sm text-zinc-300 max-w-xl leading-relaxed">
         You don't have to choose between rigorous inquiry and genuine mystery. Prismarium is built for people who want both — a place to read deeply, think comparatively, and build your own understanding over time.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl text-left">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl text-left">
         {[
           {
             label: "What this is not",
@@ -273,11 +273,11 @@ function StepWelcome() {
             labelColor: "text-cyan-400",
           },
         ].map((col) => (
-          <div key={col.label} className={`rounded-lg border p-4 ${col.color} bg-black/20`}>
-            <p className={`text-xs font-mono uppercase tracking-widest mb-3 ${col.labelColor}`}>{col.label}</p>
-            <ul className="space-y-2">
+          <div key={col.label} className={`rounded-lg border p-3 ${col.color} bg-black/20`}>
+            <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${col.labelColor}`}>{col.label}</p>
+            <ul className="space-y-1">
               {col.items.map((item) => (
-                <li key={item} className="text-base flex gap-2">
+                <li key={item} className="text-sm flex gap-2">
                   <span className="opacity-50 shrink-0">-</span>
                   <span>{item}</span>
                 </li>
@@ -343,7 +343,7 @@ function StepFeatureTour() {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 min-h-[300px]">
+      <div className="flex flex-col lg:flex-row gap-4 min-h-[260px]">
         <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible lg:w-48 shrink-0 pb-2 lg:pb-0">
           {features.map((feature) => {
             const { Icon } = feature;
@@ -569,7 +569,7 @@ export default function FeatureOnboardingModal({ onClose }: FeatureOnboardingMod
 
     const hasSeen = localStorage.getItem(STORAGE_KEY);
     if (!hasSeen) {
-      timer = window.setTimeout(() => setIsOpen(true), 800);
+      timer = window.setTimeout(() => setIsOpen(true), 2500);
     }
 
     return () => {
@@ -600,7 +600,7 @@ export default function FeatureOnboardingModal({ onClose }: FeatureOnboardingMod
   const modalContent = (
     <div className="fixed inset-0 z-[100000] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="bg-zinc-950/98 border border-amber-500/20 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col relative overflow-hidden animate-in fade-in zoom-in-95 duration-300"
+        className="bg-zinc-950/98 border border-amber-500/20 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col relative overflow-hidden animate-in fade-in zoom-in-95 duration-300"
         role="dialog"
         aria-label="Welcome to Prismarium"
       >
@@ -635,7 +635,7 @@ export default function FeatureOnboardingModal({ onClose }: FeatureOnboardingMod
           </button>
         </div>
 
-        <div className="relative flex-1 overflow-y-auto px-6 sm:px-8 py-6">
+        <div className="relative flex-1 overflow-y-auto px-6 sm:px-8 py-4">
           {step === 1 && <StepWelcome />}
           {step === 2 && <StepPhilosophy />}
           {step === 3 && <StepFeatureTour />}

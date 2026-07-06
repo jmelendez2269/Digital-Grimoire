@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, Orbit } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronUp, Orbit } from "lucide-react";
 import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -37,6 +37,7 @@ type CorrespondenceRelationship = {
 type CorrespondenceRelationshipLayer = "corresponds_to" | "associated_with" | "shares_correspondence_with" | "refines";
 type CorrespondenceRelationshipFilters = Record<CorrespondenceRelationshipLayer, boolean>;
 type CorrespondenceLayoutDensity = "compact" | "balanced" | "expanded";
+type CorrespondenceLayoutEngine = "clusters" | "organic";
 
 type FocusedCorrespondenceGraph = {
   entities: CorrespondenceEntity[];
@@ -296,6 +297,9 @@ function GraphPageContent() {
     useState<CorrespondenceRelationshipFilters>(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
   const [correspondenceLayoutDensity, setCorrespondenceLayoutDensity] =
     useState<CorrespondenceLayoutDensity>("expanded");
+  const [correspondenceLayoutEngine, setCorrespondenceLayoutEngine] =
+    useState<CorrespondenceLayoutEngine>("clusters");
+  const [controlsCollapsed, setControlsCollapsed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -548,6 +552,7 @@ function GraphPageContent() {
     setCorrespondenceGraphScope("focused");
     setCorrespondenceRelationshipFilters(DEFAULT_CORRESPONDENCE_RELATIONSHIP_FILTERS);
     setCorrespondenceLayoutDensity("expanded");
+    setCorrespondenceLayoutEngine("clusters");
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     router.replace(`/graph?${params.toString()}`, { scroll: false });
@@ -566,48 +571,30 @@ function GraphPageContent() {
   };
 
   const isParallaxGraphView = graphType === "parallax" && viewMode === "graph";
-  const correspondenceRelationshipCounts = useMemo(() => {
-    if (graphType !== "correspondences") {
-      return {
-        corresponds_to: 0,
-        associated_with: 0,
-        shares_correspondence_with: 0,
-        refines: 0,
-      };
-    }
-
-    return (relationships as CorrespondenceRelationship[]).reduce(
-      (counts, relationship) => {
-        counts[getCorrespondenceRelationshipType(relationship)] += 1;
-        return counts;
-      },
-      {
-        corresponds_to: 0,
-        associated_with: 0,
-        shares_correspondence_with: 0,
-        refines: 0,
-      } as Record<CorrespondenceRelationshipLayer, number>,
-    );
-  }, [graphType, relationships]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-900/30">
       <Header />
 
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <KnowledgeGraphHeader
-          title={graphType === "parallax" ? "The Parallax Graph" : "Correspondences"}
-          subtitle={graphType === "parallax"
-            ? "Visualizing the convergence of magical traditions and modern theory."
-            : correspondenceGraphScope === "focused"
-              ? "Focused constellations drawn from the full correspondence archive."
-              : "The full correspondence archive, organized as a living network."}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          entityCount={displayedEntityCount}
-          connectionCount={displayedRelationshipCount}
-          loading={loading}
-        />
+        {/* Collapsible controls panel */}
+        <div
+          className={`grid transition-all duration-500 ease-in-out ${controlsCollapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"}`}
+        >
+          <div className="overflow-hidden">
+            <KnowledgeGraphHeader
+              title={graphType === "parallax" ? "The Parallax Graph" : "Correspondences"}
+              subtitle={graphType === "parallax"
+                ? "Visualizing the convergence of magical traditions and modern theory."
+                : correspondenceGraphScope === "focused"
+                  ? "Focused constellations drawn from the full correspondence archive."
+                  : "The full correspondence archive, organized as a living network."}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              entityCount={displayedEntityCount}
+              connectionCount={displayedRelationshipCount}
+              loading={loading}
+            />
 
         <div className="mb-8 flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -695,24 +682,32 @@ function GraphPageContent() {
                 graphScope={correspondenceGraphScope}
                 onGraphScopeChange={setCorrespondenceGraphScope}
                 showGraphScopeControls={viewMode === "graph"}
-                relationshipFilters={correspondenceRelationshipFilters}
-                onRelationshipFilterChange={(layer, value) =>
-                  setCorrespondenceRelationshipFilters((current) => ({
-                    ...current,
-                    [layer]: value,
-                  }))
-                }
-                relationshipCounts={correspondenceRelationshipCounts}
-                showRelationshipFilters={viewMode === "graph"}
                 layoutDensity={correspondenceLayoutDensity}
                 onLayoutDensityChange={setCorrespondenceLayoutDensity}
                 showLayoutDensityControls={viewMode === "graph"}
+                layoutEngine={correspondenceLayoutEngine}
+                onLayoutEngineChange={setCorrespondenceLayoutEngine}
+                showLayoutEngineControls={viewMode === "graph"}
               />
             </div>
           )}
         </div>
+          </div>{/* end overflow-hidden */}
+        </div>{/* end collapsible grid */}
 
-        <div className="min-h-[600px] animate-in fade-in duration-700">
+        {/* Toggle strip */}
+        <div className="flex justify-center mb-3">
+          <button
+            type="button"
+            onClick={() => setControlsCollapsed((c) => !c)}
+            className="flex items-center gap-1.5 px-4 py-1 rounded-full bg-black/50 border border-amber-900/20 text-[10px] uppercase tracking-[0.22em] text-amber-100/35 hover:text-amber-100/65 hover:border-amber-900/40 transition-all duration-200 backdrop-blur-sm"
+          >
+            {controlsCollapsed ? <ChevronDown size={11} /> : <ChevronUp size={11} />}
+            {controlsCollapsed ? "Show controls" : "Hide controls"}
+          </button>
+        </div>
+
+        <div className={`animate-in fade-in duration-700 ${controlsCollapsed ? "" : "min-h-[600px]"}`}>
           {loading ? (
             <div className="flex items-center justify-center p-20">
               <div className="flex flex-col items-center gap-4">
@@ -796,13 +791,16 @@ function GraphPageContent() {
           ) : (
             <div className={`grid gap-6 ${isParallaxGraphView ? "grid-cols-1 lg:grid-cols-4" : "grid-cols-1"}`}>
               <div className={isParallaxGraphView ? "lg:col-span-3" : "col-span-1"}>
-                <div className="h-[700px] bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl">
+                <div
+                  className={`bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl transition-all duration-500 ${controlsCollapsed ? "h-[calc(100vh-120px)]" : "h-[700px]"}`}
+                >
                   <GraphVisualization
                     concepts={graphEntities as (ParallaxConcept | CorrespondenceEntity)[]}
                     relationships={graphRelationships}
                     onSelectConcept={(entity: ParallaxConcept | CorrespondenceEntity) => handleSelectEntity(entity)}
                     minSimilarity={minSimilarity}
                     layoutDensity={correspondenceLayoutDensity}
+                    layoutEngine={correspondenceLayoutEngine}
                   />
                 </div>
                 {graphType === "correspondences" &&

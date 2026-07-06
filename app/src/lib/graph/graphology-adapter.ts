@@ -115,6 +115,14 @@ function getCorrespondenceClusterLayout(density: GraphLayoutDensity) {
   }
 }
 
+// Deterministic pseudo-random in [-0.5, 0.5], stable per node index so the
+// galaxy scatter looks organic without changing between renders (keeps the
+// cached layout consistent).
+function stableJitter(seed: number, salt: number) {
+  const value = Math.sin((seed + 1) * 12.9898 + salt * 78.233) * 43758.5453;
+  return (value - Math.floor(value)) - 0.5;
+}
+
 function positionCorrespondenceClusters(graph: Graph, density: GraphLayoutDensity) {
   const layout = getCorrespondenceClusterLayout(density);
   const groupedNodeIds = new Map<string, string[]>();
@@ -171,9 +179,13 @@ function positionCorrespondenceClusters(graph: Graph, density: GraphLayoutDensit
 
         const angle = index * 2.399963229728653;
         const radius = Math.sqrt(index) * spread;
+        // Scatter each node off its exact sunflower slot so the cluster reads
+        // as a loose galaxy rather than a mechanical fan. Jitter grows with the
+        // ring so dense cores stay tight and outer arms breathe.
+        const jitterScale = spread * (0.22 + Math.min(index, 40) * 0.004);
         graph.mergeNodeAttributes(nodeId, {
-          x: center.x + Math.cos(angle) * radius,
-          y: center.y + Math.sin(angle) * radius,
+          x: center.x + Math.cos(angle) * radius + stableJitter(index, 1) * jitterScale,
+          y: center.y + Math.sin(angle) * radius + stableJitter(index, 2) * jitterScale,
           clusterKey: category,
           clusterCenterX: center.x,
           clusterCenterY: center.y,

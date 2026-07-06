@@ -6,6 +6,8 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 import type Graph from "graphology";
 import { buildGraphologyGraph, GraphEntity, GraphEdge, GraphLayoutDensity } from "@/lib/graph/graphology-adapter";
 
+export type GraphLayoutEngine = "clusters" | "organic";
+
 interface SigmaGraphProps {
   entities: GraphEntity[];
   edges: GraphEdge[];
@@ -13,6 +15,7 @@ interface SigmaGraphProps {
   minSimilarity?: number;
   height?: number;
   layoutDensity?: GraphLayoutDensity;
+  layoutEngine?: GraphLayoutEngine;
 }
 
 type LayoutSnapshot = Record<string, { x: number; y: number }>;
@@ -28,7 +31,7 @@ type GraphSummary = {
 };
 
 const LAYOUT_STORAGE_PREFIX = "digital-grimoire:sigma-layout:";
-const LAYOUT_VERSION = "category-clusters-v3-expanded-default";
+const LAYOUT_VERSION = "category-clusters-v4-engine-split";
 const MIN_LAYOUT_SPAN_BY_DENSITY: Record<GraphLayoutDensity, number> = {
   compact: 900,
   balanced: 1200,
@@ -240,6 +243,7 @@ function buildLayoutKey(
   edges: GraphEdge[],
   minSimilarity: number,
   layoutDensity: GraphLayoutDensity,
+  layoutEngine: GraphLayoutEngine,
 ) {
   const nodePart = entities
     .map((entity) => entity.id)
@@ -256,7 +260,7 @@ function buildLayoutKey(
     .sort()
     .join("|");
 
-  return `${LAYOUT_VERSION}::${layoutDensity}::${minSimilarity.toFixed(3)}::${nodePart}::${edgePart}`;
+  return `${LAYOUT_VERSION}::${layoutEngine}::${layoutDensity}::${minSimilarity.toFixed(3)}::${nodePart}::${edgePart}`;
 }
 
 function drawNodeLabel(
@@ -344,6 +348,7 @@ export default function SigmaGraph({
   minSimilarity = 0,
   height = 700,
   layoutDensity = "expanded",
+  layoutEngine = "clusters",
 }: SigmaGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
@@ -444,8 +449,8 @@ export default function SigmaGraph({
   const denseLabelRevealRatio = isVeryDenseGraph ? VERY_DENSE_LABEL_REVEAL_RATIO : DENSE_LABEL_REVEAL_RATIO;
   const denseOverviewRatio = isVeryDenseGraph ? VERY_DENSE_OVERVIEW_RATIO : DENSE_OVERVIEW_RATIO;
   const graphInteractionKey = useMemo(
-    () => buildLayoutKey(entities, edges, minSimilarity, layoutDensity),
-    [edges, entities, layoutDensity, minSimilarity],
+    () => buildLayoutKey(entities, edges, minSimilarity, layoutDensity, layoutEngine),
+    [edges, entities, layoutDensity, layoutEngine, minSimilarity],
   );
   const minLayoutSpan = MIN_LAYOUT_SPAN_BY_DENSITY[layoutDensity];
 
@@ -458,21 +463,35 @@ export default function SigmaGraph({
     const reusedCachedLayout = applyLayoutSnapshot(graph, cachedLayout);
 
     if (graph.order > 0 && !reusedCachedLayout) {
-      const correspondenceLayoutSettings =
-        layoutDensity === "expanded"
-          ? { gravity: 0.09, scalingRatio: 18, iterations: 260 }
-          : layoutDensity === "compact"
-            ? { gravity: 0.18, scalingRatio: 9.5, iterations: 220 }
-            : { gravity: 0.12, scalingRatio: 13.5, iterations: 240 };
-      forceAtlas2.assign(graph, {
-        iterations: correspondenceLayoutSettings.iterations,
-        settings: {
-          gravity: graphSummary?.isCorrespondenceGraph ? correspondenceLayoutSettings.gravity : 0.08,
-          scalingRatio: graphSummary?.isCorrespondenceGraph ? correspondenceLayoutSettings.scalingRatio : 8,
-          strongGravityMode: false,
-          barnesHutOptimize: graph.order > 300,
-        },
-      });
+      // The correspondence archive arrives from the adapter already laid out as
+      // radial category clusters. "clusters" keeps that deterministic galaxy as
+      // is; "organic" relaxes it with a *gentle* ForceAtlas2 pass that nudges
+      // nodes apart without collapsing the clusters into one knot. Non-
+      // correspondence graphs (Parallax) always use the standard force layout.
+      const useDeterministicClusters =
+        Boolean(graphSummary?.isCorrespondenceGraph) && layoutEngine === "clusters";
+
+      if (!useDeterministicClusters) {
+        const organicSettings =
+          layoutDensity === "expanded"
+            ? { gravity: 0.015, scalingRatio: 70, iterations: 90 }
+            : layoutDensity === "compact"
+              ? { gravity: 0.04, scalingRatio: 38, iterations: 90 }
+              : { gravity: 0.025, scalingRatio: 52, iterations: 90 };
+        forceAtlas2.assign(graph, {
+          iterations: graphSummary?.isCorrespondenceGraph ? organicSettings.iterations : 260,
+          settings: {
+            gravity: graphSummary?.isCorrespondenceGraph ? organicSettings.gravity : 0.08,
+            scalingRatio: graphSummary?.isCorrespondenceGraph ? organicSettings.scalingRatio : 8,
+            // Spread leaf nodes out from their hubs instead of stacking them,
+            // which is what produced the central knot before.
+            outboundAttractionDistribution: graphSummary?.isCorrespondenceGraph,
+            strongGravityMode: false,
+            barnesHutOptimize: graph.order > 300,
+          },
+        });
+      }
+
       normalizeGraphLayout(graph, minLayoutSpan);
       writeStoredLayout(layoutKey, snapshotLayout(graph));
     }
@@ -558,6 +577,38 @@ export default function SigmaGraph({
     let selectedNode: string | null = null;
     let neighbors = new Set<string>();
 
+    // Magnet animation — tracks the node that triggered the pull so the
+    // out-animation can restore positions even after hoveredNode is cleared.
+    let magnetAnchorNode: string | null = null;
+    let magnetAnchorNeighbors = new Set<string>();
+    const magnetAnim = { progress: 0, direction: "in" as "in" | "out", rafId: 0 };
+
+    const tickMagnet = () => {
+      magnetAnim.progress =
+        magnetAnim.direction === "in"
+          ? Math.min(1, magnetAnim.progress + 0.052)
+          : Math.max(0, magnetAnim.progress - 0.052);
+      renderer.refresh({ skipIndexation: true });
+      if (magnetAnim.progress > 0 && magnetAnim.progress < 1) {
+        magnetAnim.rafId = requestAnimationFrame(tickMagnet);
+      } else {
+        magnetAnim.rafId = 0;
+        if (magnetAnim.progress === 0) {
+          magnetAnchorNode = null;
+          magnetAnchorNeighbors = new Set();
+          renderer.refresh({ skipIndexation: true });
+        }
+      }
+    };
+
+    const startMagnet = (direction: "in" | "out") => {
+      magnetAnim.direction = direction;
+      if (!magnetAnim.rafId) {
+        const should = direction === "in" ? magnetAnim.progress < 1 : magnetAnim.progress > 0;
+        if (should) magnetAnim.rafId = requestAnimationFrame(tickMagnet);
+      }
+    };
+
     const applyInteractionState = () => {
       const activeNode = hoveredNode ?? selectedNode;
       const activeNeighbors = activeNode ? new Set(graph.neighbors(activeNode)) : new Set<string>();
@@ -603,6 +654,27 @@ export default function SigmaGraph({
         };
 
         if (!activeNode) {
+          // Magnet out-animation: restore pulled positions and fade non-neighbors back in
+          if (magnetAnchorNode && magnetAnim.progress > 0) {
+            if (magnetAnchorNeighbors.has(candidateNode)) {
+              const ax = graph.getNodeAttribute(magnetAnchorNode, "x") as number | undefined ?? 0;
+              const ay = graph.getNodeAttribute(magnetAnchorNode, "y") as number | undefined ?? 0;
+              const nx = typeof data.x === "number" ? data.x : 0;
+              const ny = typeof data.y === "number" ? data.y : 0;
+              const pull = 0.42 * magnetAnim.progress;
+              return { ...reducedData, x: nx + (ax - nx) * pull, y: ny + (ay - ny) * pull };
+            }
+            if (candidateNode !== magnetAnchorNode) {
+              const alpha = BACKGROUND_NODE_DIM_ALPHA * (1 - magnetAnim.progress);
+              return {
+                ...reducedData,
+                hidden: magnetAnim.progress >= 0.92,
+                color: withAlpha(data.color, Math.max(0, alpha)),
+                label: "",
+                forceLabel: false,
+              };
+            }
+          }
           return reducedData;
         }
 
@@ -617,8 +689,16 @@ export default function SigmaGraph({
         }
 
         if (activeNeighbors.has(candidateNode)) {
+          // Pull neighbor toward the hovered node
+          const ax = graph.getNodeAttribute(activeNode, "x") as number | undefined ?? 0;
+          const ay = graph.getNodeAttribute(activeNode, "y") as number | undefined ?? 0;
+          const nx = typeof data.x === "number" ? data.x : 0;
+          const ny = typeof data.y === "number" ? data.y : 0;
+          const pull = 0.42 * magnetAnim.progress;
           return {
             ...reducedData,
+            x: nx + (ax - nx) * pull,
+            y: ny + (ay - ny) * pull,
             zIndex: 7,
             size: baseSize * (isDenseGraph ? 1.08 : 1.15),
             color: data.color ?? "#c8882a",
@@ -627,10 +707,13 @@ export default function SigmaGraph({
           };
         }
 
+        // Non-neighbor: fade to invisible as magnet engages
+        const bgAlpha = BACKGROUND_NODE_DIM_ALPHA * (1 - magnetAnim.progress);
         return {
           ...reducedData,
+          hidden: magnetAnim.progress >= 0.92,
           size: Math.max(reducedData.size * (isDenseGraph ? (isVeryDenseGraph ? 0.5 : 0.65) : 0.82), 1.8),
-          color: withAlpha(data.color, BACKGROUND_NODE_DIM_ALPHA),
+          color: withAlpha(data.color, Math.max(0, bgAlpha)),
           label: "",
           forceLabel: false,
         };
@@ -694,6 +777,8 @@ export default function SigmaGraph({
 
     renderer.on("enterNode", ({ node }) => {
       hoveredNode = node;
+      magnetAnchorNode = node;
+      magnetAnchorNeighbors = new Set(graph.neighbors(node));
       if (isVeryDenseGraph) setExploredGraphKey(layoutKey);
       neighbors = new Set(graph.neighbors(node));
       const attrs = graph.getNodeAttributes(node);
@@ -701,6 +786,7 @@ export default function SigmaGraph({
         name: typeof attrs.label === "string" ? attrs.label : "Unknown",
         connections: neighbors.size,
       });
+      startMagnet("in");
       applyInteractionState();
     });
 
@@ -708,6 +794,7 @@ export default function SigmaGraph({
       hoveredNode = null;
       neighbors.clear();
       setHoveredSummary(null);
+      startMagnet("out");
       applyInteractionState();
     });
 
@@ -730,6 +817,7 @@ export default function SigmaGraph({
 
     return () => {
       if (twinkleRafId) cancelAnimationFrame(twinkleRafId);
+      if (magnetAnim.rafId) cancelAnimationFrame(magnetAnim.rafId);
       resizeObserver.disconnect();
       camera.removeListener("updated", handleCameraUpdate);
       setViewportActions({
@@ -748,6 +836,7 @@ export default function SigmaGraph({
     graphSummary?.isCorrespondenceGraph,
     graphInteractionKey,
     layoutDensity,
+    layoutEngine,
     isDenseGraph,
     isVeryDenseGraph,
     labelSizeThreshold,

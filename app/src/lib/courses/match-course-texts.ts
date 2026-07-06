@@ -1,3 +1,5 @@
+import type { createServiceClient } from '@/lib/supabase/service';
+
 interface CourseReadingLike {
   title?: string;
   author?: string;
@@ -334,4 +336,39 @@ export async function matchCourseTextsFromContent(
     is_required: true,
     texts: text,
   }));
+}
+
+/**
+ * Like matchCourseTextsFromContent, but writes the result to course_texts so the
+ * expensive fuzzy match only ever runs once per course instead of on every request.
+ * Re-checks for rows before inserting to avoid duplicates from concurrent requests.
+ */
+export async function matchAndPersistCourseTexts(
+  client: ReturnType<typeof createServiceClient>,
+  courseId: string,
+  content: CourseContentLike | null | undefined
+): Promise<MatchedCourseText[]> {
+  const matches = await matchCourseTextsFromContent(client, content);
+  if (matches.length === 0) return [];
+
+  const { data: existing } = await client
+    .from('course_texts')
+    .select('id, text_id, is_required, texts(id, title, author, cover_image_url)')
+    .eq('course_id', courseId);
+
+  if (existing && existing.length > 0) {
+    return existing as unknown as MatchedCourseText[];
+  }
+
+  const { data: inserted, error } = await client
+    .from('course_texts')
+    .insert(matches.map((m) => ({ course_id: courseId, text_id: m.text_id, is_required: m.is_required })))
+    .select('id, text_id, is_required, texts(id, title, author, cover_image_url)');
+
+  if (error || !inserted) {
+    console.warn('[matchAndPersistCourseTexts] Failed to persist matched course texts:', error);
+    return matches;
+  }
+
+  return inserted as unknown as MatchedCourseText[];
 }

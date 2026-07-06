@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { sanitizeCourseForPreview } from '@/lib/courses/access';
-import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+import { matchAndPersistCourseTexts } from '@/lib/courses/match-course-texts';
 
 export async function GET(request: NextRequest) {
     try {
@@ -72,8 +72,9 @@ export async function GET(request: NextRequest) {
 
                 return {
                     ...course,
-                    course_texts: await matchCourseTextsFromContent(
+                    course_texts: await matchAndPersistCourseTexts(
                         serviceSupabase,
+                        String(course.id),
                         (course.content as Record<string, unknown> | null) ?? null
                     ),
                 };

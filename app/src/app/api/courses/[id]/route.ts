@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { getCourseAccessTier, hasPaidCourseAccess, sanitizeCourseForPreview } from '@/lib/courses/access';
-import { attachTextIdsToReadings, matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+import { attachTextIdsToReadings, matchAndPersistCourseTexts } from '@/lib/courses/match-course-texts';
 import { attachReadingDigests, type ReadingBlurbRow } from '@/lib/courses/attach-reading-digests';
 
 export const dynamic = 'force-dynamic';
@@ -100,8 +100,9 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   const courseTexts = Array.isArray(course.course_texts) && course.course_texts.length > 0
     ? course.course_texts
-    : await matchCourseTextsFromContent(
+    : await matchAndPersistCourseTexts(
         serviceSupabase,
+        String(course.id),
         (course.content as Record<string, unknown> | null) ?? null
       );
 
