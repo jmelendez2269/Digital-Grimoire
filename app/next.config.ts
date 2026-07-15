@@ -141,6 +141,13 @@ const nextConfig: NextConfig = {
         destination: '/courses/c16-reading-the-colonizers-record/:path*',
         permanent: true,
       },
+      // Live chat is dormant for now (no moderation tooling yet) -- code and
+      // DB tables are untouched, just unlinked. Not permanent: may return.
+      {
+        source: '/community/chat',
+        destination: '/community/forum',
+        permanent: false,
+      },
     ];
   },
   // Compress output
@@ -155,8 +162,8 @@ const nextConfig: NextConfig = {
     // Allow necessary services: Supabase, Cloudflare R2, Azure, OpenAI, Vercel Analytics, Sentry
     // In development, allow localhost connections for Sentry tunnel
     const connectSrc = isProduction
-      ? "'self' https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com https://cloudflareinsights.com https://static.cloudflareinsights.com"
-      : "'self' http://localhost:* http://127.0.0.1:* https://*.supabase.co https://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com https://cloudflareinsights.com https://static.cloudflareinsights.com";
+      ? "'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com https://cloudflareinsights.com https://static.cloudflareinsights.com"
+      : "'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://*.cloudflare.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://*.cognitiveservices.azure.com https://api.openai.com https://*.vercel-insights.com https://*.sentry.io https://vitals.vercel-insights.com https://cloudflareinsights.com https://static.cloudflareinsights.com";
 
     const cspDirectives = [
       "default-src 'self'",
