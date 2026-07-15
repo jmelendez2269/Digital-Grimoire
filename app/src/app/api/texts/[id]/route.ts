@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getR2Client } from '@/lib/storage/r2-client';
+import { isFreeLibraryText } from '@/lib/library/access';
 
 // Initialize R2 client (using S3-compatible API)
-const r2Client = new S3Client({
-  region: 'auto',
-  endpoint: process.env.R2_ENDPOINT,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
-  },
-});
+const r2Client = getR2Client();
 
 export async function DELETE(
   request: Request,
@@ -160,19 +155,24 @@ export async function GET(
       );
     }
     
-    // Check authentication
+    // Check authentication — texts belonging to a free course (the taster/
+    // pre-course) are readable without signing in.
     let user;
     try {
       const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
       if (authError || !authUser) {
-        console.log('[API] Authentication failed:', authError?.message);
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        );
+        const isFree = await isFreeLibraryText(supabase, id);
+        if (!isFree) {
+          console.log('[API] Authentication failed:', authError?.message);
+          return NextResponse.json(
+            { error: 'Unauthorized' },
+            { status: 401 }
+          );
+        }
+      } else {
+        user = authUser;
+        console.log('[API] User authenticated:', user.id);
       }
-      user = authUser;
-      console.log('[API] User authenticated:', user.id);
     } catch (authError) {
       console.error('[API] Error during authentication:', authError);
       return NextResponse.json(

@@ -4,6 +4,7 @@ import {
   getLegacySupabaseCookiePrefixes,
   getSupabaseCookieOptions,
 } from "./auth-config";
+import { isFreeLibraryText } from "@/lib/library/access";
 
 function getErrorCauseMessage(error: unknown) {
   if (
@@ -60,6 +61,18 @@ export async function updateSession(request: NextRequest) {
   // Check both exact match and startsWith to handle query parameters
   if (request.nextUrl.pathname === '/monitoring' || request.nextUrl.pathname.startsWith('/monitoring')) {
     return NextResponse.next();
+  }
+
+  // Allow the video-sync cron to authenticate via CRON_SECRET — Vercel Cron
+  // requests carry no browser session/cookies, so the normal login-cookie
+  // check below would otherwise always 401 it. The route itself still
+  // re-validates this same header (defense in depth).
+  if (request.nextUrl.pathname === '/api/admin/videos/sync') {
+    const cronSecret = process.env.CRON_SECRET;
+    const authHeader = request.headers.get('authorization');
+    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+      return NextResponse.next();
+    }
   }
 
   // Allow access to maintenance page itself and static assets
@@ -196,7 +209,7 @@ export async function updateSession(request: NextRequest) {
     // Continue without user - will redirect to login if needed
   }
 
-  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/graph", "/knowledge-graph", "/workings", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/graph", "/api/stripe/webhook"];
+  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/graph", "/knowledge-graph", "/workings", "/blog", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/graph", "/api/stripe/webhook", "/api/blog"];
   const devOnlyPublicRoutes =
     process.env.NODE_ENV === "development"
       ? []
@@ -210,8 +223,27 @@ export async function updateSession(request: NextRequest) {
   // Check if this is an API route
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
 
+  // Individual library texts that belong to a free course (the taster/pre-course)
+  // don't require sign-in, unlike the rest of the gated library.
+  const libraryTextMatch = /^\/library\/([^/]+)\/?$/.exec(request.nextUrl.pathname);
+  const isLibraryTextCandidate =
+    libraryTextMatch !== null && !["media", "my-library"].includes(libraryTextMatch[1]);
+
+  const apiTextMatch = /^\/api\/texts\/([^/]+)\/?$/.exec(request.nextUrl.pathname);
+  const isApiTextCandidate = apiTextMatch !== null && apiTextMatch[1] !== "by-source-urls";
+
+  let isFreeLibraryTextRoute = false;
+  if (!user && (isLibraryTextCandidate || isApiTextCandidate)) {
+    const textId = (libraryTextMatch ?? apiTextMatch)![1];
+    try {
+      isFreeLibraryTextRoute = await isFreeLibraryText(supabase, textId);
+    } catch (error) {
+      console.warn("[Middleware] Failed to check free library text status:", error);
+    }
+  }
+
   // Protect routes that require authentication
-  if (!user && !isPublicRoute) {
+  if (!user && !isPublicRoute && !isFreeLibraryTextRoute) {
     // For API routes, return JSON error instead of redirecting
     if (isApiRoute) {
       return NextResponse.json(
