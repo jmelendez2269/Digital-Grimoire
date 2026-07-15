@@ -32,6 +32,7 @@ type DropdownItem = {
   path: string;
   description?: string;
   comingSoon?: boolean;
+  external?: boolean;
 };
 
 type NavItem = {
@@ -54,7 +55,6 @@ const primaryNav: NavItem[] = [
       { name: "Knowledge Graph", path: "/graph", description: "Traverse correspondence connections" },
       { name: "Concept Search", path: "/search", description: "Semantic search across the corpus" },
       { name: "Parallax Engine", path: "/seven-lenses", description: "Seven interpretive lenses" },
-      { name: "Shared Workings", path: "/explore/workings", description: "Community ritual experiments" },
     ],
   },
   {
@@ -68,6 +68,17 @@ const primaryNav: NavItem[] = [
       { name: "Tarot", path: "/workbench/tarot", description: "Deck Forge", comingSoon: true },
     ],
   },
+  {
+    name: "Community",
+    path: "/community/forum",
+    matchPaths: ["/community", "/explore/workings", "/blog"],
+    dropdownItems: [
+      { name: "Forum", path: "/community/forum", description: "Discuss, ask, share" },
+      { name: "Videos", path: "/community/videos", description: "Watch and search" },
+      { name: "Blog", path: "/blog", description: "Essays and updates" },
+      { name: "Shared Workings", path: "/explore/workings", description: "Community ritual experiments" },
+    ],
+  },
   { name: "Wiki", path: "/wiki" },
 ];
 
@@ -76,6 +87,7 @@ const mobileNav: NavItem[] = [
   { name: "Courses", path: "/courses", icon: "🎓" },
   { name: "Tools", path: "/explore", icon: "🕸️", matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"] },
   { name: "Workbench", path: "/journal", icon: "✨", matchPaths: ["/workbench", "/journal"] },
+  { name: "Community", path: "/community/forum", icon: "💬", matchPaths: ["/community"] },
   { name: "Wiki", path: "/wiki", icon: "📖" },
 ];
 
@@ -119,6 +131,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
     { label: "Feedback", icon: "💬", href: "/admin/feedback" },
     { label: "Technical Wiki", icon: "📖", href: "/admin/wiki" },
     { label: "Blog", icon: "📝", href: "/admin/blog" },
+    { label: "Videos", icon: "🎬", href: "/admin/videos" },
   ];
 
   return (
@@ -185,6 +198,18 @@ function Header({ librarySearch }: HeaderProps = {}) {
                           </div>
                           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Soon</span>
                         </div>
+                      ) : sub.external ? (
+                        <a
+                          key={sub.path}
+                          href={sub.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setHoveredNav(null)}
+                          className="flex flex-col px-4 py-3.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                        >
+                          <span className="text-base font-medium text-zinc-100">{sub.name}</span>
+                          {sub.description && <span className="text-xs text-zinc-500 mt-0.5">{sub.description}</span>}
+                        </a>
                       ) : (
                         <Link
                           key={sub.path}
