@@ -1697,7 +1697,7 @@ export default function DocumentDetailPage() {
               {/* Main Content Area */}
               <div className="lg:col-span-2">
                 {activeTab === 'viewer' && (
-                  <div className="h-[calc(100vh-250px)]">
+                  <div className="h-[calc(100vh-160px)]">
                     {/* Chunk Navigation Indicator */}
                     {(targetChunkId || targetChunkIndex !== null) && (
                       <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
