@@ -19,9 +19,7 @@ import {
   Edit,
   Trash2,
   ShoppingCart,
-  ExternalLink,
-  Maximize2,
-  Minimize2
+  ExternalLink
 } from 'lucide-react';
 import { generateAffiliateLink, generateTrackedLink } from '@/lib/utils/affiliate';
 import BookmarkButton from '@/components/BookmarkButton';
@@ -429,7 +427,6 @@ export default function DocumentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'viewer' | 'metadata' | 'notes'>('viewer');
-  const [isViewerExpanded, setIsViewerExpanded] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
 
   // Text selection and annotations state
@@ -1690,32 +1687,17 @@ export default function DocumentDetailPage() {
                   <Highlighter className="w-4 h-4 inline mr-2" />
                   Notes
                 </button>
-
-                {activeTab === 'viewer' && (
-                  <button
-                    onClick={() => setIsViewerExpanded((prev) => !prev)}
-                    className="ml-auto flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-100/60 hover:text-amber-100 transition-colors"
-                    title={isViewerExpanded ? 'Collapse viewer' : 'Expand viewer to full width'}
-                  >
-                    {isViewerExpanded ? (
-                      <Minimize2 className="w-4 h-4" />
-                    ) : (
-                      <Maximize2 className="w-4 h-4" />
-                    )}
-                    {isViewerExpanded ? 'Collapse' : 'Expand'}
-                  </button>
-                )}
               </div>
             </div>
           </div>
 
           {/* Main Content */}
           <div className="max-w-7xl mx-auto px-6 py-8">
-            <div className={isViewerExpanded ? 'grid grid-cols-1 gap-6' : 'grid grid-cols-1 lg:grid-cols-3 gap-6'}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Content Area */}
-              <div className={isViewerExpanded ? '' : 'lg:col-span-2'}>
+              <div className="lg:col-span-2">
                 {activeTab === 'viewer' && (
-                  <div className={isViewerExpanded ? 'h-[calc(100vh-180px)]' : 'h-[calc(100vh-250px)]'}>
+                  <div className="h-[calc(100vh-160px)]">
                     {/* Chunk Navigation Indicator */}
                     {(targetChunkId || targetChunkIndex !== null) && (
                       <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
@@ -1950,7 +1932,6 @@ export default function DocumentDetailPage() {
               </div>
 
               {/* Sidebar */}
-              {!isViewerExpanded && (
               <div className="lg:col-span-1 space-y-6">
                 {/* Buy on Amazon Section */}
                 <div className="bg-zinc-900/50 border border-amber-900/20 rounded-lg p-6 mb-6">
@@ -2005,7 +1986,6 @@ export default function DocumentDetailPage() {
 
                 <CollectionsPanel textId={documentId} />
               </div>
-              )}
             </div>
           </div>
 
