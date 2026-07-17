@@ -542,9 +542,10 @@ This project is currently in planning phase. Development team formation in progr
 
 ## 📄 License
 
+**Code:** Proprietary — © Jeanine Melendez, All Rights Reserved (not open source)  
+**Prismarium Courses & Generated Content:** All Rights Reserved  
 **Planning Documentation:** CC BY-SA 4.0  
-**Code:** (TBD - likely MIT or Apache 2.0)  
-**Content:** Various (per source)  
+**Third-party / source texts:** Various (per source)  
 
 ---
 
