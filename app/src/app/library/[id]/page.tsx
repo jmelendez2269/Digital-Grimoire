@@ -1590,7 +1590,7 @@ export default function DocumentDetailPage() {
       <main className="flex-1">
         <div className="min-h-screen bg-zinc-950 text-amber-50">
           {/* Header */}
-          <div className="border-b border-amber-900/20 bg-zinc-900/50 sticky top-[104px] z-10">
+          <div className="border-b border-amber-900/20 bg-zinc-900/50">
             <div className="max-w-7xl mx-auto px-6 py-4">
               <div className="flex items-center justify-between mb-4">
                 <Link
