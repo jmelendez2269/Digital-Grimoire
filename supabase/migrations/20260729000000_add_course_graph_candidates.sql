@@ -5,6 +5,8 @@
 -- data; they preserve typed nodes, directed multi-predicate edges, evidence,
 -- draft syntheses, connection summaries, and review state for human curation.
 
+begin;
+
 create extension if not exists pgcrypto;
 
 create table if not exists public.course_graph_imports (
@@ -654,3 +656,5 @@ comment on table public.course_graph_edges is
   'Directed candidate edges with predicate, epistemic kind, evidence, and draft connection summary.';
 comment on function public.import_course_graph_candidate(jsonb) is
   'Atomically validates and exact-syncs one lossless course graph candidate manifest without touching legacy or canonical graph tables.';
+
+commit;
