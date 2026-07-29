@@ -209,7 +209,10 @@ export async function updateSession(request: NextRequest) {
     // Continue without user - will redirect to login if needed
   }
 
-  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/graph", "/knowledge-graph", "/workings", "/blog", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/graph", "/api/stripe/webhook", "/api/blog"];
+  // Course-graph access is enforced inside its route: local development may
+  // read a local Supabase import, while deployed candidate reads require an
+  // authenticated curator. It must reach that route before this generic gate.
+  const publicRoutes = ["/", "/login", "/register", "/auth", "/forgot-password", "/reset-password", "/maintenance", "/search", "/courses", "/graph", "/knowledge-graph", "/workings", "/blog", "/api/courses", "/api/proxy-image", "/api/concepts", "/api/course-graph", "/api/graph", "/api/stripe/webhook", "/api/blog"];
   const devOnlyPublicRoutes =
     process.env.NODE_ENV === "development"
       ? []
