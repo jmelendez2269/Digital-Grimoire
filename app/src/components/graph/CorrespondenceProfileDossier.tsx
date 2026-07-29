@@ -10,6 +10,7 @@ import {
   GlassWater,
   Leaf,
   Link2,
+  LoaderCircle,
   MoonStar,
   Orbit,
   Palette,
@@ -31,10 +32,60 @@ interface CorrespondenceProfileDossierProps {
   profile: CorrespondenceProfile;
   compact?: boolean;
   onSelectConnectionEntity?: (connection: CorrespondenceProfileConnection) => void;
+  onSelectAssociationValue?: (value: string) => void | Promise<void>;
+  resolvingAssociation?: string | null;
 }
 
 function titleCase(value: string) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeConnectionName(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/^the\s+/, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function findConnectionForValue(profile: CorrespondenceProfile, value: string) {
+  const connections = profile.connections.byRelationship.flatMap((group) => group.items);
+  const normalizedValue = normalizeConnectionName(value);
+  if (!normalizedValue) return null;
+
+  const exact = connections.find(
+    (connection) => normalizeConnectionName(connection.entity.name) === normalizedValue,
+  );
+  if (exact) return exact;
+
+  const boundedValue = ` ${normalizedValue} `;
+  const contained = connections.find((connection) => {
+    const normalizedConnection = normalizeConnectionName(connection.entity.name);
+    const boundedConnection = ` ${normalizedConnection} `;
+    return (
+      normalizedConnection.startsWith(`${normalizedValue} `) ||
+      normalizedConnection.endsWith(` ${normalizedValue}`) ||
+      boundedConnection.includes(boundedValue) ||
+      boundedValue.includes(boundedConnection)
+    );
+  });
+  if (contained) return contained;
+
+  const ignoredTokens = new Set(["a", "an", "and", "for", "of", "the", "to"]);
+  const valueTokens = normalizedValue.split(" ").filter((token) => !ignoredTokens.has(token));
+  if (valueTokens.length === 0 || valueTokens.every((token) => token.length < 3)) return null;
+
+  return connections.find((connection) => {
+    const connectionTokens = new Set(
+      normalizeConnectionName(connection.entity.name)
+        .split(" ")
+        .filter((token) => !ignoredTokens.has(token)),
+    );
+    return valueTokens.every((token) => connectionTokens.has(token));
+  }) || null;
 }
 
 type SectionVisual = {
@@ -289,6 +340,8 @@ export default function CorrespondenceProfileDossier({
   profile,
   compact = false,
   onSelectConnectionEntity,
+  onSelectAssociationValue,
+  resolvingAssociation = null,
 }: CorrespondenceProfileDossierProps) {
   const gridClass = compact
     ? "grid grid-cols-1 gap-3"
@@ -399,14 +452,40 @@ export default function CorrespondenceProfileDossier({
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {item.values.map((value) => (
-                      <span
-                        key={value}
-                        className={`rounded-full border px-2.5 py-1 text-xs ${visual.chipClass}`}
-                      >
-                        {value}
-                      </span>
-                    ))}
+                    {item.values.map((value) => {
+                      const connection = findConnectionForValue(profile, value);
+                      const canResolveAssociation = section.id !== "other" && Boolean(onSelectAssociationValue);
+                      const canOpen = Boolean((connection && onSelectConnectionEntity) || canResolveAssociation);
+                      const isResolving = resolvingAssociation === value;
+
+                      return canOpen ? (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => {
+                            if (connection && onSelectConnectionEntity) {
+                              onSelectConnectionEntity(connection);
+                            } else {
+                              void onSelectAssociationValue?.(value);
+                            }
+                          }}
+                          disabled={isResolving}
+                          aria-label={`Open ${connection?.entity.name || value} correspondence`}
+                          title={`Open ${connection?.entity.name || value}`}
+                          className={`inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-amber-300/55 disabled:cursor-wait disabled:opacity-65 ${visual.chipClass}`}
+                        >
+                          <span>{value}</span>
+                          {isResolving ? <LoaderCircle className="h-3.5 w-3.5 animate-spin opacity-70" /> : <ArrowUpRight className="h-3.5 w-3.5 opacity-65" />}
+                        </button>
+                      ) : (
+                        <span
+                          key={value}
+                          className={`inline-flex min-h-11 items-center rounded-full border px-3 py-1.5 text-xs ${visual.chipClass}`}
+                        >
+                          {value}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               ))}

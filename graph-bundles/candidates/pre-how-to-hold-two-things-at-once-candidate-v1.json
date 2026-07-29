@@ -1,0 +1,2249 @@
+{
+  "version": 1,
+  "bundle_kind": "course_graph_candidate",
+  "bundle_slug": "pre-how-to-hold-two-things-at-once-candidate-v1",
+  "prepared_on": "2026-07-29",
+  "package": {
+    "source_path": "web/src/content/pre-how-to-hold-two-things-at-once-learner-ready-preview.md",
+    "source_sha256": "9952d1aa524590cd66f5c1b44eb91f180264eab575a74294e16bd2cf3fa9f1ab",
+    "package_sha256": "d39790af11569ec0d31c175dc6cd37154217b9e4e781cd502cb01e26313db162",
+    "vocabulary_version": "course-graph-v1 from COURSEGRAPHEXTRACTIONINSTRUCTIONS.md",
+    "source_status": "Learner-ready preview",
+    "run_mode": "review-only / Codex"
+  },
+  "course": {
+    "stable_id": "course:pre-how-to-hold-two-things-at-once",
+    "course_id_tag": "PRE",
+    "canonical_course_id": "a8cd1728-ff6b-4f76-98e6-61bd86ae6a2c",
+    "slug": "pre-how-to-hold-two-things-at-once"
+  },
+  "evidence": [
+    {
+      "evidence_key": "E-PRE-001",
+      "evidence_class": "course_structure",
+      "heading_path": "COURSE METADATA",
+      "locator": "L3–15",
+      "excerpt": "“Responsible openness before comparison”"
+    },
+    {
+      "evidence_key": "E-PRE-002",
+      "evidence_class": "direct_statement",
+      "heading_path": "COURSE PREMISE",
+      "locator": "L17–23",
+      "excerpt": "“learning to tell the difference”"
+    },
+    {
+      "evidence_key": "E-PRE-003",
+      "evidence_class": "editorial_choice",
+      "heading_path": "CURATOR'S NOTE",
+      "locator": "L25–35",
+      "excerpt": "“Their proximity here is an editorial experiment”"
+    },
+    {
+      "evidence_key": "E-PRE-004",
+      "evidence_class": "direct_statement",
+      "heading_path": "LIMITS OF THIS INVESTIGATION",
+      "locator": "L37–51",
+      "excerpt": "“The first four do not automatically establish the fifth”"
+    },
+    {
+      "evidence_key": "E-PRE-005",
+      "evidence_class": "course_structure",
+      "heading_path": "LEARNING OUTCOMES",
+      "locator": "L61–70",
+      "excerpt": "“Build a Responsible Tension Map”"
+    },
+    {
+      "evidence_key": "E-PRE-006",
+      "evidence_class": "course_structure",
+      "heading_path": "KEY TENSIONS",
+      "locator": "L72–79",
+      "excerpt": "“What kind of relationship does a resemblance actually support?”"
+    },
+    {
+      "evidence_key": "E-W1-001",
+      "evidence_class": "course_structure",
+      "heading_path": "WEEK 1 > PLAIN-LANGUAGE DOORWAY",
+      "locator": "L95–106",
+      "excerpt": "“Evidence vs Commitment”"
+    },
+    {
+      "evidence_key": "E-W1-002",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 1 > READINGS > The Ethics of Belief",
+      "locator": "L110–123",
+      "excerpt": "“belief is not purely private”"
+    },
+    {
+      "evidence_key": "E-W1-003",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 1 > READINGS > The Will to Believe",
+      "locator": "L125–138",
+      "excerpt": "“refusing commitment can itself close a real possibility”"
+    },
+    {
+      "evidence_key": "E-W1-004",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 1 > READINGS > An Enquiry Concerning Human Understanding",
+      "locator": "L140–153",
+      "excerpt": "“Hume complicates the Clifford–James opposition”"
+    },
+    {
+      "evidence_key": "E-W1-005",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 1 > MODERN COMPANION",
+      "locator": "L155–191",
+      "excerpt": "“may involve more than one value”"
+    },
+    {
+      "evidence_key": "E-W1-006",
+      "evidence_class": "course_structure",
+      "heading_path": "WEEK 1 > THE NEXT RESPONSIBLE MOVE",
+      "locator": "L193–212",
+      "excerpt": "“Stay revisable”"
+    },
+    {
+      "evidence_key": "E-W1-007",
+      "evidence_class": "course_structure",
+      "heading_path": "WEEK 1 > CONCEPT SEARCH",
+      "locator": "L214–223",
+      "excerpt": "“surface resemblance”"
+    },
+    {
+      "evidence_key": "E-W1-008",
+      "evidence_class": "course_structure",
+      "heading_path": "WEEK 1 > KNOWLEDGE GRAPH",
+      "locator": "L233–242",
+      "excerpt": "“documented historical relationship”"
+    },
+    {
+      "evidence_key": "E-W1-009",
+      "evidence_class": "editorial_choice",
+      "heading_path": "WEEK 1 > SYNTHESIS / BELIEF TENSION RECORD",
+      "locator": "L244–259",
+      "excerpt": "“ordinary expectation exceeds deductive proof”"
+    },
+    {
+      "evidence_key": "E-W2-001",
+      "evidence_class": "editorial_choice",
+      "heading_path": "WEEK 2 > PLAIN-LANGUAGE DOORWAY",
+      "locator": "L263–276",
+      "excerpt": "“three different intellectual worlds”"
+    },
+    {
+      "evidence_key": "E-W2-002",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 2 > READINGS > Zhuangzi",
+      "locator": "L280–295",
+      "excerpt": "“composite, layered”"
+    },
+    {
+      "evidence_key": "E-W2-003",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 2 > READINGS > The Dhammapada",
+      "locator": "L297–312",
+      "excerpt": "“patterns of attention, intention, and action matter”"
+    },
+    {
+      "evidence_key": "E-W2-004",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 2 > READINGS > The Kena Upanishad",
+      "locator": "L314–328",
+      "excerpt": "“grasped as an ordinary object of knowledge”"
+    },
+    {
+      "evidence_key": "E-W2-005",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 2 > ZHUANGZI COMPANION",
+      "locator": "L330–358",
+      "excerpt": "“every claim is equally good”"
+    },
+    {
+      "evidence_key": "E-W2-006",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 2 > DHAMMAPADA COMPANION",
+      "locator": "L360–388",
+      "excerpt": "“training over instant control”"
+    },
+    {
+      "evidence_key": "E-W2-007",
+      "evidence_class": "direct_statement",
+      "heading_path": "WEEK 2 > KENA COMPANION",
+      "locator": "L390–418",
+      "excerpt": "“mistaking a concept for mastery”"
+    },
+    {
+      "evidence_key": "E-W2-008",
+      "evidence_class": "course_structure",
+      "heading_path": "WEEK 2 > THE TENSION DIAGNOSIS",
+      "locator": "L420–456",
+      "excerpt": "“Test what kind of tension it is”"
+    },
+    {
+      "evidence_key": "E-W2-009",
+      "evidence_class": "course_structure",
+      "heading_path": "WEEK 2 > PRISMARIUM PRACTICE",
+      "locator": "L458–487",
+      "excerpt": "“Do not treat the existence of an edge as proof”"
+    },
+    {
+      "evidence_key": "E-W2-010",
+      "evidence_class": "course_structure",
+      "heading_path": "RESPONSIBLE TENSION MAP",
+      "locator": "L489–511",
+      "excerpt": "“What is the next need”"
+    },
+    {
+      "evidence_key": "E-PRE-007",
+      "evidence_class": "course_structure",
+      "heading_path": "FINAL REFLECTION / COMPLETION PATHWAYS",
+      "locator": "L513–525",
+      "excerpt": "“less willing to resolve too quickly”"
+    },
+    {
+      "evidence_key": "E-PRE-008",
+      "evidence_class": "direct_statement",
+      "heading_path": "SUPPLIED LEARNER CASES",
+      "locator": "L529–563",
+      "excerpt": "“resemblance alone does not establish”"
+    }
+  ],
+  "entities": [
+    {
+      "stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "entity_kind": "course",
+      "slug": "pre-how-to-hold-two-things-at-once",
+      "display_name": "PRE — How to Hold Two Things at Once",
+      "aliases": [],
+      "synthesis": "A two-week foundational inquiry into deciding which tensions need resolution, evidence, action, reframing, contextual study, or continued openness. The course treats openness as a responsible practice rather than credulity, indecision, or a claim that unlike sources secretly agree. Its closing reflection and provisional pathways carry the inquiry toward related courses.",
+      "course_role": null,
+      "identity_state": "existing",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-PRE-001",
+        "E-PRE-002",
+        "E-PRE-003",
+        "E-PRE-005",
+        "E-PRE-007"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:the-ethics-of-belief",
+      "entity_kind": "work",
+      "slug": "the-ethics-of-belief",
+      "display_name": "The Ethics of Belief",
+      "aliases": [],
+      "synthesis": "PRE presents this essay as a strict evidential challenge: sincere conviction does not remove responsibility for how a belief was formed, especially when belief shapes action and shared inquiry. The course also asks whether the argument leaves enough room for trust, testimony, and provisional commitment.",
+      "course_role": "Week 1 core reading",
+      "identity_state": "unresolved",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-002"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:the-will-to-believe",
+      "entity_kind": "work",
+      "slug": "the-will-to-believe",
+      "display_name": "The Will to Believe",
+      "aliases": [],
+      "synthesis": "PRE uses this essay to ask whether withholding commitment can itself close a live possibility when evidence cannot decide a genuinely live, forced, and momentous option. Its course-framed claim is permissibility under limited conditions, not that commitment makes a belief true.",
+      "course_role": "Week 1 core reading",
+      "identity_state": "unresolved",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:an-enquiry-concerning-human-understanding",
+      "entity_kind": "work",
+      "slug": "an-enquiry-concerning-human-understanding",
+      "display_name": "An Enquiry Concerning Human Understanding",
+      "aliases": [],
+      "synthesis": "PRE uses Sections IV–VII to examine the gap between deductive justification and ordinary expectation. The course emphasizes that custom or habit can support disciplined expectation without making every unsupported conviction equally reasonable.",
+      "course_role": "Week 1 core reading",
+      "identity_state": "existing",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:zhuangzi",
+      "entity_kind": "work",
+      "slug": "zhuangzi",
+      "display_name": "Zhuangzi",
+      "aliases": [],
+      "synthesis": "PRE treats the Zhuangzi as a composite and layered text whose Butterfly Dream and Cook Ding passages put perspectival instability beside skilled, non-forcing responsiveness. The draft expressly rejects reducing it to “anything goes” or a method for holding incompatible truths.",
+      "course_role": "Week 2 core reading",
+      "identity_state": "merge_candidate",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-002",
+        "E-W2-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:the-dhammapada",
+      "entity_kind": "work",
+      "slug": "the-dhammapada",
+      "display_name": "The Dhammapada",
+      "aliases": [],
+      "synthesis": "PRE presents the Twin Verses and Heedfulness within a Buddhist ethical and soteriological framework in which repeated attention, intention, conduct, and action matter. The course rejects secular productivity reduction and any suggestion that sufferers cause harm through inadequate mental training.",
+      "course_role": "Week 2 core reading",
+      "identity_state": "existing",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-003",
+        "E-W2-006"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:kena-upanishad",
+      "entity_kind": "work",
+      "slug": "kena-upanishad",
+      "display_name": "Kena Upanishad",
+      "aliases": [],
+      "synthesis": "PRE approaches the Kena Upanishad as an inquiry into what enables seeing, hearing, speech, breath, and thought, and whether that ground can be grasped as an ordinary object. Its known/not-known tension is framed as a limit of objectifying knowledge, not praise of ignorance.",
+      "course_role": "Week 2 core reading",
+      "identity_state": "merge_candidate",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-004",
+        "E-W2-007"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:the-ethics-of-belief-stanford-encyclopedia",
+      "entity_kind": "work",
+      "slug": "the-ethics-of-belief-stanford-encyclopedia",
+      "display_name": "“The Ethics of Belief” — Stanford Encyclopedia of Philosophy",
+      "aliases": [],
+      "synthesis": "The companion maps continuing debates over evidential, practical, moral, and religious considerations in belief. PRE uses it to distinguish forming a belief from acting on a possibility and to prevent Clifford, James, and Hume from becoming a neat three-answer quiz.",
+      "course_role": "Week 1 modern companion",
+      "identity_state": "unresolved",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:zhuangzi-stanford-encyclopedia",
+      "entity_kind": "work",
+      "slug": "zhuangzi-stanford-encyclopedia",
+      "display_name": "“Zhuangzi” — Stanford Encyclopedia of Philosophy",
+      "aliases": [],
+      "synthesis": "The companion supplies historical and interpretive context for a layered Classical Chinese text, including debates over language, perspective, and whether labels such as skeptic, relativist, mystic, or naturalist fit. PRE uses it to resist the “anything goes” reading.",
+      "course_role": "Week 2 tradition-connected companion",
+      "identity_state": "unresolved",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:the-dhammapada-the-buddhas-path-of-wisdom-introduction",
+      "entity_kind": "work",
+      "slug": "the-dhammapada-the-buddhas-path-of-wisdom-introduction",
+      "display_name": "“The Dhammapada: The Buddha's Path of Wisdom”",
+      "aliases": [],
+      "synthesis": "PRE identifies this as a 1985 introduction accompanying Acharya Buddharakkhita's translation. It places heedfulness within conduct, cultivation, suffering, and liberation, while warning against treating the text as a universal psychological mechanism.",
+      "course_role": "Week 2 tradition-connected companion",
+      "identity_state": "unresolved",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-006"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "work:the-principal-upanishads",
+      "entity_kind": "work",
+      "slug": "the-principal-upanishads",
+      "display_name": "The Principal Upanishads",
+      "aliases": [],
+      "synthesis": "PRE cites S. Radhakrishnan's introduction and notes to the Kena Upanishad in this volume as a modern translation and interpretation. The course uses that material as an initial context, not as a settlement of disagreements among later Vedanta traditions.",
+      "course_role": "Week 2 tradition-connected companion container",
+      "identity_state": "unresolved",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-007"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:w-k-clifford",
+      "entity_kind": "person",
+      "slug": "w-k-clifford",
+      "display_name": "W. K. Clifford",
+      "aliases": [],
+      "synthesis": "Named by PRE as the author associated with The Ethics of Belief. Within this course, Clifford supplies the strict evidential pressure concerning responsibility for belief formation.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-002"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:william-james",
+      "entity_kind": "person",
+      "slug": "william-james",
+      "display_name": "William James",
+      "aliases": [],
+      "synthesis": "Named by PRE as the author associated with The Will to Believe. Within this course, James supplies the counterpressure that withholding commitment is not always neutral when an option is live and consequential.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:david-hume",
+      "entity_kind": "person",
+      "slug": "david-hume",
+      "display_name": "David Hume",
+      "aliases": [],
+      "synthesis": "Named by PRE as the author associated with An Enquiry Concerning Human Understanding. Within this course, Hume complicates the Clifford–James framing through induction, custom, and ordinary expectation.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:andrew-chignell",
+      "entity_kind": "person",
+      "slug": "andrew-chignell",
+      "display_name": "Andrew Chignell",
+      "aliases": [],
+      "synthesis": "Named by PRE as the author of the Stanford Encyclopedia companion “The Ethics of Belief,” first published in 2010 and revised in 2016 according to the draft.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:chad-hansen",
+      "entity_kind": "person",
+      "slug": "chad-hansen",
+      "display_name": "Chad Hansen",
+      "aliases": [],
+      "synthesis": "Named by PRE as the author of the Stanford Encyclopedia companion “Zhuangzi,” substantively revised in 2024 according to the draft.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:bhikkhu-bodhi",
+      "entity_kind": "person",
+      "slug": "bhikkhu-bodhi",
+      "display_name": "Bhikkhu Bodhi",
+      "aliases": [],
+      "synthesis": "Named by PRE in connection with the 1985 companion introduction “The Dhammapada: The Buddha's Path of Wisdom.” The exact contributor and edition metadata must be resolved before publication.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-006"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:acharya-buddharakkhita",
+      "entity_kind": "person",
+      "slug": "acharya-buddharakkhita",
+      "display_name": "Acharya Buddharakkhita",
+      "aliases": [],
+      "synthesis": "Named by PRE as the translator whose Dhammapada translation is accompanied by the cited introduction. This is a translation-role candidate, not an authorship claim for the traditional text.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-006"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:s-radhakrishnan",
+      "entity_kind": "person",
+      "slug": "s-radhakrishnan",
+      "display_name": "S. Radhakrishnan",
+      "aliases": [],
+      "synthesis": "Named by PRE as the modern Indian philosopher responsible for the cited translation and interpretation of the Kena Upanishad in The Principal Upanishads.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-007"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "person:herbert-a-giles",
+      "entity_kind": "person",
+      "slug": "herbert-a-giles",
+      "display_name": "Herbert A. Giles",
+      "aliases": [],
+      "synthesis": "Named in PRE's Zhuangzi translation note. The draft treats his translation as historically important but dated and asks learners to compare its choices with contemporary context.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-002"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:responsible-openness",
+      "entity_kind": "concept",
+      "slug": "responsible-openness",
+      "display_name": "Responsible openness",
+      "aliases": [],
+      "synthesis": "A disciplined willingness to keep a question open while still evaluating evidence, risk, timing, and obligations. PRE distinguishes it from credulity, permanent indecision, and uncertainty treated as a virtue.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-001",
+        "E-PRE-002",
+        "E-W2-010"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:belief",
+      "entity_kind": "concept",
+      "slug": "belief",
+      "display_name": "Belief",
+      "aliases": [],
+      "synthesis": "A stance toward a claim whose formation can affect action and shared inquiry. PRE distinguishes believing a proposition from acting because a possibility or risk deserves consideration.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-002",
+        "E-W1-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:evidence",
+      "entity_kind": "concept",
+      "slug": "evidence",
+      "display_name": "Evidence",
+      "aliases": [],
+      "synthesis": "Support relevant to a claim or decision. PRE treats evidential strength as essential while emphasizing that evidence may remain incomplete when action, delay, trust, or risk still requires judgment.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-001",
+        "E-W1-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:certainty",
+      "entity_kind": "concept",
+      "slug": "certainty",
+      "display_name": "Certainty",
+      "aliases": [],
+      "synthesis": "A condition in which doubt is treated as resolved. PRE investigates responsible belief, commitment, and action when certainty is unavailable without implying that every uncertain possibility is equally supported.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-002",
+        "E-W1-003",
+        "E-W1-007"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:habit-based-expectation",
+      "entity_kind": "concept",
+      "slug": "habit-based-expectation",
+      "display_name": "Habit-based expectation",
+      "aliases": [],
+      "synthesis": "PRE's Hume-framed idea that repeated experience produces ordinary expectation even when no deductive proof guarantees the future. This differs from a conviction insulated from contrary evidence.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:commitment",
+      "entity_kind": "concept",
+      "slug": "commitment",
+      "display_name": "Commitment",
+      "aliases": [],
+      "synthesis": "Accepting or acting on an option before proof settles it. PRE presents commitment as potentially permissible under limited conditions, not as a process that makes a belief true.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-003",
+        "E-W1-009"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:genuine-option",
+      "entity_kind": "concept",
+      "slug": "genuine-option",
+      "display_name": "Genuine option",
+      "aliases": [],
+      "synthesis": "PRE's James-framed category for an option that is live, forced, and momentous. The category limits the argument for commitment and does not license believing whatever feels comforting.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:provisional-commitment",
+      "entity_kind": "concept",
+      "slug": "provisional-commitment",
+      "display_name": "Provisional commitment",
+      "aliases": [],
+      "synthesis": "A temporary, revisable commitment made before certainty, paired with an explicit condition for reconsideration. PRE offers it as one possible next move rather than a universal solution.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-006",
+        "E-W1-009"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:withholding-judgment",
+      "entity_kind": "concept",
+      "slug": "withholding-judgment",
+      "display_name": "Withholding judgment",
+      "aliases": [],
+      "synthesis": "Delaying belief when the evidence does not warrant settlement. PRE also asks when delay has costs, closes possibilities, or allows a practical choice to be made by inaction.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-001",
+        "E-W1-006"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:acting-under-uncertainty",
+      "entity_kind": "concept",
+      "slug": "acting-under-uncertainty",
+      "display_name": "Acting under uncertainty",
+      "aliases": [],
+      "synthesis": "Choosing a response based on available evidence, risk, and time without claiming an uncertain outcome is certain. The supplied storm case separates action on serious risk from belief that the storm will definitely occur.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-005",
+        "E-PRE-008"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:problem-of-induction",
+      "entity_kind": "concept",
+      "slug": "problem-of-induction",
+      "display_name": "Problem of induction",
+      "aliases": [],
+      "synthesis": "The problem that past regularity does not logically guarantee future regularity. PRE uses it to expose a gap between rational demonstration and the expectations ordinary life still requires.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:uncertainty",
+      "entity_kind": "concept",
+      "slug": "uncertainty",
+      "display_name": "Uncertainty",
+      "aliases": [],
+      "synthesis": "A condition to diagnose rather than celebrate. PRE asks what the uncertainty consists of, what would reduce it, whether action can wait, and what responsibility remains while the answer is open.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-002",
+        "E-W2-001",
+        "E-W2-010"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:contradiction",
+      "entity_kind": "concept",
+      "slug": "contradiction",
+      "display_name": "Contradiction",
+      "aliases": [],
+      "synthesis": "A collision that remains after key terms, questions, evidence, levels of description, and interpretations have been clarified. PRE warns against treating every tension as either a simple error or a profound paradox.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:ambiguity",
+      "entity_kind": "concept",
+      "slug": "ambiguity",
+      "display_name": "Ambiguity",
+      "aliases": [],
+      "synthesis": "A tension produced when the same word is used in different senses. Clarifying the meanings can make the disagreement more precise without necessarily resolving the ethical or practical issue.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W2-008",
+        "E-PRE-008"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:incomplete-evidence",
+      "entity_kind": "concept",
+      "slug": "incomplete-evidence",
+      "display_name": "Incomplete evidence",
+      "aliases": [],
+      "synthesis": "A state in which important facts are missing, preventing a settled conclusion. PRE distinguishes this from contradiction and shows that a time-sensitive action may still be responsible.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W2-008",
+        "E-PRE-008"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:different-levels-of-description",
+      "entity_kind": "concept",
+      "slug": "different-levels-of-description",
+      "display_name": "Different levels of description",
+      "aliases": [],
+      "synthesis": "An apparent conflict in which statements answer different questions or operate at different descriptive, explanatory, moral, psychological, or metaphysical levels. PRE asks learners to test this before declaring contradiction.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:competing-interpretation",
+      "entity_kind": "concept",
+      "slug": "competing-interpretation",
+      "display_name": "Competing interpretation",
+      "aliases": [],
+      "synthesis": "Rival accounts of what evidence, an observation, or a source means. PRE treats interpretive disagreement as distinct from both missing facts and a direct logical contradiction.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:interpretation-versus-projection",
+      "entity_kind": "concept",
+      "slug": "interpretation-versus-projection",
+      "display_name": "Interpretation versus projection",
+      "aliases": [],
+      "synthesis": "The course's question about what a source supports and what the comparing reader supplies. It functions as a guardrail against calling a personally compelling resemblance a discovery about the sources themselves.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-003",
+        "E-PRE-006"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:connection-versus-coincidence",
+      "entity_kind": "concept",
+      "slug": "connection-versus-coincidence",
+      "display_name": "Connection versus coincidence",
+      "aliases": [],
+      "synthesis": "The problem of determining what kind of relationship a resemblance actually supports. PRE separates documented historical contact, conceptual comparison, editorial juxtaposition, personal resonance, and shared-doctrine claims.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-004",
+        "E-PRE-006",
+        "E-W1-008",
+        "E-PRE-008"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:perspective",
+      "entity_kind": "concept",
+      "slug": "perspective",
+      "display_name": "Perspective",
+      "aliases": [],
+      "synthesis": "A viewpoint that changes which distinctions, assumptions, and features become visible. PRE's Zhuangzi framing uses perspective to loosen confidence in one final standpoint without concluding that all claims are equally good.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W2-002",
+        "E-W2-005"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:heedfulness",
+      "entity_kind": "concept",
+      "slug": "heedfulness",
+      "display_name": "Heedfulness",
+      "aliases": [],
+      "synthesis": "In PRE's Dhammapada context, an ethical and contemplative cultivation of attention, intention, conduct, and action. It is not merely productivity advice, instant control, or a basis for blaming suffering on “negative thoughts.”",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W2-003",
+        "E-W2-006"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:knowledge",
+      "entity_kind": "concept",
+      "slug": "knowledge",
+      "display_name": "Knowledge",
+      "aliases": [],
+      "synthesis": "What it is to know and what a mode of knowing can adequately grasp. PRE's Kena framing distinguishes missing information from the deeper question of whether object-like knowledge is adequate to the subject under inquiry.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W2-004",
+        "E-W2-007"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:limits-of-conceptual-grasping",
+      "entity_kind": "concept",
+      "slug": "limits-of-conceptual-grasping",
+      "display_name": "Limits of conceptual grasping",
+      "aliases": [],
+      "synthesis": "The possibility that concepts fail to master or objectify their subject even when the issue is not simple ignorance. PRE treats this as a question about the adequacy of a tool of knowing, not proof of a theory of consciousness.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W2-004",
+        "E-W2-007"
+      ],
+      "metadata": {}
+    },
+    {
+      "stable_id": "concept:training-versus-release",
+      "entity_kind": "concept",
+      "slug": "training-versus-release",
+      "display_name": "Training versus release",
+      "aliases": [],
+      "synthesis": "PRE's Week 2 tension over whether a better response to uncertainty can be cultivated and where deliberate practice may meet a limit. The course does not assume that the three Week 2 works give the same answer.",
+      "course_role": null,
+      "identity_state": "new",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-006",
+        "E-W2-001"
+      ],
+      "metadata": {}
+    }
+  ],
+  "edges": [
+    {
+      "stable_id": "edge:pre-struct-001",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:the-ethics-of-belief",
+      "predicate": "uses_primary_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W1-002"
+      ],
+      "connection_summary": "PRE assigns The Ethics of Belief as a primary Week 1 work. This records course structure only; it does not establish agreement with the course's other works.",
+      "weight": null,
+      "metadata": {
+        "week": 1
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-002",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:the-will-to-believe",
+      "predicate": "uses_primary_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "connection_summary": "PRE assigns The Will to Believe as a primary Week 1 work. This records course structure only; it does not establish agreement with the course's other works.",
+      "weight": null,
+      "metadata": {
+        "week": 1
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-003",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:an-enquiry-concerning-human-understanding",
+      "predicate": "uses_primary_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "connection_summary": "PRE assigns An Enquiry Concerning Human Understanding as a primary Week 1 work. This records course structure only; it does not establish agreement with the course's other works.",
+      "weight": null,
+      "metadata": {
+        "week": 1
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-004",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:zhuangzi",
+      "predicate": "uses_primary_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W2-002"
+      ],
+      "connection_summary": "PRE assigns Zhuangzi as a primary Week 2 work. This records course structure only; it does not establish agreement with the course's other works.",
+      "weight": null,
+      "metadata": {
+        "week": 2
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-005",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:the-dhammapada",
+      "predicate": "uses_primary_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W2-003"
+      ],
+      "connection_summary": "PRE assigns The Dhammapada as a primary Week 2 work. This records course structure only; it does not establish agreement with the course's other works.",
+      "weight": null,
+      "metadata": {
+        "week": 2
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-006",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:kena-upanishad",
+      "predicate": "uses_primary_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W2-004"
+      ],
+      "connection_summary": "PRE assigns Kena Upanishad as a primary Week 2 work. This records course structure only; it does not establish agreement with the course's other works.",
+      "weight": null,
+      "metadata": {
+        "week": 2
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-007",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:the-ethics-of-belief-stanford-encyclopedia",
+      "predicate": "uses_companion_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W1-005"
+      ],
+      "connection_summary": "PRE assigns “The Ethics of Belief” — Stanford Encyclopedia of Philosophy as a Week 1 companion source. This records its contextual role, not final interpretive authority.",
+      "weight": null,
+      "metadata": {
+        "week": 1
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-008",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:zhuangzi-stanford-encyclopedia",
+      "predicate": "uses_companion_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W2-005"
+      ],
+      "connection_summary": "PRE assigns “Zhuangzi” — Stanford Encyclopedia of Philosophy as a Week 2 companion source. This records its contextual role, not final interpretive authority.",
+      "weight": null,
+      "metadata": {
+        "week": 2
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-009",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:the-dhammapada-the-buddhas-path-of-wisdom-introduction",
+      "predicate": "uses_companion_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W2-006"
+      ],
+      "connection_summary": "PRE assigns “The Dhammapada: The Buddha's Path of Wisdom” as a Week 2 companion source. This records its contextual role, not final interpretive authority.",
+      "weight": null,
+      "metadata": {
+        "week": 2
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-010",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "work:the-principal-upanishads",
+      "predicate": "uses_companion_work",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W2-007"
+      ],
+      "connection_summary": "PRE assigns The Principal Upanishads as a Week 2 companion source. This records its contextual role, not final interpretive authority.",
+      "weight": null,
+      "metadata": {
+        "week": 2
+      }
+    },
+    {
+      "stable_id": "edge:pre-struct-011",
+      "source_stable_id": "work:the-ethics-of-belief",
+      "target_stable_id": "person:w-k-clifford",
+      "predicate": "authored_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-002"
+      ],
+      "connection_summary": "The hashed PRE artifact names W. K. Clifford as the author of The Ethics of Belief. Canonical identity and edition metadata remain subject to bibliographic review.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-012",
+      "source_stable_id": "work:the-will-to-believe",
+      "target_stable_id": "person:william-james",
+      "predicate": "authored_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "connection_summary": "The hashed PRE artifact names William James as the author of The Will to Believe. Canonical identity and edition metadata remain subject to bibliographic review.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-013",
+      "source_stable_id": "work:an-enquiry-concerning-human-understanding",
+      "target_stable_id": "person:david-hume",
+      "predicate": "authored_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "connection_summary": "The hashed PRE artifact names David Hume as the author of An Enquiry Concerning Human Understanding. Canonical identity and edition metadata remain subject to bibliographic review.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-014",
+      "source_stable_id": "work:the-ethics-of-belief-stanford-encyclopedia",
+      "target_stable_id": "person:andrew-chignell",
+      "predicate": "authored_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W1-005"
+      ],
+      "connection_summary": "The hashed PRE artifact names Andrew Chignell as the author of “The Ethics of Belief” — Stanford Encyclopedia of Philosophy. Canonical identity and edition metadata remain subject to bibliographic review.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-015",
+      "source_stable_id": "work:zhuangzi-stanford-encyclopedia",
+      "target_stable_id": "person:chad-hansen",
+      "predicate": "authored_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-005"
+      ],
+      "connection_summary": "The hashed PRE artifact names Chad Hansen as the author of “Zhuangzi” — Stanford Encyclopedia of Philosophy. Canonical identity and edition metadata remain subject to bibliographic review.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-016",
+      "source_stable_id": "work:the-dhammapada-the-buddhas-path-of-wisdom-introduction",
+      "target_stable_id": "person:bhikkhu-bodhi",
+      "predicate": "authored_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-006"
+      ],
+      "connection_summary": "The hashed PRE artifact names Bhikkhu Bodhi as the author of “The Dhammapada: The Buddha's Path of Wisdom”. Canonical identity and edition metadata remain subject to bibliographic review.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-017",
+      "source_stable_id": "work:the-dhammapada",
+      "target_stable_id": "person:acharya-buddharakkhita",
+      "predicate": "translated_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-006"
+      ],
+      "connection_summary": "The hashed PRE artifact associates Acharya Buddharakkhita with the translation used or discussed for The Dhammapada. The exact expression or edition must be resolved before approval.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-018",
+      "source_stable_id": "work:the-principal-upanishads",
+      "target_stable_id": "person:s-radhakrishnan",
+      "predicate": "translated_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-007"
+      ],
+      "connection_summary": "The hashed PRE artifact associates S. Radhakrishnan with the translation used or discussed for The Principal Upanishads. The exact expression or edition must be resolved before approval.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-019",
+      "source_stable_id": "work:zhuangzi",
+      "target_stable_id": "person:herbert-a-giles",
+      "predicate": "translated_by",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "speculative",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-002"
+      ],
+      "connection_summary": "The hashed PRE artifact associates Herbert A. Giles with the translation used or discussed for Zhuangzi. The exact expression or edition must be resolved before approval.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-020",
+      "source_stable_id": "work:zhuangzi-stanford-encyclopedia",
+      "target_stable_id": "work:zhuangzi",
+      "predicate": "contextualizes",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W2-005"
+      ],
+      "connection_summary": "PRE uses “Zhuangzi” — Stanford Encyclopedia of Philosophy to contextualize Zhuangzi. This is a course-role claim and does not make the companion the only valid interpretation.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-021",
+      "source_stable_id": "work:the-dhammapada-the-buddhas-path-of-wisdom-introduction",
+      "target_stable_id": "work:the-dhammapada",
+      "predicate": "contextualizes",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-006"
+      ],
+      "connection_summary": "PRE uses “The Dhammapada: The Buddha's Path of Wisdom” to contextualize The Dhammapada. This is a course-role claim and does not make the companion the only valid interpretation.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-022",
+      "source_stable_id": "work:the-principal-upanishads",
+      "target_stable_id": "work:kena-upanishad",
+      "predicate": "contextualizes",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_IDENTITY_REVIEW",
+      "evidence_keys": [
+        "E-W2-007"
+      ],
+      "connection_summary": "PRE uses The Principal Upanishads to contextualize Kena Upanishad. This is a course-role claim and does not make the companion the only valid interpretation.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-023",
+      "source_stable_id": "work:the-ethics-of-belief-stanford-encyclopedia",
+      "target_stable_id": "work:the-ethics-of-belief",
+      "predicate": "contextualizes",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W1-005"
+      ],
+      "connection_summary": "PRE uses “The Ethics of Belief” — Stanford Encyclopedia of Philosophy to contextualize The Ethics of Belief. This is a course-role claim and does not make the companion the only valid interpretation.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-struct-024",
+      "source_stable_id": "work:the-ethics-of-belief-stanford-encyclopedia",
+      "target_stable_id": "work:the-will-to-believe",
+      "predicate": "contextualizes",
+      "edge_class": "structural",
+      "epistemic_kind": "artifact_documented",
+      "scope": null,
+      "confidence": "established",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_SOURCE_EXPLICIT",
+      "evidence_keys": [
+        "E-W1-005"
+      ],
+      "connection_summary": "PRE uses “The Ethics of Belief” — Stanford Encyclopedia of Philosophy to contextualize The Will to Believe. This is a course-role claim and does not make the companion the only valid interpretation.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-001",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:responsible-openness",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-001",
+        "E-PRE-002"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Responsible openness. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-002",
+      "source_stable_id": "work:the-ethics-of-belief",
+      "target_stable_id": "concept:belief",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-002"
+      ],
+      "connection_summary": "In PRE, The Ethics of Belief is used to explore Belief. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-003",
+      "source_stable_id": "work:the-ethics-of-belief",
+      "target_stable_id": "concept:evidence",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-002"
+      ],
+      "connection_summary": "In PRE, The Ethics of Belief is used to explore Evidence. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-004",
+      "source_stable_id": "work:the-will-to-believe",
+      "target_stable_id": "concept:commitment",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "connection_summary": "In PRE, The Will to Believe is used to explore Commitment. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-005",
+      "source_stable_id": "work:the-will-to-believe",
+      "target_stable_id": "concept:genuine-option",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "connection_summary": "In PRE, The Will to Believe is used to explore Genuine option. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-006",
+      "source_stable_id": "work:the-will-to-believe",
+      "target_stable_id": "concept:certainty",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "connection_summary": "In PRE, The Will to Believe is used to explore Certainty. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-007",
+      "source_stable_id": "work:an-enquiry-concerning-human-understanding",
+      "target_stable_id": "concept:problem-of-induction",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "connection_summary": "In PRE, An Enquiry Concerning Human Understanding is used to explore Problem of induction. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-008",
+      "source_stable_id": "work:an-enquiry-concerning-human-understanding",
+      "target_stable_id": "concept:habit-based-expectation",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "connection_summary": "In PRE, An Enquiry Concerning Human Understanding is used to explore Habit-based expectation. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-009",
+      "source_stable_id": "work:an-enquiry-concerning-human-understanding",
+      "target_stable_id": "concept:uncertainty",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "connection_summary": "In PRE, An Enquiry Concerning Human Understanding is used to explore Uncertainty. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-010",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:provisional-commitment",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-006",
+        "E-W1-009"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Provisional commitment. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-011",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:withholding-judgment",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-006"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Withholding judgment. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-012",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:acting-under-uncertainty",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-005",
+        "E-W1-006"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Acting under uncertainty. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-013",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:contradiction",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Contradiction. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-014",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:ambiguity",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Ambiguity. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-015",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:incomplete-evidence",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Incomplete evidence. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-016",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:different-levels-of-description",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Different levels of description. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-017",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:competing-interpretation",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Competing interpretation. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-018",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:interpretation-versus-projection",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-003",
+        "E-PRE-006"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Interpretation versus projection. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-019",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:connection-versus-coincidence",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-004",
+        "E-PRE-006"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Connection versus coincidence. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-020",
+      "source_stable_id": "work:zhuangzi",
+      "target_stable_id": "concept:perspective",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W2-002",
+        "E-W2-005"
+      ],
+      "connection_summary": "In PRE, Zhuangzi is used to explore Perspective. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-021",
+      "source_stable_id": "work:the-dhammapada",
+      "target_stable_id": "concept:heedfulness",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W2-003",
+        "E-W2-006"
+      ],
+      "connection_summary": "In PRE, The Dhammapada is used to explore Heedfulness. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-022",
+      "source_stable_id": "work:kena-upanishad",
+      "target_stable_id": "concept:knowledge",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W2-004",
+        "E-W2-007"
+      ],
+      "connection_summary": "In PRE, Kena Upanishad is used to explore Knowledge. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-023",
+      "source_stable_id": "work:kena-upanishad",
+      "target_stable_id": "concept:limits-of-conceptual-grasping",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W2-004",
+        "E-W2-007"
+      ],
+      "connection_summary": "In PRE, Kena Upanishad is used to explore Limits of conceptual grasping. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-interpretive-024",
+      "source_stable_id": "course:pre-how-to-hold-two-things-at-once",
+      "target_stable_id": "concept:training-versus-release",
+      "predicate": "explores",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-006",
+        "E-W2-001"
+      ],
+      "connection_summary": "In PRE, PRE — How to Hold Two Things at Once is used to explore Training versus release. This is course framing, not an exhaustive definition of the source or a historical-contact claim.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-001",
+      "source_stable_id": "concept:belief",
+      "target_stable_id": "concept:acting-under-uncertainty",
+      "predicate": "distinguishes_from",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-005"
+      ],
+      "connection_summary": "PRE asks learners to distinguish Belief from Acting under uncertainty for the cited reason. The distinction is scoped to this course's diagnostic framework.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-002",
+      "source_stable_id": "concept:evidence",
+      "target_stable_id": "concept:certainty",
+      "predicate": "distinguishes_from",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-002",
+        "E-W1-001"
+      ],
+      "connection_summary": "PRE asks learners to distinguish Evidence from Certainty for the cited reason. The distinction is scoped to this course's diagnostic framework.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-003",
+      "source_stable_id": "concept:genuine-option",
+      "target_stable_id": "concept:commitment",
+      "predicate": "refines",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-003"
+      ],
+      "connection_summary": "PRE uses Genuine option to narrow or develop how Commitment is understood. This does not imply historical influence.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-004",
+      "source_stable_id": "concept:provisional-commitment",
+      "target_stable_id": "concept:commitment",
+      "predicate": "refines",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-006",
+        "E-W1-009"
+      ],
+      "connection_summary": "PRE uses Provisional commitment to narrow or develop how Commitment is understood. This does not imply historical influence.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-005",
+      "source_stable_id": "concept:commitment",
+      "target_stable_id": "concept:withholding-judgment",
+      "predicate": "contrasts_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-001",
+        "E-W1-006"
+      ],
+      "connection_summary": "PRE places Commitment and Withholding judgment in an explicit conceptual tension. The contrast does not imply that they are exhaustive opposites.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-006",
+      "source_stable_id": "concept:habit-based-expectation",
+      "target_stable_id": "concept:problem-of-induction",
+      "predicate": "responds_to",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-W1-004"
+      ],
+      "connection_summary": "PRE presents Habit-based expectation as a response to the problem or condition named by Problem of induction. It does not imply complete resolution or historical reply.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-007",
+      "source_stable_id": "concept:contradiction",
+      "target_stable_id": "concept:ambiguity",
+      "predicate": "distinguishes_from",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "PRE asks learners to distinguish Contradiction from Ambiguity for the cited reason. The distinction is scoped to this course's diagnostic framework.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-008",
+      "source_stable_id": "concept:contradiction",
+      "target_stable_id": "concept:incomplete-evidence",
+      "predicate": "distinguishes_from",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "PRE asks learners to distinguish Contradiction from Incomplete evidence for the cited reason. The distinction is scoped to this course's diagnostic framework.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-009",
+      "source_stable_id": "concept:contradiction",
+      "target_stable_id": "concept:different-levels-of-description",
+      "predicate": "distinguishes_from",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "PRE asks learners to distinguish Contradiction from Different levels of description for the cited reason. The distinction is scoped to this course's diagnostic framework.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-010",
+      "source_stable_id": "concept:contradiction",
+      "target_stable_id": "concept:competing-interpretation",
+      "predicate": "distinguishes_from",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-005",
+        "E-W2-008"
+      ],
+      "connection_summary": "PRE asks learners to distinguish Contradiction from Competing interpretation for the cited reason. The distinction is scoped to this course's diagnostic framework.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-011",
+      "source_stable_id": "concept:responsible-openness",
+      "target_stable_id": "concept:uncertainty",
+      "predicate": "responds_to",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-002",
+        "E-W2-010"
+      ],
+      "connection_summary": "PRE presents Responsible openness as a response to the problem or condition named by Uncertainty. It does not imply complete resolution or historical reply.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-concept-012",
+      "source_stable_id": "concept:heedfulness",
+      "target_stable_id": "concept:training-versus-release",
+      "predicate": "editorially_juxtaposed_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-006",
+        "E-W2-003"
+      ],
+      "connection_summary": "Prismarium places Heedfulness beside Training versus release for comparison. This edge is editorial-only and establishes neither historical contact nor shared doctrine.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-cross-001",
+      "source_stable_id": "work:the-ethics-of-belief",
+      "target_stable_id": "work:the-will-to-believe",
+      "predicate": "contrasts_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "conceptual",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_CONCEPTUAL_REVIEW",
+      "evidence_keys": [
+        "E-PRE-003",
+        "E-W1-009"
+      ],
+      "connection_summary": "PRE places The Ethics of Belief and The Will to Believe in an explicit conceptual tension. The contrast does not imply that they are exhaustive opposites.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-cross-002",
+      "source_stable_id": "work:an-enquiry-concerning-human-understanding",
+      "target_stable_id": "work:the-ethics-of-belief",
+      "predicate": "editorially_juxtaposed_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-004",
+        "E-W1-009"
+      ],
+      "connection_summary": "Prismarium places An Enquiry Concerning Human Understanding beside The Ethics of Belief for comparison. This edge is editorial-only and establishes neither historical contact nor shared doctrine.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-cross-003",
+      "source_stable_id": "work:an-enquiry-concerning-human-understanding",
+      "target_stable_id": "work:the-will-to-believe",
+      "predicate": "editorially_juxtaposed_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-W1-004",
+        "E-W1-009"
+      ],
+      "connection_summary": "Prismarium places An Enquiry Concerning Human Understanding beside The Will to Believe for comparison. This edge is editorial-only and establishes neither historical contact nor shared doctrine.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-cross-004",
+      "source_stable_id": "work:the-dhammapada",
+      "target_stable_id": "work:zhuangzi",
+      "predicate": "editorially_juxtaposed_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-003",
+        "E-W2-001",
+        "E-W2-009"
+      ],
+      "connection_summary": "Prismarium places The Dhammapada beside Zhuangzi for comparison. This edge is editorial-only and establishes neither historical contact nor shared doctrine.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-cross-005",
+      "source_stable_id": "work:kena-upanishad",
+      "target_stable_id": "work:zhuangzi",
+      "predicate": "editorially_juxtaposed_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-003",
+        "E-W2-001",
+        "E-W2-009"
+      ],
+      "connection_summary": "Prismarium places Kena Upanishad beside Zhuangzi for comparison. This edge is editorial-only and establishes neither historical contact nor shared doctrine.",
+      "weight": null,
+      "metadata": {}
+    },
+    {
+      "stable_id": "edge:pre-cross-006",
+      "source_stable_id": "work:kena-upanishad",
+      "target_stable_id": "work:the-dhammapada",
+      "predicate": "editorially_juxtaposed_with",
+      "edge_class": "interpretive",
+      "epistemic_kind": "editorial",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "review_state": "candidate",
+      "candidate_class": "CANDIDATE_EDITORIAL_ONLY",
+      "evidence_keys": [
+        "E-PRE-003",
+        "E-W2-001",
+        "E-W2-009"
+      ],
+      "connection_summary": "Prismarium places Kena Upanishad beside The Dhammapada for comparison. This edge is editorial-only and establishes neither historical contact nor shared doctrine.",
+      "weight": null,
+      "metadata": {}
+    }
+  ],
+  "blocked_inferences": [
+    {
+      "proposal": "work:zhuangzi → person:zhuangzi as authoredby",
+      "reason": "The course calls the work composite and layered and does not establish simple authorship.",
+      "evidence_keys": [
+        "E-W2-002",
+        "E-W2-005"
+      ]
+    },
+    {
+      "proposal": "work:the-dhammapada → a Buddha person node as authoredby",
+      "reason": "The course identifies a traditional Buddhist collection and a path context; it does not supply modern authorship metadata.",
+      "evidence_keys": [
+        "E-W2-003",
+        "E-W2-006"
+      ]
+    },
+    {
+      "proposal": "work:kena-upanishad → any person as authoredby",
+      "reason": "No author is named in the source artifact.",
+      "evidence_keys": [
+        "E-W2-004"
+      ]
+    },
+    {
+      "proposal": "Any Week 2 core work pair as historicallyconnectedto, influencedby, or derivesfrom",
+      "reason": "The course explicitly says proximity is an editorial experiment, not evidence of interaction or transmission.",
+      "evidence_keys": [
+        "E-PRE-003",
+        "E-PRE-004"
+      ]
+    },
+    {
+      "proposal": "Any Week 2 core work pair as doctrinallyrelatedto",
+      "reason": "The course explicitly rejects three versions of one universal answer.",
+      "evidence_keys": [
+        "E-W2-001",
+        "E-W2-009"
+      ]
+    },
+    {
+      "proposal": "Resemblance as proof of transmission",
+      "reason": "The supplied case says resemblance without date, contact, shared source, or route supports only conceptual similarity or editorial juxtaposition.",
+      "evidence_keys": [
+        "E-PRE-008"
+      ]
+    },
+    {
+      "proposal": "A mandatory numeric similarity score",
+      "reason": "A score would imply precision and sameness not supported by the course. Type and evidence should be reviewed before any optional weight.",
+      "evidence_keys": [
+        "E-PRE-004",
+        "E-W2-009"
+      ]
+    }
+  ]
+}

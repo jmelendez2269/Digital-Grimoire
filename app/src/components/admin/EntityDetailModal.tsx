@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Edit, Sparkles, X } from "lucide-react";
 import CorrespondenceProfileDossier from "@/components/graph/CorrespondenceProfileDossier";
@@ -27,6 +27,7 @@ interface EntityDetailModalProps {
   entity: ParallaxConcept | CorrespondenceEntity;
   graphType: GraphType;
   onClose: () => void;
+  onEntityChange?: (entity: CorrespondenceEntity) => void;
   readOnly?: boolean;
 }
 
@@ -50,14 +51,27 @@ function toCorrespondenceEntity(
   };
 }
 
+function normalizeEntityLookup(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/^the\s+/, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 export default function EntityDetailModal({
   entity,
   graphType,
   onClose,
+  onEntityChange,
   readOnly,
 }: EntityDetailModalProps) {
   const router = useRouter();
   const isCorrespondence = graphType === "correspondences";
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [activeEntity, setActiveEntity] = useState(entity);
   const [activeTab, setActiveTab] = useState<"consensus" | "sources">("consensus");
@@ -67,6 +81,7 @@ export default function EntityDetailModal({
   const [generatingConsensus, setGeneratingConsensus] = useState(false);
   const [generatedConsensus, setGeneratedConsensus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [resolvingAssociation, setResolvingAssociation] = useState<string | null>(null);
 
   const correspondence = isCorrespondence ? (activeEntity as CorrespondenceEntity) : null;
   const parallax = !isCorrespondence ? (activeEntity as ParallaxConcept) : null;
@@ -76,6 +91,10 @@ export default function EntityDetailModal({
     setProfile(null);
     setError(null);
   }, [entity]);
+
+  useEffect(() => {
+    dialogRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeEntity?.id]);
 
   useEffect(() => {
     if (!isCorrespondence || !activeEntity?.id) return;
@@ -90,8 +109,8 @@ export default function EntityDetailModal({
           throw new Error(data.error || "Failed to load profile");
         }
         setProfile(data.profile || null);
-      } catch (err: any) {
-        setError(err.message || "Failed to load profile");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load profile");
       } finally {
         setLoadingProfile(false);
       }
@@ -170,8 +189,8 @@ export default function EntityDetailModal({
       }
 
       setGeneratedConsensus(consensus);
-    } catch (err: any) {
-      setError(err.message || "Failed to generate consensus");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to generate consensus");
     } finally {
       setGeneratingConsensus(false);
     }
@@ -199,12 +218,43 @@ export default function EntityDetailModal({
     router.push(`/admin/knowledge-graph?${params.toString()}`);
   };
 
+  const handleSelectAssociationValue = async (value: string) => {
+    try {
+      setResolvingAssociation(value);
+      setError(null);
+      const response = await fetch(`/api/graph/entities?q=${encodeURIComponent(value)}&limit=25`, {
+        cache: "no-store",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `Could not find ${value}`);
+
+      const candidates = (data.items || []) as CorrespondenceEntity[];
+      const normalizedValue = normalizeEntityLookup(value);
+      const nextEntity =
+        candidates.find((candidate) => normalizeEntityLookup(candidate.name) === normalizedValue) ||
+        candidates.find((candidate) => candidate.aliases?.some((alias) => normalizeEntityLookup(alias) === normalizedValue)) ||
+        candidates[0];
+
+      if (!nextEntity) throw new Error(`No graph entity is available for ${value}.`);
+      setActiveEntity(nextEntity);
+      onEntityChange?.(nextEntity);
+    } catch (associationError: unknown) {
+      setError(associationError instanceof Error ? associationError.message : `Could not open ${value}.`);
+    } finally {
+      setResolvingAssociation(null);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${activeEntity?.name || "Correspondence"} details`}
         className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg border border-amber-900/30 bg-zinc-900 mx-4"
         onClick={(e) => e.stopPropagation()}
       >
@@ -247,9 +297,13 @@ export default function EntityDetailModal({
             ) : profile ? (
               <CorrespondenceProfileDossier
                 profile={profile}
+                resolvingAssociation={resolvingAssociation}
                 onSelectConnectionEntity={(connection) => {
-                  setActiveEntity(toCorrespondenceEntity(connection.entity));
+                  const nextEntity = toCorrespondenceEntity(connection.entity);
+                  setActiveEntity(nextEntity);
+                  onEntityChange?.(nextEntity);
                 }}
+                onSelectAssociationValue={handleSelectAssociationValue}
               />
             ) : (
               <div className="py-10 text-sm italic text-amber-100/45">

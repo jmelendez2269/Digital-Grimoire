@@ -1,6 +1,7 @@
-import { Network, Database, BookOpen, Layers } from "lucide-react";
+import { Network, Database, Layers } from "lucide-react";
 
-type GraphType = "correspondences" | "parallax";
+import type { GraphType } from "@/lib/types";
+
 type ViewMode = "cards" | "graph";
 
 interface GraphControlsProps {
@@ -8,21 +9,24 @@ interface GraphControlsProps {
     onGraphTypeChange: (type: GraphType) => void;
     viewMode: ViewMode;
     onViewModeChange: (mode: ViewMode) => void;
+    showViewMode?: boolean;
 }
 
 export default function GraphControls({
     graphType,
     onGraphTypeChange,
     viewMode,
-    onViewModeChange
+    onViewModeChange,
+    showViewMode = true,
 }: GraphControlsProps) {
     return (
-        <div className="flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
+        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-700 delay-100">
             {/* Graph Source Switch */}
             <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-lg p-1 flex items-center gap-1">
                 <button
+                    type="button"
                     onClick={() => onGraphTypeChange("correspondences")}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${graphType === "correspondences"
+                    className={`flex min-h-11 items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider transition-all ${graphType === "correspondences"
                         ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
                         : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                         }`}
@@ -32,8 +36,9 @@ export default function GraphControls({
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-1" />
                 <button
+                    type="button"
                     onClick={() => onGraphTypeChange("parallax")}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-mono uppercase tracking-wider transition-all ${graphType === "parallax"
+                    className={`flex min-h-11 items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider transition-all ${graphType === "parallax"
                         ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
                         : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                         }`}
@@ -43,13 +48,13 @@ export default function GraphControls({
                 </button>
             </div>
 
-            <div className="h-6 w-px bg-white/5" />
-
             {/* View Mode Switch */}
-            <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-lg p-1 flex items-center gap-1">
+            {showViewMode && <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-lg p-1 flex items-center gap-1">
                 <button
+                    type="button"
                     onClick={() => onViewModeChange("cards")}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === "cards"
+                    aria-label="Card view"
+                    className={`flex h-11 w-11 items-center justify-center rounded-md transition-all ${viewMode === "cards"
                         ? "bg-zinc-800 text-amber-400 border border-white/10"
                         : "text-zinc-600 hover:text-zinc-400"
                         }`}
@@ -58,8 +63,10 @@ export default function GraphControls({
                     <Layers className="w-4 h-4" />
                 </button>
                 <button
+                    type="button"
                     onClick={() => onViewModeChange("graph")}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === "graph"
+                    aria-label="Graph view"
+                    className={`flex h-11 w-11 items-center justify-center rounded-md transition-all ${viewMode === "graph"
                         ? "bg-zinc-800 text-amber-400 border border-white/10"
                         : "text-zinc-600 hover:text-zinc-400"
                         }`}
@@ -67,7 +74,7 @@ export default function GraphControls({
                 >
                     <Network className="w-4 h-4" />
                 </button>
-            </div>
+            </div>}
         </div>
     );
 }

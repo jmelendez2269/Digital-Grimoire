@@ -18,11 +18,30 @@ const CORRESPONDENCE_NODE_COLOR = "#c8882a";
 
 const DEFAULT_NODE_COLOR = "#22D3EE";
 const DEFAULT_EDGE_COLOR = "rgba(168, 120, 36, 0.16)";
+const COURSE_ENTITY_COLORS: Record<string, string> = {
+  course: "#F5D084",
+  concept: "#22D3EE",
+  work: "#A78BFA",
+  person: "#FB7185",
+  lesson: "#60A5FA",
+  edition: "#C084FC",
+  passage: "#38BDF8",
+  tradition: "#34D399",
+  institution: "#F59E0B",
+  artifact: "#94A3B8",
+};
 const EDGE_TYPE_COLORS: Record<string, string> = {
   corresponds_to: "rgba(232, 176, 72, 0.18)",
   associated_with: "rgba(79, 185, 255, 0.14)",
   refines: "rgba(158, 110, 255, 0.18)",
   shares_correspondence_with: "rgba(45, 212, 191, 0.22)",
+};
+const COURSE_EDGE_COLORS: Record<string, string> = {
+  artifact_documented: "rgba(245, 208, 132, 0.32)",
+  documented_historical: "rgba(52, 211, 153, 0.34)",
+  conceptual: "rgba(34, 211, 238, 0.30)",
+  editorial: "rgba(244, 114, 182, 0.30)",
+  tradition: "rgba(167, 139, 250, 0.30)",
 };
 
 export interface GraphEntity {
@@ -38,6 +57,8 @@ export interface GraphEntity {
   lenses?: string[];
   short_definition?: string;
   tags?: string[];
+  entity_kind?: string;
+  review_state?: string;
   [key: string]: unknown;
 }
 
@@ -46,9 +67,12 @@ export interface GraphEdge {
   source_id: string;
   target_id: string;
   type?: string;
-  weight?: number;
+  weight?: number | null;
   similarity?: number;
   relationship_type?: { slug?: string; color?: string; label?: string };
+  predicate?: string;
+  epistemic_kind?: string;
+  edge_class?: string;
 }
 
 export type GraphLayoutDensity = "compact" | "balanced" | "expanded";
@@ -73,6 +97,10 @@ function isCorrespondenceEntity(entity: GraphEntity) {
 }
 
 export function resolveNodeColor(entity: GraphEntity): string {
+  if (entity.entity_kind) {
+    return COURSE_ENTITY_COLORS[entity.entity_kind] ?? DEFAULT_NODE_COLOR;
+  }
+
   // Correspondence archive uses a unified warm palette so the web reads as one
   // resonant fabric instead of a scatter of unrelated categories. Anchors
   // (issues / intentions / powers) are slightly brighter to hold the eye.
@@ -95,12 +123,17 @@ export function resolveNodeColor(entity: GraphEntity): string {
 }
 
 function resolveEdgeType(edge: GraphEdge) {
-  return edge.relationship_type?.slug ?? edge.type ?? "untyped";
+  return edge.predicate ?? edge.relationship_type?.slug ?? edge.type ?? "untyped";
 }
 
 function resolveEdgeColor(edge: GraphEdge) {
   const edgeType = resolveEdgeType(edge);
-  return edge.relationship_type?.color ?? EDGE_TYPE_COLORS[edgeType] ?? DEFAULT_EDGE_COLOR;
+  return (
+    edge.relationship_type?.color ??
+    (edge.epistemic_kind ? COURSE_EDGE_COLORS[edge.epistemic_kind] : undefined) ??
+    EDGE_TYPE_COLORS[edgeType] ??
+    DEFAULT_EDGE_COLOR
+  );
 }
 
 function getCorrespondenceClusterLayout(density: GraphLayoutDensity) {
@@ -200,7 +233,11 @@ export function buildGraphologyGraph(
   minSimilarity = 0,
   layoutDensity: GraphLayoutDensity = "balanced",
 ): Graph {
-  const graph = new Graph({ multi: false, type: "undirected" });
+  const isCourseGraph = entities.some((entity) => Boolean(entity.entity_kind));
+  const graph = new Graph({
+    multi: isCourseGraph,
+    type: isCourseGraph ? "directed" : "undirected",
+  });
 
   entities.forEach((entity) => {
     if (graph.hasNode(entity.id)) return;
@@ -224,18 +261,31 @@ export function buildGraphologyGraph(
     if (weight < minSimilarity) return;
     if (!nodeSet.has(edge.source_id) || !nodeSet.has(edge.target_id)) return;
     if (edge.source_id === edge.target_id) return;
-    if (graph.hasEdge(edge.source_id, edge.target_id)) return;
+    if (isCourseGraph ? graph.hasEdge(edge.id) : graph.hasEdge(edge.source_id, edge.target_id)) {
+      return;
+    }
 
-    graph.addEdge(edge.source_id, edge.target_id, {
+    const attributes = {
+      label: resolveEdgeType(edge).replaceAll("_", " "),
+      type: isCourseGraph ? "arrow" : "line",
       size:
-        resolveEdgeType(edge) === "shares_correspondence_with"
+        edge.epistemic_kind === "editorial"
+          ? 1.2
+          : resolveEdgeType(edge) === "shares_correspondence_with"
           ? 1.5 + weight * 1.9
           : 1.1 + weight * 1.4,
       color: resolveEdgeColor(edge),
       edgeType: resolveEdgeType(edge),
       isDerived: resolveEdgeType(edge) === "shares_correspondence_with",
+      epistemicKind: edge.epistemic_kind,
       originalData: edge,
-    });
+    };
+
+    if (isCourseGraph) {
+      graph.addDirectedEdgeWithKey(edge.id, edge.source_id, edge.target_id, attributes);
+    } else {
+      graph.addEdge(edge.source_id, edge.target_id, attributes);
+    }
   });
 
   if (graph.order > 0) {
@@ -244,8 +294,14 @@ export function buildGraphologyGraph(
       const originalData = graph.getNodeAttribute(node, "originalData") as GraphEntity | undefined;
       const category = normalizeCategoryKey(originalData?.category);
       const isAnchorCategory = category === "issue_intention_power";
-      const forceLabel = degree >= 6 || isAnchorCategory;
-      const size = isAnchorCategory
+      const isCourseNode = Boolean(originalData?.entity_kind);
+      const isCourseAnchor = originalData?.entity_kind === "course";
+      const forceLabel = degree >= 6 || isAnchorCategory || isCourseAnchor;
+      const size = isCourseAnchor
+        ? 10.5 + Math.min(degree, 12) * 0.45
+        : isCourseNode
+          ? 5.4 + Math.min(degree, 10) * 0.65
+          : isAnchorCategory
         ? 8.8 + Math.min(degree, 12) * 0.55
         : 4.8 + Math.min(degree, 12) * 0.7;
 
