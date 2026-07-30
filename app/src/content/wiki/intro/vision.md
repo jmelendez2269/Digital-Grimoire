@@ -124,9 +124,9 @@ Your Study Journal is your private research workspace—document discoveries, cl
 
 The **Parallax Engine** helps you understand complex ideas through scientific, psychological, philosophical, religious, historical, symbolic, and mathematical lenses. Adjust the weighting to match your inquiry.
 
-**Map How Traditions Converge**
+**Map What Each Course Connects**
 
-Discover how Buddhist emptiness relates to quantum physics. See how Hermetic principles appear in modern psychology. The **Parallax Graph** reveals patterns across all wisdom traditions.
+Follow the concepts, works, and people extracted from completed courses. **Course Knowledge** preserves typed connections, source evidence, and epistemic warnings so you can explore a course's intellectual structure without flattening traditions into similarity claims.
 
 **Join a Learning Community**
 

@@ -118,7 +118,7 @@ This collection is not comprehensive. It is curated to reveal convergence.
 
 - Smaller, curated collection (100+ texts vs. millions in archives)
 - Rich metadata (lens tags, domain classifications, cross-references)
-- Interconnected structure (wikilinks, correspondence tables, Parallax Graph)
+- Interconnected structure (wikilinks, correspondence tables, Course Knowledge graph)
 - AI-powered synthesis (seven-lens reasoning, semantic search)
 
 **Public Domain Commitment**

@@ -12,26 +12,16 @@ import KnowledgeGraphHeader from "@/components/admin/knowledge/KnowledgeGraphHea
 import type { GraphSearchSuggestion } from "@/components/admin/knowledge/KnowledgeGraphHeader";
 import CorrespondenceControls from "@/components/admin/knowledge/CorrespondenceControls";
 import GraphControls from "@/components/admin/knowledge/GraphControls";
-import SimilarityControls from "@/components/parallax/SimilarityControls";
-import TraditionLegend from "@/components/parallax/TraditionLegend";
-import EntityNode from "@/components/PublicEntityCard";
-import ComparativeTable from "@/components/parallax/ComparativeTable";
 import EntityDetailModal from "@/components/admin/EntityDetailModal";
-import ConceptDetailModal from "@/components/parallax/ConceptDetailModal";
 import CourseGraphEntityDialog from "@/components/graph/CourseGraphEntityDialog";
-import GraphNodeGate from "@/components/graph/GraphNodeGate";
-import { useAuth } from "@/contexts/AuthContext";
 import { isSentenceLikeEntityName } from "@/lib/graph/entity-utils";
 import {
-  ConceptGraphSource,
   CorrespondenceEntity,
   CourseGraphEdge,
   CourseGraphEntity,
   CourseGraphEntityKind,
   CourseGraphPayload,
   GraphType,
-  ParallaxConcept,
-  ParallaxRelationship,
 } from "@/lib/types";
 
 type CorrespondenceRelationship = {
@@ -126,19 +116,12 @@ const COURSE_ENTITY_KIND_COLORS: Record<CourseGraphEntityKind, string> = {
   artifact: "#94A3B8",
 };
 
-type ConceptAreaEntity = ParallaxConcept | CourseGraphEntity;
-type GraphPageEntity = ConceptAreaEntity | CorrespondenceEntity;
-type ConceptAreaRelationship = ParallaxRelationship | CourseGraphEdge;
+type GraphPageEntity = CourseGraphEntity | CorrespondenceEntity;
 
 const GraphVisualization = dynamic(
   () => import("@/components/parallax/ParallaxGraph"),
   { ssr: false, loading: () => <ParallaxLoader /> },
 );
-
-const FloatingAISearch = dynamic(() => import("@/components/FloatingAISearch"), {
-  ssr: false,
-  loading: () => null,
-});
 
 function getRelationshipStrength(relationship: CorrespondenceRelationship) {
   return relationship.similarity ?? relationship.weight ?? 0.5;
@@ -409,32 +392,24 @@ function buildFocusedCorrespondenceGraph(
 function GraphPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
 
   const [graphType, setGraphType] = useState<GraphType>((searchParams.get("type") as GraphType) || "correspondences");
-  const [conceptSource, setConceptSource] = useState<ConceptGraphSource>(
-    searchParams.get("source") === "legacy" ? "legacy" : "course",
-  );
-  const [viewMode, setViewMode] = useState<"cards" | "graph" | "table">("graph");
+  const [viewMode, setViewMode] = useState<"cards" | "graph">("graph");
   const [entities, setEntities] = useState<GraphPageEntity[]>([]);
-  const [relationships, setRelationships] = useState<(ConceptAreaRelationship | CorrespondenceRelationship)[]>([]);
+  const [relationships, setRelationships] = useState<(CourseGraphEdge | CorrespondenceRelationship)[]>([]);
   const [courseGraph, setCourseGraph] = useState<CourseGraphPayload | null>(null);
   const [courseGraphError, setCourseGraphError] = useState<string | null>(null);
   const [selectedCourseKinds, setSelectedCourseKinds] = useState<CourseGraphEntityKind[]>(
     COURSE_ENTITY_KIND_ORDER,
   );
   const [loading, setLoading] = useState(true);
-  const [selectedParallaxConcept, setSelectedParallaxConcept] = useState<ParallaxConcept | null>(null);
   const [selectedCourseEntity, setSelectedCourseEntity] = useState<CourseGraphEntity | null>(null);
   const [courseFocusEntityId, setCourseFocusEntityId] = useState<string | null>(null);
   const [selectedCorrespondenceEntity, setSelectedCorrespondenceEntity] = useState<CorrespondenceEntity | null>(null);
   const [inspectedCorrespondenceEntity, setInspectedCorrespondenceEntity] = useState<CorrespondenceEntity | null>(null);
   const [correspondenceHistory, setCorrespondenceHistory] = useState<CorrespondenceEntity[]>([]);
-  const [gateEntity, setGateEntity] = useState<ParallaxConcept | CorrespondenceEntity | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTradition, setSelectedTradition] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [minSimilarity, setMinSimilarity] = useState(0);
   const [correspondenceShuffleToken, setCorrespondenceShuffleToken] = useState(() => Math.floor(Math.random() * 997));
   const [correspondenceFocusEntityId, setCorrespondenceFocusEntityId] = useState<string | null>(null);
   const [correspondenceFocusSource, setCorrespondenceFocusSource] = useState<"random" | "selected" | null>(null);
@@ -455,6 +430,15 @@ function GraphPageContent() {
   });
 
   useEffect(() => {
+    if (!searchParams.has("source")) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("source");
+    const query = params.toString();
+    router.replace(query ? `/graph?${query}` : "/graph", { scroll: false });
+  }, [router, searchParams]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const fetchEntities = async () => {
@@ -462,39 +446,20 @@ function GraphPageContent() {
       setCourseGraphError(null);
       try {
         if (graphType === "parallax") {
-          if (conceptSource === "course") {
-            const response = await fetch("/api/course-graph", { cache: "no-store" });
-            const data = (await response.json()) as CourseGraphPayload & {
-              error?: string;
-              detail?: string;
-            };
+          const response = await fetch("/api/course-graph", { cache: "no-store" });
+          const data = (await response.json()) as CourseGraphPayload & {
+            error?: string;
+            detail?: string;
+          };
 
-            if (!response.ok) {
-              throw new Error(data.error || data.detail || `Course graph request failed (${response.status})`);
-            }
-
-            if (cancelled) return;
-            setCourseGraph(data);
-            setEntities(data.entities || []);
-            setRelationships(data.edges || []);
-          } else {
-            const [entitiesRes, relationshipsRes] = await Promise.all([
-              fetch("/api/concepts?limit=200", { cache: "no-store" }),
-              fetch(`/api/concepts/relationships?limit=400&minSimilarity=${minSimilarity}`, { cache: "no-store" }),
-            ]);
-
-            if (!entitiesRes.ok || !relationshipsRes.ok) {
-              throw new Error("The legacy Concepts graph could not be loaded.");
-            }
-
-            const entitiesData = await entitiesRes.json();
-            const relationshipsData = await relationshipsRes.json();
-
-            if (cancelled) return;
-            setCourseGraph(null);
-            setEntities(entitiesData.items || []);
-            setRelationships(relationshipsData.items || []);
+          if (!response.ok) {
+            throw new Error(data.error || data.detail || `Course graph request failed (${response.status})`);
           }
+
+          if (cancelled) return;
+          setCourseGraph(data);
+          setEntities(data.entities || []);
+          setRelationships(data.edges || []);
         } else {
           const [allEntities, allRelationships] = await Promise.all([
             fetchAllGraphPages<CorrespondenceEntity>("/api/graph/entities", CORRESPONDENCE_PAGE_SIZE),
@@ -502,6 +467,7 @@ function GraphPageContent() {
           ]);
 
           if (cancelled) return;
+          setCourseGraph(null);
           setEntities(allEntities);
           setRelationships(allRelationships.map((relationship: CorrespondenceRelationship) => ({
             ...relationship,
@@ -511,7 +477,7 @@ function GraphPageContent() {
       } catch (error) {
         console.error("Failed to fetch entities", error);
         if (cancelled) return;
-        if (graphType === "parallax" && conceptSource === "course") {
+        if (graphType === "parallax") {
           setCourseGraphError(
             error instanceof Error ? error.message : "The course candidate graph could not be loaded.",
           );
@@ -530,19 +496,7 @@ function GraphPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [conceptSource, graphType, minSimilarity]);
-
-  const traditions = useMemo(() => {
-    if (graphType !== "parallax" || conceptSource !== "legacy") return [];
-
-    return Array.from(
-      new Set(
-        (entities as ParallaxConcept[])
-          .map((concept) => concept.tradition || concept.tradition_ref?.label)
-          .filter(Boolean) as string[],
-      ),
-    ).sort();
-  }, [conceptSource, graphType, entities]);
+  }, [graphType]);
 
   const categories = useMemo(() => {
     if (graphType !== "correspondences") return [];
@@ -568,12 +522,9 @@ function GraphPageContent() {
         const aliasMatch = aliases.find((alias) => alias.toLowerCase().includes(query));
         const context = graphType === "correspondences"
           ? ((entity as CorrespondenceEntity).category || (entity as CorrespondenceEntity).type?.label || aliasMatch)
-          : conceptSource === "course"
-            ? `${COURSE_ENTITY_KIND_LABELS[(entity as CourseGraphEntity).entity_kind]}${(entity as CourseGraphEntity).course_role ? ` · ${(entity as CourseGraphEntity).course_role}` : ""}`
-            : ((entity as ParallaxConcept).tradition || (entity as ParallaxConcept).tradition_ref?.label);
+          : `${COURSE_ENTITY_KIND_LABELS[(entity as CourseGraphEntity).entity_kind]}${(entity as CourseGraphEntity).course_role ? ` · ${(entity as CourseGraphEntity).course_role}` : ""}`;
         const courseContextMatch =
           graphType === "parallax" &&
-          conceptSource === "course" &&
           ((entity as CourseGraphEntity).synthesis_draft.toLowerCase().includes(query) ||
             (entity as CourseGraphEntity).course_role?.toLowerCase().includes(query) ||
             (entity as CourseGraphEntity).entity_kind.includes(query));
@@ -584,7 +535,7 @@ function GraphPageContent() {
       .sort((left, right) => left.score - right.score || left.suggestion.name.localeCompare(right.suggestion.name))
       .slice(0, 8)
       .map((item) => item.suggestion);
-  }, [conceptSource, entities, graphType, searchQuery]);
+  }, [entities, graphType, searchQuery]);
 
   const filteredEntities = useMemo(() => {
     return entities.filter((entity) => {
@@ -597,15 +548,9 @@ function GraphPageContent() {
 
       const query = searchQuery.toLowerCase();
 
-      if (graphType === "parallax" && conceptSource === "course") {
+      if (graphType === "parallax") {
         const courseEntity = entity as CourseGraphEntity;
         if (!selectedCourseKinds.includes(courseEntity.entity_kind)) return false;
-      }
-
-      if (graphType === "parallax" && conceptSource === "legacy" && selectedTradition) {
-        const concept = entity as ParallaxConcept;
-        const traditionLabel = concept.tradition || concept.tradition_ref?.label;
-        if (traditionLabel !== selectedTradition) return false;
       }
 
       if (graphType === "correspondences" && selectedCategory) {
@@ -628,36 +573,23 @@ function GraphPageContent() {
         );
       }
 
-      if (conceptSource === "course") {
-        const courseEntity = entity as CourseGraphEntity;
-        return (
-          courseEntity.name.toLowerCase().includes(query) ||
-          courseEntity.slug.toLowerCase().includes(query) ||
-          courseEntity.stable_id.toLowerCase().includes(query) ||
-          courseEntity.entity_kind.toLowerCase().includes(query) ||
-          courseEntity.aliases.some((alias) => alias.toLowerCase().includes(query)) ||
-          courseEntity.course_role?.toLowerCase().includes(query) ||
-          courseEntity.synthesis_draft.toLowerCase().includes(query)
-        );
-      }
-
-      const concept = entity as ParallaxConcept;
+      const courseEntity = entity as CourseGraphEntity;
       return (
-        concept.name.toLowerCase().includes(query) ||
-        (concept.tradition && concept.tradition.toLowerCase().includes(query)) ||
-        (concept.tradition_ref && concept.tradition_ref.label.toLowerCase().includes(query)) ||
-        concept.tags?.some((tag) => tag.toLowerCase().includes(query)) ||
-        concept.short_definition?.toLowerCase().includes(query)
+        courseEntity.name.toLowerCase().includes(query) ||
+        courseEntity.slug.toLowerCase().includes(query) ||
+        courseEntity.stable_id.toLowerCase().includes(query) ||
+        courseEntity.entity_kind.toLowerCase().includes(query) ||
+        courseEntity.aliases.some((alias) => alias.toLowerCase().includes(query)) ||
+        courseEntity.course_role?.toLowerCase().includes(query) ||
+        courseEntity.synthesis_draft.toLowerCase().includes(query)
       );
     });
   }, [
-    conceptSource,
     entities,
     graphType,
     searchQuery,
     selectedCategory,
     selectedCourseKinds,
-    selectedTradition,
   ]);
 
   const groupedCorrespondenceCards = useMemo(() => {
@@ -780,50 +712,50 @@ function GraphPageContent() {
     correspondenceGraphScope === "focused" ? focusedCorrespondenceGraph : fullCorrespondenceGraph;
 
   const visibleCourseRelationships = useMemo(() => {
-    if (graphType !== "parallax" || conceptSource !== "course") return [];
+    if (graphType !== "parallax") return [];
     const visibleEntityIds = new Set(filteredEntities.map((entity) => entity.id));
     return (relationships as CourseGraphEdge[]).filter(
       (relationship) =>
         visibleEntityIds.has(relationship.source_id) &&
         visibleEntityIds.has(relationship.target_id),
     );
-  }, [conceptSource, filteredEntities, graphType, relationships]);
+  }, [filteredEntities, graphType, relationships]);
 
   const courseDegreeById = useMemo(() => {
     const degree = new Map<string, number>();
-    if (graphType !== "parallax" || conceptSource !== "course") return degree;
+    if (graphType !== "parallax") return degree;
     for (const relationship of relationships as CourseGraphEdge[]) {
       degree.set(relationship.source_id, (degree.get(relationship.source_id) || 0) + 1);
       degree.set(relationship.target_id, (degree.get(relationship.target_id) || 0) + 1);
     }
     return degree;
-  }, [conceptSource, graphType, relationships]);
+  }, [graphType, relationships]);
 
   const courseKindCounts = useMemo(() => {
     const counts = new Map<CourseGraphEntityKind, number>();
-    if (graphType !== "parallax" || conceptSource !== "course") return counts;
+    if (graphType !== "parallax") return counts;
     for (const entity of entities as CourseGraphEntity[]) {
       counts.set(entity.entity_kind, (counts.get(entity.entity_kind) || 0) + 1);
     }
     return counts;
-  }, [conceptSource, entities, graphType]);
+  }, [entities, graphType]);
 
   const graphEntities = graphType === "correspondences" && viewMode === "graph"
     ? activeCorrespondenceGraph?.entities || []
     : filteredEntities;
-  const graphRelationships = graphType === "correspondences" && viewMode === "graph"
-    ? activeCorrespondenceGraph?.relationships || []
-    : graphType === "parallax" && conceptSource === "course"
-      ? visibleCourseRelationships
-      : relationships;
+  const graphRelationships = graphType === "correspondences"
+    ? viewMode === "graph"
+      ? activeCorrespondenceGraph?.relationships || []
+      : relationships
+    : visibleCourseRelationships;
   const displayedEntityCount = graphType === "correspondences" && viewMode === "graph"
     ? activeCorrespondenceGraph?.entities.length || 0
     : filteredEntities.length;
-  const displayedRelationshipCount = graphType === "correspondences" && viewMode === "graph"
-    ? activeCorrespondenceGraph?.relationships.length || 0
-    : graphType === "parallax" && conceptSource === "course"
-      ? visibleCourseRelationships.length
-      : relationships.length;
+  const displayedRelationshipCount = graphType === "correspondences"
+    ? viewMode === "graph"
+      ? activeCorrespondenceGraph?.relationships.length || 0
+      : relationships.length
+    : visibleCourseRelationships.length;
 
   const correspondenceDegreeById = useMemo(() => {
     const degree = new Map<string, number>();
@@ -918,10 +850,9 @@ function GraphPageContent() {
     setGraphType(type);
     setSearchQuery("");
     setSelectedCategory(null);
-    setSelectedTradition(null);
     setSelectedCourseEntity(null);
     setCourseFocusEntityId(null);
-    setMinSimilarity(0);
+    setSelectedCourseKinds(COURSE_ENTITY_KIND_ORDER);
     setCorrespondenceGraphScope("focused");
     setCorrespondenceFocusEntityId(null);
     setCorrespondenceFocusSource(null);
@@ -931,22 +862,7 @@ function GraphPageContent() {
     setCorrespondenceTraversal({ path: [], index: -1 });
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
-    router.replace(`/graph?${params.toString()}`, { scroll: false });
-  };
-
-  const handleConceptSourceChange = (source: ConceptGraphSource) => {
-    setConceptSource(source);
-    setSearchQuery("");
-    setSelectedTradition(null);
-    setSelectedCourseEntity(null);
-    setSelectedParallaxConcept(null);
-    setCourseFocusEntityId(null);
-    setSelectedCourseKinds(COURSE_ENTITY_KIND_ORDER);
-    setMinSimilarity(0);
-    setViewMode("graph");
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("type", "parallax");
-    params.set("source", source);
+    params.delete("source");
     router.replace(`/graph?${params.toString()}`, { scroll: false });
   };
 
@@ -958,22 +874,9 @@ function GraphPageContent() {
       return;
     }
 
-    if ("entity_kind" in entity) {
-      const courseEntity = entity as CourseGraphEntity;
-      setCourseFocusEntityId(courseEntity.id);
-      setSelectedCourseEntity(courseEntity);
-      return;
-    }
-
-    if (!user) {
-      setGateEntity(entity as ParallaxConcept);
-      return;
-    }
-    if (graphType === "parallax") {
-      setSelectedParallaxConcept(entity as ParallaxConcept);
-    } else {
-      setSelectedCorrespondenceEntity(entity as CorrespondenceEntity);
-    }
+    const courseEntity = entity as CourseGraphEntity;
+    setCourseFocusEntityId(courseEntity.id);
+    setSelectedCourseEntity(courseEntity);
   };
 
   const openCorrespondenceDetails = (entity: CorrespondenceEntity) => {
@@ -1100,17 +1003,9 @@ function GraphPageContent() {
         >
           <div className="overflow-hidden">
             <KnowledgeGraphHeader
-              title={
-                graphType === "parallax"
-                  ? conceptSource === "course"
-                    ? "Course Knowledge"
-                    : "The Parallax Graph"
-                  : "Correspondences"
-              }
+              title={graphType === "parallax" ? "Course Knowledge" : "Correspondences"}
               subtitle={graphType === "parallax"
-                ? conceptSource === "course"
-                  ? "Reviewing the concepts, works, people, and typed connections extracted from completed courses."
-                  : "Visualizing the convergence of magical traditions and modern theory."
+                ? "Reviewing the concepts, works, people, and typed connections extracted from completed courses."
                 : correspondenceGraphScope === "focused"
                   ? "Focused constellations drawn from the full correspondence archive."
                   : "The full correspondence archive, organized as a living network."}
@@ -1125,12 +1020,10 @@ function GraphPageContent() {
                 if (graphType === "correspondences") selectCorrespondenceSuggestion(suggestion);
                 else {
                   setSearchQuery(suggestion.name);
-                  if (conceptSource === "course") {
-                    const courseEntity = (entities as CourseGraphEntity[]).find(
-                      (candidate) => candidate.id === suggestion.id,
-                    );
-                    if (courseEntity) setCourseFocusEntityId(courseEntity.id);
-                  }
+                  const courseEntity = (entities as CourseGraphEntity[]).find(
+                    (candidate) => candidate.id === suggestion.id,
+                  );
+                  if (courseEntity) setCourseFocusEntityId(courseEntity.id);
                 }
               }}
             />
@@ -1140,21 +1033,10 @@ function GraphPageContent() {
             <GraphControls
               graphType={graphType}
               onGraphTypeChange={handleTypeChange}
-              viewMode={viewMode === "table" ? "cards" : viewMode}
+              viewMode={viewMode}
               onViewModeChange={(mode) => setViewMode(mode)}
               showViewMode={graphType === "parallax"}
             />
-
-            {graphType === "parallax" && conceptSource === "legacy" && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setViewMode("table")}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/5 text-xs text-zinc-400 hover:text-amber-200 transition-colors ${viewMode === "table" ? "text-amber-200 bg-white/10" : ""}`}
-                >
-                  <span>Table View</span>
-                </button>
-              </div>
-            )}
 
             {graphType === "correspondences" && viewMode === "graph" && activeCorrespondenceGraph && (
               <div className="flex items-center gap-3">
@@ -1221,62 +1103,6 @@ function GraphPageContent() {
           )}
 
           {graphType === "parallax" && (
-            <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Concept data source">
-              {([
-                {
-                  source: "course" as const,
-                  label: "Course knowledge",
-                  icon: GraduationCap,
-                  detail: "Candidates from completed courses",
-                },
-                {
-                  source: "legacy" as const,
-                  label: "Legacy concepts",
-                  icon: Lightbulb,
-                  detail: "Existing convergence taxonomy",
-                },
-              ]).map((option) => (
-                <button
-                  key={option.source}
-                  type="button"
-                  role="tab"
-                  aria-selected={conceptSource === option.source}
-                  onClick={() => handleConceptSourceChange(option.source)}
-                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/45 ${
-                    conceptSource === option.source
-                      ? "border-cyan-500/35 bg-cyan-500/10 text-cyan-100"
-                      : "border-white/10 bg-black/35 text-zinc-500 hover:border-white/20 hover:text-zinc-300"
-                  }`}
-                >
-                  <option.icon className="h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block font-[family-name:var(--font-cinzel)] text-[10px] uppercase tracking-[0.16em]">
-                      {option.label}
-                    </span>
-                    <span className="mt-0.5 hidden text-[10px] text-zinc-600 sm:block">
-                      {option.detail}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {graphType === "parallax" && conceptSource === "legacy" && (
-            <div className="animate-in slide-in-from-top-2 duration-300">
-              <SimilarityControls
-                minSimilarity={minSimilarity}
-                onSimilarityChange={setMinSimilarity}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedTradition={selectedTradition}
-                onTraditionChange={setSelectedTradition}
-                traditions={traditions}
-              />
-            </div>
-          )}
-
-          {graphType === "parallax" && conceptSource === "course" && (
             <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
               <div className="flex flex-wrap items-center gap-2" aria-label="Filter course entities by kind">
                 <button
@@ -1383,20 +1209,13 @@ function GraphPageContent() {
                 )}
               </div>
             </div>
-          ) : graphType === "parallax" && conceptSource === "course" && courseGraphError ? (
+          ) : graphType === "parallax" && courseGraphError ? (
             <div className="mx-auto max-w-2xl rounded-2xl border border-rose-900/35 bg-rose-950/15 px-6 py-10 text-center">
               <AlertCircle className="mx-auto h-8 w-8 text-rose-400/70" />
               <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-2xl text-amber-100">
                 Course candidates are not available in this session
               </h2>
               <p className="mt-3 text-sm leading-6 text-zinc-400">{courseGraphError}</p>
-              <button
-                type="button"
-                onClick={() => handleConceptSourceChange("legacy")}
-                className="mt-6 min-h-11 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs uppercase tracking-[0.14em] text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-              >
-                Open legacy concepts
-              </button>
             </div>
           ) : viewMode === "cards" ? (
             filteredEntities.length === 0 ? (
@@ -1426,7 +1245,7 @@ function GraphPageContent() {
                   ))}
                 </div>
               </div>
-            ) : graphType === "parallax" && conceptSource === "course" ? (
+            ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {(filteredEntities as CourseGraphEntity[]).map((entity) => (
                   <button
@@ -1468,25 +1287,7 @@ function GraphPageContent() {
                   </button>
                 ))}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {(filteredEntities as (ParallaxConcept | CorrespondenceEntity)[]).map((entity) => (
-                  <EntityNode
-                    key={entity.id}
-                    entity={entity}
-                    graphType={graphType}
-                    relationships={relationships}
-                    onSelect={() => handleSelectEntity(entity)}
-                  />
-                ))}
-              </div>
             )
-          ) : viewMode === "table" ? (
-            <ComparativeTable
-              concepts={filteredEntities as ParallaxConcept[]}
-              relationships={relationships as ParallaxRelationship[]}
-              onSelectConcept={(entity) => handleSelectEntity(entity)}
-            />
           ) : (
             <div className={`grid gap-4 transition-[grid-template-columns] duration-200 motion-reduce:transition-none ${isParallaxGraphView ? "grid-cols-1 lg:grid-cols-4" : graphType === "correspondences" ? inspectorCollapsed ? "grid-cols-1 xl:grid-cols-[minmax(0,1fr)_64px]" : "grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px]" : "grid-cols-1"}`}>
 
@@ -1581,25 +1382,21 @@ function GraphPageContent() {
                   className={`bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden relative shadow-2xl transition-all duration-500 ${controlsCollapsed ? "h-[calc(100vh-120px)]" : "h-[700px]"}`}
                 >
                   <GraphVisualization
-                    concepts={graphEntities as (ParallaxConcept | CorrespondenceEntity | CourseGraphEntity)[]}
-                     relationships={graphRelationships}
-                     onSelectConcept={(entity: ParallaxConcept | CorrespondenceEntity | CourseGraphEntity) => handleSelectEntity(entity)}
-                     onClearSelection={
-                       graphType === "correspondences"
-                         ? clearCorrespondenceLock
-                         : conceptSource === "course"
-                           ? () => setCourseFocusEntityId(null)
-                           : undefined
-                     }
-                    minSimilarity={minSimilarity}
+                    concepts={graphEntities}
+                    relationships={graphRelationships}
+                    onSelectConcept={(entity) => handleSelectEntity(entity as GraphPageEntity)}
+                    onClearSelection={
+                      graphType === "correspondences"
+                        ? clearCorrespondenceLock
+                        : () => setCourseFocusEntityId(null)
+                    }
+                    minSimilarity={0}
                     layoutDensity={correspondenceLayoutDensity}
                     layoutEngine={correspondenceLayoutEngine}
                     focusedEntityId={
                       graphType === "correspondences"
                         ? correspondenceFocusEntityId
-                        : conceptSource === "course"
-                          ? courseFocusEntityId
-                          : null
+                        : courseFocusEntityId
                     }
                   />
                 </div>
@@ -1706,8 +1503,7 @@ function GraphPageContent() {
               {isParallaxGraphView && (
                 <div className="lg:col-span-1">
                   <div className="bg-zinc-900/50 border border-amber-900/20 rounded-2xl p-4 shadow-2xl h-fit">
-                    {conceptSource === "course" ? (
-                      <div>
+                    <div>
                         <p className="font-[family-name:var(--font-cinzel)] text-[10px] uppercase tracking-[0.22em] text-amber-400/65">
                           Course graph key
                         </p>
@@ -1752,30 +1548,13 @@ function GraphPageContent() {
                           Candidate means “awaiting curator review.” Open any node for its synthesis,
                           typed connections, evidence, and epistemic warnings.
                         </div>
-                      </div>
-                    ) : (
-                      <TraditionLegend
-                        traditions={traditions}
-                        concepts={entities as ParallaxConcept[]}
-                        selectedTradition={selectedTradition}
-                        onSelectTradition={setSelectedTradition}
-                      />
-                    )}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           )}
         </div>
-
-        {selectedParallaxConcept && (
-          <ConceptDetailModal
-            concept={selectedParallaxConcept}
-            relationships={relationships as ParallaxRelationship[]}
-            concepts={entities as ParallaxConcept[]}
-            onClose={() => setSelectedParallaxConcept(null)}
-          />
-        )}
 
         <CourseGraphEntityDialog
           key={selectedCourseEntity?.id || "closed-course-entity"}
@@ -1804,18 +1583,7 @@ function GraphPageContent() {
           />
         )}
 
-        {gateEntity && (
-          <GraphNodeGate
-            entity={gateEntity}
-            graphType={graphType}
-            onClose={() => setGateEntity(null)}
-          />
-        )}
       </main>
-
-      {graphType === "parallax" && conceptSource === "legacy" && (
-        <FloatingAISearch defaultCollapsed={true} />
-      )}
 
       <Footer />
     </div>

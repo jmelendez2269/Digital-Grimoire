@@ -1,20 +1,20 @@
 ---
-title: Parallax Graph Data Seeding
+title: Legacy Concepts Data Maintenance
 type: guide
-status: stable
+status: deprecated
 audience: developer
-description: Guide for seeding initial concepts and relationships into the Parallax Graph.
+description: Internal reference for retained legacy concept records and APIs; these records are not rendered by the Concepts graph UI.
 ---
 
-# Parallax Graph - Data Seeding Guide
+# Legacy Concepts Data Maintenance
 
-**Last Updated:** March 2026  
-**Status:** Stable — Sigma.js WebGL rendering
+**Last Updated:** July 2026
+**Status:** Deprecated — Concepts UI replaced by Course Knowledge
 
 ---
 
-> [!NOTE]
-> The database currently uses legacy table names `convergence_concepts` and `convergence_relationships`. These will be migrated to `parallax_*` in a future update.
+> [!IMPORTANT]
+> The Concepts route now targets review-only Course Knowledge candidates from `/api/course-graph`, currently restricted to curators. The legacy `convergence_concepts` and `convergence_relationships` records and `/api/concepts*` endpoints remain only because Deep Search and admin tools still consume them. Do not restore a Legacy Concepts tab, route, or fallback.
 
 ---
 
@@ -45,7 +45,7 @@ app/src/
 
 ### How it works
 
-1. Page fetches entities + edges from Supabase API routes (unchanged)
+1. The public graph fetches Course Knowledge from `/api/course-graph` or Correspondences from `/api/graph/*`; it does not fetch `/api/concepts*`.
 2. `buildGraphologyGraph()` in `graphology-adapter.ts` converts the raw arrays into a Graphology `Graph` object with node attributes (`label`, `x`, `y`, `size`, `color`) and edge attributes (`size`)
 3. `forceAtlas2.assign()` runs 100 iterations synchronously to settle the layout
 4. Sigma.js mounts the WebGL canvas and handles all rendering, zoom, pan, hover highlighting, and click events
@@ -59,11 +59,11 @@ app/src/
 
 ## Overview
 
-The Parallax Graph visualizes how concepts from different wisdom traditions converge and relate to each other. This guide shows you how to add your first concepts and relationships.
+This legacy guide documents the retained concept schema for maintenance of existing Deep Search and admin dependencies. New graph knowledge should be extracted from completed courses, reviewed as candidates, and published through the Course Knowledge pipeline.
 
 ---
 
-## Quick Start: Adding Your First Concept
+## Legacy Maintenance: Adding a Concept
 
 ### Method 1: Using the API (Recommended for Testing)
 
@@ -342,38 +342,26 @@ WHERE NOT EXISTS (
 
 ---
 
-## Viewing Your Data
+## Where Legacy Records Appear
 
-Once you've added concepts and relationships:
+Legacy records are not rendered by `/graph?type=parallax`. The retired `/parallax-graph` route redirects to Course Knowledge, and stale `source=legacy` query parameters are removed.
 
-1. **Visit the Parallax Graph page:** `/parallax-graph`
-2. **Use the controls:**
-   - Adjust similarity threshold slider
-   - Filter by tradition
-   - Search by concept name
-   - Toggle between Graph and Table views
-3. **Click on nodes** in the graph to see concept details
-4. **View relationships** in the comparative table
+Only use the retained `/api/concepts*` endpoints through the admin and Deep Search consumers that still depend on them. A new concept intended for the public graph belongs in the course extraction and curator-review workflow.
 
 ---
 
-## Next Steps
+## Retention Rules
 
-1. **Seed the "Emptiness Cluster"** using the example above
-2. **Add more concept clusters:**
-   - Divine Unity (across traditions)
-   - Consciousness concepts
-   - Enlightenment/Awakening parallels
-   - Karma/Cause-and-Effect
-   - Sacred Geometry patterns
-3. **Build out relationships** between clusters
-4. **Add source citations** for scholarly rigor
+1. Do not seed new public graph content into the legacy tables.
+2. Preserve existing records while Deep Search and admin tools depend on them.
+3. Use the Course Knowledge extraction workflow for concepts, books, authors, and typed connections.
+4. Audit and migrate every remaining consumer before deleting legacy tables or APIs.
 
 ---
 
 ## Tips
 
-- **Start small:** Add 3-5 concepts first to see how they connect
+- **Test narrowly:** Use the smallest isolated fixture needed to verify a remaining legacy consumer
 - **Use meaningful similarity scores:** Be conservative; 0.7+ for strong connections
 - **Include citations:** This adds scholarly value and credibility
 - **Tag consistently:** Use consistent tags for filtering later
@@ -383,18 +371,16 @@ Once you've added concepts and relationships:
 
 ## Troubleshooting
 
-**"No concepts found" message:**
+**Legacy API returns no concepts:**
 
 - Make sure you've run the migration: `019_add_convergence_concepts.sql`
 - Check that concepts exist in the database
 - Verify your API routes are working: `/api/concepts`
 
-**"Graph not rendering" / blank canvas:**
+**A legacy record does not appear in Course Knowledge:**
 
-- Check the browser console for errors
-- Ensure `sigma` and `graphology` are installed: `pnpm add sigma graphology graphology-layout-forceatlas2`
-- Verify concepts and relationships are loading (check Network tab for `/api/graph/entities` and `/api/graph/edges`)
-- Confirm the graph container `div` has a non-zero height — the `height` prop on `SigmaGraph` controls this
+- This is expected. Course Knowledge only renders course-extracted candidates from `/api/course-graph`.
+- Add or revise the entity through the course extraction and curator-review workflow.
 
 **API returns 403 Forbidden:**
 

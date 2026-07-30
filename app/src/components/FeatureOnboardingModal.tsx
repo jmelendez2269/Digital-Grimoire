@@ -145,12 +145,12 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Two graph modes grounded in the library's texts and a curated set of ethically sourced correspondence references. A Parallax concept map connects ideas across traditions. A Correspondences archive maps symbols, plants, stones, and planets as a living network.",
+      "Two graph modes grounded in completed courses and a curated set of ethically sourced correspondence references. Course Knowledge connects concepts, works, people, and typed relationships. Correspondences maps symbols, plants, stones, and planets as a living network.",
     bullets: [
-      "Rooted in library sources and ethically sourced reference works",
-      "Parallax graph: cross-tradition concept similarity",
+      "Rooted in completed course sources and ethically sourced reference works",
+      "Course Knowledge: concepts, books, authors, and evidence-backed connections",
       "Correspondences: the symbolic archive as a living network",
-      "Focused mode opens a random constellation — or pick your own starting node",
+      "Correspondences Focus mode opens a random constellation — or pick your own starting node",
     ],
   },
   {

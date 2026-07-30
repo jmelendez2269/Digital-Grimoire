@@ -2,46 +2,55 @@
 
 ## Overview
 
-The **Knowledge Graph** is an interactive map that visualizes the hidden connections between concepts, traditions, and correspondences across the Grimoire. It transforms the library from a list of entries into a living, explorable network of ideas — showing you how Buddhist emptiness relates to Taoist Wu, or how alchemical symbols echo through Hermetic and Kabbalistic traditions.
+The **Knowledge Graph** provides two complementary ways to explore Prismarium:
+
+- **Correspondences** maps the established correspondence archive.
+- **Course Knowledge** maps the concepts, works, people, and typed connections extracted from completed courses.
+
+Course Knowledge entries are review-only candidates. Their syntheses, connections, evidence, and epistemic warnings remain visible to curators until they are approved for wider publication.
 
 ## Navigation Controls
 
-- **Zoom In/Out**: Use your mouse scroll wheel or pinch gesture on a trackpad.
-- **Pan**: Click and drag the background to move around the graph.
-- **Select a Node**: Click on any node (dot) to open a detail panel with full information about that concept or entity.
+- **Zoom In/Out**: Use the mouse wheel, trackpad pinch gesture, or graph zoom buttons.
+- **Pan**: Drag the background or use the directional controls.
+- **Select a Node**: Open its synthesis and connection dossier.
+- **Search**: Find entities by name, alias, kind, role, or synthesis text.
+- **Fit**: Recenter the visible graph.
 
-## Understanding the Nodes
+## Course Knowledge
 
-Each colored dot represents a concept or entity. The color indicates its **Tradition** or **Category**:
+Course Knowledge uses distinct node colors for each entity kind:
 
-| Color | Tradition / Category |
+| Color | Entity kind |
 |---|---|
-| 🟡 Gold | Buddhist |
-| 🔵 Cyan | Christian |
-| 🟢 Emerald | Taoist |
-| 🟠 Orange | Hindu |
-| 🔴 Red | Islamic |
-| 🟣 Indigo/Purple | Jewish / Quantum |
-| 🩷 Pink | Philosophy |
-| 🟡 Amber | Hermetic |
+| Gold | Course |
+| Cyan | Concept |
+| Violet | Work or book |
+| Rose | Person or author |
 
-The **lines (edges)** connecting nodes represent relationships. Thicker, brighter lines indicate a stronger connection between the two concepts.
+Use the kind controls to show any combination of courses, concepts, works, and people. Switch between:
 
-## Filters & Controls
+- **Graph View** for the connected network.
+- **Cards View** for a browsable collection of entity summaries.
 
-Use the controls above the graph to narrow your view:
+Each course node can also show the claims the import deliberately refuses to make. Directed arrows preserve the source → target direction of every connection.
 
-- **Tradition / Category Dropdown**: Show only concepts from a specific tradition or category.
-- **Similarity Slider** *(Parallax Graph)*: Raise this threshold to show only the strongest cross-tradition connections.
-- **Search Bar**: Search for a specific concept by name. Matching nodes will be highlighted.
+## Reading a Dossier
 
-## Tips for Exploration
+Selecting a Course Knowledge node opens:
 
-- **Hover over a node** to highlight only its direct connections — everything else will fade.
-- **Start with a tradition you know** and follow the edges to discover adjacent and parallel concepts in other traditions.
-- **Zoom in** to read concept labels clearly — labels appear and sharpen as you zoom in.
-- Switch between **Graph View**, **Cards View**, and **Table View** using the buttons at the top to explore the same data in different formats.
+- its draft course synthesis;
+- typed incoming and outgoing connections;
+- a short explanation of every connection;
+- source anchors and excerpts;
+- warnings for editorial or interpretive relationships.
+
+Select a connected entity inside the dossier to continue exploring without closing it. Use **Back** to return to the previous entity or **Escape** to close the dossier.
+
+## Correspondences
+
+Correspondences retains its own **Atlas**, **Focus**, and **Table** views. Category filters, search, hover, and direct-node selection help narrow the archive.
 
 ---
 
-*Last Updated: March 2026*
+*Last Updated: July 2026*
