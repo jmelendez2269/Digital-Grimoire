@@ -51,7 +51,7 @@ src/app/(home)/
 3. **Tools Grid** (Primary Navigation):
     * **Library** (`/library`): Browse text collection.
     * **Journal** (`/journal`): Personal notes. Title defaults to "The Journal" or user's custom `journal_name`.
-    * **Graph** (`/graph`): Parallax Graph visualization.
+    * **Graph** (`/graph`): Knowledge Graph with Correspondences and Course Knowledge views.
     * **Courses** (`/courses`): Learning paths. Includes analytics tracking on click (`/api/track/courses-click`).
     * **Seven Lenses** (`<ParallaxEngineInfo />`): Link to the 7-lens AI reasoning surface at `/seven-lenses` (the underlying component name still uses the legacy `ParallaxEngine` prefix per the rename matrix). Desktop nav labels this entry **Parallax Search**.
 4. **Extras / Practitioner Tools**:

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Parallax Graph | Prismarium",
-  description: "Explore the Parallax Graph - visualize cross-tradition connections and discover unity across wisdom traditions",
+  title: "Course Knowledge Graph | Prismarium",
+  description: "Explore concepts, works, people, and typed connections extracted from completed Prismarium courses.",
   robots: {
     index: false,
     follow: false,
   },
   openGraph: {
-    title: "Parallax Graph | Prismarium",
-    description: "Explore the Parallax Graph - visualize cross-tradition connections and discover unity across wisdom traditions",
+    title: "Course Knowledge Graph | Prismarium",
+    description: "Explore concepts, works, people, and typed connections extracted from completed Prismarium courses.",
     type: "website",
     url: "/parallax-graph",
     images: [
@@ -17,14 +17,14 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Parallax Graph - Cross-Tradition Unity",
+        alt: "Prismarium Course Knowledge Graph",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Parallax Graph | Prismarium",
-    description: "Explore the Parallax Graph - visualize cross-tradition connections",
+    title: "Course Knowledge Graph | Prismarium",
+    description: "Explore concepts, works, people, and typed connections extracted from completed courses.",
     images: ["/og-image.png"],
   },
 };
