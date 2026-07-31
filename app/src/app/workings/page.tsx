@@ -72,7 +72,7 @@ function StaticPalette() {
         ))}
       </div>
       <p className="text-xs text-zinc-600 mt-4 leading-relaxed">
-        The Parallax Engine pulls correspondences from the knowledge graph — planetary rulers, elemental associations,
+        The Working pulls correspondences from the Knowledge Graph — planetary rulers, elemental associations,
         botanical and mineral affinities — and assembles them into a coherent palette for your specific intention.
       </p>
     </div>
@@ -89,7 +89,7 @@ function HowItWorks() {
     {
       icon: <Flame size={16} className="text-amber-500/70" />,
       title: "The engine assembles",
-      body: "The Parallax Engine queries the knowledge graph — plants, stones, planets, timing, tradition — and builds a correspondence palette unique to your intent.",
+      body: "The Working queries the Knowledge Graph — plants, stones, planets, timing, tradition — and builds a correspondence palette unique to your intent.",
     },
     {
       icon: <Leaf size={16} className="text-amber-500/70" />,

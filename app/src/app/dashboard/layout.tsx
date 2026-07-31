@@ -3,15 +3,17 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Dashboard | Prismarium",
-  description: "Your Prismarium dashboard - Access your personal library, study journal, and explore esoteric texts through AI-powered analysis.",
+  title: "Member home | Prismarium",
+  description:
+    "Return to your shared course path, saved reading, Study Journal, and the questions you are following in Prismarium.",
   robots: {
     index: false,
     follow: false,
   },
   openGraph: {
-    title: "Dashboard | Prismarium",
-    description: "Your Prismarium dashboard - Access your personal library and study journal.",
+    title: "Member home | Prismarium",
+    description:
+      "Return to your shared course path, saved reading, and Study Journal.",
     type: "website",
     url: "/dashboard",
     images: [
@@ -19,14 +21,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Prismarium Dashboard",
+        alt: "Prismarium member home",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dashboard | Prismarium",
-    description: "Your Prismarium dashboard - Access your personal library and study journal.",
+    title: "Member home | Prismarium",
+    description:
+      "Return to your shared course path, saved reading, and Study Journal.",
     images: ["/og-image.png"],
   },
 };

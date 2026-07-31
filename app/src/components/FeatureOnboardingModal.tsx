@@ -25,9 +25,9 @@ const lenses = [
   { emoji: "🔭", label: "Scientific", color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20" },
   { emoji: "🧠", label: "Psychological", color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
   { emoji: "📜", label: "Philosophical", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-  { emoji: "✨", label: "Religious / Spiritual", color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
-  { emoji: "🏛️", label: "Historical", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" },
-  { emoji: "⚗️", label: "Symbolic / Occult", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+  { emoji: "✨", label: "Religious/Spiritual", color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
+  { emoji: "🏛️", label: "Historical/Anthropological", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" },
+  { emoji: "⚗️", label: "Symbolic/Occult", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
   { emoji: "∞", label: "Mathematical", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
 ];
 
@@ -41,16 +41,15 @@ const features = [
     accentColor: "text-blue-400",
     accentBg: "bg-blue-500/10",
     accentBorder: "border-blue-500/30",
-    badge: "Recommended starting point",
+    badge: "A good place to begin",
     badgeColor: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
     description:
-      "Courses are the heart of the platform. Browse by lens, follow curated Paths, trace the Arcs, or explore the course Map. Each course guides you through readings, exercises, and a synthesis artifact.",
+      "Courses are guided paths through questions we can explore together. PRE is the recommended shared beginning, never a requirement. Public course previews stay open so you can see which question calls to you.",
     bullets: [
-      "Catalog filtered by any of the 7 lenses",
-      "Arcs, Paths, and Map for navigating the full curriculum",
-      "Reading digests, lens exercises, and hands-on activities using the platform's tools",
-      "Ends in a synthesis artifact you build",
-      "Share your synthesis to the Community pool after you write it",
+      "Explore one question at a time",
+      "Read and compare different perspectives",
+      "Use the Library, Concept Search, Seven Lenses, Knowledge Graph, and Study Journal as you go",
+      "Build your own understanding in your own words",
     ],
   },
   {
@@ -105,18 +104,18 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Enter a question, concept, or passage and analyze it through seven distinct epistemological lenses at once. Powered by frontier AI models running rigorous, purpose-built prompts — not generic chatbot responses.",
+      "Bring a question, concept, or passage and look at it through seven perspectives side by side. The point is to compare what each one reveals, not to receive one final answer.",
     bullets: [
-      "Seven-lens simultaneous analysis",
-      "Frontier AI models with purpose-built prompts per lens",
-      "Adjustable lens weighting",
+      "See seven perspectives on the same question",
+      "Adjust which lenses receive more attention",
+      "Compare agreements, differences, and blind spots",
       "Built for comparison, not dogma",
     ],
   },
   {
     id: "journal",
     Icon: Book,
-    label: "Journal",
+    label: "Study Journal",
     href: "/journal",
     wikiHref: "/wiki/journal",
     accentColor: "text-indigo-400",
@@ -125,12 +124,12 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Your private research space for notes, clipped passages, reflections, and synthesis. Course work, saved outputs, and highlights all archive here — your personal map of understanding over time.",
+      "Your private place for notes, clipped passages, reflections, and connections. Keep what matters as you read and explore, and give the journal a name of your own.",
     bullets: [
       "Rich editor with wiki-links",
       "Clip passages from the Library",
       "Save outputs from Seven Lenses",
-      "Archived synthesis and highlights from your courses",
+      "Keep course notes and questions together",
     ],
   },
   {
@@ -145,12 +144,12 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "Two graph modes grounded in completed courses and a curated set of ethically sourced correspondence references. Course Knowledge connects concepts, works, people, and typed relationships. Correspondences maps symbols, plants, stones, and planets as a living network.",
+      "Follow Course Knowledge connections between concepts, books, authors, and lessons, or explore sourced symbolic correspondences.",
     bullets: [
-      "Rooted in completed course sources and ethically sourced reference works",
-      "Course Knowledge: concepts, books, authors, and evidence-backed connections",
-      "Correspondences: the symbolic archive as a living network",
-      "Correspondences Focus mode opens a random constellation — or pick your own starting node",
+      "Course Knowledge: concepts, books, authors, lessons, and typed connections",
+      "Connections grounded in course, Library, and reference sources",
+      "Correspondences: explore symbolic relationships",
+      "Choose a starting point or open a random connection",
     ],
   },
   {
@@ -165,70 +164,13 @@ const features = [
     badge: null,
     badgeColor: "",
     description:
-      "A ritual generator. Describe what you're working toward in plain language — a job, a decision, a transition — and the engine pulls correspondences from the knowledge graph (symbols, plants, stones, planets, timing) and builds a complete, personalized ritual around your intention.",
+      "A ritual generator. Describe what you're working toward in plain language — a job, a decision, a transition — and the engine pulls correspondences from the Knowledge Graph (symbols, plants, stones, planets, timing) and builds a complete, personalized ritual around your intention.",
     bullets: [
       "Tell it your intention in plain language — it builds the ritual",
-      "Correspondence palette drawn live from the knowledge graph",
+      "Correspondence palette drawn live from the Knowledge Graph",
       "Record conditions when you cast it; watch what follows",
       "Share completed workings to the community",
     ],
-  },
-];
-
-const workflowSteps = [
-  {
-    Icon: GraduationCap,
-    label: "Courses",
-    href: "/courses",
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/30",
-    description: "Start with a core question",
-  },
-  {
-    Icon: Library,
-    label: "Library",
-    href: "/library",
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-    border: "border-cyan-500/30",
-    description: "Read the assigned texts",
-  },
-  {
-    Icon: Lightbulb,
-    label: "Concept Search",
-    href: "/search",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/30",
-    description: "Trace patterns and themes",
-  },
-  {
-    Icon: Zap,
-    label: "Seven Lenses",
-    href: "/seven-lenses",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-    description: "Analyze through multiple lenses",
-  },
-  {
-    Icon: Book,
-    label: "Journal",
-    href: "/journal",
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10",
-    border: "border-indigo-500/30",
-    description: "Capture your synthesis",
-  },
-  {
-    Icon: FlaskConical,
-    label: "The Working",
-    href: "/workbench/the-working",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-    description: "Take it into practice",
   },
 ];
 
@@ -241,15 +183,15 @@ function StepWelcome() {
         </div>
         <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70">Prismarium</p>
         <h2 className="text-2xl sm:text-3xl font-serif text-amber-100 leading-tight max-w-lg">
-          A curated body of wisdom, a method for understanding it, and tools for carrying that method into your own work.
+          A place to keep learning, compare perspectives, and build your own understanding.
         </h2>
         <p className="text-xs font-mono text-zinc-500 tracking-widest">
-          Prismatic Learning · Seven Lenses · Synthesis as Discipline
+          Read · compare · question · make connections
         </p>
       </div>
 
       <p className="text-sm text-zinc-300 max-w-xl leading-relaxed">
-        You don't have to choose between rigorous inquiry and genuine mystery. Prismarium is built for people who want both — a place to read deeply, think comparatively, and build your own understanding over time.
+        Prismarium grew out of my own search for somewhere I could keep learning without being handed one final answer. I’m still learning too. This is a place to read deeply, compare perspectives, and build your own understanding over time.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl text-left">
@@ -262,13 +204,13 @@ function StepWelcome() {
           },
           {
             label: "What this is",
-            items: ["A place to hold many traditions at once", "A method for building your own map"],
+            items: ["A place to hold many traditions at once", "A way to build your own map"],
             color: "border-amber-500/30 text-amber-200",
             labelColor: "text-amber-400",
           },
           {
-            label: "What we believe",
-            items: ["Multiple truths can coexist", "No lens is final", "You decide what resonates", "Synthesis matters"],
+            label: "What guides the work",
+            items: ["More than one perspective can matter", "No lens gets the final word", "You decide what holds up for you", "Questions can stay open"],
             color: "border-cyan-500/20 text-cyan-200",
             labelColor: "text-cyan-400",
           },
@@ -294,10 +236,10 @@ function StepPhilosophy() {
   return (
     <div className="flex flex-col gap-8 py-2">
       <div className="text-center">
-        <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-3">Prismatic Learning</p>
-        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-3">Seven Ways of Knowing</h2>
+        <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-3">Seven Lenses</p>
+        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-3">Seven ways to look at a question</h2>
         <p className="text-zinc-400 max-w-2xl mx-auto text-base leading-relaxed">
-          Reality is not accessed through a single mode of inquiry. Prismarium compares claims through seven distinct lenses so that no single framework quietly becomes absolute.
+          A question can look very different depending on where you stand. Seven Lenses lets you compare seven perspectives without treating any one of them as the final answer.
         </p>
       </div>
 
@@ -321,7 +263,7 @@ function StepPhilosophy() {
 
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 text-center max-w-2xl mx-auto">
         <p className="text-amber-200 text-base leading-relaxed">
-          <span className="font-medium">Synthesis is not agreement.</span> It is the discipline of holding multiple perspectives long enough to understand what each one reveals.
+          The point is not to force the lenses into agreement. It is to notice what each one reveals, where they differ, and what you think after seeing the question from more than one direction.
         </p>
       </div>
     </div>
@@ -336,10 +278,10 @@ function StepFeatureTour() {
   return (
     <div className="flex flex-col gap-4 py-2">
       <div className="text-center">
-        <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-2">Your Toolkit</p>
-        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-2">The Platform&apos;s Tools</h2>
+        <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-2">Ways to explore</p>
+        <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-2">The tools</h2>
         <p className="text-zinc-400 text-base max-w-xl mx-auto">
-          Select a tool to see what it does and how it fits into the overall workflow.
+          Choose a tool to see what it can help you do. You can use any of them on their own or alongside a course path.
         </p>
       </div>
 
@@ -398,7 +340,7 @@ function StepFeatureTour() {
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
             <Link href={selected.wikiHref} className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-              Read the docs
+              How it works
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -410,19 +352,20 @@ function StepFeatureTour() {
 
 function StepWorkflow() {
   const coreTools = [
-    { Icon: Library, label: "Library", description: "Read the assigned texts", color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
+    { Icon: Library, label: "Library", description: "Read across the collection", color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
     { Icon: Lightbulb, label: "Concept Search", description: "Trace patterns and themes", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-    { Icon: Zap, label: "Seven Lenses", description: "Analyze through multiple lenses", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-    { Icon: Book, label: "Journal", description: "Capture your synthesis", color: "text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/30" },
+    { Icon: Zap, label: "Seven Lenses", description: "Compare perspectives", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+    { Icon: Network, label: "Knowledge Graph", description: "Follow connections between ideas", color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
+    { Icon: Book, label: "Study Journal", description: "Keep notes and connections", color: "text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/30" },
   ];
 
   return (
     <div className="flex flex-col gap-5 py-2">
       <div className="text-center">
-        <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-3">The Recommended Path</p>
+        <p className="text-xs font-mono uppercase tracking-[0.3em] text-amber-500/70 mb-3">One way to begin</p>
         <h2 className="text-3xl sm:text-4xl font-serif text-amber-100 mb-3">How the Tools Work Together</h2>
         <p className="text-zinc-400 text-base max-w-2xl mx-auto leading-relaxed">
-          Start with a course. The tools branch from there — each one feeds into the next. The Working sits alongside the ecosystem as its own thing.
+          A course gives us a question to follow together. From there, you can read in the Library, trace an idea with Concept Search, compare perspectives with Seven Lenses, follow connections in the Knowledge Graph, and keep your notes in your Study Journal.
         </p>
       </div>
 
@@ -431,20 +374,20 @@ function StepWorkflow() {
         <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-xl border border-blue-500/40 bg-blue-500/10 text-center w-56">
           <GraduationCap className="w-6 h-6 text-blue-400" />
           <p className="font-semibold text-base text-blue-400">Courses</p>
-          <p className="text-sm text-zinc-500 leading-snug">Start with a core question</p>
+          <p className="text-sm text-zinc-500 leading-snug">Explore a question together</p>
         </div>
 
         {/* Branch stem */}
         <div className="flex flex-col items-center">
           <div className="w-px h-4 bg-zinc-700" />
-          <div className="w-48 h-px bg-zinc-700" />
-          <div className="flex justify-between w-48">
-            {coreTools.map(() => <div key={Math.random()} className="w-px h-4 bg-zinc-700" />)}
+          <div className="w-64 h-px bg-zinc-700" />
+          <div className="flex justify-between w-64">
+            {coreTools.map((tool) => <div key={tool.label} className="w-px h-4 bg-zinc-700" />)}
           </div>
         </div>
 
-        {/* 4 parallel tools */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+        {/* 5 parallel tools */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 w-full">
           {coreTools.map(({ Icon, label, description, color, bg, border }) => (
             <div key={label} className={`flex flex-col items-center gap-2 p-4 rounded-xl border ${border} ${bg} text-center`}>
               <Icon className={`w-5 h-5 ${color}`} />
@@ -457,13 +400,13 @@ function StepWorkflow() {
 
       {/* Independent use note */}
       <p className="text-sm text-zinc-500 text-center max-w-xl mx-auto leading-relaxed">
-        Every tool works independently too — browse the Library on your own, run a Seven Lenses analysis on any question, or use the Knowledge Graph to follow your own threads. The course structure is a recommendation, not a requirement.
+        You can also begin with any tool on its own. Courses are one way in, not a requirement.
       </p>
 
       {/* The Working — standalone */}
       <div className="flex items-center gap-3 mt-1">
         <div className="flex-1 h-px border-t border-dashed border-zinc-700" />
-        <p className="text-xs font-mono text-zinc-600 uppercase tracking-widest shrink-0">standalone · part of the ecosystem</p>
+        <p className="text-xs font-mono text-zinc-600 uppercase tracking-widest shrink-0">a separate practice tool</p>
         <div className="flex-1 h-px border-t border-dashed border-zinc-700" />
       </div>
 
@@ -471,7 +414,7 @@ function StepWorkflow() {
         <div className="flex flex-col items-center gap-2 px-6 py-4 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 text-center w-72">
           <FlaskConical className="w-5 h-5 text-amber-400" />
           <p className="font-semibold text-base text-amber-400">The Working</p>
-          <p className="text-sm text-zinc-500 leading-snug">A ritual generator — draws from the knowledge graph, used on its own terms</p>
+          <p className="text-sm text-zinc-500 leading-snug">Build a ritual from an intention and connections in the Knowledge Graph.</p>
         </div>
       </div>
     </div>
@@ -495,9 +438,9 @@ function StepReady({ onClose }: { onClose: () => void }) {
         {[
           {
             Icon: GraduationCap,
-            label: "Start a Course",
-            description: "Structured inquiry around a core question",
-            href: "/courses",
+            label: "Begin with PRE",
+            description: "Meet the method in the two-week shared orientation",
+            href: "/courses/pre-how-to-hold-two-things-at-once",
             color: "text-blue-400",
             bg: "bg-blue-500/10",
             border: "border-blue-500/30",
@@ -513,8 +456,8 @@ function StepReady({ onClose }: { onClose: () => void }) {
           },
           {
             Icon: Lightbulb,
-            label: "Search Concepts",
-            description: "Follow an idea across the full collection of texts",
+            label: "Open Concept Search",
+            description: "Follow an idea across the collection.",
             href: "/search",
             color: "text-emerald-400",
             bg: "bg-emerald-500/10",
@@ -536,7 +479,7 @@ function StepReady({ onClose }: { onClose: () => void }) {
 
       <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/30 p-5 max-w-lg w-full">
         <p className="text-zinc-400 text-base mb-3">
-          Need orientation on a feature? The wiki explains how the study surfaces work and how they connect.
+          Need help finding your way around? The wiki explains what each part does and how they connect.
         </p>
         <Link href="/wiki" onClick={onClose} className="inline-flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 font-medium transition-colors">
           Visit the Wiki

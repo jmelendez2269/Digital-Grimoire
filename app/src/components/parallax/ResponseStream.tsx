@@ -548,7 +548,7 @@ export default function ResponseStream({
       }
     } catch (error) {
       console.error('Error saving to journal:', error);
-      alert(error instanceof Error ? error.message : 'Failed to save to journal');
+      alert(error instanceof Error ? error.message : 'Failed to save to Study Journal');
     } finally {
       setSaving(false);
     }
@@ -567,12 +567,12 @@ export default function ResponseStream({
 
   return (
     <div className="space-y-6">
-      {/* Save to Journal Modal */}
+      {/* Save to Study Journal Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-amber-900/30 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-amber-100">Save to Journal</h3>
+              <h3 className="text-xl font-bold text-amber-100">Save to Study Journal</h3>
               <button
                 onClick={() => setShowSaveModal(false)}
                 className="text-zinc-400 hover:text-zinc-200 transition-colors"
@@ -673,7 +673,7 @@ export default function ResponseStream({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-amber-900/30 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-amber-100">Navigate to Journal Page?</h3>
+              <h3 className="text-xl font-bold text-amber-100">Open Study Journal Page?</h3>
               <button
                 onClick={() => setShowNavigateModal(false)}
                 className="text-zinc-400 hover:text-zinc-200 transition-colors"
@@ -739,7 +739,7 @@ export default function ResponseStream({
             ) : (
               <>
                 <FileText className="w-4 h-4" />
-                Save to Journal
+                Save to Study Journal
               </>
             )}
           </button>

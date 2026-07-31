@@ -560,7 +560,7 @@ export default function JournalPageEditor() {
             href="/journal"
             className="text-amber-400 hover:text-amber-300 underline"
           >
-            Back to Journal
+            Back to Study Journal
           </Link>
         </div>
       </div>
@@ -581,7 +581,7 @@ export default function JournalPageEditor() {
                   className="flex items-center gap-2 text-zinc-400 hover:text-amber-400 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Back to Journal
+                  Back to Study Journal
                 </Link>
 
                 <div className="flex items-center gap-2">

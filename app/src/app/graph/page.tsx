@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, BookOpen, ChevronDown, ChevronRight, ChevronUp, Compass, GraduationCap, Lightbulb, List, Map as MapIcon, Orbit, PanelRightClose, PanelRightOpen, Search, Sparkles, UserRound, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -14,7 +14,15 @@ import CorrespondenceControls from "@/components/admin/knowledge/CorrespondenceC
 import GraphControls from "@/components/admin/knowledge/GraphControls";
 import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import CourseGraphEntityDialog from "@/components/graph/CourseGraphEntityDialog";
+import CourseGraphPublicView from "@/components/graph/CourseGraphPublicView";
 import { isSentenceLikeEntityName } from "@/lib/graph/entity-utils";
+import {
+  FD01_COURSE_SLUG,
+  FD01_PATTERN_TEST_FALLBACK,
+  FD01_PATTERN_TEST_VIEW,
+  isFd01GraphPreviewEnabled,
+  type PublicCourseGraphPackage,
+} from "@/lib/graph/course-graph-public";
 import {
   CorrespondenceEntity,
   CourseGraphEdge,
@@ -62,7 +70,11 @@ type PaginatedGraphResponse<T> = {
   hasMore?: boolean;
 };
 
-const CORRESPONDENCE_PAGE_SIZE = 5000;
+// Supabase/PostgREST caps each response at 1,000 rows in this project. Keep
+// the requested page size at that ceiling so offset pagination never skips
+// rows when the API returns fewer items than requested.
+const CORRESPONDENCE_PAGE_SIZE = 1000;
+const DEFAULT_CANDIDATE_COURSE = "pre-how-to-hold-two-things-at-once";
 const FOCUSED_GRAPH_NODE_LIMIT = 140;
 const FOCUSED_GRAPH_EDGE_LIMIT = 520;
 const FOCUSED_NEIGHBOR_FANOUT = 18;
@@ -392,13 +404,41 @@ function buildFocusedCorrespondenceGraph(
 function GraphPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const requestedGraphType = searchParams.get("type");
+  const isPublicCourseView = requestedGraphType === "course";
+  const selectedPublicCourse = searchParams.get("course")?.trim() || "";
+  const selectedPublicView = searchParams.get("view")?.trim() || "";
+  const selectedPublicFocus = searchParams.get("focus")?.trim() || null;
+  const selectedCandidateBundle = searchParams.get("bundle")?.trim() || "";
+  const publicCoursePreviewEnabled = isFd01GraphPreviewEnabled();
 
-  const [graphType, setGraphType] = useState<GraphType>((searchParams.get("type") as GraphType) || "correspondences");
+  const [graphType, setGraphType] = useState<GraphType>(
+    requestedGraphType === "course"
+      ? "parallax"
+      : requestedGraphType === "parallax" ||
+          requestedGraphType === "correspondences"
+        ? requestedGraphType
+        : "correspondences",
+  );
+
+  useEffect(() => {
+    setGraphType(
+      requestedGraphType === "course" ||
+        requestedGraphType === "parallax"
+        ? "parallax"
+        : "correspondences",
+    );
+  }, [requestedGraphType]);
+
   const [viewMode, setViewMode] = useState<"cards" | "graph">("graph");
   const [entities, setEntities] = useState<GraphPageEntity[]>([]);
   const [relationships, setRelationships] = useState<(CourseGraphEdge | CorrespondenceRelationship)[]>([]);
   const [courseGraph, setCourseGraph] = useState<CourseGraphPayload | null>(null);
   const [courseGraphError, setCourseGraphError] = useState<string | null>(null);
+  const [publicCourseGraph, setPublicCourseGraph] =
+    useState<PublicCourseGraphPackage | null>(null);
+  const [usedStaticCourseFallback, setUsedStaticCourseFallback] =
+    useState(false);
   const [selectedCourseKinds, setSelectedCourseKinds] = useState<CourseGraphEntityKind[]>(
     COURSE_ENTITY_KIND_ORDER,
   );
@@ -428,6 +468,7 @@ function GraphPageContent() {
     path: [],
     index: -1,
   });
+  const deepLinkedFocusRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!searchParams.has("source")) return;
@@ -445,8 +486,71 @@ function GraphPageContent() {
       setLoading(true);
       setCourseGraphError(null);
       try {
+        if (isPublicCourseView) {
+          setCourseGraph(null);
+          setEntities([]);
+          setRelationships([]);
+          if (!publicCoursePreviewEnabled) {
+            setPublicCourseGraph(null);
+            setUsedStaticCourseFallback(false);
+            throw new Error(
+              "This learner course graph preview has not been enabled.",
+            );
+          }
+
+          if (
+            selectedPublicCourse !== FD01_COURSE_SLUG ||
+            selectedPublicView !== FD01_PATTERN_TEST_VIEW
+          ) {
+            setPublicCourseGraph(null);
+            setUsedStaticCourseFallback(false);
+            throw new Error(
+              "This public course view requires one exact course and saved-view selection.",
+            );
+          }
+
+          try {
+            const response = await fetch(
+              `/api/course-graph/learner?course=${encodeURIComponent(selectedPublicCourse)}&view=${encodeURIComponent(selectedPublicView)}`,
+              { cache: "no-store" },
+            );
+            const data = (await response.json()) as PublicCourseGraphPackage & {
+              error?: string;
+            };
+            if (
+              !response.ok ||
+              data.schema_version !== "course-graph-learner/v1" ||
+              data.course?.slug !== selectedPublicCourse ||
+              data.selected_view?.view_id !== selectedPublicView
+            ) {
+              throw new Error(data.error || "Learner package unavailable");
+            }
+            if (cancelled) return;
+            setPublicCourseGraph(data);
+            setUsedStaticCourseFallback(false);
+          } catch {
+            if (cancelled) return;
+            setPublicCourseGraph(FD01_PATTERN_TEST_FALLBACK);
+            setUsedStaticCourseFallback(true);
+          }
+          return;
+        }
+
         if (graphType === "parallax") {
-          const response = await fetch("/api/course-graph", { cache: "no-store" });
+          if (
+            Boolean(selectedCandidateBundle) ===
+            Boolean(selectedPublicCourse)
+          ) {
+            throw new Error(
+              "Select exactly one course or candidate bundle in the URL.",
+            );
+          }
+          const selector = selectedCandidateBundle
+            ? `bundle=${encodeURIComponent(selectedCandidateBundle)}`
+            : `course=${encodeURIComponent(selectedPublicCourse)}`;
+          const response = await fetch(`/api/course-graph?${selector}`, {
+            cache: "no-store",
+          });
           const data = (await response.json()) as CourseGraphPayload & {
             error?: string;
             detail?: string;
@@ -496,7 +600,14 @@ function GraphPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [graphType]);
+  }, [
+    graphType,
+    isPublicCourseView,
+    publicCoursePreviewEnabled,
+    selectedCandidateBundle,
+    selectedPublicCourse,
+    selectedPublicView,
+  ]);
 
   const categories = useMemo(() => {
     if (graphType !== "correspondences") return [];
@@ -837,6 +948,28 @@ function GraphPageContent() {
     }
   }, []);
 
+  useEffect(() => {
+    const focusValue = searchParams.get("focus")?.trim().toLowerCase();
+
+    if (graphType !== "correspondences" || !focusValue) {
+      deepLinkedFocusRef.current = null;
+      return;
+    }
+
+    const entity = (entities as CorrespondenceEntity[]).find(
+      (candidate) =>
+        candidate.id.toLowerCase() === focusValue ||
+        candidate.slug?.toLowerCase() === focusValue,
+    );
+
+    if (!entity || deepLinkedFocusRef.current === entity.id) {
+      return;
+    }
+
+    deepLinkedFocusRef.current = entity.id;
+    focusCorrespondence(entity, { recordTraversal: false });
+  }, [entities, focusCorrespondence, graphType, searchParams]);
+
   const clearCorrespondenceLock = useCallback(() => {
     setSearchQuery("");
     setCorrespondenceFocusEntityId(null);
@@ -863,6 +996,17 @@ function GraphPageContent() {
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", type);
     params.delete("source");
+    if (
+      type === "parallax" &&
+      !params.has("course") &&
+      !params.has("bundle")
+    ) {
+      params.set("course", DEFAULT_CANDIDATE_COURSE);
+    }
+    if (type === "correspondences") {
+      params.delete("course");
+      params.delete("bundle");
+    }
     router.replace(`/graph?${params.toString()}`, { scroll: false });
   };
 
@@ -991,6 +1135,39 @@ function GraphPageContent() {
   ]);
 
   const isParallaxGraphView = graphType === "parallax" && viewMode === "graph";
+
+  if (isPublicCourseView) {
+    return (
+      <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-900/30">
+        <Header />
+        <main className="container mx-auto px-4 pb-12 pt-24">
+          {loading ? (
+            <div className="flex min-h-[500px] items-center justify-center">
+              <ParallaxLoader />
+            </div>
+          ) : publicCourseGraph ? (
+            <CourseGraphPublicView
+              graph={publicCourseGraph}
+              focus={selectedPublicFocus}
+              usedFallback={usedStaticCourseFallback}
+            />
+          ) : (
+            <div className="mx-auto max-w-2xl rounded-2xl border border-rose-900/35 bg-rose-950/15 px-6 py-10 text-center">
+              <AlertCircle className="mx-auto h-8 w-8 text-rose-400/70" />
+              <h1 className="mt-4 font-[family-name:var(--font-cormorant)] text-2xl text-amber-100">
+                Course view unavailable
+              </h1>
+              <p className="mt-3 text-sm leading-6 text-zinc-400">
+                {courseGraphError ||
+                  "Choose the exact course and saved view from the learner course."}
+              </p>
+            </div>
+          )}
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-300 selection:bg-amber-900/30">

@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { getCourseAccessTier, hasPaidCourseAccess, sanitizeCourseForPreview } from '@/lib/courses/access';
-import { attachTextIdsToReadings, matchAndPersistCourseTexts } from '@/lib/courses/match-course-texts';
+import { attachTextIdsToReadings, matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
 import { attachReadingDigests, type ReadingBlurbRow } from '@/lib/courses/attach-reading-digests';
+import {
+  getCourseReleaseStatus,
+  isCourseAvailable,
+} from '@/lib/courses/presentation';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,11 +102,24 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 });
   }
 
+  const releaseStatus = getCourseReleaseStatus(course);
+  const courseAvailable = isCourseAvailable(releaseStatus);
+
+  if (wantsFullAccess && !courseAvailable && !viewer.isAdmin) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Course not available',
+        code: 'COURSE_NOT_OPEN',
+      },
+      { status: 403 }
+    );
+  }
+
   const courseTexts = Array.isArray(course.course_texts) && course.course_texts.length > 0
     ? course.course_texts
-    : await matchAndPersistCourseTexts(
+    : await matchCourseTextsFromContent(
         serviceSupabase,
-        String(course.id),
         (course.content as Record<string, unknown> | null) ?? null
       );
 
@@ -145,7 +162,8 @@ export async function GET(request: NextRequest, { params }: Params) {
   const enrolled = viewer.user
     ? await isEnrolled(serviceSupabase, viewer.user.id, String(course.id))
     : false;
-  const canViewFullCourse = viewer.isAdmin || (enrolled && paidCourseUnlocked);
+  const canViewFullCourse =
+    viewer.isAdmin || (courseAvailable && enrolled && paidCourseUnlocked);
 
   if (wantsFullAccess && !canViewFullCourse) {
     if (viewer.user && enrolled && !paidCourseUnlocked) {
@@ -182,6 +200,8 @@ export async function GET(request: NextRequest, { params }: Params) {
         enrolled,
         admin: viewer.isAdmin,
         tier: accessTier,
+        available: courseAvailable,
+        releaseStatus,
         upgradeRequired: accessTier === 'paid' && !viewer.hasPaidAccess,
       },
     },

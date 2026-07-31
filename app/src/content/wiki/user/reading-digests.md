@@ -3,14 +3,14 @@ title: Reading Digests
 type: guide
 status: stable
 audience: user
-description: Long-form digests that orient you to every curated reading in Prismatic Learning.
+description: Long-form digests that orient you to every curated reading in Courses.
 ---
 
 # Reading Digests
 
 ## What is a Reading Digest?
 
-Every curated reading in a Prismatic Learning **course**, **arc**, or **path** comes with a **Reading Digest** — a 600–1,300 word long-form briefing that captures the source's argument, key passages, and the questions worth carrying into the text.
+Every curated reading in a **course**, **arc**, or **path** comes with a **Reading Digest** — a 600–1,300 word long-form briefing that captures the source's argument, key passages, and the questions worth carrying into the text.
 
 The digest is not a replacement for the original. It is a doorway. Read it first to orient yourself, then return to the source when you want to engage directly.
 
@@ -34,7 +34,7 @@ A typical digest includes:
 
 1. **Open the digest before the source.** A few minutes here saves a lot of friction later.
 2. **Note the prompts.** Carry them into the source instead of reading passively.
-3. **Capture your own response.** Move what stays with you into the [Journal](/wiki/journal).
+3. **Capture your own response.** Move what stays with you into the [Study Journal](/wiki/journal).
 4. **Compare with the source.** Where does the digest sharpen the text? Where does it flatten it? That tension is part of the work.
 
 ## A note on authorship

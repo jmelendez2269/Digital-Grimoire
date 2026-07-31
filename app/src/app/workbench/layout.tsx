@@ -13,7 +13,7 @@ type Tab = {
 };
 
 const tabs: Tab[] = [
-  { name: 'Journal',      href: '/journal',                  icon: BookOpen    },
+  { name: 'Study Journal', href: '/journal',                 icon: BookOpen    },
   { name: 'The Working',  href: '/workbench/the-working',    icon: FlaskConical },
   { name: 'Tarot',        href: '/workbench/tarot',          icon: Wand2,  comingSoon: true },
 ];

@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: WikiPageProps): Promise<Metad
 
     return {
         title: `${doc.title} | Wiki`,
-        description: `Documentation for ${doc.title}`,
+        description: `Prismarium wiki guide for ${doc.title}`,
     };
 }
 

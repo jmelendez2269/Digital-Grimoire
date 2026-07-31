@@ -1,14 +1,14 @@
 ---
-title: "The Journal"
+title: "Study Journal"
 description: "Your personal space for recording insights, study notes, ritual outcomes, and the long arc of your practice."
 ---
 
-# The Journal
+# Study Journal
 
-The **Journal** is your dedicated space for documenting your path within Prismarium. Whether you're recording daily reflections, logging dream signs, capturing a synthesis from [Seven Lenses](/wiki/parallax-engine), or detailing the outcome of a ritual, the Journal keeps the work organised and searchable.
+The **Study Journal** is your dedicated space for documenting your path within Prismarium. Whether you're recording daily reflections, logging dream signs, capturing a synthesis from [Seven Lenses](/wiki/parallax-engine), or detailing the outcome of a ritual, the Study Journal keeps the work organised and searchable.
 
 > [!NOTE]
-> You can rename the Journal in your user settings. The default label is **The Journal**; your custom name (for example *Magical Journal*) will appear across the dashboard and nav.
+> You can rename the Study Journal in your user settings. The default label is **Study Journal**; your custom name (for example *Magical Journal*) will appear in personalized headings and actions.
 
 ## Features
 
@@ -28,8 +28,8 @@ The **Journal** is your dedicated space for documenting your path within Prismar
 ### 3. Integration with the Rest of Prismarium
 
 - **[Reading Digests](/wiki/reading-digests) and library texts** can be cited directly from a journal entry.
-- **[Seven Lenses](/wiki/parallax-engine) outputs** are easy to capture into the Journal — keep the synthesis you actually want to revisit, drop the rest.
-- **Workbench**: Journal entries can be linked to specific rituals in the **Practitioner Workbench** so you can reflect on the outcomes of the work you do in the Ritual Machine.
+- **[Seven Lenses](/wiki/parallax-engine) outputs** are easy to capture into the Study Journal — keep the synthesis you actually want to revisit, drop the rest.
+- **Workbench**: Study Journal entries can be linked to specific rituals in the **Practitioner Workbench** so you can reflect on the outcomes of the work you do in the Ritual Machine.
 
 ## Tips for Success
 

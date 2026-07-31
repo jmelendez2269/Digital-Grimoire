@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
 
         if (isRateLimit) {
           setError(
-            "Email rate limit exceeded. Please wait 1 hour before requesting another password reset link. This limit helps protect against spam.",
+            "A reset email was requested too recently. Please wait at least 60 seconds before trying again, then use the newest link we send.",
           );
         } else {
           setError(resetError.message);
@@ -127,9 +127,9 @@ export default function ForgotPasswordPage() {
                     </svg>
                     <div className="flex-1">
                       <p className="font-medium">{error}</p>
-                      {error.toLowerCase().includes("rate limit") && (
+                      {error.toLowerCase().includes("too recently") && (
                         <p className="mt-2 text-xs text-red-300/80">
-                          Tip: If you&apos;re already signed in, you may not need to reset your password. Try refreshing the page or contact support if you need immediate assistance.
+                          Check your inbox and junk folder first—the previous request may already have succeeded.
                         </p>
                       )}
                     </div>

@@ -52,8 +52,8 @@ This is the primary functional component rendered by `page.tsx`. It acts as a "B
     * **Library** (`/library`): Browse text collection.
     * **Journal** (`/journal`): Personal notes. Title defaults to "The Journal" or the user's custom `journal_name`.
     * **Graph** (`/graph`): Knowledge graph visualization (legacy alias: `/parallax-graph`).
-    * **Prismatic Learning** (`/courses`): Learning paths organised into Catalog, Arcs, Paths, and Map tabs. Includes analytics tracking on click (`/api/track/courses-click`).
-    * **Seven Lenses** (`<ParallaxEngineInfo />`): Link to the 7-lens AI reasoning surface at `/seven-lenses`. Desktop nav labels it **Parallax Search**.
+    * **Courses** (`/courses`): Learning paths organised into Catalog, Arcs, Paths, and Map tabs. Includes analytics tracking on click (`/api/track/courses-click`).
+    * **Seven Lenses** (`<ParallaxEngineInfo />`): Link to the 7-lens AI reasoning surface at `/seven-lenses`.
     * **Reading Digest surface** (`/courses/[slug]/learn`): Per-course learn page that surfaces long-form **Reading Digests** (~600–1,300 words) for each reading. The admin-side **digest review queue** lives at `/admin/reading-blurbs`; digests are stored in the `reading_blurbs` table.
 4. **Extras / Practitioner Tools**:
     * **Ritual Library** (`/ritual-machine`): Browse curated pre-built ritual protocols.

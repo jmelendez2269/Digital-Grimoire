@@ -20,6 +20,7 @@ unlighthouse-reports/
 Thumbs.db
 
 # Working/temp files
+.tmp/
 app/*-merge-plan.json
 app/prod-leftover-audit.json
 narrative-drafts-*.md

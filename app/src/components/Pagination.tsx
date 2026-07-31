@@ -72,7 +72,7 @@ function Pagination({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg">
+    <div className="flex w-full min-w-0 flex-col items-center justify-between gap-4 overflow-hidden rounded-lg border border-amber-900/20 bg-zinc-900/50 px-4 py-3 sm:flex-row">
       {/* Results Info */}
       <div className="text-sm text-amber-100/60">
         Showing <span className="font-medium text-amber-100">{startItem}</span> to{' '}
@@ -81,12 +81,12 @@ function Pagination({
       </div>
 
       {/* Page Navigation */}
-      <div className="flex items-center gap-1">
+      <div className="flex w-full min-w-0 max-w-full items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-1">
         {/* First Page Button */}
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-amber-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="hidden p-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-amber-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors sm:inline-flex"
           aria-label="First page"
         >
           <ChevronsLeft className="w-4 h-4" />
@@ -103,7 +103,7 @@ function Pagination({
         </button>
 
         {/* Page Numbers */}
-        <div className="flex items-center gap-1 mx-2">
+        <div className="mx-2 hidden items-center gap-1 sm:flex">
           {pageNumbers.map((page, index) => (
             <button
               key={index}
@@ -122,6 +122,10 @@ function Pagination({
           ))}
         </div>
 
+        <span className="text-sm font-medium text-amber-100 sm:hidden">
+          Page {currentPage} of {totalPages}
+        </span>
+
         {/* Next Page Button */}
         <button
           onClick={() => onPageChange(currentPage + 1)}
@@ -136,7 +140,7 @@ function Pagination({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-amber-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="hidden p-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 text-amber-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors sm:inline-flex"
           aria-label="Last page"
         >
           <ChevronsRight className="w-4 h-4" />

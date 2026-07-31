@@ -18,6 +18,48 @@ function extractJsonObject(value: string): string | null {
   return text.slice(start, end + 1);
 }
 
+// Some models (notably Claude without OpenAI-style forced JSON mode) emit raw
+// control characters (literal newlines/tabs) inside JSON string values instead
+// of escaping them. Walk the text tracking string/escape state and escape any
+// raw control character found inside a string so JSON.parse can handle it.
+function sanitizeControlCharsInStrings(value: string): string {
+  let result = '';
+  let inString = false;
+  let escaped = false;
+
+  for (const char of value) {
+    if (inString) {
+      if (escaped) {
+        result += char;
+        escaped = false;
+      } else if (char === '\\') {
+        result += char;
+        escaped = true;
+      } else if (char === '"') {
+        result += char;
+        inString = false;
+      } else if (char === '\n') {
+        result += '\\n';
+      } else if (char === '\r') {
+        result += '\\r';
+      } else if (char === '\t') {
+        result += '\\t';
+      } else if (char.charCodeAt(0) < 0x20) {
+        result += `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`;
+      } else {
+        result += char;
+      }
+    } else {
+      result += char;
+      if (char === '"') {
+        inString = true;
+      }
+    }
+  }
+
+  return result;
+}
+
 function formatJsonParseError(error: unknown, source: string): string {
   const message = error instanceof Error ? error.message : String(error);
   const positionMatch = message.match(/position\s+(\d+)/i);
@@ -30,11 +72,13 @@ function formatJsonParseError(error: unknown, source: string): string {
 }
 
 export function parseAiJsonObject<T>(responseText: string): T {
-  const candidates = [
+  const rawCandidates = [
     responseText.trim(),
     stripJsonFence(responseText),
     extractJsonObject(responseText),
   ].filter((candidate): candidate is string => Boolean(candidate));
+
+  const candidates = [...rawCandidates, ...rawCandidates.map(sanitizeControlCharsInStrings)];
 
   let lastError: unknown;
   for (const candidate of candidates) {

@@ -7,6 +7,12 @@ import { ArrowLeft, Clock, GraduationCap, BookOpen, Loader2, Lock } from 'lucide
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import CourseReleaseBadge from '@/components/CourseReleaseBadge';
+import {
+  getCourseReleaseStatus,
+  isCourseAvailable,
+  isIntroductionCourse,
+} from '@/lib/courses/presentation';
 import { tiptapToHtml } from '@/lib/tiptap/render';
 
 const PROSE_CLASSES = `prose prose-invert prose-amber max-w-none
@@ -128,7 +134,14 @@ function CourseDetailContent() {
 
   // Fetch enrollment status once course is loaded and user is known
   useEffect(() => {
-    if (!course || !user || authLoading) return;
+    if (
+      !course ||
+      !user ||
+      authLoading ||
+      !isCourseAvailable(getCourseReleaseStatus(course))
+    ) {
+      return;
+    }
 
     const fetchEnrollment = async () => {
       setEnrollmentLoading(true);
@@ -151,6 +164,11 @@ function CourseDetailContent() {
   const handleEnroll = async () => {
     setEnrollmentError(null);
 
+    if (!course || !isCourseAvailable(getCourseReleaseStatus(course))) {
+      setEnrollmentError('This path isn’t available yet.');
+      return;
+    }
+
     if (!user) {
       router.push(`/login?redirect=/courses/${slug}`);
       return;
@@ -168,11 +186,11 @@ function CourseDetailContent() {
       } else if (res.status === 401) {
         router.push(`/login?redirect=/courses/${slug}`);
       } else {
-        setEnrollmentError(data.message || data.error || 'Could not initialize this course. Please try again.');
+        setEnrollmentError('We couldn’t start this path. Please try again.');
       }
     } catch (err) {
       console.error('Enrollment failed:', err);
-      setEnrollmentError(err instanceof Error ? err.message : 'Could not initialize this course. Please try again.');
+      setEnrollmentError('We couldn’t start this path. Please try again.');
     } finally {
       setIsEnrolling(false);
     }
@@ -228,6 +246,11 @@ function CourseDetailContent() {
     courseContent?.curator_note_public ||
     courseContent?.curator_note
   ) as string | undefined;
+  const releaseStatus = course ? getCourseReleaseStatus(course) : null;
+  const courseAvailable = releaseStatus
+    ? isCourseAvailable(releaseStatus)
+    : false;
+  const introductionCourse = course ? isIntroductionCourse(course) : false;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-200 font-sans selection:bg-amber-500/30">
@@ -245,12 +268,12 @@ function CourseDetailContent() {
             className="group inline-flex items-center gap-2 text-zinc-500 hover:text-amber-400 transition-colors mb-8 text-xs font-mono uppercase tracking-wide"
           >
             <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
-            The Paths
+            Courses
           </Link>
 
           {error && !authLoading && (
             <div className="mb-6 p-4 bg-red-900/10 border border-red-500/20 rounded-lg">
-              <h3 className="text-sm font-mono text-red-400 mb-1 uppercase tracking-wide">Module Load Failed</h3>
+              <h3 className="text-sm font-mono text-red-400 mb-1 uppercase tracking-wide">We couldn’t open this path</h3>
               <p className="text-sm text-red-400/70">{error}</p>
             </div>
           )}
@@ -270,17 +293,18 @@ function CourseDetailContent() {
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   {courseIdTag && (
-                    <span className="text-[10px] font-mono text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                    <span className="rounded border border-amber-500/20 bg-amber-500/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-amber-300">
                       {courseIdTag}
                     </span>
                   )}
-                  {course.course_type && (
+                  {releaseStatus && <CourseReleaseBadge status={releaseStatus} />}
+                  {(introductionCourse || course.course_type) && (
                     <span className={`text-[10px] font-mono uppercase px-2 py-0.5 border rounded ${
-                      course.course_type === 'foundational'
+                      introductionCourse || course.course_type === 'foundational'
                         ? 'border-amber-500/30 text-amber-400 bg-amber-500/10'
                         : 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10'
                     }`}>
-                      {getCourseTypeLabel(course.course_type)}
+                      {introductionCourse ? 'Introduction' : getCourseTypeLabel(course.course_type)}
                     </span>
                   )}
                   {arc && (
@@ -320,7 +344,7 @@ function CourseDetailContent() {
               {curatorNote && (
                 <section className="relative p-6 md:p-7 bg-cyan-950/10 border border-cyan-500/15 rounded-lg">
                   <h2 className="text-xs font-mono text-cyan-400 uppercase tracking-widest mb-4">
-                    Curator&apos;s Note
+                    Why I chose this path
                   </h2>
                   <div className="text-sm md:text-base text-zinc-300 leading-relaxed whitespace-pre-line">
                     {curatorNote}
@@ -334,7 +358,7 @@ function CourseDetailContent() {
                   <div className="absolute top-0 right-0 p-2 opacity-10">
                     <BookOpen className="w-24 h-24 text-amber-500" />
                   </div>
-                  <h2 className="text-xs font-mono text-amber-500 uppercase tracking-widest mb-4">Core Premise</h2>
+                  <h2 className="text-xs font-mono text-amber-500 uppercase tracking-widest mb-4">Why this question</h2>
                   <div className="relative z-10 text-lg md:text-xl text-zinc-200 font-light italic leading-relaxed">
                     {renderRichText(course.premise, 'text-zinc-200')}
                   </div>
@@ -346,7 +370,7 @@ function CourseDetailContent() {
                 <div className="space-y-8">
                   {course.description && (
                     <div>
-                      <h2 className="text-lg font-bold text-amber-500 mb-4">Module Overview</h2>
+                      <h2 className="text-lg font-bold text-amber-500 mb-4">About this path</h2>
                       {renderRichText(course.description)}
                     </div>
                   )}
@@ -354,7 +378,7 @@ function CourseDetailContent() {
                   {/* Core Texts Section */}
                   {course.course_texts && course.course_texts.length > 0 && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-6">Core Texts</h2>
+                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-6">Readings we’ll use</h2>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {course.course_texts.map((ct) => (
                           <Link
@@ -421,14 +445,14 @@ function CourseDetailContent() {
 
                   {renderedContent && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-4">Syllabus</h2>
+                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-4">The path</h2>
                       <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: renderedContent }} />
                     </div>
                   )}
 
                   {previewWeeks.length > 0 && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-4">Public Syllabus</h2>
+                      <h2 className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-4">A look at the path</h2>
                       <div className="space-y-3">
                         {previewWeeks.map((week) => {
                           const summary = week.description || week.week_summary;
@@ -476,7 +500,7 @@ function CourseDetailContent() {
 
                   {course.learning_outcomes && course.learning_outcomes.length > 0 && (
                     <div className="pt-8 border-t border-white/5">
-                      <h2 className="text-lg font-bold text-amber-500 mb-4">Learning Outcomes</h2>
+                      <h2 className="text-lg font-bold text-amber-500 mb-4">What we’ll explore</h2>
                       <ul className="grid gap-3">
                         {course.learning_outcomes.map((outcome, idx) => (
                           <li key={idx} className="flex items-start gap-3 p-3 bg-zinc-900/30 border border-white/5 rounded-lg text-sm text-zinc-300">
@@ -495,17 +519,34 @@ function CourseDetailContent() {
                     <div className="p-1 rounded-xl bg-gradient-to-b from-amber-500/20 to-cyan-500/10">
                       <div className="bg-black/80 rounded-lg p-6 backdrop-blur-xl border border-white/10">
                         <h3 className="text-base font-bold text-white mb-1">
-                          {enrollment ? 'Path Active' : upgradeRequired ? 'Member Path' : 'Initialize Path'}
+                          {!courseAvailable
+                            ? 'Not available yet'
+                            : enrollment
+                              ? 'You’re on this path'
+                              : upgradeRequired
+                                ? 'This path is for members'
+                                : 'Start this path'}
                         </h3>
 
-                        {enrollmentLoading ? (
+                        {!courseAvailable ? (
+                          <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                            <p className="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                              <Lock className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+                              This course is not open yet.
+                            </p>
+                            <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                              You can read this preview, but starting the course and its
+                              learning materials will become available when it opens.
+                            </p>
+                          </div>
+                        ) : enrollmentLoading ? (
                           <div className="flex items-center justify-center py-6">
                             <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
                           </div>
                         ) : enrollment ? (
                           <>
-                            <p className="text-xs text-zinc-500 mb-4">
-                              Currently on{' '}
+                            <p className="text-xs text-zinc-400 mb-4">
+                              You’re on{' '}
                               <span className="text-amber-400 font-mono">Week {currentWeek}</span>
                               {' '}of {totalWeeks}
                             </p>
@@ -513,44 +554,46 @@ function CourseDetailContent() {
                             {/* Progress bar */}
                             <div className="h-0.5 bg-zinc-800 rounded-full mb-5 overflow-hidden">
                               <div
-                                className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-500"
+                                className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-500 motion-reduce:transition-none"
                                 style={{ width: `${progressPct}%` }}
                               />
                             </div>
 
                             <Link
                               href={`/courses/${course.slug}/learn`}
-                              className="flex items-center justify-center gap-2 w-full py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+                              className="flex min-h-11 items-center justify-center gap-2 w-full py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
                             >
                               <BookOpen className="w-4 h-4" />
-                              Continue — Week {currentWeek}
+                              Continue this path · Week {currentWeek}
                             </Link>
                           </>
                         ) : (
                           <>
-                            <p className="text-xs text-zinc-500 mb-5">
+                            <p className="text-xs text-zinc-400 mb-5">
                               {upgradeRequired
-                                ? 'Pre-course and taster paths are free. Upgrade to start the full class workspace.'
-                                : isFreeCourse
-                                  ? 'This introductory path is free to begin.'
-                                  : 'Enter this path and access the protected course workspace.'}
+                                ? 'PRE and taster paths are open to everyone. Join Prismarium to start this path.'
+                                : introductionCourse
+                                  ? 'PRE stays open as the introduction. Start whenever you’re ready.'
+                                  : isFreeCourse
+                                    ? 'This taster path is open to everyone. Start whenever you’re ready.'
+                                    : 'Start this path and keep your reading, notes, and progress together.'}
                             </p>
 
                             <button
                               type="button"
                               onClick={handleEnroll}
                               disabled={isEnrolling}
-                              className="flex items-center justify-center gap-2 w-full py-3 bg-amber-600 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+                              className="flex min-h-11 items-center justify-center gap-2 w-full py-3 bg-amber-600 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
                             >
                               {isEnrolling ? (
                                 <>
                                   <Loader2 className="w-4 h-4 animate-spin" />
-                                  Initializing...
+                                  Starting...
                                 </>
                               ) : (
                                 <>
                                   {upgradeRequired ? <Lock className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
-                                  {user ? (upgradeRequired ? 'Upgrade to Start' : 'Enter Path') : 'Sign In to Begin'}
+                                  {user ? (upgradeRequired ? 'Join to start' : 'Start this path') : 'Log in to start'}
                                 </>
                               )}
                             </button>
@@ -562,8 +605,8 @@ function CourseDetailContent() {
                             )}
 
                             {!user && (
-                              <p className="text-[10px] text-zinc-600 text-center mt-2 font-mono">
-                                Authentication required
+                              <p className="mt-3 text-center font-mono text-[10px] leading-relaxed text-zinc-400">
+                                Log in or join Prismarium to save your place.
                               </p>
                             )}
                           </>
@@ -573,24 +616,12 @@ function CourseDetailContent() {
 
                     <div className="rounded-lg border border-amber-500/10 bg-amber-950/10 p-4">
                       <h4 className="mb-2 text-[10px] font-mono uppercase tracking-wider text-amber-400">
-                        Protected Curriculum
+                        About these materials
                       </h4>
-                      <p className="text-xs leading-relaxed text-zinc-500">
+                      <p className="text-xs leading-relaxed text-zinc-400">
                         Public previews are shareable with attribution. Full Prismarium course prompts, exercises,
                         sequencing, and artifacts are for personal use inside Prismarium unless written permission is granted.
                       </p>
-                    </div>
-
-                    {/* Status indicator */}
-                    <div className="bg-zinc-900/30 rounded-lg p-4 border border-white/5">
-                      <h4 className="text-[10px] font-mono text-zinc-600 uppercase tracking-wider mb-2">Module Status</h4>
-                      <div className="flex items-center gap-2 text-xs text-emerald-400 font-mono">
-                        <span className="relative flex h-1.5 w-1.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                        </span>
-                        Online / Available
-                      </div>
                     </div>
                   </div>
                 </div>

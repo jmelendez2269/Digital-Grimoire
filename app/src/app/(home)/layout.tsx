@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Home | Prismarium | Multi-Lens Library & Knowledge Network",
-  description: "Welcome to Prismarium - A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+  title: "Prismarium — A place to keep learning",
+  description:
+    "A place to explore religion, mythology, mysticism, philosophy, science, symbolism, consciousness, and other big questions through shared course paths, a growing Library, Seven Lenses, Concept Search, a Knowledge Graph, and your own Study Journal.",
   openGraph: {
-    title: "Prismarium | Multi-Lens Library & Knowledge Network",
-    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity. Explore esoteric texts, sacred writings, and wisdom traditions through AI-powered analysis.",
+    title: "Prismarium — A place to keep learning",
+    description:
+      "Explore big questions through shared course paths, a growing Library, Seven Lenses, Concept Search, a Knowledge Graph, and your own Study Journal.",
     type: "website",
     url: "/",
     images: [
@@ -13,14 +15,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Prismarium - Multi-Lens Library & Knowledge Network",
+        alt: "Prismarium — A place to keep learning",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prismarium | Multi-Lens Library & Knowledge Network",
-    description: "A multi-lens library and knowledge network where hidden wisdom reveals our unity.",
+    title: "Prismarium — A place to keep learning",
+    description:
+      "Explore big questions through shared course paths and tools for building your own understanding.",
     images: ["/og-image.png"],
   },
 };

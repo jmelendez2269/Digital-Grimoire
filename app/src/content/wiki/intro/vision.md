@@ -26,7 +26,7 @@ Week: Week 2 — Jan 12–18 (<https://www.notion.so/Week-2-Jan-12-18-bbf7a5c3ad
 
 A comprehensive educational platform that guides you through wisdom traditions with structured courses, foundational curricula, and rotating thematic explorations. **Project Parallax Academy** offers 8-week foundational courses and ongoing theme cycles that help you build understanding systematically while maintaining the flexibility to explore your own path.
 
-### A Journal
+### A Study Journal
 
 Your private Study Journal—a Notion-like workspace where you document discoveries as you read, clip passages from the library, build interconnected knowledge networks with wiki-links, and synthesize insights across traditions. This is your digital space for personal research, where every reading becomes part of a larger understanding.
 
@@ -122,7 +122,7 @@ Your Study Journal is your private research workspace—document discoveries, cl
 
 **Explore Concepts from Seven Perspectives**
 
-The **Parallax Engine** helps you understand complex ideas through scientific, psychological, philosophical, religious, historical, symbolic, and mathematical lenses. Adjust the weighting to match your inquiry.
+**Seven Lenses** helps you understand complex ideas through scientific, psychological, philosophical, religious, historical, symbolic, and mathematical lenses. Adjust the weighting to match your inquiry.
 
 **Map What Each Course Connects**
 

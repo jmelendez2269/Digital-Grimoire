@@ -31,7 +31,7 @@ These are your primary instruments for study and exploration:
 * **[Knowledge Graph](/wiki/graph)**
   See the unseen connections. This visual tool maps how different concepts, authors, and traditions relate to one another.
 
-* **[Prismatic Learning](/wiki/courses)**
+* **[Courses](/wiki/courses)**
   Structured learning paths organised into a **Catalog** of individual courses, multi-course **Arcs**, longer **Paths**, and a **Map** view that shows how the offerings connect. Start here for a guided deep dive into a tradition or topic.
 
 * **[Seven Lenses](/wiki/parallax-engine)**
@@ -43,7 +43,7 @@ These are your primary instruments for study and exploration:
   5. Historical/Anthropological
   6. Symbolic/Occult
   7. Mathematical
-  Open it from the **Seven Lenses** / **Parallax Search** nav entry (path: `/seven-lenses`).
+  Open it from **Explore** or the **Tools** menu (path: `/seven-lenses`).
 
 * **[Concept Search](/wiki/library-search-bar)**
   Follow an idea across books and traditions. This is especially useful when you want to compare how one concept appears in different intellectual or spiritual lineages.
@@ -56,4 +56,4 @@ These are your primary instruments for study and exploration:
 * **Personalize**: Ensure you are logged in so the dashboard can display your custom journal name and track your progress.
 * **Start with a question**: Courses, Concept Search, and Seven Lenses all work best when you bring a real question or tension into them.
 * **Connect your work**: Use the **[Knowledge Graph](/wiki/graph)** and **[Concept Search](/wiki/library-search-bar)** together to surface unexpected relationships.
-* **Capture what matters**: Move your best findings into the **[Journal](/wiki/journal)** so your understanding compounds over time.
+* **Capture what matters**: Move your best findings into the **[Study Journal](/wiki/journal)** so your understanding compounds over time.

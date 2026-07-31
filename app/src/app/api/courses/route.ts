@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { sanitizeCourseForPreview } from '@/lib/courses/access';
 import { matchAndPersistCourseTexts } from '@/lib/courses/match-course-texts';
+import { EMPTY_PLATFORM_TOTALS } from '@/lib/platform/catalog';
+import { getPlatformTotals } from '@/lib/platform/totals.server';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +25,10 @@ export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient();
         const serviceSupabase = createServiceClient();
+        const totalsPromise = getPlatformTotals(serviceSupabase).catch((error) => {
+            console.error('[courses GET] Failed to load platform totals:', error);
+            return EMPTY_PLATFORM_TOTALS;
+        });
         const { isAdmin } = await getViewer(supabase);
         const searchParams = request.nextUrl.searchParams;
 
@@ -121,28 +127,32 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        const enrichedCourses = await Promise.all(
-            (courses || []).map(async (course: Record<string, unknown>) => {
-                const existingCourseTexts = Array.isArray(course.course_texts) ? course.course_texts : [];
-                if (existingCourseTexts.length > 0) return course;
+        const [enrichedCourses, totals] = await Promise.all([
+            Promise.all(
+                (courses || []).map(async (course: Record<string, unknown>) => {
+                    const existingCourseTexts = Array.isArray(course.course_texts) ? course.course_texts : [];
+                    if (existingCourseTexts.length > 0) return course;
 
-                const fallbackCourseTexts = await matchAndPersistCourseTexts(
-                    serviceSupabase,
-                    String(course.id),
-                    (course.content as Record<string, unknown> | null) ?? null
-                );
+                    const fallbackCourseTexts = await matchAndPersistCourseTexts(
+                        serviceSupabase,
+                        String(course.id),
+                        (course.content as Record<string, unknown> | null) ?? null
+                    );
 
-                return {
-                    ...course,
-                    course_texts: fallbackCourseTexts,
-                };
-            })
-        );
+                    return {
+                        ...course,
+                        course_texts: fallbackCourseTexts,
+                    };
+                })
+            ),
+            totalsPromise,
+        ]);
 
         return NextResponse.json(
             {
                 success: true,
-                courses: isAdmin ? enrichedCourses : enrichedCourses.map(sanitizeCourseForPreview)
+                courses: isAdmin ? enrichedCourses : enrichedCourses.map(sanitizeCourseForPreview),
+                totals,
             },
             {
                 headers: {

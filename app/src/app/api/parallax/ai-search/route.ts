@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { hybridSearch, HybridSearchResult } from '@/lib/parallax/hybrid-retrieval';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
-import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
+import { parseAiJsonObject } from '@/lib/ai/json';
 
 interface AiSearchResult {
     summary: string;
@@ -233,7 +233,7 @@ interface AiSearchResult {
         book_id: string; // MUST match the 'ID' provided in the context exactly.
         title: string;
         author: string;
-        relevanceSentence: string; // A single brief sentence explaining why this book is relevant.
+        relevanceSentence: string; // 2-4 sentences explaining why this book is relevant: connect its actual content/quotes to the specific concept or query, not a generic description of the book.
         relevanceLabel?: string; // e.g., "High Relevance", "Foundational Text", "Scientific Perspective"
         excerpts: Array<{
             text: string; // A relevant quote from the content snippet.
@@ -266,14 +266,14 @@ Generate the Deep Search response JSON.`;
         let finalResponse: AiSearchResult;
         try {
             const aiResponse = await aiOrchestrator.chatComplete(messages, {
-                model: getDefaultOpenRouterModel(),
+                model: 'claude-sonnet-5',
                 jsonMode: true,
-                temperature: 0.3 // Keep it relatively focused
+                maxTokens: 4096 // Room for richer per-book relevance explanations across up to 15 books
             });
 
             let parsedResult: unknown;
             try {
-                parsedResult = JSON.parse(aiResponse.content);
+                parsedResult = parseAiJsonObject(aiResponse.content);
             } catch (parseError) {
                 console.error('[Deep Search] Failed to parse AI JSON:', parseError);
                 console.error('[Deep Search] Raw content:', aiResponse.content);

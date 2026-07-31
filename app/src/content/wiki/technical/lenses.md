@@ -11,7 +11,7 @@ description: Technical specification for the Seven Lenses feature, the lens-tagg
 **Last reviewed:** May 2026
 **Status:** ✅ Live in production
 **Canonical route:** `/seven-lenses` (legacy alias: `/parallax-engine`)
-**Nav labels:** *Seven Lenses* (mobile), *Parallax Search* (desktop)
+**Public label:** *Seven Lenses*
 
 ## Overview
 
@@ -152,7 +152,7 @@ The lens filter appears in the Advanced Filters panel with:
 ### Filter Experience
 
 ```
-Parallax Lenses (The 7 perspectives)
+Seven Lenses (The 7 perspectives)
 [Dropdown: Select lenses...]
 
 When expanded:

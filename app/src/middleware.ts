@@ -1,7 +1,14 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
+  if (
+    process.env.NODE_ENV === "development"
+    && request.nextUrl.pathname === "/dev/course-parser-preview"
+  ) {
+    return NextResponse.next();
+  }
+
   return await updateSession(request);
 }
 

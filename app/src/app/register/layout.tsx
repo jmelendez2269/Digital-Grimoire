@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Create Account | Prismarium",
-  description: "Join Prismarium - a multi-lens library and knowledge network where hidden wisdom reveals our unity. Create your account to start exploring esoteric texts, sacred writings, and wisdom traditions.",
+  description:
+    "Join Prismarium to explore shared course paths, read across the Library, compare perspectives, follow connections, and keep a private Study Journal.",
   robots: {
     index: false,
     follow: false,
   },
   openGraph: {
     title: "Create Account | Prismarium",
-    description: "Join Prismarium - a multi-lens library and knowledge network where hidden wisdom reveals our unity. Create your account to start exploring esoteric texts, sacred writings, and wisdom traditions.",
+    description:
+      "Join Prismarium to explore shared course paths and build your own understanding.",
     type: "website",
     url: "/register",
     images: [
@@ -24,7 +26,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Create Account | Prismarium",
-    description: "Join Prismarium - a multi-lens library and knowledge network where hidden wisdom reveals our unity.",
+    description:
+      "Join Prismarium to explore shared course paths and build your own understanding.",
     images: ["/og-image.png"],
   },
 };

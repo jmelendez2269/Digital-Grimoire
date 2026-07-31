@@ -78,6 +78,24 @@ export default function CookiePolicyPage() {
                 <li><strong>Required:</strong> Yes - cannot disable</li>
               </ul>
             </div>
+            <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700 my-4">
+              <p className="text-zinc-300 mb-2"><strong>Guest Course Ballot Cookie:</strong></p>
+              <ul className="list-disc pl-6 text-zinc-300 space-y-1">
+                <li><strong>Purpose:</strong> Remember your current choice, let you change it while the ballot is open, and reveal results after you vote</li>
+                <li><strong>When Set:</strong> Only after a vote is successfully recorded</li>
+                <li><strong>Duration:</strong> Up to one year</li>
+                <li><strong>Protection:</strong> HttpOnly, SameSite=Lax, and Secure in production</li>
+              </ul>
+              <p className="mt-3 text-sm text-zinc-400">
+                The cookie contains a random token. Prismarium stores only a poll-specific
+                cryptographic identifier derived from it; not the token, your email, a raw IP
+                address, or your browser&apos;s user agent.
+              </p>
+              <p className="mt-2 text-sm text-zinc-400">
+                Abuse prevention uses separate, short-lived, poll-specific HMAC rate
+                identifiers. Ballot tables never store a raw IP address or user agent.
+              </p>
+            </div>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">3.2 Analytics Cookies</h3>
             <p className="text-zinc-300 mb-2">
@@ -127,7 +145,7 @@ export default function CookiePolicyPage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.2 Cookie Consent Banner</h3>
             <p className="text-zinc-300">
-              When you first visit our website, you'll see a cookie consent banner. You can choose to:
+              When you first visit our website, you’ll see a cookie consent banner. You can choose to:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1 mt-2">
               <li><strong>Accept All:</strong> Accept all cookies (essential + analytics)</li>
@@ -135,7 +153,7 @@ export default function CookiePolicyPage() {
               <li><strong>Cookie Settings:</strong> View detailed cookie information</li>
             </ul>
             <p className="text-zinc-300 mt-4">
-              Your preference is saved in your browser's local storage. You can change your preference
+              Your preference is saved in your browser’s local storage. You can change your preference
               at any time by clearing your browser data or contacting us.
             </p>
           </section>
@@ -160,7 +178,7 @@ export default function CookiePolicyPage() {
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">6. Changes to This Cookie Policy</h2>
             <p className="text-zinc-300">
               We may update this Cookie Policy from time to time. We will notify you of any changes
-              by updating the "Last Updated" date at the top of this page. Your continued use of our
+              by updating the “Last Updated” date at the top of this page. Your continued use of our
               website after any changes constitutes acceptance of the updated policy.
             </p>
           </section>

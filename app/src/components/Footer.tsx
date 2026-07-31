@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github, MessageSquare, BookOpen, ExternalLink } from "lucide-react";
+import { Github, MessageSquare, BookOpen } from "lucide-react";
 
 const ParallaxMark = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
@@ -42,8 +42,8 @@ export default function Footer() {
                 Prismarium
               </span>
             </Link>
-            <p className="text-xs text-zinc-500 leading-relaxed font-mono uppercase tracking-tight">
-              Explore esoteric texts, sacred writings, and wisdom traditions through multiple perspectives in Prismarium.
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              A place for curious people to read, compare, question, and build their own understanding.
             </p>
             <div className="flex items-center gap-4 mt-2">
               <a href="https://github.com/jmelendez2269" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors" title="GitHub">
@@ -62,10 +62,10 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <h3 className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest">Explore</h3>
             <div className="flex flex-col gap-2">
+              <Link href="/courses" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Courses</Link>
               <Link href="/library" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Library</Link>
               <Link href="/search" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Concept Search</Link>
-              <Link href="/courses" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Wisdom Courses</Link>
-              <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Concept Map</Link>
+              <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Knowledge Graph</Link>
             </div>
           </div>
 
@@ -73,12 +73,13 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <h3 className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest">Tools</h3>
             <div className="flex flex-col gap-2">
-              <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Study Journal</Link>
               <Link href="/seven-lenses" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Seven Lenses</Link>
+              <Link href="/journal" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Study Journal</Link>
               <Link href="/wiki" className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">
                 <BookOpen size={12} />
-                Documentation
+                Wiki
               </Link>
+              <Link href="/community/forum" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Community</Link>
             </div>
           </div>
 
@@ -99,50 +100,21 @@ export default function Footer() {
 
         </div>
 
-        {/* Parent Brand: Project Parallax */}
-        <a
-          href="https://projectparallax.xyz"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group mb-8 flex items-center justify-between gap-4 rounded-lg border border-white/[0.06] bg-gradient-to-r from-cyan-500/[0.03] via-violet-500/[0.04] to-amber-500/[0.03] px-5 py-4 transition-all hover:border-white/[0.12] hover:from-cyan-500/[0.06] hover:via-violet-500/[0.08] hover:to-amber-500/[0.06]"
-        >
-          <div className="flex items-center gap-3">
-            <ParallaxMark className="w-7 h-7 shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-zinc-500">
-                Part of the Project Parallax family
-              </span>
-              <span className="text-sm font-semibold tracking-wide text-zinc-200 group-hover:text-white">
-                Seeing things from different perspectives
-              </span>
-            </div>
-          </div>
-          <span className="hidden md:flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-zinc-500 group-hover:text-cyan-300">
-            projectparallax.xyz
-            <ExternalLink size={11} />
-          </span>
-        </a>
-
         {/* Bottom Bar: Copyright & Disclosures */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">
-            © {currentYear} PRISMARIUM //{" "}
+          <p className="text-[10px] text-zinc-500 font-mono tracking-wide">
+            © {currentYear} Prismarium.{" "}
             <a
               href="https://projectparallax.xyz"
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-400 hover:text-cyan-300 transition-colors underline-offset-2 hover:underline"
             >
-              A PROJECT PARALLAX PRODUCT
-            </a>{" "}
-            // ALL RIGHTS RESERVED
+              A Project Parallax project.
+            </a>
           </p>
 
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
-              <span className="text-[10px] font-mono text-zinc-600 uppercase">System Active</span>
-            </div>
             <p className="text-[10px] text-zinc-600 font-mono text-center md:text-right leading-relaxed max-w-xs">
               As an Amazon Associate I earn from qualifying purchases.
             </p>

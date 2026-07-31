@@ -62,7 +62,7 @@ export default function TarotDeck() {
 
             if (error) throw error;
 
-            toast.success('Reading saved to journal.');
+            toast.success('Reading saved to Study Journal.');
             setDrawnCards([]);
             setReflection('');
         } catch (error: any) {
@@ -130,7 +130,7 @@ export default function TarotDeck() {
 
             {/* Controls & Reflection */}
             <div className="bg-zinc-900/30 border border-zinc-800 rounded-lg p-6">
-                <label className="block text-sm text-zinc-400 mb-2">Reflection / Journal Entry</label>
+                <label className="block text-sm text-zinc-400 mb-2">Reflection / Study Journal Entry</label>
                 <textarea
                     value={reflection}
                     onChange={(e) => setReflection(e.target.value)}
@@ -152,7 +152,7 @@ export default function TarotDeck() {
                         className="flex items-center gap-2 px-6 py-2 bg-amber-600 hover:bg-amber-500 text-black font-semibold rounded disabled:opacity-50 transition-colors"
                     >
                         {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                        Save to Journal
+                        Save to Study Journal
                     </button>
                 </div>
             </div>

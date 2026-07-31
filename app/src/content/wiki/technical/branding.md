@@ -52,7 +52,7 @@ description: Brand guidelines for Prismarium, the Project Parallax brand house, 
 
 ### The Five Core Pillars
 
-1. **Prismatic Learning (Courses):** Systematic guidance through wisdom traditions. The `/courses` surface is organised into Catalog, Arcs, Paths, and Map tabs and includes long-form **Reading Digests** for each curated reading.
+1. **Courses:** Systematic guidance through wisdom traditions. The `/courses` surface is organised into Catalog, Arcs, Paths, and Map tabs and includes long-form **Reading Digests** for each curated reading.
 2. **The Study Journal:** A private research workspace for documentation, passage clipping, and building interconnected knowledge networks using wiki-links.
 3. **The Prismarium Library:** A filtered synthesis of foundational texts that bridge multiple perspectives, rather than an unfiltered archive. Includes corpus collection shells (e.g. King James Bible, Bible Apocrypha) that nest sub-books inside their parent corpus in the library grid.
 4. **The Ritual Machine:** A practice-oriented toolset for ritual inventory, correspondence planning, and documenting personal craft.
@@ -129,8 +129,8 @@ Evokes intellectual depth, quiet contemplation, and mystery. Dark Academia aesth
 | Correspondence Tables | Correspondences | `/correspondences` |
 | The Convergence Graph | Prismarium Graph / Knowledge Graph | `/graph` (canonical), `/parallax-graph` (legacy alias) |
 | *Atmospheric Subtitle* | Neural Interface | (Visual Identity) |
-| The Convergence Machine | **Seven Lenses** (a.k.a. Prismarium Lens Engine; nav label *Parallax Search*) | `/seven-lenses` (canonical), `/parallax-engine` (legacy) |
-| Convergence School | Prismatic Learning (Courses) | `/courses` |
+| The Convergence Machine | **Seven Lenses** (internal namespace retains `parallax`) | `/seven-lenses` (canonical), `/parallax-engine` (legacy) |
+| Convergence School | Courses | `/courses` |
 | Reading Digest | Reading Digest | Surfaced on `/courses/[slug]/learn`; review queue at `/admin/reading-blurbs`; stored in `reading_blurbs` |
 | Curator Note (draft / approved) | Curator Note | Embedded in reader; drafts managed under `/admin/curator-notes` |
 
@@ -138,6 +138,6 @@ Evokes intellectual depth, quiet contemplation, and mystery. Dark Academia aesth
 
 ## VERSION HISTORY
 
-- **v2.1** - May 2026 - Renamed Parallax Engine to **Seven Lenses**; added Reading Digests, Prismatic Learning 4-tab structure, corpus collection shells, and curator-note draft workflow.
+- **v2.1** - May 2026 - Renamed Parallax Engine to **Seven Lenses**; added Reading Digests, the Courses 4-tab structure, corpus collection shells, and curator-note draft workflow.
 - **v2.0** - February 2026 - Major Pivot to Project Parallax. Integrated School, Journal, and Ritual Machine vision.
 - **v1.1** - November 2025 - Initial Convergence Brand docs.

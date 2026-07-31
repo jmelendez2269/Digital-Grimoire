@@ -170,8 +170,8 @@ export default function TheWorkingPage() {
           <h1 className="text-xl font-bold text-zinc-100">The Working</h1>
         </div>
         <p className="text-sm text-zinc-500 max-w-xl leading-relaxed">
-          State an intention. The Parallax Engine assembles a correspondence palette from the
-          knowledge graph and synthesizes a ritual. Cast it, record it, watch what unfolds.
+          State an intention. The Working assembles a correspondence palette from the
+          Knowledge Graph and synthesizes a ritual. Cast it, record it, watch what unfolds.
         </p>
       </div>
 
@@ -206,7 +206,7 @@ export default function TheWorkingPage() {
             {stage === "loading" ? (
               <div className="flex items-center gap-3 py-2 text-sm text-zinc-400">
                 <Loader2 size={15} className="animate-spin text-amber-500/60 shrink-0" />
-                The Parallax Engine is assembling your ritual — this takes about 20 seconds…
+                The Working is assembling your ritual — this takes about 20 seconds…
               </div>
             ) : (
               <button

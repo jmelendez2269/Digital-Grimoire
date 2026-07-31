@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { getCourseAccessTier, hasPaidCourseAccess } from '@/lib/courses/access';
+import {
+  getCourseReleaseStatus,
+  isCourseAvailable,
+} from '@/lib/courses/presentation';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +43,17 @@ export async function GET(
     const course = await resolveCourseId(serviceSupabase, idOrSlug);
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+
+    if (!isCourseAvailable(getCourseReleaseStatus(course))) {
+      return NextResponse.json(
+        {
+          error: 'Course not available',
+          message: 'This path isn’t available yet.',
+          code: 'COURSE_NOT_OPEN',
+        },
+        { status: 403 }
+      );
     }
 
     const { data: enrollment } = await serviceSupabase
@@ -82,6 +97,17 @@ export async function POST(
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
+    if (!isCourseAvailable(getCourseReleaseStatus(course))) {
+      return NextResponse.json(
+        {
+          error: 'Course not available',
+          message: 'This path isn’t available yet.',
+          code: 'COURSE_NOT_OPEN',
+        },
+        { status: 403 }
+      );
+    }
+
     const { data: profile } = await serviceSupabase
       .from('users')
       .select('role, subscription_status')
@@ -92,7 +118,7 @@ export async function POST(
       return NextResponse.json(
         {
           error: 'Upgrade required',
-          message: 'Pre-course and taster paths are free. Upgrade to start the full class.',
+          message: 'PRE and taster paths are open to everyone. Join Prismarium to start this path.',
           code: 'UPGRADE_REQUIRED',
         },
         { status: 402 }

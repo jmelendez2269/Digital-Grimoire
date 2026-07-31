@@ -74,7 +74,7 @@ export default function ParallaxLanding() {
               Prismarium
             </h2>
             <p className="text-sm opacity-65 leading-relaxed flex-1">
-              A multi-lens library and knowledge network. Explore sacred texts and wisdom traditions through seven analytical lenses — each illuminating something the others cannot.
+              A place to read, compare perspectives, follow connections, and build your own understanding one question at a time.
             </p>
             <Link
               href="/register"
@@ -143,7 +143,7 @@ export default function ParallaxLanding() {
       {/* Footer */}
       <footer className="px-8 py-6 border-t text-center" style={{ borderColor: "var(--glass-border-color)" }}>
         <p className="text-xs opacity-40" style={{ fontFamily: "var(--font-mono)" }}>
-          © PRISMARIUM // A PROJECT PARALLAX PRODUCT
+          © {new Date().getFullYear()} Prismarium. A Project Parallax project.
         </p>
       </footer>
     </div>

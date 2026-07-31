@@ -234,7 +234,7 @@ export default function AnnotationPanel({
         });
 
         if (response.ok) {
-          alert('Annotation saved to journal!');
+          alert('Annotation saved to Study Journal!');
           setShowSaveModal(false);
           // Reset form
           setNewQuote('');
@@ -245,8 +245,8 @@ export default function AnnotationPanel({
           setShowForm(false);
           onSelectionCleared?.();
         } else {
-          const errorData = await response.json().catch(() => ({ error: 'Failed to save to journal' }));
-          alert(errorData.error || 'Failed to save to journal');
+          const errorData = await response.json().catch(() => ({ error: 'Failed to save to Study Journal' }));
+          alert(errorData.error || 'Failed to save to Study Journal');
         }
       } else {
         // Add to existing page
@@ -324,7 +324,7 @@ export default function AnnotationPanel({
         });
 
         if (updateResponse.ok) {
-          alert('Annotation added to journal page!');
+          alert('Annotation added to Study Journal page!');
           setShowSaveModal(false);
           // Reset form
           setNewQuote('');
@@ -335,13 +335,13 @@ export default function AnnotationPanel({
           setShowForm(false);
           onSelectionCleared?.();
         } else {
-          const errorData = await updateResponse.json().catch(() => ({ error: 'Failed to update journal page' }));
-          alert(errorData.error || 'Failed to update journal page');
+          const errorData = await updateResponse.json().catch(() => ({ error: 'Failed to update Study Journal page' }));
+          alert(errorData.error || 'Failed to update Study Journal page');
         }
       }
     } catch (error) {
       console.error('Error saving annotation to journal:', error);
-      alert(error instanceof Error ? error.message : 'Failed to save annotation to journal');
+      alert(error instanceof Error ? error.message : 'Failed to save annotation to Study Journal');
     } finally {
       setSavingToJournal(false);
     }
@@ -487,12 +487,13 @@ export default function AnnotationPanel({
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-purple-400 mt-0.5">•</span>
-                  <span><strong className="text-amber-100">Literary:</strong> Appreciate language, style, and narrative structure</span>
+                  <span><strong className="text-amber-100">Mathematical:</strong> Examine patterns, proportions, and numerical relationships</span>
                 </li>
               </ul>
 
               <p className="text-amber-100/80 leading-relaxed">
-                Highlight any passage in The Kybalion to trigger AI-powered analysis across all seven perspectives, revealing deep interconnections and insights.
+                Highlight any passage in The Kybalion to compare it through Seven
+                Lenses and notice the connections each perspective reveals.
               </p>
 
               <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-3">
@@ -513,12 +514,12 @@ export default function AnnotationPanel({
         </div>
       )}
 
-      {/* Save to Journal Modal */}
+      {/* Save to Study Journal Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-amber-900/30 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-amber-100">Save to Journal</h3>
+              <h3 className="text-xl font-bold text-amber-100">Save to Study Journal</h3>
               <button
                 onClick={() => setShowSaveModal(false)}
                 className="text-zinc-400 hover:text-zinc-200 transition-colors"
@@ -727,7 +728,7 @@ export default function AnnotationPanel({
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
-              {savingToJournal ? 'Saving...' : 'Save to Journal'}
+              {savingToJournal ? 'Saving...' : 'Save to Study Journal'}
             </button>
             <button
               onClick={() => {

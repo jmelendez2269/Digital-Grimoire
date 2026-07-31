@@ -20,7 +20,7 @@ export default async function AdminWikiRoot() {
                     <BookOpen className="w-5 h-5 text-teal-400" />
                     <span className="text-xs font-mono text-teal-400 uppercase tracking-widest">Technical Wiki</span>
                 </div>
-                <h1 className="text-4xl font-bold text-zinc-100">Documentation Index</h1>
+                <h1 className="text-4xl font-bold text-zinc-100">Technical Wiki</h1>
                 <p className="mt-2 text-sm text-zinc-500">
                     Overview of all available technical reference materials.
                 </p>

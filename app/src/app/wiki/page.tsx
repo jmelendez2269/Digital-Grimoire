@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Book, FileText } from "lucide-react";
 
 export const metadata = {
-    title: "Library Wiki Index",
-    description: "Index of all library documentation",
+    title: "Prismarium Wiki",
+    description: "Guides and reference material for Prismarium",
 };
 
 export default async function WikiRoot() {
@@ -20,7 +20,7 @@ export default async function WikiRoot() {
                     <Book className="w-5 h-5 text-cyan-400" />
                     <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">Library Wiki</span>
                 </div>
-                <h1 className="text-4xl font-bold text-zinc-100">Documentation Index</h1>
+                <h1 className="text-4xl font-bold text-zinc-100">Wiki</h1>
                 <p className="mt-2 text-sm text-zinc-500">
                     Overview of all available reference materials and guides.
                 </p>
@@ -46,7 +46,7 @@ export default async function WikiRoot() {
 
                 {docs.length === 0 && (
                     <div className="col-span-full py-12 text-center text-zinc-500">
-                        No documentation found.
+                        No wiki guides found.
                     </div>
                 )}
             </div>

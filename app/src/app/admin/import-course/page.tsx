@@ -13,10 +13,12 @@ import {
   Loader2,
   FileText,
   ClipboardPaste,
+  MonitorPlay,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { parseCourseMarkdown, type ParsedCourse, type ParseResult } from '@/lib/parsers/course-markdown-parser';
+import { CourseLearnerRenderer } from '@/components/courses/CourseLearnerRenderer';
 
 type InputMethod = 'paste' | 'file';
 type ImportStatus = 'idle' | 'previewing' | 'importing' | 'success' | 'error';
@@ -33,6 +35,7 @@ export default function ImportCoursePage() {
   const [error, setError] = useState<string | null>(null);
   const [warningsOpen, setWarningsOpen] = useState(false);
   const [publishImmediately, setPublishImmediately] = useState(false);
+  const [learnerPreviewOpen, setLearnerPreviewOpen] = useState(false);
 
   const [importedCourse, setImportedCourse] = useState<{
     courseId: string;
@@ -40,6 +43,11 @@ export default function ImportCoursePage() {
     title: string;
     weekCount: number;
     readingCount: number;
+    updated: boolean;
+  } | null>(null);
+  const [slugConflict, setSlugConflict] = useState<{
+    existingId: string;
+    existingSlug: string;
   } | null>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,24 +84,26 @@ export default function ImportCoursePage() {
     }
   };
 
-  const handleImport = async () => {
+  const handleImport = async (updateExistingId?: string) => {
     if (!parseResult?.success) return;
 
     setStatus('importing');
     setError(null);
+    setSlugConflict(null);
 
     try {
       const response = await fetch('/api/admin/import-course', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markdownContent: markdownText, publishImmediately }),
+        body: JSON.stringify({ markdownContent: markdownText, publishImmediately, updateExistingId }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         if (response.status === 409) {
-          setError(`Slug conflict: a course with this slug already exists (${data.existingSlug}). Rename the course or update the existing one.`);
+          setError(`A course with this slug already exists (${data.existingSlug}).`);
+          setSlugConflict({ existingId: data.existingId, existingSlug: data.existingSlug });
         } else {
           setError(data.error || 'Import failed');
         }
@@ -107,6 +117,7 @@ export default function ImportCoursePage() {
         title: data.title,
         weekCount: data.weekCount,
         readingCount: data.readingCount,
+        updated: Boolean(data.updated),
       });
       setStatus('success');
     } catch (err) {
@@ -124,6 +135,7 @@ export default function ImportCoursePage() {
     setWarningsOpen(false);
     setPublishImmediately(false);
     setImportedCourse(null);
+    setSlugConflict(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -151,7 +163,9 @@ export default function ImportCoursePage() {
               <div className="flex items-start gap-3">
                 <CheckCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-emerald-400" />
                 <div className="flex-1">
-                  <h3 className="mb-3 text-lg font-semibold text-emerald-400">Course Imported Successfully</h3>
+                  <h3 className="mb-3 text-lg font-semibold text-emerald-400">
+                    {importedCourse.updated ? 'Course Updated Successfully' : 'Course Imported Successfully'}
+                  </h3>
                   <div className="mb-4 grid grid-cols-2 gap-3 font-mono text-sm text-zinc-300">
                     <div><span className="text-zinc-500">Title:</span> {importedCourse.title}</div>
                     <div><span className="text-zinc-500">Slug:</span> {importedCourse.slug}</div>
@@ -189,7 +203,18 @@ export default function ImportCoursePage() {
             <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-400" />
-                <p className="text-sm text-red-300">{error}</p>
+                <div className="flex-1">
+                  <p className="text-sm text-red-300">{error}</p>
+                  {slugConflict && (
+                    <button
+                      onClick={() => handleImport(slugConflict.existingId)}
+                      className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20"
+                    >
+                      <BookMarked className="h-4 w-4" />
+                      Update existing course instead
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -411,7 +436,15 @@ export default function ImportCoursePage() {
                       </label>
 
                       <button
-                        onClick={handleImport}
+                        onClick={() => setLearnerPreviewOpen((open) => !open)}
+                        className="mr-3 inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-5 py-2.5 text-sm text-cyan-200 hover:bg-cyan-500/20"
+                      >
+                        <MonitorPlay className="h-4 w-4" />
+                        {learnerPreviewOpen ? 'Close Learner Preview' : 'Preview as Learner'}
+                      </button>
+
+                      <button
+                        onClick={() => handleImport()}
                         disabled={status === 'importing'}
                         className="flex items-center gap-2 rounded-lg bg-amber-600 px-6 py-2.5 text-sm font-medium text-white transition-all hover:bg-amber-500 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -429,6 +462,18 @@ export default function ImportCoursePage() {
                       </button>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {parsedCourse && learnerPreviewOpen && (
+                <div className="fixed inset-0 z-[100] overflow-y-auto bg-zinc-950">
+                  <button
+                    onClick={() => setLearnerPreviewOpen(false)}
+                    className="fixed right-4 top-4 z-[110] rounded-lg border border-white/10 bg-black/80 px-4 py-2 text-sm text-zinc-200"
+                  >
+                    Close preview
+                  </button>
+                  <CourseLearnerRenderer course={parsedCourse} warnings={warnings} preview />
                 </div>
               )}
             </div>

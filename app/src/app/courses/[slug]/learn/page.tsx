@@ -26,6 +26,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import { formatLensName } from '@/lib/utils/formatting';
 import { getLensColorClasses } from '@/lib/utils/lens-colors';
+import { CourseLearnerRenderer } from '@/components/courses/CourseLearnerRenderer';
+import type { CourseContent } from '@/lib/parsers/course-markdown-parser';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,9 +100,27 @@ interface Course {
     id: string;
     title: string;
     slug: string;
+    premise?: string | null;
+    learning_outcomes?: string[] | null;
+    course_texts?: Array<{
+        id: string;
+        text_id: string;
+        texts: {
+            id: string;
+            title: string;
+            author: string | null;
+            cover_image_url: string | null;
+        } | Array<{
+            id: string;
+            title: string;
+            author: string | null;
+            cover_image_url: string | null;
+        }> | null;
+    }>;
     content: {
         weeks: Week[];
         concept_seeds?: string[];
+        format_version?: number;
     } | null;
 }
 
@@ -114,6 +134,11 @@ function CourseLearnContent() {
     const params = useParams();
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
+    const customJournalName = user?.user_metadata?.journal_name;
+    const journalName =
+        typeof customJournalName === 'string' && customJournalName.trim()
+            ? customJournalName.trim()
+            : 'Study Journal';
     const [course, setCourse] = useState<Course | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -159,8 +184,7 @@ function CourseLearnContent() {
                     return;
                 }
                 if (!courseResponse.ok) {
-                    const data = await courseResponse.json();
-                    throw new Error(data.error || 'Failed to fetch course');
+                    throw new Error('We couldn’t open this path');
                 }
                 const courseData = await courseResponse.json();
 
@@ -176,7 +200,7 @@ function CourseLearnContent() {
                         setSelectedWeek(matchedWeek ? matchedWeek.week_number : sortedWeeks[0].week_number);
                     }
                 } else {
-                    throw new Error(courseData.error || 'Course not found');
+                    throw new Error('We couldn’t open this path');
                 }
 
                 // Fetch reading progress
@@ -199,7 +223,7 @@ function CourseLearnContent() {
                 }
             } catch (err) {
                 console.error('Error fetching course:', err);
-                setError(err instanceof Error ? err.message : 'An error occurred');
+                setError('We couldn’t open this path');
             } finally {
                 setLoading(false);
             }
@@ -352,6 +376,36 @@ function CourseLearnContent() {
         return { completed, total: week.readings.length };
     };
 
+    if (course?.content?.format_version === 2) {
+        return (
+            <div className="min-h-screen bg-zinc-950">
+                <Header />
+                <CourseLearnerRenderer
+                    course={{
+                        title: course.title,
+                        premise: course.premise,
+                        learning_outcomes: course.learning_outcomes,
+                        content: course.content as unknown as CourseContent,
+                    }}
+                    bookMetadata={(course.course_texts ?? []).flatMap((courseText) => {
+                        const texts = Array.isArray(courseText.texts)
+                            ? courseText.texts
+                            : courseText.texts
+                                ? [courseText.texts]
+                                : [];
+                        return texts.map((text) => ({
+                            textId: courseText.text_id,
+                            title: text.title,
+                            author: text.author,
+                            coverImageUrl: text.cover_image_url,
+                            href: `/library/${courseText.text_id}`,
+                        }));
+                    })}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen flex-col bg-zinc-950 text-zinc-200 font-sans selection:bg-amber-500/30 overflow-hidden">
             <Header />
@@ -372,7 +426,7 @@ function CourseLearnContent() {
                 `}>
                     <div className="h-full overflow-y-auto w-80">
                         <div className="p-4">
-                            <h2 className="text-sm font-mono text-zinc-400 uppercase tracking-wider mb-4 px-2">Course Syllabus</h2>
+                            <h2 className="text-sm font-mono text-zinc-400 uppercase tracking-wider mb-4 px-2">The path</h2>
                             <div className="space-y-1">
                                 {sortedWeeks.map((week) => {
                                     const completion = getWeekReadingCompletion(week);
@@ -436,7 +490,7 @@ function CourseLearnContent() {
                             </div>
                         ) : error ? (
                             <div className="p-4 bg-red-900/10 border border-red-500/20 rounded-lg">
-                                <h3 className="text-red-400 font-mono mb-2">ERROR_LOAD_FAILED</h3>
+                                <h3 className="text-red-400 font-mono mb-2">We couldn’t open this path</h3>
                                 <p className="text-zinc-400">{error}</p>
                             </div>
                         ) : currentWeek ? (
@@ -549,6 +603,7 @@ function CourseLearnContent() {
                                             onSave={saveSynthesisToJournal}
                                             saving={saving}
                                             savedPageId={savedPageId}
+                                            journalName={journalName}
                                             onContribute={contributeToCommmunity}
                                             contributionSent={contributionSent}
                                         />
@@ -831,14 +886,14 @@ function LensExerciseSection({
 }
 
 // Pull the first quoted phrase out of an exercise prompt so we can pre-fill the
-// tool's search box (e.g. Run a Deep Search for **"as above so below"** -> "as above so below").
+// tool's search box (e.g. Run Concept Search for **"as above so below"** -> "as above so below").
 function extractSeedTerm(prompt: string): string | null {
     const match = prompt.match(/[“"]([^”"]{2,})[”"]/);
     return match ? match[1].trim() : null;
 }
 
 const FEATURE_CONFIG: Record<FeatureKind, { label: string; icon: any; route: string; param: 'q' | 'prompt' | null }> = {
-    deep_search: { label: 'Deep Search', icon: Search, route: '/deep-search', param: 'q' },
+    deep_search: { label: 'Concept Search', icon: Search, route: '/search', param: 'q' },
     lens_engine: { label: 'Seven Lenses', icon: Compass, route: '/seven-lenses', param: 'prompt' },
     knowledge_graph: { label: 'Knowledge Graph', icon: Share2, route: '/knowledge-graph', param: null },
 };
@@ -921,6 +976,7 @@ function SynthesisSection({
     onSave,
     saving,
     savedPageId,
+    journalName,
     onContribute,
     contributionSent,
 }: {
@@ -931,6 +987,7 @@ function SynthesisSection({
     onSave: () => void;
     saving: boolean;
     savedPageId: string | null;
+    journalName: string;
     onContribute: () => void;
     contributionSent: boolean;
 }) {
@@ -1001,19 +1058,19 @@ function SynthesisSection({
                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-white text-base font-medium transition-all"
                     >
                         <PenTool className="w-4 h-4" />
-                        {saving ? 'Saving...' : 'Save to Workbook'}
+                        {saving ? 'Saving...' : `Save to ${journalName}`}
                     </button>
                 ) : (
                     <>
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-900/20 border border-emerald-500/20 rounded-lg text-emerald-300 text-base">
                             <CheckCircle className="w-4 h-4" />
-                            Saved to Workbook
+                            Saved to {journalName}
                         </div>
                         <Link
                             href={`/journal/${savedPageId}`}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-zinc-300 text-base transition-colors"
                         >
-                            Open in Journal
+                            Open in {journalName}
                             <ExternalLink className="w-4 h-4" />
                         </Link>
                         {!contributionSent ? (
@@ -1125,7 +1182,7 @@ function CommunitySection({
 
 export default function CourseLearnPage() {
     return (
-        <Suspense fallback={<div className="h-screen bg-zinc-950 flex items-center justify-center text-amber-500">Loading Interface...</div>}>
+        <Suspense fallback={<div className="h-screen bg-zinc-950 flex items-center justify-center text-amber-500">Opening your path...</div>}>
             <CourseLearnContent />
         </Suspense>
     );
