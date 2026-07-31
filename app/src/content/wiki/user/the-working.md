@@ -89,7 +89,7 @@ A completed working — intent, ritual, conditions, and outcome notes — can be
 ## How it connects to the rest of Prismarium
 
 - **[The correspondence graph](/wiki/graph)** supplies every component and its explanation.
-- **[The Journal](/wiki/journal)** is where the long arc of your practice lives — workings are a specialized kind of journal entry, so they sit alongside your dreams, reflections, and study notes.
+- **[Study Journal](/wiki/journal)** is where the long arc of your practice lives — workings are a specialized kind of journal entry, so they sit alongside your dreams, reflections, and study notes.
 - **[The Library](/wiki/library-features)** is the study counterpart: read there, work here.
 
 ---

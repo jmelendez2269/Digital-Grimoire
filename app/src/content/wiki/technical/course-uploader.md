@@ -18,6 +18,8 @@ The Course Uploader is the admin workflow for turning a course production markdo
 
 This tool is designed for structured course briefs that follow the house markdown template in `docs/planning/course_template.md`.
 
+Course Format V2 is documented canonically in `docs/planning/COURSE_FORMAT_V2.md`. The importer auto-detects V2's `# WEEK N` grammar while retaining the V1 `## WEEK N` grammar for existing courses.
+
 ---
 
 ## What It Does
@@ -56,6 +58,8 @@ Use **Preview Parse** before import to:
 - confirm course metadata was recognized
 - inspect week count and reading count
 - catch parser warnings before writing data
+
+Use **Preview as Learner** to render parsed JSON through the same V2 presentational renderer used by the learner route. The preview is explicitly local/not imported, includes warnings and a JSON/debug view, and performs no course, enrollment, or progress writes.
 
 ### 4. Import the course
 

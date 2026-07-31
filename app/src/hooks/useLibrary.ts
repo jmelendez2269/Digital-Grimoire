@@ -1,5 +1,5 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Text {
   id: string;
@@ -48,8 +48,8 @@ interface UseLibraryTextsParams {
   limit: number;
   searchQuery: string;
   filterValues: FilterValues;
-  sortBy: 'title' | 'author' | 'year' | 'created_at' | 'domain' | 'type';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "title" | "author" | "year" | "created_at" | "domain" | "type";
+  sortOrder: "asc" | "desc";
   enabled?: boolean;
 }
 
@@ -66,8 +66,9 @@ export function useLibraryTexts({
 
   return useQuery({
     queryKey: [
-      'library',
-      'texts',
+      "library",
+      "texts",
+      user ? "member" : "public",
       page,
       limit,
       searchQuery,
@@ -75,16 +76,12 @@ export function useLibraryTexts({
       filterValues.type,
       filterValues.yearMin,
       filterValues.yearMax,
-      filterValues.tags.join(','),
-      filterValues.lenses.join(','),
+      filterValues.tags.join(","),
+      filterValues.lenses.join(","),
       sortBy,
       sortOrder,
     ],
     queryFn: async (): Promise<LibraryTextsResponse> => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
       // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
@@ -92,43 +89,48 @@ export function useLibraryTexts({
       });
 
       if (searchQuery) {
-        params.append('search', searchQuery);
+        params.append("search", searchQuery);
       }
-      if (filterValues.domain !== 'all') {
-        params.append('domain', filterValues.domain);
+      if (filterValues.domain !== "all") {
+        params.append("domain", filterValues.domain);
       }
-      if (filterValues.type !== 'all') {
-        params.append('type', filterValues.type);
+      if (filterValues.type !== "all") {
+        params.append("type", filterValues.type);
       }
       if (filterValues.yearMin !== null) {
-        params.append('yearMin', filterValues.yearMin.toString());
+        params.append("yearMin", filterValues.yearMin.toString());
       }
       if (filterValues.yearMax !== null) {
-        params.append('yearMax', filterValues.yearMax.toString());
+        params.append("yearMax", filterValues.yearMax.toString());
       }
       if (filterValues.tags.length > 0) {
-        params.append('tags', filterValues.tags.join(','));
+        params.append("tags", filterValues.tags.join(","));
       }
       if (filterValues.lenses.length > 0) {
-        params.append('lenses', filterValues.lenses.join(','));
+        params.append("lenses", filterValues.lenses.join(","));
       }
       if (sortBy) {
-        params.append('sortBy', sortBy);
+        params.append("sortBy", sortBy);
       }
       if (sortOrder) {
-        params.append('sortOrder', sortOrder);
+        params.append("sortOrder", sortOrder);
       }
 
-      const response = await fetch(`/api/texts?${params.toString()}`, {
-        method: 'GET',
+      const endpoint = user ? "/api/texts" : "/api/library/catalog";
+      const response = await fetch(`${endpoint}?${params.toString()}`, {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `Failed to load library (${response.status})`);
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        throw new Error(
+          errorData.error || `Failed to load library (${response.status})`
+        );
       }
 
       const data = await response.json();
@@ -140,27 +142,45 @@ export function useLibraryTexts({
         totalPages: data.totalPages || 0,
       };
     },
-    enabled: enabled && !!user,
+    enabled,
     staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
     gcTime: 30 * 60 * 1000, // 30 minutes - keep cached data longer for instant navigation
     placeholderData: (previousData) => previousData, // Show cached data immediately while refetching
   });
 }
 
-export function useLibraryFilterOptions(): UseQueryResult<FilterOptions, Error> {
+export function useLibraryFilterOptions(): UseQueryResult<
+  FilterOptions,
+  Error
+> {
   const { supabase, user } = useAuth();
 
   return useQuery({
-    queryKey: ['library', 'filterOptions'],
+    queryKey: ["library", "filterOptions", user ? "member" : "public"],
     queryFn: async (): Promise<FilterOptions> => {
+      if (!user) {
+        const response = await fetch("/api/library/catalog?mode=filters");
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: "Unknown error" }));
+          throw new Error(
+            errorData.error ||
+              `Failed to load Library filters (${response.status})`
+          );
+        }
+
+        return response.json();
+      }
+
       if (!supabase) {
-        throw new Error('Supabase client not available');
+        throw new Error("Supabase client not available");
       }
 
       // Fetch all documents to extract unique values
       const { data, error } = await supabase
-        .from('texts')
-        .select('domain, type, tags, lenses');
+        .from("texts")
+        .select("domain, type, tags, lenses");
 
       if (error) throw error;
 
@@ -201,13 +221,13 @@ export function useLibraryFilterOptions(): UseQueryResult<FilterOptions, Error> 
 
       // Always show all 7 lenses in a specific order
       const allSevenLenses = [
-        'scientific',
-        'psychological',
-        'philosophical',
-        'religious_spiritual',
-        'historical_anthropological',
-        'symbolic_occult',
-        'mathematical',
+        "scientific",
+        "psychological",
+        "philosophical",
+        "religious_spiritual",
+        "historical_anthropological",
+        "symbolic_occult",
+        "mathematical",
       ];
 
       return {
@@ -217,8 +237,7 @@ export function useLibraryFilterOptions(): UseQueryResult<FilterOptions, Error> 
         allLenses: allSevenLenses,
       };
     },
-    enabled: !!supabase && !!user,
+    enabled: user ? !!supabase : true,
     staleTime: 10 * 60 * 1000, // 10 minutes - filter options change rarely
   });
 }
-

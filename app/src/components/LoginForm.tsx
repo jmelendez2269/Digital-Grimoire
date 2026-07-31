@@ -5,14 +5,31 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
+function getSafeRedirectPath(value: string | null): string {
+  return value?.startsWith("/") && !value.startsWith("//")
+    ? value
+    : "/dashboard";
+}
+
+function getInitialLoginError(value: string | null): string {
+  if (value === "verification_failed") {
+    return "Email verification failed. Please try again or request a new verification email.";
+  }
+
+  return value ?? "";
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { supabase, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() =>
+    getInitialLoginError(searchParams.get("error"))
+  );
   const [loading, setLoading] = useState(false);
+  const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
 
   const isLocalSupabase =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("127.0.0.1:54321") ||
@@ -30,31 +47,20 @@ export function LoginForm() {
     return message;
   };
 
-  useEffect(() => {
-    // Check for error in URL params (e.g., verification failed)
-    const urlError = searchParams.get("error");
-    if (urlError === "verification_failed") {
-      setError("Email verification failed. Please try again or request a new verification email.");
-    } else if (urlError) {
-      setError(urlError);
-    }
-  }, [searchParams]);
-
   // Redirect when user becomes authenticated
   useEffect(() => {
     if (user && window.location.pathname === "/login") {
-      console.log("✅ User authenticated, redirecting to dashboard");
-      setLoading(false);
-      router.push("/dashboard");
+      console.log("✅ User authenticated, continuing to requested page");
+      router.push(redirectPath);
       // Fallback navigation if router.push doesn't work
       setTimeout(() => {
         if (window.location.pathname === "/login") {
           console.log("⚠️ Router navigation timeout - trying window.location");
-          window.location.href = "/dashboard";
+          window.location.href = redirectPath;
         }
       }, 500);
     }
-  }, [user, router]);
+  }, [user, router, redirectPath]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,10 +71,11 @@ export function LoginForm() {
 
     try {
       console.log("📡 Calling Supabase signInWithPassword...");
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
       if (signInError) {
         if (signInError.message.includes("Invalid login credentials")) {
@@ -79,7 +86,9 @@ export function LoginForm() {
 
         // Check if error is related to email confirmation
         if (signInError.message.includes("Email not confirmed")) {
-          console.log("⚠️ Email not confirmed, redirecting to verification page");
+          console.log(
+            "⚠️ Email not confirmed, redirecting to verification page"
+          );
           setLoading(false);
           router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
           return;
@@ -94,23 +103,27 @@ export function LoginForm() {
       if (data.user) {
         // Check if email is verified
         if (!data.user.email_confirmed_at) {
-          console.log("⚠️ Email not verified, redirecting to verification page");
+          console.log(
+            "⚠️ Email not verified, redirecting to verification page"
+          );
           setLoading(false);
           router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
           return;
         }
-        console.log("✅ Redirecting to dashboard");
+        console.log("✅ Continuing to requested page");
 
         // Reset loading state before redirect
         setLoading(false);
-        router.push("/dashboard");
+        router.push(redirectPath);
         router.refresh();
 
         // Fallback: force hard navigation if router.push doesn't work within 1 second
         setTimeout(() => {
           if (window.location.pathname === "/login") {
-            console.log("⚠️ Router navigation timeout - trying window.location");
-            window.location.href = "/dashboard";
+            console.log(
+              "⚠️ Router navigation timeout - trying window.location"
+            );
+            window.location.href = redirectPath;
           }
         }, 1000);
       } else {
@@ -139,10 +152,10 @@ export function LoginForm() {
           ? "https://prismarium.xyz"
           : window.location.origin;
 
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${redirectOrigin}/auth/callback`,
+          redirectTo: `${redirectOrigin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
         },
       });
 
@@ -164,30 +177,34 @@ export function LoginForm() {
   };
 
   return (
-    <div className="glass-panel p-8 backdrop-blur-xl relative overflow-hidden rounded-2xl border-white/5">
+    <div className="glass-panel relative overflow-hidden rounded-2xl border-white/5 p-8 backdrop-blur-xl">
       {/* Top Border Gradient */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+      <div className="absolute top-0 right-0 left-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
 
       {/* Iframe Warning */}
-      {typeof window !== 'undefined' && window.self !== window.top && (
-        <div className="mb-6 p-4 rounded bg-cyan-950/40 border border-cyan-500/30 text-cyan-200 text-xs">
+      {typeof window !== "undefined" && window.self !== window.top && (
+        <div className="mb-6 rounded border border-cyan-500/30 bg-cyan-950/40 p-4 text-xs text-cyan-200">
           <p className="mb-3 font-semibold">Security Notice</p>
           <p className="mb-3 opacity-80">
-            Authentication cannot be completed in this sidebar/frame. Please return to the source.
+            Authentication cannot be completed in this sidebar/frame. Please
+            return to the source.
           </p>
           <button
-            onClick={() => window.open(window.location.href, '_blank')}
-            className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium tracking-wide rounded transition-colors"
+            onClick={() => window.open(window.location.href, "_blank")}
+            className="w-full rounded bg-cyan-600 py-2 font-medium tracking-wide text-white transition-colors hover:bg-cyan-500"
           >
             Open in browser
           </button>
         </div>
       )}
 
-      <form onSubmit={handleLogin} className="space-y-6 relative z-10">
+      <form onSubmit={handleLogin} className="relative z-10 space-y-6">
         {/* Email Field */}
         <div className="group">
-          <label htmlFor="email" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">
+          <label
+            htmlFor="email"
+            className="mb-1.5 block text-xs font-medium tracking-wider text-zinc-400"
+          >
             Email Address
           </label>
           <div className="relative">
@@ -197,16 +214,19 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-cyan-50 placeholder-zinc-700 text-sm focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 transition-all group-hover:border-white/20"
+              className="block w-full rounded border border-white/10 bg-black/50 px-4 py-3 text-sm text-cyan-50 placeholder-zinc-700 transition-all group-hover:border-white/20 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none"
               placeholder="email@example.com"
             />
-            <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
+            <div className="pointer-events-none absolute inset-0 rounded border border-white/5 transition-colors group-hover:border-white/10" />
           </div>
         </div>
 
         {/* Password Field */}
         <div className="group">
-          <label htmlFor="password" className="block text-xs font-medium text-zinc-400 mb-1.5 tracking-wider">
+          <label
+            htmlFor="password"
+            className="mb-1.5 block text-xs font-medium tracking-wider text-zinc-400"
+          >
             Password
           </label>
           <div className="relative">
@@ -216,17 +236,17 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="block w-full rounded bg-black/50 border border-white/10 px-4 py-3 text-cyan-50 placeholder-zinc-700 text-sm focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 transition-all group-hover:border-white/20"
+              className="block w-full rounded border border-white/10 bg-black/50 px-4 py-3 text-sm text-cyan-50 placeholder-zinc-700 transition-all group-hover:border-white/20 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:outline-none"
               placeholder="••••••••"
             />
-            <div className="absolute inset-0 rounded pointer-events-none border border-white/5 group-hover:border-white/10 transition-colors" />
+            <div className="pointer-events-none absolute inset-0 rounded border border-white/5 transition-colors group-hover:border-white/10" />
           </div>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="rounded border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-mono text-red-400 flex items-center gap-2">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <div className="flex items-center gap-2 rounded border border-red-500/30 bg-red-500/10 px-4 py-3 font-mono text-xs text-red-400">
+            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
             ERROR: {error}
           </div>
         )}
@@ -236,7 +256,7 @@ export function LoginForm() {
           type="submit"
           disabled={loading}
           onClick={() => console.log("🖱️ Sign In button clicked")}
-          className="relative w-full overflow-hidden rounded bg-cyan-600 px-4 py-3 text-sm font-semibold text-white tracking-wide hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50 transition-all group"
+          className="group relative w-full overflow-hidden rounded bg-cyan-600 px-4 py-3 text-sm font-semibold tracking-wide text-white transition-all hover:bg-cyan-500 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-black focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
             {loading ? (
@@ -245,19 +265,22 @@ export function LoginForm() {
               </>
             ) : (
               <>
-                Sign In <span className="group-hover:translate-x-1 transition-transform">→</span>
+                Sign In{" "}
+                <span className="transition-transform group-hover:translate-x-1">
+                  →
+                </span>
               </>
             )}
           </span>
           {/* Shine effect */}
-          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
         </button>
 
         {/* Forgot Password */}
         <div className="text-center">
           <Link
             href="/forgot-password"
-            className="text-xs text-zinc-500 hover:text-cyan-500 transition-colors tracking-wider"
+            className="text-xs tracking-wider text-zinc-500 transition-colors hover:text-cyan-500"
           >
             Forgot password?
           </Link>
@@ -266,9 +289,11 @@ export function LoginForm() {
 
       {/* Divider */}
       <div className="my-8 flex items-center gap-4">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent to-zinc-800"></div>
-        <span className="text-[10px] text-zinc-600 uppercase tracking-widest text-center">Or continue with</span>
-        <div className="flex-1 h-px bg-gradient-to-l from-transparent to-zinc-800"></div>
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-800"></div>
+        <span className="text-center text-[10px] tracking-widest text-zinc-600 uppercase">
+          Or continue with
+        </span>
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-800"></div>
       </div>
 
       {/* Google Sign-In Button */}
@@ -276,9 +301,12 @@ export function LoginForm() {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className="group relative flex w-full items-center justify-center gap-3 rounded border border-zinc-800 bg-black/30 px-4 py-3 text-sm font-medium text-zinc-300 transition-all hover:border-zinc-600 hover:text-white hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-700 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
+        className="group relative flex w-full items-center justify-center gap-3 rounded border border-zinc-800 bg-black/30 px-4 py-3 text-sm font-medium text-zinc-300 transition-all hover:border-zinc-600 hover:bg-zinc-900 hover:text-white focus:ring-2 focus:ring-zinc-700 focus:ring-offset-2 focus:ring-offset-black focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <svg className="h-5 w-5 opacity-70 group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24">
+        <svg
+          className="h-5 w-5 opacity-70 transition-opacity group-hover:opacity-100"
+          viewBox="0 0 24 24"
+        >
           <path
             fill="currentColor"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -296,16 +324,16 @@ export function LoginForm() {
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-        <span className="tracking-wide text-xs">Sign in with Google</span>
+        <span className="text-xs tracking-wide">Sign in with Google</span>
       </button>
 
       {/* Register Link */}
       <div className="mt-8 text-center">
         <p className="text-xs text-zinc-500">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/register"
-            className="text-cyan-500 hover:text-cyan-400 underline decoration-cyan-500/30 hover:decoration-cyan-500 transition-all font-semibold tracking-wider ml-1"
+            className="ml-1 font-semibold tracking-wider text-cyan-500 underline decoration-cyan-500/30 transition-all hover:text-cyan-400 hover:decoration-cyan-500"
           >
             Sign up
           </Link>
@@ -313,13 +341,12 @@ export function LoginForm() {
       </div>
 
       {/* Corner Decor */}
-      <div className="absolute bottom-0 right-0 p-2 opacity-50">
-        <div className="w-2 h-2 border-r border-b border-cyan-500/50"></div>
+      <div className="absolute right-0 bottom-0 p-2 opacity-50">
+        <div className="h-2 w-2 border-r border-b border-cyan-500/50"></div>
       </div>
       <div className="absolute top-0 left-0 p-2 opacity-50">
-        <div className="w-2 h-2 border-l border-t border-cyan-500/50"></div>
+        <div className="h-2 w-2 border-t border-l border-cyan-500/50"></div>
       </div>
     </div>
   );
 }
-

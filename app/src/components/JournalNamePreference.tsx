@@ -15,7 +15,7 @@ export default function JournalNamePreference({ onSave }: JournalNamePreferenceP
 
   useEffect(() => {
     if (user) {
-      setJournalName(user.user_metadata?.journal_name || 'Digital Grimoire');
+      setJournalName(user.user_metadata?.journal_name || 'Study Journal');
     }
   }, [user]);
 
@@ -34,7 +34,7 @@ export default function JournalNamePreference({ onSave }: JournalNamePreferenceP
         throw error;
       }
 
-      toast.success('Journal name updated successfully!');
+      toast.success('Study Journal name updated successfully!');
       if (onSave) {
         onSave();
       }
@@ -48,7 +48,7 @@ export default function JournalNamePreference({ onSave }: JournalNamePreferenceP
   return (
     <div>
       <label htmlFor="journalName" className="block text-sm font-medium text-amber-100">
-        Journal Name
+        Study Journal Name
       </label>
       <div className="mt-2 flex gap-2">
         <input
@@ -58,7 +58,7 @@ export default function JournalNamePreference({ onSave }: JournalNamePreferenceP
           onChange={(e) => setJournalName(e.target.value)}
           maxLength={50}
           className="flex-1 rounded-md border border-zinc-700 bg-zinc-950 px-4 py-3 text-amber-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-          placeholder="Digital Grimoire"
+          placeholder="Study Journal"
         />
         <button
           onClick={handleSave}

@@ -57,31 +57,27 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">2.1 Source Code</h3>
             <p className="text-zinc-300 mb-4">
-              The Prismarium platform source code is licensed under the <strong>MIT License</strong>.
+              The Prismarium platform source code is <strong>proprietary and All Rights Reserved</strong>. It is not
+              open source. No license or right to the source code is granted by accessing or using the Service.
             </p>
 
             <div className="bg-zinc-800/50 rounded-lg p-6 border border-zinc-700 my-4">
-              <h4 className="text-lg font-semibold text-amber-200 mb-3">MIT License</h4>
-              <p className="text-zinc-300 text-sm mb-2">
-                Copyright (c) {new Date().getFullYear()} Prismarium
-              </p>
+              <h4 className="text-lg font-semibold text-amber-200 mb-3">Proprietary License — All Rights Reserved</h4>
               <p className="text-zinc-300 text-sm mb-4">
-                Permission is hereby granted, free of charge, to any person obtaining a copy
-                of this software and associated documentation files (the "Software"), to deal
-                in the Software without restriction, including without limitation the rights
-                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-                copies of the Software, and to permit persons to whom the Software is
-                furnished to do so, subject to the following conditions:
+                Copyright (c) {new Date().getFullYear()} Jeanine Melendez. All rights reserved.
               </p>
               <p className="text-zinc-300 text-sm mb-2">
-                The above copyright notice and this permission notice shall be included in all
-                copies or substantial portions of the Software.
+                The Prismarium source code and its structure, organization, and underlying logic are the confidential
+                and proprietary property of Jeanine Melendez. Except as expressly permitted in writing, you may not
+                copy, reproduce, modify, adapt, translate, distribute, publish, sublicense, sell, rent, lease, or
+                create derivative works from any part of the source code, nor reverse engineer, decompile, or
+                disassemble it, nor use it to build or train any competing product, service, or model.
               </p>
               <p className="text-zinc-300 text-sm">
                 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
                 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
                 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-                AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+                AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
                 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
                 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
                 SOFTWARE.
@@ -89,24 +85,18 @@ export default function LicensePage() {
             </div>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">2.2 What This Means</h3>
-            <p className="text-zinc-300 mb-2">You are free to:</p>
+            <p className="text-zinc-300 mb-2">Without our prior written permission, you may NOT:</p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>Use the code for commercial or private purposes</li>
-              <li>Modify the code to suit your needs</li>
-              <li>Distribute the code</li>
-              <li>Sublicense the code</li>
-              <li>Use the code privately</li>
+              <li>Copy, reproduce, or store the source code outside of authorized use of the Service</li>
+              <li>Modify, adapt, or create derivative works from the code</li>
+              <li>Distribute, publish, sublicense, sell, rent, or lease the code</li>
+              <li>Reverse engineer, decompile, or disassemble the code</li>
+              <li>Use the code (in whole or in part) to build or train a competing product, service, or model</li>
             </ul>
-            <p className="text-zinc-300 mb-2 mt-4">You must:</p>
-            <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>Include the original copyright notice and license</li>
-              <li>Include a copy of the MIT License</li>
-            </ul>
-            <p className="text-zinc-300 mb-2 mt-4">You cannot:</p>
-            <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>Hold the authors liable for damages</li>
-              <li>Use the authors' names to promote your products without permission</li>
-            </ul>
+            <p className="text-zinc-300 mb-2 mt-4">
+              If you would like to license or reuse any part of the Prismarium source code, contact us to request
+              written permission.
+            </p>
           </section>
 
           <section className="mt-8">
@@ -189,13 +179,10 @@ export default function LicensePage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">4.4 Prismarium-Generated Content</h3>
             <p className="text-zinc-300 mb-2">
-              Content created by Prismarium (AI-generated metadata, synthesized responses, UI text) is:
+              Content created by Prismarium (AI-generated metadata, synthesized responses, UI text) is
+              © {new Date().getFullYear()} Jeanine Melendez, All Rights Reserved. You may not reproduce,
+              redistribute, or create derivative works from it without written permission.
             </p>
-            <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>© Prismarium {new Date().getFullYear()}</li>
-              <li>Licensed under CC BY-SA 4.0 for documentation and educational content</li>
-              <li>Subject to MIT License for code-related content</li>
-            </ul>
           </section>
 
           <section className="mt-8">
@@ -254,7 +241,8 @@ export default function LicensePage() {
             <p className="text-zinc-300 mt-4">
               For a complete list of dependencies and their licenses, see the{" "}
               <code className="bg-zinc-800 px-2 py-1 rounded text-amber-300">package.json</code> file
-              in the project repository. All dependencies are compatible with the MIT License.
+              in the project. We use each dependency in compliance with its respective open-source license.
+              Our use of open-source dependencies does not make the Prismarium source code itself open source.
             </p>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.2 Attribution Requirements</h3>
@@ -268,42 +256,23 @@ export default function LicensePage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">6. Trademarks and Branding</h2>
             <p className="text-zinc-300 mb-4">
-              "Prismarium" and the Prismarium logo are product marks used in connection with the Prismarium service. While the code is open source,
-              the Prismarium name and branding are protected. You may:
+              "Prismarium" and "Project Parallax," together with their associated logos and branding, are marks used
+              in connection with the Prismarium service and are protected. The source code is proprietary and is not
+              available for reuse. You may not:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>Use the code for your own projects</li>
-              <li>Modify and distribute the code</li>
-              <li>Create derivative works</li>
-            </ul>
-            <p className="text-zinc-300 mb-2 mt-4">You may not:</p>
-            <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li>Use the "Prismarium" name or logo for your own products without permission</li>
+              <li>Use the "Prismarium" or "Project Parallax" name or logo for your own products without permission</li>
               <li>Imply endorsement or affiliation with Prismarium</li>
               <li>Use Prismarium branding in a way that causes confusion</li>
             </ul>
-            <p className="text-zinc-300 mt-4">
-              If you fork or modify Prismarium, please use a different name and branding to avoid confusion.
-            </p>
           </section>
 
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">7. Contributing</h2>
             <p className="text-zinc-300 mb-4">
-              We welcome contributions to Prismarium! By contributing code, documentation, or content,
-              you agree that your contributions will be licensed under the same terms as the project:
-            </p>
-            <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li><strong>Code contributions:</strong> MIT License</li>
-              <li><strong>Documentation contributions:</strong> CC BY-SA 4.0</li>
-              <li><strong>Content contributions:</strong> You retain ownership, but grant Prismarium the rights needed to use and display your content</li>
-            </ul>
-            <p className="text-zinc-300 mt-4">
-              For more information about contributing, see our{" "}
-              <Link href="https://github.com/jmelendez2269/Digital-Grimoire"
-                className="text-amber-400 hover:text-amber-300">
-                GitHub repository
-              </Link>.
+              Prismarium is not an open-source project and does not accept public source-code contributions. If you
+              are interested in collaborating or contributing content, please contact us first. Any contribution
+              accepted with our written agreement will be assigned to Prismarium unless we agree otherwise in writing.
             </p>
           </section>
 
@@ -313,8 +282,8 @@ export default function LicensePage() {
               <p className="text-amber-200 font-semibold mb-2">Important:</p>
               <p className="text-zinc-300">
                 The software is provided "as is", without warranty of any kind. Prismarium and its
-                contributors are not liable for any damages arising from the use of this software.
-                See the full MIT License text above for complete disclaimer language.
+                operator are not liable for any damages arising from the use of this software.
+                See the full proprietary license text above for complete disclaimer language.
               </p>
             </div>
           </section>

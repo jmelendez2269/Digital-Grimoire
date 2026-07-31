@@ -13,7 +13,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Prismarium - Multi-lens library and knowledge network",
+        alt: "Prismarium — A place to keep learning",
       },
     ],
   },
@@ -46,8 +46,8 @@ export default function PrivacyPolicyPage() {
           <section className="mt-8">
             <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">1. Introduction</h2>
             <p className="text-zinc-300">
-              Welcome to Prismarium ("we," "our," or "us"). This Privacy Policy explains how we collect,
-              use, disclose, and safeguard your information when you use our digital library platform (the "Service").
+              Welcome to Prismarium (“we,” “our,” or “us”). This Privacy Policy explains how we collect,
+              use, disclose, and safeguard your information when you use our digital library platform (the “Service”).
             </p>
             <p className="text-zinc-300">
               By using our Service, you agree to the collection and use of information in accordance with this policy.
@@ -93,6 +93,14 @@ export default function PrivacyPolicyPage() {
               <li>Browser type and version</li>
               <li>Device information (for responsive design)</li>
               <li>Session cookies (required for authentication)</li>
+            </ul>
+
+            <p className="text-zinc-300 mb-2 mt-4"><strong>Guest Course Ballots:</strong></p>
+            <ul className="list-disc pl-6 text-zinc-300 space-y-1">
+              <li>A random browser token lets us remember and update one current choice while a ballot is open</li>
+              <li>Our database stores only a poll-specific cryptographic identifier derived from that token, never the token itself</li>
+              <li>Short-lived rate limits use a separate poll-specific cryptographic network identifier</li>
+              <li>We do not attach ballot records to an email address or account, and we do not store a raw IP address or user agent in ballot tables</li>
             </ul>
 
             <p className="text-zinc-300 mb-2 mt-4"><strong>Analytics:</strong></p>
@@ -221,6 +229,13 @@ export default function PrivacyPolicyPage() {
               <li>Provider: Supabase</li>
               <li>Required: Yes (cannot disable - required for service)</li>
             </ul>
+            <p className="text-zinc-300 mb-2 mt-4"><strong>Guest Ballot Cookie:</strong></p>
+            <ul className="list-disc pl-6 text-zinc-300 space-y-1">
+              <li>Purpose: Remember your current course-ballot choice, allow changes while voting is open, and reveal live results after you vote</li>
+              <li>Set only after a vote is successfully recorded</li>
+              <li>Protected from JavaScript access and sent only in same-site requests</li>
+              <li>Duration: Up to one year, or until you delete it</li>
+            </ul>
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.2 Analytics Cookies</h3>
             <p className="text-zinc-300 mb-2"><strong>Vercel Analytics:</strong></p>
@@ -312,7 +327,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="mt-8">
-            <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">8. Children's Privacy</h2>
+            <h2 className="text-2xl font-semibold text-amber-200 mt-8 mb-4">8. Children’s Privacy</h2>
             <p className="text-zinc-300">
               Our Service is not intended for children under 13 years of age. We do not knowingly collect personal
               information from children under 13. If you are a parent or guardian and believe your child has provided
@@ -346,7 +361,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1 mt-2">
               <li>Posting the new Privacy Policy on this page</li>
-              <li>Updating the "Last Updated" date</li>
+              <li>Updating the “Last Updated” date</li>
               <li>Sending an email notification (for material changes)</li>
               <li>Displaying a notice in the application (for significant changes)</li>
             </ul>
@@ -371,7 +386,7 @@ export default function PrivacyPolicyPage() {
                 <strong>Operated by:</strong> Jeanine Melendez
               </p>
               <p className="text-zinc-400 text-sm mt-2">
-                For privacy-specific inquiries, please use the subject line: "Privacy Inquiry"
+                For privacy-specific inquiries, please use the subject line: “Privacy Inquiry”
               </p>
             </div>
           </section>

@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { markdownContent, publishImmediately = false } = body;
+    const { markdownContent, publishImmediately = false, updateExistingId } = body;
 
     if (!markdownContent || typeof markdownContent !== 'string') {
       return NextResponse.json(
@@ -52,6 +52,114 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = createServiceClient();
 
+    const { data: slugMatch } = await serviceSupabase
+      .from('courses')
+      .select('id, slug')
+      .eq('slug', course.slug)
+      .maybeSingle();
+
+    if (updateExistingId) {
+      const { data: target } = await serviceSupabase
+        .from('courses')
+        .select('id, slug')
+        .eq('id', updateExistingId)
+        .maybeSingle();
+
+      if (!target) {
+        return NextResponse.json({ error: 'Course to update was not found' }, { status: 404 });
+      }
+
+      if (slugMatch && slugMatch.id !== updateExistingId) {
+        return NextResponse.json(
+          {
+            error: 'Another course already uses this slug',
+            code: 'SLUG_CONFLICT',
+            existingSlug: slugMatch.slug,
+            existingId: slugMatch.id,
+            warnings,
+          },
+          { status: 409 }
+        );
+      }
+
+      const { data: updated, error: updateError } = await serviceSupabase
+        .from('courses')
+        .update({
+          title: course.title,
+          slug: course.slug,
+          description: course.description || null,
+          premise: course.premise || null,
+          learning_outcomes: course.learning_outcomes,
+          course_type: course.course_type,
+          level: course.level,
+          duration_weeks: course.duration_weeks,
+          content: course.content,
+          is_published: publishImmediately,
+        })
+        .eq('id', updateExistingId)
+        .select('id, slug, title')
+        .single();
+
+      if (updateError) {
+        console.error('[Import Course] Update error:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update course in database', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      const { error: deleteTextsError } = await serviceSupabase
+        .from('course_texts')
+        .delete()
+        .eq('course_id', updateExistingId);
+
+      if (deleteTextsError) {
+        console.error('[Import Course] Failed to clear old course texts:', deleteTextsError);
+      }
+
+      const matchedCourseTexts = await matchCourseTextsFromContent(serviceSupabase, course.content);
+
+      if (matchedCourseTexts.length > 0) {
+        const { error: courseTextsError } = await serviceSupabase.from('course_texts').insert(
+          matchedCourseTexts.map((text) => ({
+            course_id: updated.id,
+            text_id: text.text_id,
+            is_required: text.is_required,
+          }))
+        );
+
+        if (courseTextsError) {
+          console.error('[Import Course] Failed to link course texts:', courseTextsError);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        updated: true,
+        courseId: updated.id,
+        slug: updated.slug,
+        title: updated.title,
+        weekCount: course.content.weeks.length,
+        readingCount: course.content.weeks.reduce((acc, week) => acc + week.readings.length, 0),
+        matchedTextCount: matchedCourseTexts.length,
+        isPublished: publishImmediately,
+        warnings,
+      });
+    }
+
+    if (slugMatch) {
+      return NextResponse.json(
+        {
+          error: 'A course with this slug already exists',
+          code: 'SLUG_CONFLICT',
+          existingSlug: slugMatch.slug,
+          existingId: slugMatch.id,
+          warnings,
+        },
+        { status: 409 }
+      );
+    }
+
     const { data: highestOrderedCourse } = await serviceSupabase
       .from('courses')
       .select('sort_order')
@@ -60,25 +168,6 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     const nextSortOrder = (highestOrderedCourse?.sort_order ?? -1) + 1;
-
-    const { data: existing } = await serviceSupabase
-      .from('courses')
-      .select('id, slug')
-      .eq('slug', course.slug)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json(
-        {
-          error: 'A course with this slug already exists',
-          code: 'SLUG_CONFLICT',
-          existingSlug: existing.slug,
-          existingId: existing.id,
-          warnings,
-        },
-        { status: 409 }
-      );
-    }
 
     const { data: inserted, error: insertError } = await serviceSupabase
       .from('courses')
@@ -124,6 +213,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      updated: false,
       courseId: inserted.id,
       slug: inserted.slug,
       title: inserted.title,

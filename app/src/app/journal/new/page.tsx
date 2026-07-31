@@ -255,7 +255,7 @@ function NewJournalPageContent() {
                     onClick={() => router.push('/journal')}
                     className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
                   >
-                    Back to Journal
+                    Back to Study Journal
                   </button>
                   <button
                     onClick={() => window.location.reload()}

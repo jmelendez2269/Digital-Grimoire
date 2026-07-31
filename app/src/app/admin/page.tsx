@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Cpu,
   ClipboardCheck,
+  Vote,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -129,6 +130,14 @@ export default function AdminDashboardHub() {
       icon: <BookOpen className="w-8 h-8 text-purple-400" />,
       href: "/admin/courses",
       color: "purple",
+      available: true,
+    },
+    {
+      title: "Course Path Ballots",
+      description: "Create, open, close, archive, and record editorial decisions for the advisory guest ballot.",
+      icon: <Vote className="w-8 h-8 text-cyan-400" />,
+      href: "/admin/course-polls",
+      color: "cyan",
       available: true,
     },
     {

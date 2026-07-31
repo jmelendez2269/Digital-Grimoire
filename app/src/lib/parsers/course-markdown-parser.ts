@@ -23,6 +23,35 @@ export interface CourseReading {
     passage: ReadingTier;
     full: ReadingTier;
   };
+  source_role?: string;
+  historical_note?: string;
+  translation_note?: string;
+  reading_note?: string;
+  interpretive_caution?: string;
+  direct_url?: string;
+}
+
+export interface LearnerMarkdownSection {
+  heading: string;
+  markdown: string;
+}
+
+export interface CompanionCard {
+  title: string;
+  companion_type: 'modern' | 'tradition_connected' | 'companion';
+  meet_the_source: string;
+  source_type?: string;
+  creator?: string;
+  publication_title?: string;
+  date?: string;
+  direct_url?: string;
+  idea_plain_language: string;
+  why_it_matters: string;
+  argues_or_found: string;
+  does_not_settle: string;
+  supplied_example?: string;
+  reading_context?: string;
+  sections: LearnerMarkdownSection[];
 }
 
 export interface LensExercise {
@@ -70,6 +99,16 @@ export interface CourseWeek {
   micro_artifact?: MicroArtifact;
   capstone_artifact?: CapstoneArtifact;
   final_reflection?: string;
+  doorway?: string;
+  reading_context?: string;
+  companion_cards?: CompanionCard[];
+  encounter?: LearnerMarkdownSection;
+  practices?: LearnerMarkdownSection;
+  supplied_cases?: LearnerMarkdownSection[];
+  return_readings?: LearnerMarkdownSection[];
+  completed_examples?: LearnerMarkdownSection[];
+  capstone?: LearnerMarkdownSection;
+  sections?: LearnerMarkdownSection[];
 }
 
 export interface KeyTension {
@@ -84,14 +123,25 @@ export interface CompletionPathway {
 }
 
 export interface CourseContent {
+  format_version?: 1 | 2;
+  production_slug?: string;
   arc: string;
   arc_position: number;
   core_question: string;
   course_id_tag: string;
   orientation?: string;
   mode?: string;
+  recommended_preparation?: string;
+  primary_artifact?: string;
   curator_note_public?: string;
   tone_safety?: string;
+  scope_limits?: string;
+  course_use_guidance?: string;
+  learner_case_deck?: LearnerMarkdownSection[];
+  reference_materials?: LearnerMarkdownSection[];
+  completed_examples?: LearnerMarkdownSection[];
+  source_context_notes?: string;
+  sections?: LearnerMarkdownSection[];
   // Phase 2: course family taxonomy (see docs/planning/course_template.md)
   course_family?: string;
   track_slug?: string;
@@ -286,8 +336,10 @@ function parseMetadataTable(section: string): Record<string, string> {
 
   while ((match = regex.exec(section)) !== null) {
     let key = match[1].replace(/\*\*/g, '').trim().toLowerCase().replace(/\s+/g, '_');
-    // Strip wrapping backticks so values like `mythic-imagination` round-trip clean
-    let value = match[2].replace(/\*\*/g, '').trim().replace(/^`+|`+$/g, '').trim();
+    // Strip wrapping backticks so values like `mythic-imagination` round-trip clean.
+    // Bold markers are preserved in the value (unlike the key) so descriptive
+    // metadata fields like Primary artifact can emphasize a term inline.
+    const value = match[2].trim().replace(/^`+|`+$/g, '').trim();
     if (METADATA_KEY_ALIASES[key]) key = METADATA_KEY_ALIASES[key];
     if (key && key !== 'field' && !key.startsWith('-')) {
       result[key] = value;
@@ -772,7 +824,596 @@ function parseWeek(
   return { week, warnings };
 }
 
+function splitHeadingBlocks(markdown: string, level: number): Array<{ heading: string; body: string }> {
+  const marker = '#'.repeat(level);
+  const regex = new RegExp(`^${marker}\\s+(.+)$`, 'gm');
+  const matches = [...markdown.matchAll(regex)];
+  return matches.map((match, index) => ({
+    heading: match[1].trim(),
+    body: markdown
+      .slice((match.index ?? 0) + match[0].length, matches[index + 1]?.index ?? markdown.length)
+      .trim(),
+  }));
+}
+
+function fieldFromBoldLines(markdown: string, label: string): string {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = markdown.match(new RegExp(
+    `^\\*\\*${escaped}:\\*\\*\\s*([\\s\\S]*?)(?=\\n(?:[-*]\\s+)?\\*\\*[^\\n]+:\\*\\*|\\n\\|\\s*Tier\\s*\\||$)`,
+    'im'
+  ));
+  return match?.[1]?.trim() || '';
+}
+
+function cleanReadingHeadingPart(value: string): string {
+  return value
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[*_`]/g, '')
+    .replace(/^[,\s-]+|[,\s-]+$/g, '')
+    .trim();
+}
+
+function parseV2ReadingIdentity(heading: string): {
+  title: string;
+  author?: string;
+  section?: string;
+} {
+  const normalized = normalizeDashes(heading).replace(/^\d+\.\s*/, '').trim();
+  const dashMatch = normalized.match(/\s+-\s+/);
+  const italicMatches = [...normalized.matchAll(/\*([^*]+)\*/g)];
+
+  if (!dashMatch) {
+    if (italicMatches.length === 1) {
+      const work = italicMatches[0];
+      const trailing = cleanReadingHeadingPart(
+        normalized.slice((work.index ?? 0) + work[0].length)
+      );
+      return {
+        title: cleanReadingHeadingPart(work[1]),
+        section: trailing || undefined,
+      };
+    }
+    return { title: cleanReadingHeadingPart(normalized) || heading.trim() };
+  }
+
+  const left = normalized.slice(0, dashMatch.index).trim();
+  const right = normalized.slice((dashMatch.index ?? 0) + dashMatch[0].length).trim();
+  const rightWork = right.match(/\*([^*]+)\*/);
+  if (rightWork) {
+    const trailing = cleanReadingHeadingPart(
+      right.slice((rightWork.index ?? 0) + rightWork[0].length)
+    );
+    return {
+      title: cleanReadingHeadingPart(rightWork[1]),
+      author: cleanReadingHeadingPart(left) || undefined,
+      section: trailing || undefined,
+    };
+  }
+
+  const leftWork = left.match(/\*([^*]+)\*/);
+  if (leftWork) {
+    return {
+      title: cleanReadingHeadingPart(leftWork[1]),
+      section: cleanReadingHeadingPart(right) || undefined,
+    };
+  }
+
+  const cleanLeft = cleanReadingHeadingPart(left);
+  const cleanRight = cleanReadingHeadingPart(right);
+  if (looksLikePersonName(cleanLeft)) {
+    return {
+      title: cleanRight || cleanLeft,
+      author: cleanLeft || undefined,
+    };
+  }
+  return {
+    title: cleanLeft || cleanRight || heading.trim(),
+    section: cleanRight || undefined,
+  };
+}
+
+function parseV2TierBullets(body: string): {
+  tiers: Partial<Record<'keystone' | 'passage' | 'full', ReadingTier>>;
+  trailingNote: string;
+} {
+  const tiers: Partial<Record<'keystone' | 'passage' | 'full', ReadingTier>> = {};
+  const regex = /^[-*]\s+\*\*(Keystone|Passage|Full\s+Text):\*\*\s*(.+)$/gim;
+  let match: RegExpExecArray | null;
+  let lastMatchEnd = -1;
+
+  while ((match = regex.exec(body)) !== null) {
+    const key = match[1].toLowerCase().startsWith('full')
+      ? 'full'
+      : match[1].toLowerCase() as 'keystone' | 'passage';
+    tiers[key] = { reference: match[2].trim(), description: '' };
+    lastMatchEnd = regex.lastIndex;
+  }
+
+  return {
+    tiers,
+    trailingNote: lastMatchEnd >= 0 ? body.slice(lastMatchEnd).trim() : '',
+  };
+}
+
+function parseV2Reading(block: { heading: string; body: string }, sortOrder: number): CourseReading {
+  const identity = parseV2ReadingIdentity(block.heading);
+  const rows = parsePipeTable(block.body);
+  const tiers = {
+    keystone: { reference: '', description: '' },
+    passage: { reference: '', description: '' },
+    full: { reference: '', description: '' },
+  };
+  for (const row of rows) {
+    const tierName = (row.tier || '').toLowerCase();
+    const value = {
+      reference: row.selection || row.reference || '',
+      description: row['what this depth adds'] || row.description || '',
+    };
+    if (tierName.includes('keystone')) tiers.keystone = value;
+    else if (tierName.includes('passage')) tiers.passage = value;
+    else if (tierName.includes('full')) tiers.full = value;
+  }
+  const bulletTiers = parseV2TierBullets(block.body);
+  for (const key of ['keystone', 'passage', 'full'] as const) {
+    if (bulletTiers.tiers[key]) tiers[key] = bulletTiers.tiers[key];
+  }
+  const reading: CourseReading = {
+    sort_order: sortOrder,
+    title: identity.title,
+    selection_rationale: fieldFromBoldLines(block.body, 'Why it is here'),
+    tiers,
+  };
+  if (identity.author) reading.author = identity.author;
+  if (identity.section) reading.section = identity.section;
+  const optional: Array<[keyof CourseReading, string]> = [
+    ['source_role', fieldFromBoldLines(block.body, 'Source role')],
+    ['historical_note', fieldFromBoldLines(block.body, 'Historical note')],
+    ['translation_note', fieldFromBoldLines(block.body, 'Translation note')],
+    ['reading_note', fieldFromBoldLines(block.body, 'Reading note')],
+    ['interpretive_caution', fieldFromBoldLines(block.body, 'Interpretive caution')],
+  ];
+  for (const [key, value] of optional) if (value) Object.assign(reading, { [key]: value });
+  if (!reading.reading_note && !reading.interpretive_caution && bulletTiers.trailingNote) {
+    reading.reading_note = bulletTiers.trailingNote;
+  } else if (
+    !reading.reading_note
+    && !reading.interpretive_caution
+    && rows.length === 0
+    && Object.keys(bulletTiers.tiers).length === 0
+  ) {
+    const sourceRoleLine = block.body.match(/^\*\*Source role:\*\*[^\n]*$/im);
+    const trailingProse = sourceRoleLine
+      ? block.body.slice((sourceRoleLine.index ?? 0) + sourceRoleLine[0].length).trim()
+      : '';
+    if (trailingProse && !/^(\*\*|\||[-*]\s+\*\*)/.test(trailingProse)) {
+      reading.reading_note = trailingProse;
+    }
+  }
+  return reading;
+}
+
+function markdownLink(markdown: string): { title?: string; url?: string } {
+  const match = markdown.match(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/);
+  return match ? { title: match[1], url: match[2] } : {};
+}
+
+function isCompanionHeading(heading: string): boolean {
+  return /^(?:MODERN|TRADITION-CONNECTED)?\s*COMPANION\b/i.test(
+    normalizeDashes(heading)
+  );
+}
+
+function parseCompanionCard(
+  heading: string,
+  body: string,
+  childHeadingLevel = 3
+): CompanionCard {
+  const sections = splitHeadingBlocks(body, childHeadingLevel).map(({ heading: childHeading, body: markdown }) => ({
+    heading: childHeading,
+    markdown,
+  }));
+  const get = (...names: string[]) =>
+    sections.find((section) => names.some((name) => section.heading.toLowerCase().startsWith(name.toLowerCase())))?.markdown || '';
+  const source = get('Meet the source');
+  const deeper = get('Go Deeper');
+  const link = markdownLink(deeper);
+  const date = source.match(/\b(?:18|19|20)\d{2}\b/)?.[0];
+  return {
+    title: normalizeDashes(heading).replace(/^(MODERN|TRADITION-CONNECTED)\s+COMPANION\s*-\s*/i, '').trim(),
+    companion_type: /^MODERN/i.test(heading)
+      ? 'modern'
+      : /^TRADITION-CONNECTED/i.test(heading)
+        ? 'tradition_connected'
+        : 'companion',
+    meet_the_source: source,
+    date,
+    direct_url: link.url,
+    idea_plain_language: get('The idea in plain language'),
+    why_it_matters: get('Why it matters'),
+    argues_or_found: get('What it argues or found', 'What it argues'),
+    does_not_settle: get('What it does not settle'),
+    supplied_example: get('Try one supplied example', 'Supplied example'),
+    sections,
+  };
+}
+
+function parseV2LearningOutcomes(section: string): string[] {
+  const numbered = parseLearningOutcomes(section);
+  if (numbered.length) return numbered;
+
+  return section
+    .split('\n')
+    .map((line) => line.match(/^[-*]\s+(.+)$/)?.[1]?.trim())
+    .filter((outcome): outcome is string => Boolean(outcome))
+    .map(stripBold);
+}
+
+function parseV2KeyTensions(section: string): KeyTension[] {
+  const canonical = parseKeyTensions(section);
+  if (canonical.length) return canonical;
+
+  return parsePipeTable(section)
+    .map((row) => ({
+      label: row.tension?.trim() || '',
+      description: (
+        row['question underneath it']
+        || row.question
+        || row.description
+        || ''
+      ).trim(),
+    }))
+    .filter((tension) => Boolean(tension.label && tension.description));
+}
+
+function parseV2CompletionPathways(section: string): CompletionPathway[] {
+  const headingPathways: CompletionPathway[] = splitHeadingBlocks(section, 3)
+    .flatMap(({ heading, body }) => {
+      const match = normalizeDashes(heading).match(
+        /^([A-Za-z]+\d+)\s*-\s*(.+)$/
+      );
+      if (!match) return [];
+      const pathway: CompletionPathway = {
+        code: match[1].toUpperCase(),
+        title: stripItalics(match[2].trim()),
+      };
+      const description = body.replace(/\n\s*---\s*$/, '').trim();
+      if (description) pathway.description = description;
+      return [pathway];
+    });
+  if (headingPathways.length) return headingPathways;
+
+  const pathways: CompletionPathway[] = [];
+  for (const line of section.split('\n')) {
+    const normalized = normalizeDashes(line.trim());
+    const canonical = normalized.match(/^-\s+\*\*(\w+)\s*-\s*([^*]+)\*\*:?\s*(.*)$/);
+    if (canonical) {
+      pathways.push({
+        code: canonical[1],
+        title: canonical[2].trim(),
+        description: canonical[3].trim() || undefined,
+      });
+      continue;
+    }
+
+    const action = normalized.match(/^-\s+(Choose|Return to|Use)\s+(?:the\s+)?\*\*([^*]+)\*\*\s*(.*)$/i);
+    if (!action) continue;
+    const target = normalizeDashes(action[2].trim());
+    const codedTarget = target.match(/^([A-Za-z]+\d+)(?:\s*-\s*(.+))?$/);
+    const actionCode = action[1].toLowerCase().startsWith('return')
+      ? 'RETURN'
+      : action[1].toLowerCase() === 'use'
+        ? 'USE'
+        : 'CHOOSE';
+    pathways.push({
+      code: codedTarget?.[1]?.toUpperCase() || actionCode,
+      title: codedTarget?.[2]?.trim() || target,
+      description: action[3].trim().replace(/^if\s+/i, '') || undefined,
+    });
+  }
+  return pathways.length ? pathways : parseCompletionPathways(section);
+}
+
+function parseV2Week(heading: string, body: string): { week: CourseWeek; warnings: string[] } {
+  const warnings: string[] = [];
+  const match = normalizeDashes(heading).match(/^WEEK\s+(\d+)\s*-\s*(.+)$/i);
+  if (!match) throw new Error(`Invalid V2 week heading: ${heading}`);
+  const weekNumber = Number(match[1]);
+  const title = match[2].trim();
+  const intro = body.split(/^##\s+/m)[0];
+  const sections = splitHeadingBlocks(body, 2);
+  const rawSections = sections.map((section) => ({ heading: section.heading, markdown: section.body }));
+  const find = (...names: string[]) =>
+    sections.find((section) => names.some((name) => section.heading.toLowerCase().startsWith(name.toLowerCase())));
+  const readingSection = find('READINGS');
+  const readingBlocks = readingSection ? splitHeadingBlocks(readingSection.body, 3) : [];
+  const readings = readingBlocks
+    .filter((block) => !isCompanionHeading(block.heading))
+    .map((block, index) => parseV2Reading(block, index + 1));
+  const nestedCompanions = readingBlocks
+    .filter((block) => isCompanionHeading(block.heading))
+    .map((block) => parseCompanionCard(block.heading, block.body, 4));
+  const companions = [
+    ...nestedCompanions,
+    ...sections
+      .filter((section) => isCompanionHeading(section.heading))
+      .map((section) => parseCompanionCard(section.heading, section.body)),
+  ];
+  const getMeta = (label: string) => fieldFromBoldLines(intro, label);
+  const coreQuestionSection = find('CORE QUESTION');
+  const keyTensionSection = find('KEY TENSION');
+  const doorwaySection = find('PLAIN-LANGUAGE DOORWAY', 'WHY THIS WEEK MATTERS', 'CAPSTONE PURPOSE');
+  const suppliedCasesSection = find('SUPPLIED CASE DECK', 'SUPPLIED CASES');
+  const returnReadingsSection = find('RETURN READINGS');
+  const capstoneSection = find('CAPSTONE');
+  const finalReflection = find('FINAL REFLECTION');
+  const encounter = find('CENTRAL LENS EXERCISE', 'CENTRAL ENCOUNTER', 'CENTRAL EXERCISE');
+  const practices = find('PRISMARIUM PRACTICE', 'FEATURE EXERCISES', 'OPTIONAL PRODUCT PRACTICE');
+  const synthesis = find('SYNTHESIS PROMPT');
+  const microArtifact = find('MICRO-ARTIFACT', 'CONVERGENCE MICRO-ARTIFACT');
+  const weekType = /capstone/i.test(getMeta('Week type')) || Boolean(capstoneSection)
+    ? 'capstone'
+    : 'standard';
+  const week: CourseWeek = {
+    week_number: weekNumber,
+    title,
+    week_type: weekType,
+    core_question: getMeta('Core question') || coreQuestionSection?.body || '',
+    key_tension:
+      getMeta('Key tension')
+      || stripBold(keyTensionSection?.body.split('\n').find((line) => line.trim()) || ''),
+    lens_focus: parseLensFocus(getMeta('Lens focus')),
+    readings,
+    doorway: doorwaySection?.body || '',
+    companion_cards: companions,
+    sections: rawSections,
+  };
+  const knownWeekHeading = /^(CORE QUESTION|KEY TENSION|WHY THIS WEEK MATTERS|PLAIN-LANGUAGE DOORWAY|READINGS|RETURN READINGS|SUPPLIED CASE(?: DECK|S)?|(?:MODERN|TRADITION-CONNECTED)?\s*COMPANION|CENTRAL (?:LENS )?EXERCISE|CENTRAL ENCOUNTER|PRISMARIUM PRACTICE|OPTIONAL PRODUCT PRACTICE|FEATURE EXERCISES|SYNTHESIS PROMPT|MICRO-ARTIFACT|CONVERGENCE MICRO-ARTIFACT|MAP PANEL|CAPSTONE|PART \d+|FINAL REFLECTION|COMPLETION PATHWAYS)/i;
+  for (const section of sections) {
+    if (!knownWeekHeading.test(section.heading)) {
+      warnings.push(`Week ${weekNumber}: unrecognized heading "## ${section.heading}" is retained in week.sections and shown in preview`);
+    }
+  }
+  if (encounter) {
+    week.encounter = { heading: encounter.heading, markdown: encounter.body };
+    week.lens_exercise = { prompt: encounter.body, instructions: [] };
+  }
+  if (practices) week.practices = { heading: practices.heading, markdown: practices.body };
+  if (suppliedCasesSection) {
+    week.supplied_cases = splitHeadingBlocks(suppliedCasesSection.body, 3)
+      .map((section) => ({ heading: section.heading, markdown: section.body }));
+  }
+  if (returnReadingsSection) {
+    week.return_readings = splitHeadingBlocks(returnReadingsSection.body, 3)
+      .map((section) => ({ heading: section.heading, markdown: section.body }));
+  }
+  if (synthesis) week.synthesis_prompt = { prompt: synthesis.body, expansion: [] };
+  if (microArtifact) {
+    week.micro_artifact = {
+      name: normalizeDashes(microArtifact.heading).replace(/^MICRO-ARTIFACT\s*-\s*/i, ''),
+      description: microArtifact.body,
+      purpose: '',
+      capstone_connection: '',
+    };
+  }
+  if (capstoneSection) week.capstone = { heading: capstoneSection.heading, markdown: capstoneSection.body };
+  if (finalReflection) week.final_reflection = finalReflection.body;
+  if (weekType !== 'capstone' && readings.length === 0) {
+    warnings.push(`Week ${weekNumber} ("${title}") has no primary readings under ## READINGS`);
+  }
+  for (const reading of readings) {
+    const missingTiers = (['keystone', 'passage', 'full'] as const)
+      .filter((tier) => !reading.tiers[tier].reference)
+      .map((tier) => tier === 'full' ? 'Full Text' : `${tier[0].toUpperCase()}${tier.slice(1)}`);
+    if (missingTiers.length) {
+      warnings.push(
+        `Week ${weekNumber}, reading "${reading.title}" is missing reading tier${missingTiers.length === 1 ? '' : 's'}: ${missingTiers.join(', ')}`
+      );
+    }
+  }
+  for (const card of companions) {
+    const missing = [
+      ['Meet the source', card.meet_the_source],
+      ['The idea in plain language', card.idea_plain_language],
+      ['Why it matters this week', card.why_it_matters],
+      ['What it argues or found', card.argues_or_found],
+      ['What it does not settle', card.does_not_settle],
+    ].filter(([, value]) => !value).map(([label]) => label);
+    if (missing.length) warnings.push(`Week ${weekNumber}, companion "${card.title}" is incomplete: missing ${missing.join(', ')}`);
+  }
+  return { week, warnings };
+}
+
+const LOCKED_V2_PRODUCTION_SLUGS: Readonly<Record<string, string>> = {
+  FD01: 'fd01-mythic-imagination-from-classical-pattern-to-personal-meaning',
+};
+
+function extractV2CourseTitle(
+  markdown: string,
+  metadata: Record<string, string>
+): { courseIdTag: string; courseTitle: string } | null {
+  const firstHeading = markdown
+    .split('\n')
+    .find((line) => /^#\s+/.test(line))
+    ?.replace(/^#\s+/, '')
+    .trim();
+  if (firstHeading) {
+    const match = normalizeDashes(firstHeading).match(
+      /^(?:Course\s+)?(PRE|[A-Za-z]+\d+)\s*[-:]\s*(.+)$/i
+    );
+    if (match) {
+      return {
+        courseIdTag: match[1].toUpperCase(),
+        courseTitle: match[2].trim(),
+      };
+    }
+  }
+
+  const metadataCourseId = (
+    metadata.course_id
+    || metadata.course
+    || metadata.course_code
+    || ''
+  ).trim();
+  const metadataTitle = (metadata.title || '').trim();
+  if (!/^(?:PRE|[A-Za-z]+\d+)$/i.test(metadataCourseId) || !metadataTitle) return null;
+  return {
+    courseIdTag: metadataCourseId.toUpperCase(),
+    courseTitle: metadataTitle,
+  };
+}
+
+function parseCourseMarkdownV2(markdown: string): ParseResult {
+  const warnings: string[] = [];
+  const weekMatches = [...markdown.matchAll(/^#\s+(WEEK\s+\d+\s*[—–-]\s*.+)$/gim)];
+  if (!weekMatches.length) return { success: false, error: 'No V2 weekly sections found', warnings };
+  const coursePart = markdown.slice(0, weekMatches[0].index);
+  const trailingCourseHeading = [...markdown.matchAll(/^#\s+(?!WEEK\b)(.+)$/gim)]
+    .find((match) => (match.index ?? 0) > (weekMatches.at(-1)?.index ?? 0));
+  const weeksEnd = trailingCourseHeading?.index ?? markdown.length;
+  const sections = splitHeadingBlocks(coursePart, 2);
+  const sectionMap = new Map(sections.map((section) => [section.heading.toLowerCase(), section.body]));
+  const findCourseSection = (...names: string[]) =>
+    sections.find((section) =>
+      names.some((name) => section.heading.toLowerCase() === name.toLowerCase())
+    )?.body || '';
+  const metadata = parseMetadataTable(sectionMap.get('course metadata') || '');
+  const title = extractV2CourseTitle(coursePart, metadata);
+  if (!title) return { success: false, error: 'Could not find V2 course title or metadata', warnings };
+  const weeks: CourseWeek[] = [];
+  weekMatches.forEach((match, index) => {
+    const start = (match.index ?? 0) + match[0].length;
+    const end = weekMatches[index + 1]?.index ?? weeksEnd;
+    const parsed = parseV2Week(match[1], markdown.slice(start, end));
+    weeks.push(parsed.week);
+    warnings.push(...parsed.warnings);
+  });
+  const knownCourseHeadings = new Set([
+    'course metadata', 'course premise', "curator's note", 'curator note',
+    "jack's curator note",
+    'limits of this investigation', 'scope and limits', 'tone & safety note',
+    'scope, context, and safety', 'care note',
+    'learning outcomes', 'key tensions', 'completion pathways', 'how to use this course',
+    'how the course works', 'the six questions we will ask of a claim',
+    'the five distinctions we will keep making',
+    'reading guidance', 'source/context notes',
+  ]);
+  for (const section of sections) {
+    if (!knownCourseHeadings.has(section.heading.toLowerCase())) {
+      warnings.push(`Unrecognized course heading "## ${section.heading}" is retained in content.sections and shown in preview`);
+    }
+  }
+  const tail = trailingCourseHeading ? markdown.slice(trailingCourseHeading.index ?? weeksEnd) : '';
+  const tailSections = tail
+    ? splitHeadingBlocks(tail, 2).map((section) => ({ heading: section.heading, markdown: section.body }))
+    : [];
+  const tailHeading = trailingCourseHeading?.[1]?.trim().toLowerCase() || '';
+  const isLearnerMaterials = tailHeading.includes('learner materials');
+  const learnerCases = isLearnerMaterials ? [] : tailSections;
+  const completedExamples = isLearnerMaterials
+    ? tailSections.filter((section) => /completed|worked example/i.test(section.heading))
+    : [];
+  const referenceMaterials = isLearnerMaterials
+    ? tailSections.filter((section) => !completedExamples.includes(section))
+    : [];
+  const outcomes = parseV2LearningOutcomes(sectionMap.get('learning outcomes') || '');
+  const tensions = parseV2KeyTensions(sectionMap.get('key tensions') || '');
+  const weekPathwaySection = weeks
+    .flatMap((week) => week.sections ?? [])
+    .find((section) => section.heading.toLowerCase().startsWith('completion pathways'));
+  const pathways = parseV2CompletionPathways(
+    sectionMap.get('completion pathways') || weekPathwaySection?.markdown || ''
+  );
+  const required: Array<[string, boolean]> = [
+    ['COURSE PREMISE', Boolean(sectionMap.get('course premise')?.trim())],
+    ['LEARNING OUTCOMES', outcomes.length > 0],
+    ['KEY TENSIONS', tensions.length > 0],
+    ['COMPLETION PATHWAYS', pathways.length > 0],
+  ];
+  const missingRequired = required.filter(([, present]) => !present).map(([heading]) => heading);
+  if (missingRequired.length) {
+    return {
+      success: false,
+      error: `Course Format V2 validation failed. Add or repair the required section${missingRequired.length === 1 ? '' : 's'}: ${missingRequired.join(', ')}`,
+      warnings,
+    };
+  }
+  const premise = sectionMap.get('course premise')?.trim() || '';
+  const duration = Number((metadata.length || metadata.length_weeks || `${weeks.length}`).match(/\d+/)?.[0]) || weeks.length;
+  const declaredProductionSlug = metadata.production_slug?.trim();
+  const productionSlug =
+    declaredProductionSlug
+    || LOCKED_V2_PRODUCTION_SLUGS[title.courseIdTag]
+    || `${title.courseIdTag.toLowerCase()}-${slugify(title.courseTitle)}`;
+  if (!declaredProductionSlug && LOCKED_V2_PRODUCTION_SLUGS[title.courseIdTag]) {
+    warnings.push(
+      `${title.courseIdTag} is using its locked production slug "${productionSlug}". Add a "Production slug" row to COURSE METADATA so the identity is explicit in the source.`
+    );
+  }
+  const curatorNote = sections.find((section) =>
+    /curator(?:['’]s)? note$/i.test(section.heading)
+  )?.body;
+  const scopeLimits = findCourseSection(
+    'limits of this investigation',
+    'scope and limits',
+    'scope, context, and safety'
+  );
+  const guidanceSections = sections.filter((section) =>
+    [
+      'how to use this course',
+      'how the course works',
+      'reading guidance',
+      'the six questions we will ask of a claim',
+      'the five distinctions we will keep making',
+    ].includes(section.heading.toLowerCase())
+  );
+  const courseUseGuidance = guidanceSections
+    .map((section) => `### ${section.heading}\n\n${section.body}`)
+    .join('\n\n');
+  const content: CourseContent = {
+    format_version: 2,
+    production_slug: productionSlug,
+    arc: metadata.arc || '',
+    arc_position: Number(metadata.arc_position) || 1,
+    core_question: metadata.core_question || '',
+    course_id_tag: title.courseIdTag,
+    orientation: metadata.orientation,
+    mode: metadata.mode,
+    recommended_preparation: metadata.recommended_preparation,
+    primary_artifact: metadata.primary_artifact,
+    curator_note_public: curatorNote,
+    scope_limits: scopeLimits,
+    tone_safety: sectionMap.get('tone & safety note') || sectionMap.get('care note'),
+    course_use_guidance: courseUseGuidance,
+    source_context_notes: sectionMap.get('source/context notes'),
+    key_tensions: tensions,
+    completion_pathways: pathways,
+    learner_case_deck: learnerCases,
+    reference_materials: referenceMaterials,
+    completed_examples: completedExamples,
+    sections: sections.map((section) => ({ heading: section.heading, markdown: section.body })),
+    weeks,
+  };
+  return {
+    success: true,
+    warnings,
+    course: {
+      title: title.courseTitle,
+      slug: productionSlug,
+      premise,
+      description: (premise.match(/[^.!?]*[.!?]+/g) || []).slice(0, 2).join(' ').trim() || premise.slice(0, 280),
+      learning_outcomes: outcomes,
+      course_type: mapCourseType(metadata.type || metadata.arc || ''),
+      level: mapLevel(metadata.level || ''),
+      duration_weeks: duration,
+      content,
+    },
+  };
+}
+
 export function parseCourseMarkdown(markdown: string): ParseResult {
+  if (/^#\s+WEEK\s+\d+\s*[—–-]/im.test(markdown)) {
+    return parseCourseMarkdownV2(markdown);
+  }
   const warnings: string[] = [];
 
   try {

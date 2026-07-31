@@ -1,11 +1,11 @@
-# User Guide: Prismatic Learning (Courses)
+# User Guide: Courses
 
 > [!NOTE]
-> The Courses surface is now branded **Prismatic Learning**. The route remains `/courses`. Older planning docs may still refer to `Project Parallax Academy` or `Parallax School`.
+> The feature is called **Courses** and lives at `/courses`. Older planning docs may use previous names.
 
 ## Overview
 
-**Prismatic Learning** is Prismarium's structured learning experience. Where the Library invites open exploration, Prismatic Learning curates guided journeys through specific traditions, concepts, and practices.
+**Courses** is Prismarium's structured learning experience. Where the Library invites open exploration, Courses offers guided paths through specific traditions, concepts, and practices.
 
 The page is organised around four tabs:
 

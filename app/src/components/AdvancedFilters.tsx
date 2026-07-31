@@ -289,7 +289,7 @@ function AdvancedFilters({ options, values, onChange }: AdvancedFiltersProps) {
           {/* Lenses Filter */}
           <div>
             <label className="block text-sm font-medium text-amber-100 mb-2">
-              Parallax Lenses
+              Seven Lenses
               <span className="ml-2 text-xs text-amber-100/60 font-normal">
                 (The 7 perspectives)
               </span>

@@ -219,26 +219,34 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Static assets with content hash - long-term caching
-      {
-        source: '/_next/static/:path*',
-        headers: [
+      // Static assets with content hash - long-term caching.
+      // Dev-mode chunk URLs are NOT content-hashed (they reuse the same path
+      // across rebuilds), so immutable caching here would make the browser
+      // permanently pin a stale build until its cache is manually cleared.
+      // Restrict to production, where the build ID makes these URLs unique.
+      ...(isProduction
+        ? [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            source: '/_next/static/:path*',
+            headers: [
+              {
+                key: 'Cache-Control',
+                value: 'public, max-age=31536000, immutable',
+              },
+            ],
           },
-        ],
-      },
-      // Images from Next.js Image Optimization
-      {
-        source: '/_next/image',
-        headers: [
+          // Images from Next.js Image Optimization
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            source: '/_next/image',
+            headers: [
+              {
+                key: 'Cache-Control',
+                value: 'public, max-age=31536000, immutable',
+              },
+            ],
           },
-        ],
-      },
+        ]
+        : []),
       // Public static files - match common file extensions
       {
         source: '/:path*.:ext(ico|png|jpg|jpeg|svg|webp|avif|woff|woff2|ttf|eot)',

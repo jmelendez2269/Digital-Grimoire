@@ -32,7 +32,7 @@ export default function ParallaxLoader({ className, size = 'md' }: ParallaxLoade
         xl: 24,
     }[size];
 
-    // The 7 Parallax Lenses icons
+    // The Seven Lenses icons
     const lensIcons = [
         { icon: FlaskConical, color: 'text-blue-400', label: 'Scientific' },
         { icon: Brain, color: 'text-purple-400', label: 'Psychological' },
@@ -147,7 +147,7 @@ export default function ParallaxLoader({ className, size = 'md' }: ParallaxLoade
                 <div className="absolute inset-0 bg-amber-500/5 blur-md rounded-full -z-10 animate-pulse" />
             </div>
 
-            <span className="sr-only">Accessing Parallax perspectives...</span>
+            <span className="sr-only">Analyzing through Seven Lenses...</span>
         </div>
     );
 }

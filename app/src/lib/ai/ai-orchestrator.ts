@@ -142,17 +142,21 @@ class AIOrchestrator {
         const userMessages = messages.filter(m => m.role !== 'system');
 
         const response = await this.getAnthropicClient().messages.create({
-            model: (options.model as any) || 'claude-3-5-sonnet-latest',
+            model: (options.model as any) || 'claude-sonnet-5',
             system: systemMessage,
             messages: userMessages.map(m => ({
                 role: m.role as 'user' | 'assistant',
                 content: m.content
             })),
             max_tokens: options.maxTokens || 1024,
-            temperature: options.temperature ?? 0.7,
+            // claude-sonnet-5 and the Opus 4.6+ family reject an explicit `temperature` outright
+            ...(options.temperature !== undefined ? { temperature: options.temperature } : {}),
         });
 
-        const content = response.content[0].type === 'text' ? response.content[0].text : '';
+        // Adaptive thinking (on by default on claude-sonnet-5+) puts a `thinking` block
+        // before the `text` block, so the text isn't necessarily at index 0.
+        const textBlock = response.content.find((block) => block.type === 'text');
+        const content = textBlock && textBlock.type === 'text' ? textBlock.text : '';
 
         return {
             content,

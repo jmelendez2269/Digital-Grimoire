@@ -70,9 +70,16 @@ interface SerializableWeek {
   micro_artifact?: SerializableMicroArtifact;
   capstone_artifact?: SerializableCapstoneArtifact;
   final_reflection?: string;
+  doorway?: string;
+  supplied_cases?: Array<{ heading?: string; markdown?: string }>;
+  return_readings?: Array<{ heading?: string; markdown?: string }>;
+  completed_examples?: Array<{ heading?: string; markdown?: string }>;
+  sections?: Array<{ heading?: string; markdown?: string }>;
 }
 
 interface SerializableContent {
+  format_version?: 1 | 2;
+  production_slug?: string;
   arc?: string;
   arc_position?: number;
   core_question?: string;
@@ -94,6 +101,10 @@ interface SerializableContent {
   key_tensions?: Array<{ label?: string; description?: string }>;
   completion_pathways?: Array<{ code?: string; title?: string; description?: string }>;
   weeks?: SerializableWeek[];
+  sections?: Array<{ heading?: string; markdown?: string }>;
+  learner_case_deck?: Array<{ heading?: string; markdown?: string }>;
+  reference_materials?: Array<{ heading?: string; markdown?: string }>;
+  completed_examples?: Array<{ heading?: string; markdown?: string }>;
 }
 
 export interface SerializableCourse {
@@ -127,6 +138,7 @@ function serializeMetadata(course: SerializableCourse): string {
   const content = course.content ?? {};
   const rows: Array<[string, string]> = [];
   if (content.course_id_tag) rows.push(['course_id', content.course_id_tag]);
+  if (content.production_slug) rows.push(['production_slug', content.production_slug]);
   if (course.title) rows.push(['title', course.title]);
   if (content.core_question) rows.push(['core_question', content.core_question]);
   if (content.arc) rows.push(['arc', content.arc]);
@@ -347,6 +359,61 @@ function serializeWeek(week: SerializableWeek): string {
 
 export function serializeCourseToMarkdown(course: SerializableCourse): string {
   const content = course.content ?? {};
+  if (content.format_version === 2 && content.sections?.length) {
+    const courseIdTag = trimOrEmpty(content.course_id_tag) || 'C00';
+    const title = trimOrEmpty(course.title) || 'Untitled';
+    const parts = [`# Course ${courseIdTag} — ${title}`];
+    for (const section of content.sections) {
+      const heading = trimOrEmpty(section.heading);
+      if (!heading) continue;
+      let markdown = trimOrEmpty(section.markdown);
+      if (
+        heading.toLowerCase() === 'course metadata'
+        && content.production_slug
+        && content.course_id_tag === 'FD01'
+        && !/^\|\s*(?:production[ _]slug|stable[ _]slug)\s*\|/im.test(markdown)
+      ) {
+        markdown = `${markdown}\n| Production slug | ${content.production_slug} |`;
+      }
+      parts.push('', `## ${heading}`, '', markdown);
+    }
+    for (const week of (content.weeks ?? []).slice().sort(
+      (a, b) => (a.week_number ?? 0) - (b.week_number ?? 0)
+    )) {
+      const number = week.week_number ?? 1;
+      const titleText = trimOrEmpty(week.title) || `Week ${number}`;
+      parts.push('', `# WEEK ${number} — ${titleText}`, '');
+      parts.push(`**Week type:** ${week.week_type === 'capstone' ? 'Capstone' : 'Standard'}  `);
+      if (week.core_question) parts.push(`**Core question:** ${week.core_question}  `);
+      if (week.key_tension) parts.push(`**Key tension:** ${week.key_tension}  `);
+      if (week.lens_focus?.length) parts.push(`**Lens focus:** ${week.lens_focus.join(' · ')}`);
+      for (const section of week.sections ?? []) {
+        const heading = trimOrEmpty(section.heading);
+        if (!heading) continue;
+        parts.push('', `## ${heading}`, '', trimOrEmpty(section.markdown));
+      }
+    }
+    if (content.learner_case_deck?.length) {
+      parts.push('', '# SUPPLIED LEARNER CASES');
+      for (const section of content.learner_case_deck) {
+        const heading = trimOrEmpty(section.heading);
+        if (!heading) continue;
+        parts.push('', `## ${heading}`, '', trimOrEmpty(section.markdown));
+      }
+    }
+    if (content.reference_materials?.length || content.completed_examples?.length) {
+      parts.push('', '# SUPPLIED LEARNER MATERIALS');
+      for (const section of [
+        ...(content.reference_materials ?? []),
+        ...(content.completed_examples ?? []),
+      ]) {
+        const heading = trimOrEmpty(section.heading);
+        if (!heading) continue;
+        parts.push('', `## ${heading}`, '', trimOrEmpty(section.markdown));
+      }
+    }
+    return parts.join('\n').replace(/\n{4,}/g, '\n\n\n') + '\n';
+  }
   const courseIdTag = trimOrEmpty(content.course_id_tag) || 'C00';
   const title = trimOrEmpty(course.title) || 'Untitled';
 

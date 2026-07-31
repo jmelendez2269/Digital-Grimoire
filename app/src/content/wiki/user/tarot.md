@@ -47,7 +47,7 @@ The Oracle is for *reading*. If you want to generate custom cards using AI, visi
 ## Tips for Better Readings
 
 * **Clear your mind first** — even 3 slow breaths before drawing makes a difference
-* **Write it down** — save your draw to the [Journal](/wiki/journal) for reflection
+* **Write it down** — save your draw to the [Study Journal](/wiki/journal) for reflection
 * **Don't re-draw** — if you don't like what appears, sit with it. Discomfort is often the message
 * **Start simple** — one card a day is a complete practice for beginners
 

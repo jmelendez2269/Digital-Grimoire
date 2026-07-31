@@ -222,7 +222,7 @@ export default function JournalHomePage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 to-zinc-500">
-                {user?.user_metadata?.journal_name || 'My_Grimoire'}
+                {user?.user_metadata?.journal_name || 'Study Journal'}
               </h1>
               <p className="text-zinc-400 max-w-xl text-lg">
                 Your personal collection of thoughts, workbooks, and artifacts.
@@ -257,7 +257,7 @@ export default function JournalHomePage() {
                 }`}
               >
                 <FileText className="w-4 h-4" />
-                My Journal
+                Study Journal
               </button>
               <button
                 onClick={() => setActiveTab('workbooks')}

@@ -7,7 +7,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactQueryProvider } from "@/lib/react-query";
 import { getAbsoluteUrl, getAppUrl } from "@/lib/utils";
 import CookieConsent from "@/components/CookieConsent";
-import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -62,10 +61,22 @@ const appUrl = getAppUrl();
 const ogImageUrl = getAbsoluteUrl("/og-image.png");
 
 export const metadata: Metadata = {
-  title: "Prismarium | Multi-Lens Library & Knowledge Network",
-  description: "Prismarium is a multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses — multiple perspectives, one inquiry.",
+  title: "Prismarium — A place to keep learning",
+  description:
+    "Explore religion, mythology, mysticism, philosophy, science, symbolism, consciousness, and other big questions through shared course paths and tools for building your own understanding.",
   metadataBase: new URL(appUrl),
-  keywords: ["esoteric texts", "sacred writings", "wisdom traditions", "knowledge network", "digital library", "hermeticism", "spiritual texts", "AI analysis", "Prismarium"],
+  keywords: [
+    "religion",
+    "mythology",
+    "mysticism",
+    "philosophy",
+    "science",
+    "symbolism",
+    "consciousness",
+    "courses",
+    "digital library",
+    "Prismarium",
+  ],
   authors: [{ name: "Prismarium" }],
   creator: "Prismarium",
   publisher: "Prismarium",
@@ -78,21 +89,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: appUrl,
     siteName: "Prismarium",
-    title: "Prismarium | Multi-Lens Library & Knowledge Network",
-    description: "Prismarium is a multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses.",
+    title: "Prismarium — A place to keep learning",
+    description:
+      "Explore big questions through shared course paths, a growing Library, Seven Lenses, Concept Search, a Knowledge Graph, and your own Study Journal.",
     images: [
       {
         url: ogImageUrl,
         width: 1200,
         height: 630,
-        alt: "Prismarium - Multi-Lens Library & Knowledge Network",
+        alt: "Prismarium — A place to keep learning",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prismarium | Multi-Lens Library & Knowledge Network",
-    description: "Explore wisdom traditions through multiple lenses. Prismarium — a knowledge network for curious minds.",
+    title: "Prismarium — A place to keep learning",
+    description:
+      "A place for curious people to read, compare, question, and build their own understanding.",
     images: [ogImageUrl],
   },
   robots: {
@@ -123,7 +136,7 @@ export default function RootLayout({
     name: "Prismarium",
     url: appUrl,
     description:
-      "Prismarium is a multi-lens library and knowledge network. Explore esoteric texts, sacred writings, and wisdom traditions through the Seven Lenses.",
+      "A place to explore big questions through shared course paths, a growing Library, Seven Lenses, Concept Search, a Knowledge Graph, and a private Study Journal.",
     potentialAction: {
       "@type": "SearchAction",
       target: {

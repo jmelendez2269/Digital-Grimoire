@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Library | Prismarium | Multi-lens library and knowledge network",
-  description: "Browse and explore the Prismarium - a curated collection of esoteric texts, sacred writings, and wisdom traditions from across cultures and time periods. Discover hidden wisdom through AI-powered analysis.",
+  title: "Library | Prismarium",
+  description:
+    "Read across religion, mythology, mysticism, philosophy, science, symbolism, consciousness, and related fields in the Prismarium Library.",
   openGraph: {
     title: "Library | Prismarium",
-    description: "Browse and explore the Prismarium - a curated collection of esoteric texts, sacred writings, and wisdom traditions.",
+    description:
+      "Start with a book or follow a question across the Prismarium Library.",
     type: "website",
     url: "/library",
     images: [
@@ -13,14 +15,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Prismarium - Esoteric Texts & Wisdom Traditions",
+        alt: "The Prismarium Library",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Library | Prismarium",
-    description: "Browse and explore the Prismarium - a curated collection of esoteric texts and wisdom traditions.",
+    description:
+      "Start with a book or follow a question across the Prismarium Library.",
     images: ["/og-image.png"],
   },
 };

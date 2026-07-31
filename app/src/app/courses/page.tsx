@@ -2,11 +2,23 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Search, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import CourseReleaseBadge from '@/components/CourseReleaseBadge';
+import {
+  getCourseReleaseStatus,
+  groupCoursesByRelease,
+  isCourseAvailable,
+  isIntroductionCourse,
+  isMainCourse,
+} from '@/lib/courses/presentation';
+import {
+  EMPTY_PLATFORM_TOTALS,
+  type PlatformTotals,
+} from '@/lib/platform/catalog';
 import { tiptapToText } from '@/lib/tiptap/render';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -55,14 +67,14 @@ interface Course {
 
 interface Enrollment {
   current_week: number;
-  progress: Record<string, unknown>;
+  progress: Record<string, unknown> | null;
 }
 
 interface EnrolledCourse extends Course {
   enrollment: Enrollment;
 }
 
-type ViewMode = 'arcs' | 'paths' | 'map' | 'catalog';
+type ViewMode = 'arcs' | 'map' | 'catalog';
 
 // ─── Constants / helpers ──────────────────────────────────────────────────────
 
@@ -77,6 +89,29 @@ const ARC_PALETTE = [
   '#FF3A5C', // ruby
   '#B48F4A', // brass
 ];
+
+function formatPlatformTotal(value: number | null): string {
+  return value === null ? '—' : value.toLocaleString();
+}
+
+function PlatformTotalsLine({
+  totals,
+  className,
+}: {
+  totals: PlatformTotals;
+  className: string;
+}) {
+  return (
+    <p className={className}>
+      <b className="font-medium text-amber-300">{formatPlatformTotal(totals.tools)}</b>
+      {' study tools · '}
+      <b className="font-medium text-amber-300">{formatPlatformTotal(totals.books)}</b>
+      {' books · '}
+      <b className="font-medium text-amber-300">{formatPlatformTotal(totals.courses)}</b>
+      {' courses'}
+    </p>
+  );
+}
 
 // 7 Spectrum lenses — mapped to design tokens, with heuristic keyword sets
 // for deriving per-course lens tags from title/description/key-tension text.
@@ -101,19 +136,19 @@ const LENS_DEFS: Array<{ key: string; label: string; color: string; keywords: Re
   },
   {
     key: 'religious',
-    label: 'Religious / Spiritual',
+    label: 'Religious/Spiritual',
     color: '#2AFFA0', // --spectrum-emerald
     keywords: /\b(religion|religious|spirit|sacred|divine|god|devot|mystic|prayer|soul|salvation|ritual|monastic|gnos)/i,
   },
   {
     key: 'historical',
-    label: 'Historical',
+    label: 'Historical/Anthropological',
     color: '#20E0F5', // --spectrum-cyan
     keywords: /\b(histor|tradition|transmiss|inherit|lineage|ancient|century|era|archive|colonial|antiquity)/i,
   },
   {
     key: 'symbolic',
-    label: 'Symbolic / Occult',
+    label: 'Symbolic/Occult',
     color: '#3A7FFF', // --spectrum-sapphire
     keywords: /\b(symbol|sign|hermetic|alchem|kabbal|qabal|occult|magic|esoter|tarot|sigil|correspond|myth)/i,
   },
@@ -136,211 +171,6 @@ function deriveLenses(course: Course): number[] {
   ];
   const blob = parts.join(' ');
   return LENS_DEFS.map((def, i) => (def.keywords.test(blob) ? i : -1)).filter((i) => i >= 0);
-}
-
-// ─── Seed data for Paths + Map (until schema supports it) ────────────────────
-
-interface SeedPathStep {
-  code: string;       // course tag e.g. "GM·1"
-  title: string;
-  level: 'foundational' | 'intermediate' | 'advanced';
-  weeks: number;
-  why: string;        // prose linking previous → this
-}
-
-interface SeedPath {
-  id: string;
-  name: string;
-  tag: string;
-  color: string;      // accent
-  subtitle: string;
-  steps: SeedPathStep[];
-}
-
-const SEED_PATHS: SeedPath[] = [
-  {
-    id: 'hermetic',
-    name: 'The Hermetic Arc',
-    tag: 'Esoteric',
-    color: '#B48F4A',
-    subtitle: 'The classical Western esoteric lineage traced from alchemy through geometry to synthesis.',
-    steps: [
-      { code: 'C01', title: 'How Humans Know What They Know', level: 'foundational', weeks: 8, why: 'The grammar of knowing — what counts as valid knowledge in the first place.' },
-      { code: 'C06', title: 'Alchemy: Inner, Outer, and Psychological', level: 'intermediate', weeks: 8, why: 'You arrive knowing what a legitimate knowledge claim looks like, and can evaluate alchemical claims precisely.' },
-      { code: 'C07', title: 'The Qabalah and the Tree of Life', level: 'intermediate', weeks: 8, why: 'The Qabalah is the most systematic map in the same tradition; C06 gives you the substrate, C07 the architecture.' },
-      { code: 'C13', title: 'Sacred Geometry and the Mathematical Cosmos', level: 'advanced', weeks: 8, why: 'The Sefirot carry numerical and geometric properties; the mathematical-cosmological thread of C07 is what C13 examines in full.' },
-      { code: 'C15', title: 'Synthesis as a Practice', level: 'advanced', weeks: 8, why: 'Seven weeks with incompatible positions makes the demand for synthesis training exact and unavoidable.' },
-      { code: 'C17', title: 'Reality Cracks and Liminal States', level: 'advanced', weeks: 8, why: 'The threshold material is the most demanding test of the synthesizer\'s discernment — seven traditions, one phenomenon, no resolution.' },
-    ],
-  },
-  {
-    id: 'mystical',
-    name: 'The Mystical Traditions',
-    tag: 'Mysticism',
-    color: '#B03AFF',
-    subtitle: 'Direct knowing across Christian, Eastern, Islamic, and women\'s mystical traditions — tracing what gnosis requires.',
-    steps: [
-      { code: 'C01', title: 'How Humans Know What They Know', level: 'foundational', weeks: 8, why: 'The grammar of knowing — what counts as valid knowledge.' },
-      { code: 'C08', title: 'Gnosis vs. Belief', level: 'intermediate', weeks: 8, why: 'The gnosis/belief distinction is the first precise application of C01\'s instruments to a claim that resists verification.' },
-      { code: 'C09', title: 'What the Self Obscures', level: 'intermediate', weeks: 8, why: 'C08 establishes the cross-traditional vocabulary; C09 asks what must dissolve for direct knowing to become possible.' },
-      { code: 'C10', title: 'Islamic Thought', level: 'intermediate', weeks: 8, why: 'The Buddhist and Vedantic accounts meet their Islamic parallel — fana and baqa — with vocabulary already in place.' },
-      { code: 'C11', title: 'The Women Mystics', level: 'intermediate', weeks: 8, why: 'Rabia bridges the Sufi tradition to women who made the same claim under different institutional constraints.' },
-      { code: 'C15', title: 'Synthesis as a Practice', level: 'advanced', weeks: 8, why: 'The women mystics generate the most demanding synthesis demand — coded speech, suppression, and claimed direct knowledge.' },
-    ],
-  },
-  {
-    id: 'philosophical',
-    name: 'The Philosophical Spine',
-    tag: 'Philosophy',
-    color: '#3A7FFF',
-    subtitle: 'Epistemology into science into Western philosophy into ethics — the rigorous critical mind trained from first principles.',
-    steps: [
-      { code: 'C01', title: 'How Humans Know What They Know', level: 'foundational', weeks: 8, why: 'The grammar of knowing.' },
-      { code: 'C04', title: 'What Science Can and Can\'t Say', level: 'intermediate', weeks: 8, why: 'C04 stress-tests the scientific lens — what it can establish, and the category errors when its claims overstep.' },
-      { code: 'C05', title: 'Every Map Lies a Little', level: 'intermediate', weeks: 8, why: 'Every map distorts the territory — the epistemological consequence of C04 applied to representation itself.' },
-      { code: 'C12', title: 'The Western Philosophical Inheritance', level: 'intermediate', weeks: 8, why: 'The Stoic tradition is the inheritance\'s most practically powerful and undervalued leg; C12 shows the context it was formed within.' },
-      { code: 'C14', title: 'Ethics Without Absolutes', level: 'advanced', weeks: 8, why: 'Ethics Without Absolutes generates the synthesis demand; once you\'ve reasoned ethically without foundations, you need the methodology.' },
-      { code: 'C15', title: 'Synthesis as a Practice', level: 'advanced', weeks: 8, why: 'Bergson and Whitehead\'s process critique is the most sophisticated internal account of how maps distort territory.' },
-    ],
-  },
-  {
-    id: 'symbolic',
-    name: 'Myth, Symbol & the Modern World',
-    tag: 'Symbolic',
-    color: '#FF8C2A',
-    subtitle: 'From symbol mechanics through correspondence — arriving at how the same structures appear in contemporary technology.',
-    steps: [
-      { code: 'C02', title: 'Why Stories Keep Working', level: 'foundational', weeks: 8, why: 'The mechanics of myth — why certain symbols survive, what psychotechnology does.' },
-      { code: 'C03', title: 'Why Everything Seems Connected', level: 'foundational', weeks: 8, why: 'Symbols organise reality; C03 asks whether the connections they reveal are in the world or in the symbol-making mind.' },
-      { code: 'C06', title: 'Alchemy: Inner, Outer, and Psychological', level: 'intermediate', weeks: 8, why: 'The correspondence principle C03 examined is the philosophical foundation of the Hermetic tradition; C06 gives you the full tradition.' },
-      { code: 'C15', title: 'Synthesis as a Practice', level: 'advanced', weeks: 8, why: 'Lévi\'s reconstruction in C06 Week 6 is a case study in both responsible and irresponsible synthesis.' },
-      { code: 'C18', title: 'Technology as Modern Myth', level: 'advanced', weeks: 8, why: 'Technology mythology applies exactly the multi-lens symbolic analysis C15 develops — C18 is C02\'s methods at advanced resolution.' },
-    ],
-  },
-  {
-    id: 'methodologist',
-    name: 'The Methodologist',
-    tag: 'Method',
-    color: '#2AFFA0',
-    subtitle: 'Method, discernment, reading, and application — the full analytical toolkit before engaging with contemporary concerns.',
-    steps: [
-      { code: 'C01', title: 'How Humans Know What They Know', level: 'foundational', weeks: 8, why: 'The grammar of knowing.' },
-      { code: 'C05', title: 'Every Map Lies a Little', level: 'intermediate', weeks: 8, why: 'Every map distorts — the epistemological consequence applied to representation itself.' },
-      { code: 'C12', title: 'The Western Philosophical Inheritance', level: 'intermediate', weeks: 8, why: 'The Western philosophical inheritance is the largest map in the curriculum; C05 equips you to read it as one.' },
-      { code: 'C15', title: 'Synthesis as a Practice', level: 'advanced', weeks: 8, why: 'The Western tradition\'s fractures generate the synthesis demands C15 is designed to meet.' },
-      { code: 'C16', title: "Reading the Colonizer's Record", level: 'advanced', weeks: 8, why: 'Where C15 develops responsible synthesis, C16 develops responsible reading — together they are a complete discernment practice.' },
-      { code: 'C17', title: 'Reality Cracks and Liminal States', level: 'advanced', weeks: 8, why: 'The reading discipline equips you to engage with liminal traditions without collapsing their cosmologies.' },
-    ],
-  },
-  {
-    id: 'self',
-    name: 'The Self and Its Dissolution',
-    tag: 'Inner Work',
-    color: '#FF3A5C',
-    subtitle: "Eastern traditions on constructed selfhood, Islamic mysticism, women's threshold experience, liminality, and karma.",
-    steps: [
-      { code: 'C09', title: 'What the Self Obscures', level: 'intermediate', weeks: 8, why: "The Eastern traditions' most sustained argument that the working self was already not what it appeared." },
-      { code: 'C10', title: 'Islamic Thought', level: 'intermediate', weeks: 8, why: 'The Buddhist and Vedantic accounts meet their Islamic parallel in fana and baqa — structurally similar claims in very different theological frames.' },
-      { code: 'C11', title: 'The Women Mystics', level: 'intermediate', weeks: 8, why: "Rabia bridges to C11's women who made the divine-love claim from outside institutional authority." },
-      { code: 'C17', title: 'Reality Cracks and Liminal States', level: 'advanced', weeks: 8, why: 'The threshold experiences the women mystics described are exactly what C17 maps across traditions; you arrive with the case studies in hand.' },
-      { code: 'C19', title: 'Karma and the Long Arc', level: 'advanced', weeks: 8, why: 'Karma is one answer to what the return carries across — the long arc of consequence extends beyond any single life or framework.' },
-    ],
-  },
-  {
-    id: 'mathematical',
-    name: 'The Pattern Traditions',
-    tag: 'Mathematical',
-    color: '#B48F4A',
-    subtitle: 'From the drive to find connection, through Hermetic correspondence and Kabbalistic architecture, to the mathematical-cosmological claim.',
-    steps: [
-      { code: 'C03', title: 'Why Everything Seems Connected', level: 'foundational', weeks: 8, why: 'Is the human drive to find pattern a discovery or a symptom? The question the entire path holds open.' },
-      { code: 'C06', title: 'Alchemy: Inner, Outer, and Psychological', level: 'intermediate', weeks: 8, why: 'The Hermetic tradition is built directly on the correspondence claim C03 examined.' },
-      { code: 'C07', title: 'The Qabalah and the Tree of Life', level: 'intermediate', weeks: 8, why: "The Tree of Life is simultaneously philosophical, cosmological, and mathematical; C06's substrate makes it legible from the inside." },
-      { code: 'C13', title: 'Sacred Geometry and the Mathematical Cosmos', level: 'advanced', weeks: 8, why: "The Sefirot's numerical and geometric properties find their hardest formulation in C13's discovery/projection question." },
-    ],
-  },
-  {
-    id: 'modern',
-    name: 'Into the Present',
-    tag: 'Arc 4',
-    color: '#22D3EE',
-    subtitle: 'The full toolkit turned on contemporary reality — technology mythology, long-arc consequence, and the question of what the universe is made of.',
-    steps: [
-      { code: 'C01', title: 'How Humans Know What They Know', level: 'foundational', weeks: 8, why: "Without C01's distinctions, contemporary discourse collapses into assertion vs. counter-assertion." },
-      { code: 'C15', title: 'Synthesis as a Practice', level: 'advanced', weeks: 8, why: 'Synthesis as a Practice is the methodological bridge into Arc 4.' },
-      { code: 'C17', title: 'Reality Cracks and Liminal States', level: 'advanced', weeks: 8, why: 'The threshold material generates the most demanding test of synthesis discernment.' },
-      { code: 'C18', title: 'Technology as Modern Myth', level: 'advanced', weeks: 8, why: 'The initiatory grammar from C17 reappears in how technology structures its salvation and apocalypse narratives.' },
-      { code: 'C19', title: 'Karma and the Long Arc', level: 'advanced', weeks: 8, why: 'The mythology of technology asks what a myth costs; karma asks what consequence looks like beyond a single product cycle.' },
-      { code: 'C20', title: 'The Fabric of the Universe', level: 'advanced', weeks: 8, why: 'The long arc arrives at the substance question — what the universe is made of when all traditions reach the same edge.' },
-    ],
-  },
-];
-
-// Map seed data: 20 courses, 4 arc bands, edge list.
-interface MapSeedNode {
-  id: string;
-  title: string;
-  q: string;
-  arc: 'FS' | 'TT' | 'PA' | 'CM';
-  level: 'foundational' | 'intermediate' | 'advanced';
-  weeks: number;
-}
-
-const MAP_NODES: MapSeedNode[] = [
-  { id: 'C01', title: 'How Humans Know What They Know', q: 'What counts as truth — and who decides?', arc: 'FS', level: 'foundational', weeks: 8 },
-  { id: 'C02', title: 'Why Stories Keep Working', q: 'Why do certain symbols refuse to die?', arc: 'FS', level: 'foundational', weeks: 8 },
-  { id: 'C03', title: 'Why Everything Seems Connected', q: 'Is the drive to find connection a discovery — or a symptom?', arc: 'FS', level: 'foundational', weeks: 8 },
-  { id: 'C04', title: "What Science Can and Can't Say", q: 'What can science settle — and what does it leave untouched?', arc: 'FS', level: 'intermediate', weeks: 8 },
-  { id: 'C05', title: 'Every Map Lies a Little', q: 'If every map distorts the territory, what do we do with maps?', arc: 'FS', level: 'intermediate', weeks: 8 },
-  { id: 'C06', title: 'Alchemy: Inner, Outer, Psychological', q: 'Can transformation be systematized?', arc: 'TT', level: 'intermediate', weeks: 8 },
-  { id: 'C07', title: 'The Qabalah and the Tree of Life', q: 'What does a diagram do that a doctrine cannot?', arc: 'TT', level: 'intermediate', weeks: 8 },
-  { id: 'C08', title: 'Gnosis vs. Belief', q: 'Is direct experience a kind of knowledge?', arc: 'TT', level: 'intermediate', weeks: 8 },
-  { id: 'C09', title: 'What the Self Obscures', q: 'What do Eastern traditions know about the self?', arc: 'TT', level: 'intermediate', weeks: 8 },
-  { id: 'C10', title: 'Islamic Thought', q: 'What does it mean to know God beyond categories?', arc: 'TT', level: 'intermediate', weeks: 8 },
-  { id: 'C11', title: 'The Women Mystics', q: 'What happens when the gatekeepers are men?', arc: 'TT', level: 'intermediate', weeks: 8 },
-  { id: 'C12', title: 'Western Philosophical Inheritance', q: 'What did Western philosophy inherit?', arc: 'TT', level: 'intermediate', weeks: 8 },
-  { id: 'C13', title: 'Sacred Geometry & Mathematical Cosmos', q: 'Is mathematical pattern discovered — or projected?', arc: 'TT', level: 'advanced', weeks: 8 },
-  { id: 'C14', title: 'Ethics Without Absolutes', q: 'How do you reason ethically when foundations collapse?', arc: 'PA', level: 'advanced', weeks: 8 },
-  { id: 'C15', title: 'Synthesis as a Practice', q: 'What does integration look like as method?', arc: 'PA', level: 'advanced', weeks: 8 },
-  { id: 'C16', title: "Reading the Colonizer's Record", q: 'How do you engage traditions preserved in misunderstanding?', arc: 'PA', level: 'advanced', weeks: 8 },
-  { id: 'C17', title: 'Reality Cracks and Liminal States', q: 'What becomes visible at the edges of frameworks?', arc: 'CM', level: 'advanced', weeks: 8 },
-  { id: 'C18', title: 'Technology as Modern Myth', q: 'What myths is technology asking us to live inside?', arc: 'CM', level: 'advanced', weeks: 8 },
-  { id: 'C19', title: 'Karma and the Long Arc', q: 'What if every action ripples across generations?', arc: 'CM', level: 'advanced', weeks: 8 },
-  { id: 'C20', title: 'The Fabric of the Universe', q: 'Physics, mysticism, and philosophy at the same edge.', arc: 'CM', level: 'advanced', weeks: 8 },
-];
-
-const MAP_EDGES: Array<[string, string]> = [
-  ['C01','C02'],['C01','C04'],['C01','C06'],['C01','C08'],['C01','C12'],
-  ['C02','C03'],['C02','C18'],
-  ['C03','C06'],
-  ['C04','C05'],['C04','C12'],
-  ['C05','C12'],
-  ['C06','C07'],['C06','C08'],['C06','C12'],['C06','C13'],['C06','C15'],
-  ['C07','C08'],['C07','C09'],['C07','C12'],['C07','C13'],
-  ['C08','C09'],['C08','C11'],
-  ['C09','C10'],['C09','C11'],['C09','C12'],
-  ['C10','C11'],['C10','C12'],
-  ['C11','C15'],
-  ['C12','C13'],['C12','C14'],
-  ['C13','C14'],['C13','C15'],['C13','C17'],
-  ['C14','C15'],
-  ['C15','C16'],['C15','C17'],['C15','C18'],['C15','C19'],['C15','C20'],
-  ['C16','C17'],
-  ['C17','C18'],['C17','C19'],
-  ['C18','C19'],['C18','C20'],
-  ['C19','C20'],
-];
-
-const ARC_BAND_META: Record<MapSeedNode['arc'], { label: string; color: string; y: number }> = {
-  FS: { label: 'Foundational Synthesis', color: '#22D3EE', y: 58 },
-  TT: { label: 'Traditions Across Time', color: '#B48F4A', y: 200 },
-  PA: { label: 'The Practical Arts',      color: '#2AFFA0', y: 350 },
-  CM: { label: 'Convergence & Modern',    color: '#3A7FFF', y: 470 },
-};
-
-// Count how many seed paths a given course id appears in
-function countPathsForCourse(id: string): number {
-  return SEED_PATHS.filter((p) => p.steps.some((s) => s.code === id)).length;
 }
 
 function getCoreQuestion(course: Course, maxLength = 200): string | null {
@@ -395,22 +225,6 @@ function buildArcs(courses: Course[]): ArcBucket[] {
   });
 }
 
-function pickCurator(courses: Course[], enrollmentMap: Record<string, Enrollment>): Course | null {
-  if (courses.length === 0) return null;
-  // Prefer an in-progress enrolled course.
-  const enrolled = courses.find((c) => enrollmentMap[c.id]);
-  if (enrolled) return enrolled;
-  // Else first foundational at arc_position 1.
-  const opener = courses.find(
-    (c) => (c.level === 'foundational' || c.course_type === 'foundational') && c.content?.arc_position === 1,
-  );
-  if (opener) return opener;
-  // Else lowest arc_position overall.
-  return [...courses].sort(
-    (a, b) => (a.content?.arc_position ?? 99) - (b.content?.arc_position ?? 99),
-  )[0];
-}
-
 type LengthBucket = 'all' | 'short' | 'mid' | 'long';
 function inLengthBucket(weeks: number | null, bucket: LengthBucket): boolean {
   if (bucket === 'all') return true;
@@ -427,11 +241,16 @@ function courseStatus(course: Course, enrollment: Enrollment | undefined): {
   label: string;
 } {
   const total = course.duration_weeks || 8;
-  if (!enrollment) return { state: 'enter', pct: 0, label: 'Enter path →' };
+  if (!enrollment) return { state: 'enter', pct: 0, label: 'Not started' };
   const week = enrollment.current_week || 1;
   const pct = Math.min(100, Math.round((week / total) * 100));
-  if (week >= total) return { state: 'done', pct: 100, label: '✓ Completed' };
-  return { state: 'current', pct, label: `● Week ${week} of ${total} → Continue` };
+  const progress = enrollment.progress ?? {};
+  const completed =
+    progress.completed === true ||
+    progress.status === 'completed' ||
+    week >= total;
+  if (completed) return { state: 'done', pct: 100, label: 'Completed' };
+  return { state: 'current', pct, label: `Week ${week} of ${total}` };
 }
 
 // ─── Book cover stack (used by both concepts) ────────────────────────────────
@@ -488,9 +307,9 @@ function ArcSpineView({
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 items-start">
       {/* Left rail */}
       <aside className="lg:sticky lg:top-4">
-        <h5 className="text-xs font-mono uppercase tracking-[0.22em] text-zinc-500 mb-4">
-          The eight arcs
-        </h5>
+        <p className="text-xs font-mono uppercase tracking-[0.22em] text-zinc-500 mb-4">
+          Course arcs
+        </p>
         <div className="flex flex-col gap-2">
           {arcs.map((arc) => {
             const active = arc.key === activeArc?.key;
@@ -539,7 +358,7 @@ function ArcSpineView({
         {activeArc && (
           <div className="flex flex-wrap items-end justify-between gap-4 mb-7 pb-4 border-b border-white/6">
             <div>
-              <p className="font-serif italic text-3xl text-zinc-100 m-0">{activeArc.name}</p>
+              <h3 className="font-serif italic text-3xl text-zinc-100 m-0">{activeArc.name}</h3>
               {activeArc.courses[0]?.content?.core_question && (
                 <p className="font-serif italic text-amber-400 text-lg mt-2 leading-relaxed">
                   {activeArc.courses[0].content.core_question}
@@ -547,7 +366,7 @@ function ArcSpineView({
               )}
             </div>
             <div className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400">
-              <b className="text-amber-400 font-medium">{activeArc.courses.length} paths</b>
+              <b className="text-amber-400 font-medium">{activeArc.courses.length} courses</b>
               {activeArc.totalWeeks > 0 && <> · ~{activeArc.totalWeeks} weeks</>}
             </div>
           </div>
@@ -581,27 +400,26 @@ function ArcCourseRow({
   enrollment?: Enrollment;
   arcColor: string;
 }) {
-  const router = useRouter();
   const tag = course.content?.course_id_tag;
   const coreQuestion = getCoreQuestion(course, 220);
   const tensionsCount = course.content?.key_tensions?.length ?? 0;
   const status = courseStatus(course, enrollment);
+  const releaseStatus = getCourseReleaseStatus(course);
+  const isOpen = isCourseAvailable(releaseStatus);
+  const introductionCourse = isIntroductionCourse(course);
 
   const levelDotColor =
     course.level === 'advanced' ? '#B03AFF' :
     course.level === 'intermediate' ? '#22D3EE' :
     '#B48F4A';
 
-  const href = enrollment ? `/courses/${course.slug}/learn` : `/courses/${course.slug}`;
+  const href =
+    isOpen && enrollment
+      ? `/courses/${course.slug}/learn`
+      : `/courses/${course.slug}`;
 
-  return (
-    <button
-      type="button"
-      onClick={() => router.push(href)}
-      className={`relative w-full text-left py-[18px] pb-[22px] border-b border-white/6 group ${
-        status.state === 'current' ? '' : ''
-      }`}
-    >
+  const rowContent = (
+    <>
       {/* spine dot */}
       <span
         className="absolute -left-[24px] top-6 w-[14px] h-[14px] rounded-full bg-zinc-950 border-[2px]"
@@ -612,18 +430,28 @@ function ArcCourseRow({
         }}
       />
 
-      <div className="grid grid-cols-[56px_1fr_200px] gap-6 items-center md:grid-cols-[72px_1fr_240px]">
-        <div className="font-display font-semibold text-[34px] leading-none text-amber-500/70">
+      <div className="grid grid-cols-1 gap-4 items-center md:grid-cols-[72px_1fr_240px] md:gap-6">
+        <div className="font-display font-semibold text-[28px] leading-none text-amber-500/70 md:text-[34px]">
           {positionLabel}
         </div>
 
         <div>
-          <h4 className="font-sans font-semibold text-xl text-zinc-100 m-0 group-hover:text-amber-100 transition-colors leading-snug">
+          <div className="mb-2.5 flex flex-wrap items-center gap-2">
             {tag && (
-              <span className="inline-flex items-center gap-1.5 font-mono text-xs text-amber-400 bg-amber-500/[0.06] border border-amber-500/25 px-2 py-[3px] rounded-[3px] mr-2 align-middle">
+              <span className="inline-flex items-center rounded-[3px] border border-amber-500/25 bg-amber-500/[0.06] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-amber-300">
                 {tag}
               </span>
             )}
+            <CourseReleaseBadge status={releaseStatus} />
+            {introductionCourse && (
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-300">
+                Introduction
+              </span>
+            )}
+          </div>
+          <h4
+            className="m-0 font-sans text-xl font-semibold leading-snug text-zinc-100 transition-colors group-hover:text-amber-100"
+          >
             {course.title}
           </h4>
 
@@ -649,7 +477,7 @@ function ArcCourseRow({
             {tensionsCount > 0 && <span>↔ {tensionsCount} key tensions</span>}
           </div>
 
-          {status.state === 'current' && (
+          {isOpen && status.state === 'current' ? (
             <div className="h-[2px] rounded-[2px] bg-white/6 overflow-hidden mt-2">
               <div
                 className="h-full rounded-[2px]"
@@ -659,33 +487,361 @@ function ArcCourseRow({
                 }}
               />
             </div>
-          )}
+          ) : null}
         </div>
 
-        <div className="text-right">
-          <div className="flex justify-end mb-2">
+        <div className="text-left md:text-right">
+          <div className="mb-2 flex md:justify-end">
             <CoverStack texts={course.course_texts} compact />
           </div>
-          <span
-            className={`font-mono text-xs tracking-[0.18em] uppercase inline-flex items-center gap-1.5 ${
-              status.state === 'done'
-                ? 'text-amber-400'
-                : status.state === 'current'
-                ? 'text-cyan-400'
-                : 'text-cyan-500 group-hover:text-cyan-300'
-            }`}
-          >
-            {status.label}
-          </span>
+          {isOpen ? (
+            <span
+              className={`font-mono text-xs tracking-[0.18em] uppercase inline-flex items-center gap-1.5 ${
+                status.state === 'done'
+                  ? 'text-amber-400'
+                  : status.state === 'current'
+                  ? 'text-cyan-400'
+                  : 'text-cyan-500 group-hover:text-cyan-300'
+              }`}
+            >
+              {status.label}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-cyan-300">
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              Public preview
+            </span>
+          )}
         </div>
       </div>
 
       {/* faint hover wash tinted by arc color */}
       <span
-        className="absolute inset-x-0 -inset-y-px opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+        className="pointer-events-none absolute inset-x-0 -inset-y-px opacity-0 transition-opacity group-hover:opacity-100"
         style={{ background: `linear-gradient(90deg, ${arcColor}10, transparent 60%)` }}
       />
-    </button>
+    </>
+  );
+
+  const rowClassName =
+    'group relative block w-full cursor-pointer border-b border-white/6 py-[18px] pb-[22px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 focus-visible:ring-inset';
+
+  return (
+    <Link href={href} className={rowClassName}>
+      {rowContent}
+    </Link>
+  );
+}
+
+// ─── CONCEPT C · Constellation Map View ──────────────────────────────────────
+// Real curriculum data, not seed/mock nodes: bands come from each course's
+// `content.arc`, position within a band from `content.arc_position`, and
+// edges from each course's own `content.completion_pathways` codes. The
+// Hero's Journey Taster is excluded — per Mission Control's live-course audit
+// (2026-07-29), it is retired from the future learner pathway even though its
+// app record stays live until a separately approved migration.
+
+const ARC_BAND_ORDER = [
+  'Standalone Entry Point',
+  'Foundation Doors',
+  'Foundational Synthesis',
+  'Traditions Across Time',
+  'Esoteric Practice',
+  'Visual & Mathematical Imagination',
+  'The Practical Arts',
+  'Convergence & Modern Application',
+];
+
+const MAP_WIDTH = 760;
+const MAP_BAND_HEIGHT = 84;
+const MAP_TOP_MARGIN = 50;
+
+interface ConstellationNode {
+  slug: string;
+  tag: string;
+  title: string;
+  coreQuestion: string | null;
+  arc: string;
+  color: string;
+  x: number;
+  y: number;
+}
+
+interface ConstellationEdge {
+  a: string;
+  b: string;
+}
+
+interface ConstellationBand {
+  name: string;
+  color: string;
+  y: number;
+}
+
+function buildConstellation(courses: Course[]): {
+  nodes: ConstellationNode[];
+  edges: ConstellationEdge[];
+  bands: ConstellationBand[];
+  height: number;
+} {
+  const included = courses.filter((c) => isMainCourse(c) || isIntroductionCourse(c));
+
+  const byArc = new Map<string, Course[]>();
+  for (const c of included) {
+    const arc = c.content?.arc?.trim() || 'Open Paths';
+    if (!byArc.has(arc)) byArc.set(arc, []);
+    byArc.get(arc)!.push(c);
+  }
+
+  const orderedArcNames = [...byArc.keys()].sort((a, b) => {
+    const ai = ARC_BAND_ORDER.indexOf(a);
+    const bi = ARC_BAND_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+
+  const bands: ConstellationBand[] = orderedArcNames.map((name, i) => ({
+    name,
+    color: ARC_PALETTE[i % ARC_PALETTE.length],
+    y: MAP_TOP_MARGIN + i * MAP_BAND_HEIGHT,
+  }));
+  const bandByName = new Map(bands.map((b) => [b.name, b]));
+
+  const nodes: ConstellationNode[] = [];
+  const tagToSlug = new Map<string, string>();
+
+  for (const arcName of orderedArcNames) {
+    const band = bandByName.get(arcName)!;
+    const list = [...byArc.get(arcName)!].sort((a, b) => {
+      const ap = a.content?.arc_position ?? 99;
+      const bp = b.content?.arc_position ?? 99;
+      if (ap !== bp) return ap - bp;
+      return a.title.localeCompare(b.title);
+    });
+    const step = (MAP_WIDTH - 100) / Math.max(list.length - 1, 1);
+    list.forEach((c, i) => {
+      const tag = (c.content?.course_id_tag || c.slug).toUpperCase();
+      tagToSlug.set(tag, c.slug);
+      nodes.push({
+        slug: c.slug,
+        tag,
+        title: c.title,
+        coreQuestion: getCoreQuestion(c, 130),
+        arc: arcName,
+        color: band.color,
+        x: list.length === 1 ? MAP_WIDTH / 2 : 50 + i * step,
+        y: band.y,
+      });
+    });
+  }
+
+  const edgeKeys = new Set<string>();
+  const edges: ConstellationEdge[] = [];
+  for (const c of included) {
+    const sourceTag = (c.content?.course_id_tag || c.slug).toUpperCase();
+    const sourceSlug = tagToSlug.get(sourceTag);
+    if (!sourceSlug) continue;
+    for (const pathway of c.content?.completion_pathways ?? []) {
+      const targetSlug = tagToSlug.get((pathway.code ?? '').toUpperCase());
+      if (!targetSlug || targetSlug === sourceSlug) continue;
+      const key = [sourceSlug, targetSlug].sort().join('|');
+      if (edgeKeys.has(key)) continue;
+      edgeKeys.add(key);
+      edges.push({ a: sourceSlug, b: targetSlug });
+    }
+  }
+
+  const height = MAP_TOP_MARGIN + bands.length * MAP_BAND_HEIGHT;
+  return { nodes, edges, bands, height };
+}
+
+function MapView({ courses }: { courses: Course[] }) {
+  const [hoverSlug, setHoverSlug] = useState<string | null>(null);
+  const { nodes, edges, bands, height } = useMemo(() => buildConstellation(courses), [courses]);
+  const nodeBySlug = useMemo(() => new Map(nodes.map((n) => [n.slug, n])), [nodes]);
+
+  const degree = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of edges) {
+      m.set(e.a, (m.get(e.a) ?? 0) + 1);
+      m.set(e.b, (m.get(e.b) ?? 0) + 1);
+    }
+    return m;
+  }, [edges]);
+
+  const radius = (slug: string) => 8 + Math.min(degree.get(slug) ?? 0, 6) * 2;
+
+  const edgePath = (aSlug: string, bSlug: string) => {
+    const pa = nodeBySlug.get(aSlug);
+    const pb = nodeBySlug.get(bSlug);
+    if (!pa || !pb) return '';
+    const dy = pb.y - pa.y;
+    const dx = pb.x - pa.x;
+    if (Math.abs(dy) < 20) {
+      const mx = (pa.x + pb.x) / 2;
+      const arch = pa.y - Math.max(24, Math.abs(dx) * 0.18);
+      return `M${pa.x},${pa.y} Q${mx},${arch} ${pb.x},${pb.y}`;
+    }
+    const cp1x = pa.x + dx * 0.15;
+    const cp1y = pa.y + dy * 0.5;
+    const cp2x = pb.x - dx * 0.15;
+    const cp2y = pb.y - dy * 0.5;
+    return `M${pa.x},${pa.y} C${cp1x},${cp1y} ${cp2x},${cp2y} ${pb.x},${pb.y}`;
+  };
+
+  const connected = useMemo(() => {
+    if (!hoverSlug) return new Set<string>();
+    const s = new Set<string>();
+    for (const e of edges) {
+      if (e.a === hoverSlug) s.add(e.b);
+      if (e.b === hoverSlug) s.add(e.a);
+    }
+    return s;
+  }, [hoverSlug, edges]);
+
+  const hoverNode = hoverSlug ? nodeBySlug.get(hoverSlug) ?? null : null;
+  const hoverLinks = hoverNode
+    ? [...connected]
+        .map((slug) => nodeBySlug.get(slug))
+        .filter((n): n is ConstellationNode => !!n)
+        .sort((a, b) => a.title.localeCompare(b.title))
+    : [];
+
+  if (nodes.length === 0) return null;
+
+  return (
+    <div className="border border-white/6 rounded-2xl overflow-hidden bg-zinc-950/40">
+      {/* Legend bar */}
+      <div className="flex flex-wrap items-center gap-4 px-6 py-4 border-b border-white/6">
+        <span className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400">Arc</span>
+        {bands.map((band) => (
+          <span key={band.name} className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: band.color, boxShadow: `0 0 6px ${band.color}` }}
+            />
+            {band.name}
+          </span>
+        ))}
+        <span className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400 ml-2">Size</span>
+        <span className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
+          <span className="w-2 h-2 rounded-full bg-zinc-500" /> fewer pathways
+          <span className="w-3.5 h-3.5 rounded-full bg-zinc-500 ml-1.5" /> more pathways
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px]">
+        {/* Graph */}
+        <svg
+          viewBox={`0 0 ${MAP_WIDTH} ${height}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="Constellation map of course pathways"
+        >
+          {bands.map((band) => (
+            <text
+              key={band.name}
+              x={12}
+              y={band.y - 22}
+              className="fill-zinc-600"
+              style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase' }}
+            >
+              {band.name}
+            </text>
+          ))}
+
+          {edges.map(({ a, b }) => {
+            const dim = hoverSlug && a !== hoverSlug && b !== hoverSlug;
+            const lit = hoverSlug && (a === hoverSlug || b === hoverSlug);
+            return (
+              <path
+                key={`${a}-${b}`}
+                d={edgePath(a, b)}
+                fill="none"
+                stroke={lit ? nodeBySlug.get(hoverSlug!)?.color ?? '#52525B' : '#3F3F46'}
+                strokeWidth={lit ? 1.6 : 1}
+                opacity={dim ? 0.08 : lit ? 0.85 : 0.35}
+              />
+            );
+          })}
+
+          {nodes.map((n) => {
+            const isHover = n.slug === hoverSlug;
+            const isConnected = connected.has(n.slug);
+            const dim = hoverSlug && !isHover && !isConnected;
+            return (
+              <g
+                key={n.slug}
+                transform={`translate(${n.x}, ${n.y})`}
+                onMouseEnter={() => setHoverSlug(n.slug)}
+                onMouseLeave={() => setHoverSlug(null)}
+                style={{ cursor: 'pointer', opacity: dim ? 0.25 : 1 }}
+              >
+                <Link href={`/courses/${n.slug}`} aria-label={n.title}>
+                  <circle
+                    r={radius(n.slug)}
+                    fill={isHover || isConnected ? n.color : '#18181B'}
+                    stroke={n.color}
+                    strokeWidth={isHover ? 2 : 1.25}
+                    style={{ filter: isHover ? `drop-shadow(0 0 6px ${n.color})` : undefined }}
+                  />
+                  <text
+                    y={radius(n.slug) + 12}
+                    textAnchor="middle"
+                    className="fill-zinc-400"
+                    style={{ fontSize: 8, fontFamily: 'monospace' }}
+                  >
+                    {n.tag}
+                  </text>
+                </Link>
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Detail panel */}
+        <div className="border-t lg:border-t-0 lg:border-l border-white/6 p-5">
+          {hoverNode ? (
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em]" style={{ color: hoverNode.color }}>
+                {hoverNode.arc}
+              </p>
+              <h4 className="font-serif text-xl text-zinc-100 mt-1.5">{hoverNode.title}</h4>
+              {hoverNode.coreQuestion && (
+                <p className="font-serif italic text-amber-400/90 text-sm mt-2 leading-relaxed">
+                  {hoverNode.coreQuestion}
+                </p>
+              )}
+              {hoverLinks.length > 0 && (
+                <div className="mt-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                    Pathways
+                  </p>
+                  <ul className="space-y-1.5">
+                    {hoverLinks.map((n) => (
+                      <li key={n.slug}>
+                        <Link
+                          href={`/courses/${n.slug}`}
+                          className="text-sm text-zinc-300 hover:text-cyan-300 transition-colors"
+                        >
+                          {n.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              Hover or focus a node to see how that course's questions connect onward.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -842,7 +998,7 @@ function CatalogView({
         <div className="text-center py-20 border border-white/5 rounded-2xl bg-zinc-900/10">
           <div className="text-5xl font-mono text-zinc-800 mb-3">∅</div>
           <p className="text-base font-mono text-zinc-500 uppercase tracking-wide">
-            No paths match your filters
+            No courses match your filters
           </p>
         </div>
       ) : (
@@ -904,15 +1060,29 @@ function ChipSep() {
   return <span className="w-px h-5 bg-white/8 mx-2.5" aria-hidden />;
 }
 
-function CuratorPick({ course, enrollment }: { course: Course; enrollment?: Enrollment }) {
+function ReleaseSpotlight({
+  course,
+  enrollment,
+}: {
+  course: Course;
+  enrollment?: Enrollment;
+}) {
   const tag = course.content?.course_id_tag;
   const arc = course.content?.arc;
   const arcPos = course.content?.arc_position;
   const coreQuestion = getCoreQuestion(course, 260);
   const status = courseStatus(course, enrollment);
+  const releaseStatus = getCourseReleaseStatus(course);
+  const isOpen = isCourseAvailable(releaseStatus);
+  const supportingLine = 'This is the question I’m personally working through right now — follow along, or move at your own pace.';
+  const primaryAction = status.state === 'current'
+    ? 'Continue this path'
+    : isOpen
+      ? 'See this path'
+      : 'Preview this path';
 
   return (
-    <div className="relative grid md:grid-cols-[1.4fr_1fr] gap-7 p-7 rounded-2xl border border-cyan-500/30 overflow-hidden mb-2"
+    <article className="relative grid md:grid-cols-[1.4fr_1fr] gap-7 p-7 rounded-2xl border border-cyan-500/30 overflow-hidden mb-2"
          style={{
            background: 'linear-gradient(135deg, rgba(34,211,238,0.06), rgba(13,20,37,0.6) 60%, rgba(180,143,74,0.04))',
          }}>
@@ -921,8 +1091,18 @@ function CuratorPick({ course, enrollment }: { course: Course; enrollment?: Enro
         style={{ background: 'radial-gradient(circle at 80% 0%, rgba(34,211,238,0.12), transparent 50%)' }}
       />
       <div className="relative">
-        <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-cyan-400 mb-3.5 flex items-center gap-2.5">
-          <span>◈</span> Curator’s entry · this season
+        <div className="mb-3.5 flex flex-wrap items-center gap-2">
+          {tag && (
+            <span className="inline-flex items-center rounded-[3px] border border-amber-500/25 bg-amber-500/[0.06] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-300">
+              {tag}
+            </span>
+          )}
+          <CourseReleaseBadge status={releaseStatus} />
+          {isIntroductionCourse(course) && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-400">
+              Introduction
+            </span>
+          )}
         </div>
         <h3 className="font-display font-semibold text-[30px] leading-tight text-zinc-100 m-0 mb-3">
           {course.title}
@@ -932,6 +1112,9 @@ function CuratorPick({ course, enrollment }: { course: Course; enrollment?: Enro
             “{coreQuestion}”
           </p>
         )}
+        <p className="mb-5 max-w-[520px] text-sm leading-relaxed text-zinc-300">
+          {supportingLine}
+        </p>
         <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tracking-wider uppercase text-zinc-500 mb-6">
           {arc && (
             <span>
@@ -945,21 +1128,32 @@ function CuratorPick({ course, enrollment }: { course: Course; enrollment?: Enro
               <span>{course.course_texts.length} core text{course.course_texts.length !== 1 ? 's' : ''}</span>
             </>
           )}
-          {tag && (<><span>·</span><span className="text-amber-400">{tag}</span></>)}
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={enrollment ? `/courses/${course.slug}/learn` : `/courses/${course.slug}`}
-            className="inline-flex items-center gap-2.5 px-5 py-3 rounded-md border border-cyan-500 bg-cyan-500/10 text-cyan-400 font-mono text-[12px] tracking-[0.18em] uppercase hover:bg-cyan-500/15 hover:shadow-[0_0_24px_rgba(34,211,238,0.18)] transition-all"
-          >
-            {status.state === 'current' ? 'Continue path' : 'Enter the path'} →
-          </Link>
-          {course.content?.curator_note_public && (
+          {isOpen ? (
+            <>
+              <Link
+                href={enrollment ? `/courses/${course.slug}/learn` : `/courses/${course.slug}`}
+                className="inline-flex min-h-11 items-center gap-2.5 rounded-md border border-cyan-500 bg-cyan-500/10 px-5 py-3 font-mono text-[12px] uppercase tracking-[0.18em] text-cyan-400 transition-all hover:bg-cyan-500/15 hover:shadow-[0_0_24px_rgba(34,211,238,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+              >
+                {primaryAction} →
+              </Link>
+              {course.content?.curator_note_public ? (
+                <Link
+                  href={`/courses/${course.slug}`}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md border border-white/8 text-zinc-400 font-mono text-[11px] tracking-[0.18em] uppercase hover:border-white/20 hover:text-zinc-100 transition-colors"
+                >
+                  Why I chose this path
+                </Link>
+              ) : null}
+            </>
+          ) : (
             <Link
               href={`/courses/${course.slug}`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md border border-white/8 text-zinc-400 font-mono text-[11px] tracking-[0.18em] uppercase hover:border-white/20 hover:text-zinc-100 transition-colors"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-cyan-500/40 bg-cyan-500/[0.06] px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cyan-300 transition-colors hover:border-cyan-400/70 hover:bg-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
             >
-              Read the curator’s note
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Public preview
             </Link>
           )}
         </div>
@@ -990,7 +1184,7 @@ function CuratorPick({ course, enrollment }: { course: Course; enrollment?: Enro
           <circle cx="258" cy="170" r="2" fill="#B03AFF" />
         </svg>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -1003,32 +1197,44 @@ function CatalogCard({
   enrollment?: Enrollment;
   arcColor?: string;
 }) {
-  const router = useRouter();
   const arc = course.content?.arc;
   const arcPos = course.content?.arc_position;
+  const tag = course.content?.course_id_tag;
   const coreQuestion = getCoreQuestion(course, 180);
   const status = courseStatus(course, enrollment);
+  const releaseStatus = getCourseReleaseStatus(course);
+  const isOpen = isCourseAvailable(releaseStatus);
 
   const pip =
-    course.level === 'advanced'
+    isIntroductionCourse(course)
+      ? { label: 'Introduction', cls: 'text-amber-300 border-amber-400/30 bg-amber-500/[0.08]' }
+      : course.level === 'advanced'
       ? { label: 'Advanced', cls: 'text-violet-400 border-violet-500/30 bg-violet-500/[0.06]' }
       : course.level === 'intermediate'
       ? { label: 'Theme', cls: 'text-cyan-400 border-cyan-500/25 bg-cyan-500/[0.06]' }
       : { label: 'Foundational', cls: 'text-amber-400 border-amber-500/25 bg-amber-500/[0.06]' };
 
-  const href = enrollment ? `/courses/${course.slug}/learn` : `/courses/${course.slug}`;
+  const href =
+    isOpen && enrollment
+      ? `/courses/${course.slug}/learn`
+      : `/courses/${course.slug}`;
 
-  return (
-    <button
-      type="button"
-      onClick={() => router.push(href)}
-      className="relative flex flex-col text-left p-6 min-h-[280px] rounded-[14px] border border-white/6 bg-zinc-900/35 hover:border-amber-500/55 transition-colors"
-    >
+  const cardContent = (
+    <>
       <span className={`absolute top-3.5 right-3.5 font-mono text-xs tracking-[0.18em] uppercase px-2 py-1 rounded-[3px] border ${pip.cls}`}>
         {pip.label}
       </span>
 
-      <div className="flex items-center gap-2.5 font-mono text-xs tracking-[0.22em] uppercase text-amber-500 mb-4">
+      <div className="mb-4 flex min-h-7 flex-wrap items-center gap-2 pr-28">
+        {tag && (
+          <span className="inline-flex items-center rounded-[3px] border border-amber-500/25 bg-amber-500/[0.06] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-amber-300">
+            {tag}
+          </span>
+        )}
+        <CourseReleaseBadge status={releaseStatus} />
+      </div>
+
+      <div className="flex items-center gap-2.5 font-mono text-xs tracking-[0.22em] uppercase text-amber-500 mb-3">
         <span className="text-zinc-500">{arcPos ? String(arcPos).padStart(2, '0') : '—'}</span>
         <span>{arc ?? 'Open Paths'}</span>
         <span
@@ -1039,9 +1245,9 @@ function CatalogCard({
         />
       </div>
 
-      <h4 className="font-display font-semibold text-[22px] leading-tight text-zinc-100 m-0 mb-3">
+      <h3 className="font-display font-semibold text-[22px] leading-tight text-zinc-100 m-0 mb-3">
         {course.title}
-      </h4>
+      </h3>
 
       {coreQuestion && (
         <p className="font-serif italic text-base leading-relaxed text-amber-400/90 m-0 mb-4 flex-grow">
@@ -1052,426 +1258,112 @@ function CatalogCard({
       <div className="flex justify-between items-center pt-3.5 border-t border-dashed border-white/8">
         <CoverStack texts={course.course_texts} compact />
         <div className="font-mono text-xs tracking-[0.18em] uppercase text-zinc-400 flex items-center gap-3">
-          {status.state === 'current' ? (
+          {!isOpen ? (
+            <span className="inline-flex items-center gap-2 text-cyan-300">
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              Public preview
+            </span>
+          ) : status.state === 'current' ? (
             <span className="flex items-center gap-2 text-amber-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              Active · Wk {enrollment?.current_week ?? 1}
+              Week {enrollment?.current_week ?? 1} of {course.duration_weeks || 8}
             </span>
           ) : status.state === 'done' ? (
-            <span className="text-amber-400">✓ Completed</span>
+            <span className="text-amber-400">Completed</span>
           ) : (
-            <span>
-              {course.duration_weeks ? `${course.duration_weeks} wks` : ''}
-              {course.course_texts && course.course_texts.length > 0
-                ? ` · ${course.course_texts.length} text${course.course_texts.length !== 1 ? 's' : ''}`
-                : ''}
-            </span>
+            <span>Not started</span>
           )}
         </div>
       </div>
-    </button>
+    </>
+  );
+
+  const cardClassName =
+    'relative flex min-h-[280px] cursor-pointer flex-col rounded-[14px] border border-white/6 bg-zinc-900/35 p-6 text-left transition-colors hover:border-amber-500/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70';
+
+  return (
+    <Link href={href} className={cardClassName}>
+      {cardContent}
+    </Link>
   );
 }
 
-// ─── Paths View (seed data) ───────────────────────────────────────────────────
-
-function PathsView({
-  activeId,
-  setActiveId,
+function ReleaseOverview({
+  courses,
+  arcs,
+  enrollmentMap,
 }: {
-  activeId: string;
-  setActiveId: (id: string) => void;
+  courses: Course[];
+  arcs: ArcBucket[];
+  enrollmentMap: Record<string, Enrollment>;
 }) {
-  const active = SEED_PATHS.find((p) => p.id === activeId) ?? SEED_PATHS[0];
-  const totalWeeks = active.steps.reduce((s, st) => s + st.weeks, 0);
-
-  // Hub courses = appear in 3+ paths
-  const hubs = active.steps
-    .filter((s) => countPathsForCourse(s.code) >= 3)
-    .slice(0, 3);
+  const groups = groupCoursesByRelease(courses);
+  const getArcColor = (course: Course) =>
+    arcs.find((arc) => arc.key === (course.content?.arc?.trim() ?? 'Open Paths'))?.color;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
-      {/* Left rail */}
-      <aside className="lg:sticky lg:top-4">
-        <h5 className="text-xs font-mono uppercase tracking-[0.22em] text-zinc-500 mb-4">
-          {SEED_PATHS.length} paths · seed
-        </h5>
-        <div className="flex flex-col gap-2">
-          {SEED_PATHS.map((p) => {
-            const isActive = p.id === active.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setActiveId(p.id)}
-                className={`text-left p-3.5 rounded-[10px] border transition-all ${
-                  isActive ? 'bg-zinc-900/60' : 'bg-zinc-900/30 hover:bg-zinc-900/45'
-                }`}
-                style={{
-                  borderColor: isActive ? `${p.color}66` : 'rgba(255,255,255,0.06)',
-                  boxShadow: isActive ? `inset 0 0 24px ${p.color}10` : undefined,
-                }}
-              >
-                <div className="font-serif text-[17px] leading-tight text-zinc-100 mb-2">{p.name}</div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs tracking-[0.18em] uppercase text-zinc-500">
-                    {p.steps.length} courses
-                  </span>
-                  <span
-                    className="font-mono text-[11px] tracking-[0.18em] uppercase px-2 py-[3px] rounded-[2px]"
-                    style={{ background: `${p.color}18`, color: p.color }}
-                  >
-                    {p.tag}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+    <div className="space-y-12">
+      <section aria-labelledby="studying-together-now">
+        <div className="mb-5">
+          <h2
+            id="studying-together-now"
+            className="font-display text-2xl font-semibold tracking-tight text-zinc-100"
+          >
+            What I’m working through right now
+          </h2>
         </div>
-      </aside>
-
-      {/* Main */}
-      <section>
-        {/* Path header */}
-        <div className="pb-5 mb-5 border-b border-white/6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full" style={{ background: active.color, boxShadow: `0 0 8px ${active.color}` }} />
-            <span
-              className="font-mono text-xs tracking-[0.2em] uppercase px-2 py-[3px] rounded-[2px]"
-              style={{ background: `${active.color}18`, color: active.color }}
-            >
-              {active.tag}
-            </span>
-          </div>
-          <h2 className="font-serif italic text-[34px] text-zinc-100 m-0 mb-3 leading-tight">{active.name}</h2>
-          <p className="text-base text-zinc-300 leading-relaxed max-w-2xl">{active.subtitle}</p>
-          <div className="flex items-center gap-3 mt-4 font-mono text-xs tracking-[0.18em] uppercase text-zinc-500">
-            <span><b className="text-zinc-200 font-medium">{active.steps.length}</b> courses</span>
-            <span>·</span>
-            <span>~<b className="text-zinc-200 font-medium">{totalWeeks}</b> weeks</span>
-            <span>·</span>
-            <span className="text-zinc-600">From completion pathways</span>
-          </div>
-        </div>
-
-        {/* Hub courses */}
-        {hubs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-7">
-            {hubs.map((h) => {
-              const pn = countPathsForCourse(h.code);
-              return (
-                <div
-                  key={h.code}
-                  className="border rounded-md p-4"
-                  style={{ borderColor: `${active.color}30` }}
-                >
-                  <div className="font-mono text-xs tracking-[0.16em] uppercase mb-2" style={{ color: active.color }}>
-                    {h.code} · hub course
-                  </div>
-                  <div className="font-serif italic text-[15px] leading-snug text-zinc-200">{h.title}</div>
-                  <div className="mt-3 font-mono text-xs tracking-[0.18em] uppercase" style={{ color: `${active.color}99` }}>
-                    in {pn} of {SEED_PATHS.length} paths
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {groups.current ? (
+          <ReleaseSpotlight
+            course={groups.current}
+            enrollment={enrollmentMap[groups.current.id]}
+          />
+        ) : (
+          <ReleaseSlotPlaceholder>
+            The course I’m currently working through will appear here once it’s announced.
+          </ReleaseSlotPlaceholder>
         )}
+      </section>
 
-        {/* Chain of steps */}
-        <div>
-          {active.steps.map((step, idx) => {
-            const isLast = idx === active.steps.length - 1;
-            const pn = countPathsForCourse(step.code);
-            return (
-              <div key={step.code + idx}>
-                <div className="flex gap-4">
-                  <div className="flex flex-col items-center" style={{ width: 48 }}>
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center font-mono text-xs font-semibold border-[1.5px]"
-                      style={{
-                        background: `${active.color}18`,
-                        borderColor: `${active.color}66`,
-                        color: active.color,
-                      }}
-                    >
-                      {step.code.replace(/^C/, '')}
-                    </div>
-                    {!isLast && (
-                      <div
-                        className="w-[1.5px] flex-1 min-h-[22px]"
-                        style={{ background: `${active.color}22` }}
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 pb-6">
-                    <div className="flex items-center gap-2.5 font-mono text-xs tracking-[0.18em] uppercase text-zinc-500 mb-1.5">
-                      <span>{step.code}</span>
-                      {pn > 1 && (
-                        <span
-                          className="font-mono text-[11px] tracking-[0.18em] uppercase px-2 py-[2px] rounded-[2px]"
-                          style={{ background: 'rgba(255,255,255,0.04)', color: '#a1a1aa', border: '1px solid rgba(255,255,255,0.06)' }}
-                        >
-                          in {pn} paths
-                        </span>
-                      )}
-                    </div>
-                    <div className="font-sans font-semibold text-[18px] text-zinc-100 mb-2 leading-snug">{step.title}</div>
-                    <p className="font-serif italic text-base text-zinc-300 leading-relaxed m-0 mb-3 max-w-2xl">
-                      {step.why}
-                    </p>
-                    <div className="flex items-center gap-3 font-mono text-xs tracking-[0.15em] uppercase text-zinc-500">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: active.color }}
-                      />
-                      <span>{step.level}</span>
-                      <span className="text-zinc-700">·</span>
-                      <span>{step.weeks} weeks</span>
-                    </div>
-                  </div>
-                </div>
-                {!isLast && (
-                  <div className="pl-12 pb-3 font-mono text-xs tracking-[0.22em] uppercase" style={{ color: `${active.color}55` }}>
-                    ↓ leads to
-                  </div>
-                )}
-              </div>
-            );
-          })}
+      <section aria-labelledby="open-paths">
+        <div className="mb-5 max-w-2xl">
+          <h2
+            id="open-paths"
+            className="font-display text-2xl font-semibold tracking-tight text-zinc-100"
+          >
+            Open paths
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+            PRE stays open as the introduction, and paths that have already opened stay in the collection.
+          </p>
         </div>
-
-        {/* End line */}
-        <div className="flex items-center gap-3 mt-7">
-          <span className="flex-1 h-px bg-white/6" />
-          <span className="font-mono text-xs tracking-[0.22em] uppercase text-zinc-600">Path complete</span>
-          <span className="flex-1 h-px bg-white/6" />
-        </div>
+        {groups.open.length > 0 ? (
+          <div className="grid gap-3.5 md:grid-cols-2 lg:grid-cols-3">
+            {groups.open.map((course) => (
+              <CatalogCard
+                key={course.id}
+                course={course}
+                enrollment={enrollmentMap[course.id]}
+                arcColor={getArcColor(course)}
+              />
+            ))}
+          </div>
+        ) : (
+          <ReleaseSlotPlaceholder>
+            Open paths will appear here as the shared collection grows.
+          </ReleaseSlotPlaceholder>
+        )}
       </section>
     </div>
   );
 }
 
-// ─── Map View (seed graph) ────────────────────────────────────────────────────
-
-function MapView() {
-  const [hoverId, setHoverId] = useState<string | null>(null);
-
-  const W = 760;
-  const H = 540;
-
-  // Positions: spread nodes within each arc band horizontally
-  const positions = useMemo(() => {
-    const m: Record<string, { x: number; y: number }> = {};
-    const byArc: Record<MapSeedNode['arc'], MapSeedNode[]> = { FS: [], TT: [], PA: [], CM: [] };
-    for (const n of MAP_NODES) byArc[n.arc].push(n);
-    (Object.keys(byArc) as Array<MapSeedNode['arc']>).forEach((arc) => {
-      const list = byArc[arc];
-      const y = ARC_BAND_META[arc].y;
-      const step = (W - 100) / Math.max(list.length - 1, 1);
-      list.forEach((n, i) => {
-        m[n.id] = { x: 50 + i * step, y };
-      });
-    });
-    return m;
-  }, []);
-
-  // Node radius by # of paths
-  const radius = (id: string) => 8 + Math.min(countPathsForCourse(id), 6) * 2;
-
-  // Edge path
-  const edgePath = (a: string, b: string) => {
-    const pa = positions[a], pb = positions[b];
-    if (!pa || !pb) return '';
-    const dy = pb.y - pa.y, dx = pb.x - pa.x;
-    if (Math.abs(dy) < 25) {
-      // same band — arch up
-      const mx = (pa.x + pb.x) / 2;
-      const arch = pa.y - Math.max(28, Math.abs(dx) * 0.15);
-      return `M${pa.x},${pa.y} Q${mx},${arch} ${pb.x},${pb.y}`;
-    }
-    const cp1x = pa.x + dx * 0.15, cp1y = pa.y + dy * 0.5;
-    const cp2x = pb.x - dx * 0.15, cp2y = pb.y - dy * 0.5;
-    return `M${pa.x},${pa.y} C${cp1x},${cp1y} ${cp2x},${cp2y} ${pb.x},${pb.y}`;
-  };
-
-  const connected = useMemo(() => {
-    if (!hoverId) return new Set<string>();
-    const s = new Set<string>();
-    for (const [a, b] of MAP_EDGES) {
-      if (a === hoverId) s.add(b);
-      if (b === hoverId) s.add(a);
-    }
-    return s;
-  }, [hoverId]);
-
-  const hoverNode = hoverId ? MAP_NODES.find((n) => n.id === hoverId) ?? null : null;
-  const hoverPaths = hoverNode
-    ? SEED_PATHS.filter((p) => p.steps.some((s) => s.code === hoverNode.id))
-    : [];
-  const hoverColor = hoverNode ? ARC_BAND_META[hoverNode.arc].color : '#52525B';
-
+function ReleaseSlotPlaceholder({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border border-white/6 rounded-2xl overflow-hidden bg-zinc-950/40">
-      {/* Legend bar */}
-      <div className="flex flex-wrap items-center gap-4 px-6 py-4 border-b border-white/6">
-        <span className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400">Arc</span>
-        {(Object.entries(ARC_BAND_META) as Array<[MapSeedNode['arc'], typeof ARC_BAND_META[MapSeedNode['arc']]]>).map(
-          ([arc, meta]) => (
-            <span key={arc} className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: meta.color, boxShadow: `0 0 6px ${meta.color}` }} />
-              {meta.label}
-            </span>
-          ),
-        )}
-        <span className="font-mono text-xs tracking-[0.2em] uppercase text-zinc-400 ml-2">Size</span>
-        <span className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
-          <span className="w-2 h-2 rounded-full bg-zinc-500" /> 1 path
-        </span>
-        <span className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
-          <span className="w-3 h-3 rounded-full bg-zinc-500" /> 3 paths
-        </span>
-        <span className="inline-flex items-center gap-2 font-mono text-xs text-zinc-300">
-          <span className="w-4 h-4 rounded-full bg-zinc-500" /> 5+ paths
-        </span>
-        <span className="ml-auto font-mono text-xs tracking-[0.18em] uppercase text-zinc-500">
-          Hover node to explore
-        </span>
-      </div>
-
-      <div className="relative">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full block">
-          {/* Arc bands */}
-          {(Object.entries(ARC_BAND_META) as Array<[MapSeedNode['arc'], typeof ARC_BAND_META[MapSeedNode['arc']]]>).map(
-            ([arc, meta]) => (
-              <g key={arc}>
-                <rect
-                  x={0}
-                  y={meta.y - 35}
-                  width={W}
-                  height={70}
-                  fill={meta.color}
-                  fillOpacity={0.04}
-                />
-                <text
-                  x={12}
-                  y={meta.y - 20}
-                  fontSize={12}
-                  fontFamily="var(--font-mono, 'Fira Mono', monospace)"
-                  letterSpacing="1.8"
-                  fill={meta.color}
-                  fillOpacity={0.6}
-                >
-                  {meta.label.toUpperCase()}
-                </text>
-              </g>
-            ),
-          )}
-
-          {/* Edges */}
-          {MAP_EDGES.map(([a, b]) => {
-            const involves = hoverId && (a === hoverId || b === hoverId);
-            const dim = hoverId && !involves;
-            return (
-              <path
-                key={`${a}-${b}`}
-                d={edgePath(a, b)}
-                stroke={involves ? hoverColor : '#27272a'}
-                strokeWidth={involves ? 1.8 : 1}
-                opacity={dim ? 0.15 : involves ? 1 : 0.7}
-                fill="none"
-              />
-            );
-          })}
-
-          {/* Nodes */}
-          {MAP_NODES.map((n) => {
-            const pos = positions[n.id];
-            if (!pos) return null;
-            const color = ARC_BAND_META[n.arc].color;
-            const r = radius(n.id);
-            const isHover = hoverId === n.id;
-            const isConnected = connected.has(n.id);
-            const dim = hoverId && !isHover && !isConnected;
-            return (
-              <g
-                key={n.id}
-                style={{ cursor: 'pointer' }}
-                onMouseEnter={() => setHoverId(n.id)}
-                onMouseLeave={() => setHoverId(null)}
-                opacity={dim ? 0.2 : 1}
-              >
-                <circle cx={pos.x} cy={pos.y} r={r + 3} fill={`${color}10`} />
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill={isHover ? `${color}55` : `${color}22`}
-                  stroke={color}
-                  strokeOpacity={0.7}
-                  strokeWidth={isHover ? 2.5 : countPathsForCourse(n.id) >= 4 ? 2 : 1.5}
-                />
-                <text
-                  x={pos.x}
-                  y={pos.y + 5}
-                  textAnchor="middle"
-                  fontSize={r > 12 ? 13 : 12}
-                  fill={color}
-                  fontFamily="var(--font-mono, 'Fira Mono', monospace)"
-                  fontWeight={500}
-                  pointerEvents="none"
-                >
-                  {n.id.replace(/^C/, '')}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Tooltip */}
-        {hoverNode && (
-          <div
-            className="absolute pointer-events-none border rounded-md px-4 py-3 max-w-[300px] bg-zinc-950/95 backdrop-blur"
-            style={{
-              borderColor: `${hoverColor}55`,
-              left: `${(positions[hoverNode.id].x / W) * 100}%`,
-              top: `${(positions[hoverNode.id].y / H) * 100}%`,
-              transform: 'translate(14px, -100%)',
-              boxShadow: `0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px ${hoverColor}22`,
-            }}
-          >
-            <div className="font-mono text-xs tracking-[0.18em] uppercase mb-2" style={{ color: hoverColor }}>
-              {hoverNode.id} · {ARC_BAND_META[hoverNode.arc].label}
-            </div>
-            <div className="text-base text-zinc-100 leading-snug mb-2 font-medium">{hoverNode.title}</div>
-            <p className="font-serif italic text-sm text-zinc-300 leading-snug m-0 mb-3">
-              “{hoverNode.q}”
-            </p>
-            {hoverPaths.length > 0 ? (
-              <div className="font-mono text-xs tracking-[0.16em] uppercase text-zinc-400">
-                In {hoverPaths.length} path{hoverPaths.length !== 1 ? 's' : ''}:
-                <div className="mt-1.5 flex flex-col gap-1">
-                  {hoverPaths.map((p) => (
-                    <span key={p.id} style={{ color: p.color }} className="text-[13px]">
-                      {p.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <span className="font-mono text-xs tracking-[0.16em] uppercase text-zinc-600">
-                Not yet in a named path
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+    <div className="rounded-xl border border-dashed border-white/10 bg-zinc-900/20 px-5 py-6 text-sm leading-relaxed text-zinc-400">
+      {children}
     </div>
   );
 }
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 function CoursesPageContent() {
   const searchParams = useSearchParams();
@@ -1479,6 +1371,7 @@ function CoursesPageContent() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [totals, setTotals] = useState<PlatformTotals>(EMPTY_PLATFORM_TOTALS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -1493,9 +1386,6 @@ function CoursesPageContent() {
   const [filterLevel, setFilterLevel] = useState<string>('all');
   const [filterLength, setFilterLength] = useState<LengthBucket>('all');
   const [filterLens, setFilterLens] = useState<number | null>(null);
-
-  // Paths view state
-  const [activePathId, setActivePathId] = useState<string>(SEED_PATHS[0].id);
 
   const enrollmentMap: Record<string, Enrollment> = useMemo(() => {
     const m: Record<string, Enrollment> = {};
@@ -1522,7 +1412,19 @@ function CoursesPageContent() {
 
         const res = await fetch(`/api/courses?${params}`, { cache: 'no-store' });
         const data = await res.json();
-        if (data.success) setCourses(data.courses || []);
+        if (data.success) {
+          setCourses(data.courses || []);
+          if (data.totals) {
+            setTotals({
+              tools:
+                typeof data.totals.tools === 'number'
+                  ? data.totals.tools
+                  : EMPTY_PLATFORM_TOTALS.tools,
+              books: typeof data.totals.books === 'number' ? data.totals.books : null,
+              courses: typeof data.totals.courses === 'number' ? data.totals.courses : null,
+            });
+          }
+        }
       } catch (err) {
         console.error('Error fetching courses:', err);
       } finally {
@@ -1576,101 +1478,104 @@ function CoursesPageContent() {
       </div>
 
       <main className="flex-1 relative z-10">
-        {/* Archive header */}
+        {/* Course introduction */}
         <div className="border-b border-white/8 bg-zinc-900/20 backdrop-blur-md">
           <div className="max-w-screen-2xl mx-auto px-6 py-10">
             <div className="flex items-start justify-between gap-6 flex-wrap">
-              <div>
+              <div className="max-w-3xl">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-px w-8 bg-amber-500/40" />
                   <span className="text-xs uppercase tracking-widest font-mono text-amber-500/80">
-                    Prismatic Learning
+                    Courses
                   </span>
                 </div>
-                <h1 className="text-5xl font-bold text-white tracking-tight mb-3">
-                  The Paths
+                <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                  Follow a question. See where it leads.
                 </h1>
-                <p className="text-zinc-400 max-w-2xl text-base leading-relaxed">
-                  Eight arcs of inquiry. Each is a sustained encounter with a domain — read in order, or step in wherever a question calls you.
+                <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-300">
+                  Prismarium courses aren’t expert-led classes or finished answers. They are questions
+                  we can read, compare, and think through together.
+                </p>
+                <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
+                  PRE is the recommended starting point, never a requirement. Every published course
+                  keeps a public preview, while starting the full path follows its existing access policy.
                 </p>
               </div>
 
-              <div className="flex flex-col items-end gap-2.5">
+              <div className="flex w-full flex-col items-start gap-2.5 sm:w-auto sm:items-end">
                 {/* Search */}
-                <div className="relative">
+                <div className="relative w-full sm:w-auto">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500/50" />
                   <input
                     type="text"
-                    placeholder="SEARCH_PATHS..."
+                    aria-label="Search courses"
+                    placeholder="SEARCH_COURSES..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 bg-black/40 border border-white/8 rounded-lg text-amber-400 placeholder-amber-500/25 font-mono text-sm focus:outline-none focus:border-amber-500/40 w-80 transition-all tracking-[0.16em]"
+                    className="w-full rounded-lg border border-white/8 bg-black/40 py-2.5 pl-10 pr-4 font-mono text-sm tracking-[0.16em] text-amber-400 placeholder-amber-500/25 transition-all focus:border-amber-500/40 focus:outline-none sm:w-80"
                   />
                 </div>
 
-                {/* Stats */}
-                <div className="flex gap-4 font-mono text-xs tracking-[0.22em] uppercase text-zinc-400">
-                  <span>
-                    <b className="text-amber-400 font-medium">{courses.length}</b> paths
-                  </span>
-                  <span>
-                    <b className="text-amber-400 font-medium">{arcs.length}</b> arc{arcs.length === 1 ? '' : 's'}
-                  </span>
-                  {enrolledCourses.length > 0 && (
-                    <span>
-                      <b className="text-amber-400 font-medium">{enrolledCourses.length}</b> active
-                    </span>
-                  )}
-                </div>
+                <PlatformTotalsLine
+                  totals={totals}
+                  className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-300"
+                />
               </div>
             </div>
           </div>
         </div>
 
         <div className="max-w-screen-2xl mx-auto px-6 py-8">
-          {/* Persistent Curator's Entry — visible above both views */}
-          {!loading && courses.length > 0 && (() => {
-            const curator = pickCurator(courses, enrollmentMap);
-            return curator ? (
-              <CuratorPick course={curator} enrollment={enrollmentMap[curator.id]} />
-            ) : null;
-          })()}
-
-          {/* View bar: 4-tab toggle + view-stats */}
           {!loading && courses.length > 0 && (
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-7 mt-7">
-              <div className="inline-flex p-[3px] bg-black/40 border border-white/8 rounded-lg gap-[2px]">
-                {(['arcs', 'paths', 'map', 'catalog'] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setViewMode(m)}
-                    className={`font-mono text-sm tracking-[0.22em] uppercase px-5 py-3 rounded-[5px] transition-colors ${
-                      viewMode === m
-                        ? 'bg-cyan-500/10 text-cyan-400'
-                        : 'text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
+            <ReleaseOverview
+              courses={courses}
+              arcs={arcs}
+              enrollmentMap={enrollmentMap}
+            />
+          )}
+
+          {/* The larger curriculum map remains available below the release view. */}
+          {!loading && courses.length > 0 && (
+            <section aria-labelledby="larger-map" className="mt-16 border-t border-white/8 pt-10">
+              <div className="mb-7">
+                <h2
+                  id="larger-map"
+                  className="font-display text-3xl font-semibold tracking-tight text-zinc-100"
+                >
+                  The larger map
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                  Explore how the questions connect across the full course map.
+                </p>
               </div>
-              <div className="flex gap-4 font-mono text-xs tracking-[0.22em] uppercase text-zinc-400">
-                <span>
-                  <b className="text-amber-400 font-medium">{arcs.length}</b> arc{arcs.length === 1 ? '' : 's'}
-                </span>
-                <span>·</span>
-                <span>
-                  <b className="text-amber-400 font-medium">{courses.length}</b> paths
-                </span>
-                {(viewMode === 'paths' || viewMode === 'map') && (
-                  <>
-                    <span>·</span>
-                    <span className="text-zinc-500">Seed data preview</span>
-                  </>
-                )}
+
+              <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
+                <div
+                  className="inline-flex max-w-full gap-[2px] overflow-x-auto rounded-lg border border-white/8 bg-black/40 p-[3px]"
+                  aria-label="Course map view"
+                >
+                  {(['arcs', 'map', 'catalog'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setViewMode(m)}
+                      aria-pressed={viewMode === m}
+                      className={`min-h-11 rounded-[5px] px-5 py-3 font-mono text-sm uppercase tracking-[0.22em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 ${
+                        viewMode === m
+                          ? 'bg-cyan-500/10 text-cyan-300'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+                <PlatformTotalsLine
+                  totals={totals}
+                  className="font-mono text-xs uppercase tracking-[0.22em] text-zinc-400"
+                />
               </div>
-            </div>
+            </section>
           )}
 
           {/* Loading / Empty / View */}
@@ -1687,7 +1592,7 @@ function CoursesPageContent() {
             <div className="text-center py-28 border border-white/5 rounded-2xl bg-zinc-900/10">
               <div className="text-4xl font-mono text-zinc-800 mb-4">∅</div>
               <p className="text-sm font-mono text-zinc-600 uppercase tracking-wide">
-                {searchQuery ? 'No paths match your query' : 'No paths available yet'}
+                {searchQuery ? 'No courses match your query' : 'No courses available yet'}
               </p>
             </div>
           ) : viewMode === 'arcs' ? (
@@ -1697,7 +1602,9 @@ function CoursesPageContent() {
               setActiveArcKey={setActiveArcKey}
               enrollmentMap={enrollmentMap}
             />
-          ) : viewMode === 'catalog' ? (
+          ) : viewMode === 'map' ? (
+            <MapView courses={courses} />
+          ) : (
             <CatalogView
               courses={courses}
               arcs={arcs}
@@ -1717,10 +1624,6 @@ function CoursesPageContent() {
                 setFilterLens(null);
               }}
             />
-          ) : viewMode === 'paths' ? (
-            <PathsView activeId={activePathId} setActiveId={setActivePathId} />
-          ) : (
-            <MapView />
           )}
         </div>
       </main>

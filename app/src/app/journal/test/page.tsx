@@ -17,7 +17,7 @@ export default function JournalTestPage() {
   async function runDiagnostics() {
     const logs: string[] = [];
     
-    logs.push('🔍 Starting Journal Diagnostics...\n');
+    logs.push('🔍 Starting Study Journal Diagnostics...\n');
 
     // Run the debug endpoint
     logs.push('🔧 Running detailed diagnostics...\n');
@@ -117,7 +117,7 @@ export default function JournalTestPage() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-zinc-800 rounded-lg border border-zinc-700 p-6">
           <h1 className="text-2xl font-bold text-amber-400 mb-4">
-            🔧 Journal Diagnostics
+            🔧 Study Journal Diagnostics
           </h1>
           
           {loading ? (
@@ -143,7 +143,7 @@ export default function JournalTestPage() {
               href="/journal"
               className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 rounded-lg font-medium transition-colors"
             >
-              Back to Journal
+              Back to Study Journal
             </a>
           </div>
         </div>

@@ -43,7 +43,14 @@ type NavItem = {
   dropdownItems?: DropdownItem[];
 };
 
-const primaryNav: NavItem[] = [
+const guestPrimaryNav: NavItem[] = [
+  { name: "Courses", path: "/courses" },
+  { name: "Library", path: "/library" },
+  { name: "Explore", path: "/explore" },
+  { name: "About", path: "/#origin" },
+];
+
+const memberPrimaryNav: NavItem[] = [
   { name: "Library", path: "/library" },
   { name: "Courses", path: "/courses" },
   {
@@ -54,16 +61,16 @@ const primaryNav: NavItem[] = [
     dropdownItems: [
       { name: "Knowledge Graph", path: "/graph", description: "Traverse correspondence connections" },
       { name: "Concept Search", path: "/search", description: "Semantic search across the corpus" },
-      { name: "Parallax Engine", path: "/seven-lenses", description: "Seven interpretive lenses" },
+      { name: "Seven Lenses", path: "/seven-lenses", description: "Compare seven perspectives" },
     ],
   },
   {
     name: "Workbench",
-    path: "/journal",
+    path: "/workbench",
     icon: <Sparkles className="w-3.5 h-3.5" />,
     matchPaths: ["/workbench", "/journal"],
     dropdownItems: [
-      { name: "Journal", path: "/journal", description: "Your study journal" },
+      { name: "Study Journal", path: "/journal", description: "Your private notes and connections" },
       { name: "The Working", path: "/workbench/the-working", description: "Intent-driven ritual generator" },
       { name: "Tarot", path: "/workbench/tarot", description: "Deck Forge", comingSoon: true },
     ],
@@ -82,11 +89,11 @@ const primaryNav: NavItem[] = [
   { name: "Wiki", path: "/wiki" },
 ];
 
-const mobileNav: NavItem[] = [
+const memberMobileNav: NavItem[] = [
   { name: "Library", path: "/library", icon: "📚" },
   { name: "Courses", path: "/courses", icon: "🎓" },
   { name: "Tools", path: "/explore", icon: "🕸️", matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"] },
-  { name: "Workbench", path: "/journal", icon: "✨", matchPaths: ["/workbench", "/journal"] },
+  { name: "Workbench", path: "/workbench", icon: "✨", matchPaths: ["/workbench", "/journal"] },
   { name: "Community", path: "/community/forum", icon: "💬", matchPaths: ["/community"] },
   { name: "Wiki", path: "/wiki", icon: "📖" },
 ];
@@ -161,7 +168,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
         </Link>
 
         <div className="hidden items-center gap-1 md:flex ml-8">
-          {primaryNav.map((item) => (
+          {(user ? memberPrimaryNav : guestPrimaryNav).map((item) => (
             <div
               key={item.path}
               className="relative"
@@ -291,7 +298,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                           { href: "/profile", icon: "👤", label: "Profile" },
                           { href: "/dashboard", icon: "📊", label: "Dashboard" },
                           { href: "/library/my-library", icon: "📖", label: "My Library" },
-                          { href: "/journal", icon: "📝", label: "Journal" },
+                          { href: "/journal", icon: "📝", label: "Study Journal" },
                           { href: "/settings", icon: "⚙️", label: "Settings" },
                         ].map((item) => (
                           <Link
@@ -339,13 +346,13 @@ function Header({ librarySearch }: HeaderProps = {}) {
             ) : (
               <div className="hidden md:flex items-center gap-2">
                 <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-                  Log In
+                  Log in
                 </Link>
                 <Link
                   href="/register"
                   className="px-4 py-1.5 text-sm font-bold text-black bg-cyan-500 hover:bg-cyan-400 rounded transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]"
                 >
-                  JOIN PRISMARIUM &gt;
+                  Join Prismarium
                 </Link>
               </div>
             )}
@@ -373,7 +380,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pb-4 border-b border-white/10">
-                  {mobileNav.map((item) => (
+                  {memberMobileNav.map((item) => (
                     <Link
                       key={item.path}
                       href={item.path}
@@ -423,15 +430,31 @@ function Header({ librarySearch }: HeaderProps = {}) {
               </div>
             ) : (
               <div className="relative z-10 flex flex-col gap-3 py-4">
+                <div className="grid grid-cols-2 gap-2 pb-4 border-b border-white/10">
+                  {guestPrimaryNav.map((item) => (
+                    <Link
+                      key={item.path}
+                      href={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`p-3 rounded-lg text-center text-sm font-semibold ${
+                        isActive(item)
+                          ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
+                          : "bg-black/30 border border-white/5 text-zinc-300 hover:bg-white/5"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
                 <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-zinc-300 border border-white/20 rounded-lg hover:bg-white/5">
-                  Log In
+                  Log in
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full py-3 text-center text-sm font-bold text-black bg-cyan-500 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400"
                 >
-                  JOIN PRISMARIUM
+                  Join Prismarium
                 </Link>
               </div>
             )}

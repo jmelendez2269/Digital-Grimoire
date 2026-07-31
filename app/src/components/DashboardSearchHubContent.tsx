@@ -89,7 +89,7 @@ export default function DashboardSearchHubContent() {
                         }`}
                 >
                     <Sparkles className="w-4 h-4" />
-                    Parallax Search
+                    Ask Stelloquy
                 </button>
             </div>
 
@@ -99,7 +99,7 @@ export default function DashboardSearchHubContent() {
                     <div>
                         <AISearchBar />
                         <p className="mt-3 text-sm text-zinc-400 text-center">
-                            Ask questions, get insights, or explore ideas with AI assistance
+                            Ask a question or explore an idea with Stelloquy.
                         </p>
                     </div>
                 ) : activeTab === 'library' ? (

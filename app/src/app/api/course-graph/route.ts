@@ -78,24 +78,51 @@ export async function GET(request: NextRequest) {
 
   try {
     const service = createServiceClient();
-    const bundleSlug = request.nextUrl.searchParams.get("bundle");
+    const bundleSlug = request.nextUrl.searchParams.get("bundle")?.trim() || "";
+    const courseSlug = request.nextUrl.searchParams.get("course")?.trim() || "";
+
+    if (Boolean(bundleSlug) === Boolean(courseSlug)) {
+      return NextResponse.json(
+        {
+          error: "Select exactly one course graph bundle or course.",
+          code: "COURSE_GRAPH_EXACT_SELECTION_REQUIRED",
+        },
+        {
+          status: 400,
+          headers: { "Cache-Control": "private, no-store" },
+        },
+      );
+    }
 
     let importQuery = service
       .from("course_graph_imports")
       .select(
         "id,bundle_slug,version,course_stable_id,course_slug,course_id_tag,canonical_course_id,vocabulary_version,source_path,source_sha256,package_sha256,source_status,run_mode,prepared_on,review_state,imported_at",
-      )
-      .order("imported_at", { ascending: false })
-      .limit(1);
+      );
 
     if (bundleSlug) {
-      importQuery = importQuery.eq("bundle_slug", bundleSlug);
+      importQuery = importQuery.eq("bundle_slug", bundleSlug).limit(1);
+    } else {
+      importQuery = importQuery.eq("course_slug", courseSlug).limit(2);
     }
 
     const { data: imports, error: importError } = await importQuery;
     if (importError) return databaseError("Unable to load the course graph import.", importError);
 
     const graphImport = (imports?.[0] || null) as CourseGraphImport | null;
+    if (courseSlug && (imports?.length || 0) > 1) {
+      return NextResponse.json(
+        {
+          error:
+            "More than one package exists for this course; select an exact bundle.",
+          code: "COURSE_GRAPH_BUNDLE_SELECTION_REQUIRED",
+        },
+        {
+          status: 409,
+          headers: { "Cache-Control": "private, no-store" },
+        },
+      );
+    }
     if (!graphImport) {
       return NextResponse.json(
         {

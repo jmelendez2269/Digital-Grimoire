@@ -3,8 +3,9 @@ export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter';
 export type KnownAIModel =
     | 'gpt-4o'
     | 'gpt-4o-mini'
-    | 'claude-3-5-sonnet-latest'
-    | 'claude-3-opus-20240229'
+    | 'claude-sonnet-5'
+    | 'claude-opus-4-8'
+    | 'claude-haiku-4-5-20251001'
     | 'gemini-1-5-pro'
     | 'gemini-1-5-flash';
 

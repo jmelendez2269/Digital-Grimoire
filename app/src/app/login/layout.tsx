@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Sign In | Prismarium",
-  description: "Sign in to Prismarium to access your personal library, digital grimoire, and explore esoteric texts and wisdom traditions through AI-powered analysis.",
+  description:
+    "Log in to Prismarium to return to your course paths, saved reading, Study Journal, and the questions you are following.",
   robots: {
     index: false,
     follow: false,
   },
   openGraph: {
     title: "Sign In | Prismarium",
-    description: "Sign in to Prismarium to access your personal library, digital grimoire, and explore esoteric texts and wisdom traditions through AI-powered analysis.",
+    description:
+      "Log in to Prismarium to return to your course paths, saved reading, and Study Journal.",
     type: "website",
     url: "/login",
     images: [
@@ -24,7 +26,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Sign In | Prismarium",
-    description: "Sign in to Prismarium to access your personal library and digital grimoire.",
+    description:
+      "Log in to Prismarium to return to your course paths, saved reading, and Study Journal.",
     images: ["/og-image.png"],
   },
 };

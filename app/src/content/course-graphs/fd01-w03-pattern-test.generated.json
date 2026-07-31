@@ -1,0 +1,306 @@
+{
+  "schema_version": "course-graph-learner/v1",
+  "course": {
+    "stable_id": "course:fd01-mythic-imagination-from-classical-pattern-to-personal-meaning",
+    "course_id_tag": "FD01",
+    "slug": "fd01-mythic-imagination-from-classical-pattern-to-personal-meaning",
+    "title": "Mythic Imagination: When Old Stories Find You"
+  },
+  "vocabulary_version": "course-graph-v1",
+  "selected_view": {
+    "view_id": "fd01-w03-pattern-test",
+    "label": "FD01 Week 3 Pattern Test",
+    "description": "The six ordered connections specified by the reviewed Week 3 Knowledge Graph exercise.",
+    "edge_ids": [
+      "course-view:fd01-w03-pattern-test:01",
+      "course-view:fd01-w03-pattern-test:02",
+      "course-view:fd01-w03-pattern-test:03",
+      "course-view:fd01-w03-pattern-test:04",
+      "course-view:fd01-w03-pattern-test:05",
+      "course-view:fd01-w03-pattern-test:06"
+    ],
+    "focus_stable_id": "lesson:fd01-mythic-imagination-from-classical-pattern-to-personal-meaning:w03"
+  },
+  "entities": [
+    {
+      "stable_id": "concept:universal-hero-pattern",
+      "entity_kind": "concept",
+      "subtype": null,
+      "slug": "universal-hero-pattern",
+      "display_name": "Universal hero pattern",
+      "aliases": [
+        "hero's journey universality claim",
+        "monomyth claim"
+      ],
+      "short_definition": "The contested claim that diverse hero narratives instantiate one broadly universal underlying design.",
+      "synthesis": "FD01 treats the universal hero pattern as a proposal to test rather than a law of narrative or psyche. Similarity can reflect independent resemblance, common constraints, transmission, genre convention, deliberate templates, editorial selection, or unresolved alternatives.",
+      "course_role": "Week 3 claim under criticism",
+      "caveats": [
+        "Curricular comparison is not evidence of universality."
+      ]
+    },
+    {
+      "stable_id": "lesson:fd01-mythic-imagination-from-classical-pattern-to-personal-meaning:w03",
+      "entity_kind": "lesson",
+      "subtype": "week",
+      "slug": "fd01-mythic-imagination-from-classical-pattern-to-personal-meaning:w03",
+      "display_name": "Week 3 — The Pattern—and the Stories That Break It",
+      "aliases": [
+        "Week 3"
+      ],
+      "short_definition": "A bounded lesson that tests a hero-pattern proposal against fit, break, and competing pathways.",
+      "synthesis": "Week 3 asks whether recurring story resemblance reflects a discovered pattern, a constructed pattern, transmission, genre convention, or interpreter selection. The saved view preserves four assigned-source roles, one editorial juxtaposition, and one criticism of universality.",
+      "course_role": "Week 3 saved-view anchor",
+      "caveats": [
+        "The graph exercise has not been tested in the live product."
+      ]
+    },
+    {
+      "stable_id": "passage:myths-and-legends-of-ancient-greece-and-rome:perseus-selection",
+      "entity_kind": "passage",
+      "subtype": "course selection",
+      "slug": "myths-and-legends-of-ancient-greece-and-rome:perseus-selection",
+      "display_name": "Perseus selection",
+      "aliases": [
+        "Perseus"
+      ],
+      "short_definition": "The selected Berens sequence covering Perseus's mission, Medusa encounter, rescue, and return.",
+      "synthesis": "The Perseus selection is the strong-fit story used in Week 3's pattern test. Keeping it as a passage prevents a comparison of selected episodes from becoming an unsupported claim about the entirety of Berens's work or Greek heroic narrative.",
+      "course_role": "Week 3 pattern-test passage",
+      "caveats": [
+        "Exact edition-level start and end locators remain unverified."
+      ]
+    },
+    {
+      "stable_id": "passage:thus-spake-zarathustra:prologue",
+      "entity_kind": "passage",
+      "subtype": "course selection",
+      "slug": "thus-spake-zarathustra:prologue",
+      "display_name": "Zarathustra Prologue",
+      "aliases": [
+        "Prologue, sections 1–9"
+      ],
+      "short_definition": "The selected Prologue sequence in which Zarathustra returns and his audience rejects his gift.",
+      "synthesis": "The Prologue selection provides a failed-return counterexample for the Week 3 pattern test. Its audience, timing, pride, and communication problems complicate a completed return stage without turning the literary speaker into a historical or doctrinal source.",
+      "course_role": "Week 3 pattern-test passage",
+      "caveats": [
+        "Exact production edition and translation remain unresolved."
+      ]
+    },
+    {
+      "stable_id": "work:myths-and-legends-of-ancient-greece-and-rome",
+      "entity_kind": "work",
+      "subtype": "mythology collection",
+      "slug": "myths-and-legends-of-ancient-greece-and-rome",
+      "display_name": "Myths and Legends of Ancient Greece and Rome",
+      "aliases": [],
+      "short_definition": "E. M. Berens's nineteenth-century retelling, used here for the selected Perseus narrative.",
+      "synthesis": "Berens supplies the strong-fit Perseus case: mission, supernatural aid, monster encounter, rescue, and return. FD01 treats the retelling as mediated historical reception rather than transparent access to ancient Greek belief or support for every later comparison.",
+      "course_role": "Week 3 primary work",
+      "caveats": [
+        "T035 must be reconciled to the exact Project Gutenberg transcription and selection."
+      ]
+    },
+    {
+      "stable_id": "work:psychology-of-the-unconscious",
+      "entity_kind": "work",
+      "subtype": "psychology",
+      "slug": "psychology-of-the-unconscious",
+      "display_name": "Psychology of the Unconscious",
+      "aliases": [],
+      "short_definition": "C. G. Jung's historical psychological proposal about hero imagery and psychic development.",
+      "synthesis": "Jung gives the pattern an interior mechanism by interpreting outward heroic struggle as psychological development. FD01 presents this as an influential historical proposal whose evidence and universal reach remain open to criticism, not as the final meaning beneath every hero story.",
+      "course_role": "Week 3 primary work",
+      "caveats": [
+        "T023 translation, file, and relation to later revisions require reconciliation."
+      ]
+    },
+    {
+      "stable_id": "work:the-not-so-universal-heros-journey",
+      "entity_kind": "work",
+      "subtype": "peer-reviewed journal article",
+      "slug": "the-not-so-universal-heros-journey",
+      "display_name": "The Not So Universal Hero's Journey",
+      "aliases": [],
+      "short_definition": "Thomas Nield's 2021 criticism of universal hero-journey claims and their storytelling dominance.",
+      "synthesis": "Nield questions whether one classical narrative design is universal and examines how a dominant screenwriting model can narrow the stories creators are encouraged to tell. FD01 uses the article as course-context criticism, not proof that recurring patterns never occur.",
+      "course_role": "Week 3 modern companion",
+      "caveats": [
+        "Store citation-first; article access terms and exact learner excerpt require confirmation."
+      ]
+    },
+    {
+      "stable_id": "work:thus-spake-zarathustra",
+      "entity_kind": "work",
+      "subtype": "philosophical literature",
+      "slug": "thus-spake-zarathustra",
+      "display_name": "Thus Spake Zarathustra",
+      "aliases": [
+        "Thus Spoke Zarathustra"
+      ],
+      "short_definition": "Friedrich Nietzsche's literary-philosophical work, used here for its Prologue's failed return.",
+      "synthesis": "Nietzsche's Prologue supplies counter-pressure to a clean return-with-the-boon pattern because Zarathustra's audience rejects his gift. The literary figure is not the historical Zarathustra, and the work is not evidence about Zoroastrian teaching.",
+      "course_role": "Week 3 primary work",
+      "caveats": [
+        "Production record, translator, edition, source, rights, and selection boundary remain unresolved."
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "stable_id": "course-view:fd01-w03-pattern-test:01",
+      "source_stable_id": "lesson:fd01-mythic-imagination-from-classical-pattern-to-personal-meaning:w03",
+      "target_stable_id": "work:myths-and-legends-of-ancient-greece-and-rome",
+      "predicate": "uses_primary_work",
+      "scope": null,
+      "confidence": "established",
+      "connection_summary": "Week 3 uses Berens's Perseus material as a primary work and strong-fit pattern case. Assignment does not imply that Berens supports the course's later comparisons.",
+      "caveats": [
+        "Exact production edition and selection locators remain deferred."
+      ],
+      "evidence_ids": [
+        "E-FD01-002",
+        "E-FD01-006"
+      ],
+      "weight": null
+    },
+    {
+      "stable_id": "course-view:fd01-w03-pattern-test:02",
+      "source_stable_id": "lesson:fd01-mythic-imagination-from-classical-pattern-to-personal-meaning:w03",
+      "target_stable_id": "work:psychology-of-the-unconscious",
+      "predicate": "uses_primary_work",
+      "scope": null,
+      "confidence": "established",
+      "connection_summary": "Week 3 uses Jung's hero material as a primary work and historical psychological proposal. Assignment does not make Jung's interpretation universal or final.",
+      "caveats": [
+        "Exact production translation and selection locators remain deferred."
+      ],
+      "evidence_ids": [
+        "E-FD01-003",
+        "E-FD01-006"
+      ],
+      "weight": null
+    },
+    {
+      "stable_id": "course-view:fd01-w03-pattern-test:03",
+      "source_stable_id": "lesson:fd01-mythic-imagination-from-classical-pattern-to-personal-meaning:w03",
+      "target_stable_id": "work:thus-spake-zarathustra",
+      "predicate": "uses_primary_work",
+      "scope": null,
+      "confidence": "established",
+      "connection_summary": "Week 3 uses Nietzsche's Zarathustra Prologue as a primary work and failed-return counter-pressure. Nietzsche's literary Zarathustra is not the historical Zarathustra or evidence about Zoroastrian teaching.",
+      "caveats": [
+        "Production identity, translator, edition, and selection boundary remain deferred."
+      ],
+      "evidence_ids": [
+        "E-FD01-004",
+        "E-FD01-006"
+      ],
+      "weight": null
+    },
+    {
+      "stable_id": "course-view:fd01-w03-pattern-test:04",
+      "source_stable_id": "lesson:fd01-mythic-imagination-from-classical-pattern-to-personal-meaning:w03",
+      "target_stable_id": "work:the-not-so-universal-heros-journey",
+      "predicate": "uses_companion_work",
+      "scope": null,
+      "confidence": "established",
+      "connection_summary": "Week 3 uses Nield's article as the modern companion for testing universality claims. Companion status identifies the article's course role, not agreement with every claim.",
+      "caveats": [
+        "Article access terms and exact learner excerpt remain deferred."
+      ],
+      "evidence_ids": [
+        "E-FD01-005",
+        "E-FD01-006"
+      ],
+      "weight": null
+    },
+    {
+      "stable_id": "course-view:fd01-w03-pattern-test:05",
+      "source_stable_id": "passage:myths-and-legends-of-ancient-greece-and-rome:perseus-selection",
+      "target_stable_id": "passage:thus-spake-zarathustra:prologue",
+      "predicate": "editorially_juxtaposed_with",
+      "scope": "course_context",
+      "confidence": "established",
+      "connection_summary": "FD01 deliberately places the Perseus selection beside Zarathustra's Prologue in its central pattern exercise. Juxtaposition does not establish transmission, influence, historical contact, universality, or shared doctrine.",
+      "caveats": [
+        "Editorial adjacency is the strongest supported relationship."
+      ],
+      "evidence_ids": [
+        "E-FD01-006"
+      ],
+      "weight": null
+    },
+    {
+      "stable_id": "course-view:fd01-w03-pattern-test:06",
+      "source_stable_id": "work:the-not-so-universal-heros-journey",
+      "target_stable_id": "concept:universal-hero-pattern",
+      "predicate": "critiques",
+      "scope": "course_context",
+      "confidence": "interpretive",
+      "connection_summary": "FD01 uses Nield's article to criticize the universal-hero-pattern claim and its dominance as a story model. The critique does not prove recurring patterns never occur or that the model has no bounded use.",
+      "caveats": [
+        "This is Nield's course role, not a universal disproof."
+      ],
+      "evidence_ids": [
+        "E-FD01-005",
+        "E-FD01-006"
+      ],
+      "weight": null
+    }
+  ],
+  "citations": [
+    {
+      "evidence_key": "E-FD01-002",
+      "evidence_class": "course_structure",
+      "citation": "FD01, Week 3, “Readings” → Berens, L431-L439",
+      "source_url": null,
+      "locator": "L431-L439"
+    },
+    {
+      "evidence_key": "E-FD01-003",
+      "evidence_class": "course_structure",
+      "citation": "FD01, Week 3, “Readings” → Jung, L441-L449",
+      "source_url": null,
+      "locator": "L441-L449"
+    },
+    {
+      "evidence_key": "E-FD01-004",
+      "evidence_class": "course_structure",
+      "citation": "FD01, Week 3, “Readings” → Nietzsche, L451-L463",
+      "source_url": "https://www.gutenberg.org/files/1998/1998-h/1998-h.htm",
+      "locator": "L451-L463"
+    },
+    {
+      "evidence_key": "E-FD01-005",
+      "evidence_class": "scholarly_interpretation",
+      "citation": "Thomas Nield, “The Not So Universal Hero's Journey,” Journal of Screenwriting 12.2 (2021), doi:10.1386/josc_00056_1",
+      "source_url": "https://intellectdiscover.com/content/journals/10.1386/josc_00056_1",
+      "locator": "L465-L503"
+    },
+    {
+      "evidence_key": "E-FD01-006",
+      "evidence_class": "editorial_choice",
+      "citation": "FD01, Week 3, Knowledge Graph saved view table, L528-L545",
+      "source_url": null,
+      "locator": "L528-L545"
+    },
+    {
+      "evidence_key": "E-FD01-007",
+      "evidence_class": "bibliographic",
+      "citation": "FD01 source-and-rights register, L104-L117",
+      "source_url": null,
+      "locator": "L104-L117"
+    }
+  ],
+  "reviewed_non_edges": [
+    {
+      "statement": "Comparison and resemblance do not establish textual transmission, influence, historical contact, a universal pattern, or shared doctrine.",
+      "evidence_ids": [
+        "E-FD01-006"
+      ],
+      "caveats": []
+    }
+  ]
+}
+
