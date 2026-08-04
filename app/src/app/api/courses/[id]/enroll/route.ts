@@ -118,7 +118,7 @@ export async function POST(
       return NextResponse.json(
         {
           error: 'Upgrade required',
-          message: 'PRE and taster paths are open to everyone. Join Prismarium to start this path.',
+          message: 'How to Hold Two Things at Once and taster paths are open to everyone. Join Prismarium to start this path.',
           code: 'UPGRADE_REQUIRED',
         },
         { status: 402 }

@@ -78,7 +78,7 @@ test("five-step onboarding retains its behavior contract and approved copy", () 
       "Choose a tool to see what it can help you do. You can use any of them on their own or alongside a course path.",
       "How it works",
       "A good place to begin",
-      "Courses are guided paths through questions we can explore together. PRE is the recommended shared beginning, never a requirement. Public course previews stay open so you can see which question calls to you.",
+      "Courses are guided paths through questions we can explore together. How to Hold Two Things at Once is the recommended shared beginning, never a requirement. Public course previews stay open so you can see which question calls to you.",
       "Explore one question at a time",
       "Read and compare different perspectives",
       "Use the Library, Concept Search, Seven Lenses, Knowledge Graph, and Study Journal as you go",
@@ -111,7 +111,7 @@ test("five-step onboarding retains its behavior contract and approved copy", () 
       "You can also begin with any tool on its own. Courses are one way in, not a requirement.",
       "a separate practice tool",
       "Build a ritual from an intention and connections in the Knowledge Graph.",
-      "Begin with PRE",
+      "Begin with How to Hold Two Things at Once",
       "Meet the method in the two-week shared orientation",
       "Open Concept Search",
       "Follow an idea across the collection.",
@@ -348,7 +348,7 @@ test("enrollment API returns the approved PRE and taster explanation", () => {
   assertIncludesAll(
     source,
     [
-      "PRE and taster paths are open to everyone. Join Prismarium to start this path.",
+      "How to Hold Two Things at Once and taster paths are open to everyone. Join Prismarium to start this path.",
     ],
     sourceName
   );

@@ -44,7 +44,7 @@ const features = [
     badge: "A good place to begin",
     badgeColor: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
     description:
-      "Courses are guided paths through questions we can explore together. PRE is the recommended shared beginning, never a requirement. Public course previews stay open so you can see which question calls to you.",
+      "Courses are guided paths through questions we can explore together. How to Hold Two Things at Once is the recommended shared beginning, never a requirement. Public course previews stay open so you can see which question calls to you.",
     bullets: [
       "Explore one question at a time",
       "Read and compare different perspectives",
@@ -438,7 +438,7 @@ function StepReady({ onClose }: { onClose: () => void }) {
         {[
           {
             Icon: GraduationCap,
-            label: "Begin with PRE",
+            label: "Begin with How to Hold Two Things at Once",
             description: "Meet the method in the two-week shared orientation",
             href: "/courses/pre-how-to-hold-two-things-at-once",
             color: "text-blue-400",

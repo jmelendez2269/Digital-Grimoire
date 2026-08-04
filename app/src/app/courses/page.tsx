@@ -1333,7 +1333,7 @@ function ReleaseOverview({
             Open paths
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-            PRE stays open as the introduction, and paths that have already opened stay in the collection.
+            How to Hold Two Things at Once stays open as the introduction, and paths that have already opened stay in the collection.
           </p>
         </div>
         {groups.open.length > 0 ? (
@@ -1497,7 +1497,7 @@ function CoursesPageContent() {
                   we can read, compare, and think through together.
                 </p>
                 <p className="mt-3 max-w-2xl text-base leading-relaxed text-zinc-400">
-                  PRE is the recommended starting point, never a requirement. Every published course
+                  How to Hold Two Things at Once is the recommended starting point, never a requirement. Every published course
                   keeps a public preview, while starting the full path follows its existing access policy.
                 </p>
               </div>
