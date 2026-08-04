@@ -6,42 +6,87 @@ import { fileURLToPath } from "node:url";
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
+// Normalize CRLF so these source assertions hold on Windows checkouts too.
 function readSource(relativePath: string): string {
-  return readFileSync(resolve(appRoot, relativePath), "utf8");
+  return readFileSync(resolve(appRoot, relativePath), "utf8").replace(
+    /\r\n/g,
+    "\n",
+  );
+}
+
+// Collapse whitespace runs so an assertion describes the code's shape rather
+// than its formatting — reindenting or rewrapping must not fail these tests.
+function normalizeWhitespace(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function assertContains(
+  source: string,
+  expected: string,
+  sourceName: string,
+): void {
+  assert.ok(
+    normalizeWhitespace(source).includes(normalizeWhitespace(expected)),
+    `${sourceName} is missing: ${expected}`,
+  );
+}
+
+function assertOmits(
+  source: string,
+  forbidden: string,
+  sourceName: string,
+): void {
+  assert.ok(
+    !normalizeWhitespace(source).includes(normalizeWhitespace(forbidden)),
+    `${sourceName} should no longer contain: ${forbidden}`,
+  );
 }
 
 test("published course cards always open a public preview", () => {
-  const catalog = readSource("src/app/courses/page.tsx");
+  const sourceName = "src/app/courses/page.tsx";
+  const catalog = readSource(sourceName);
 
-  assert.ok(catalog.includes("Public preview"));
-  assert.ok(!catalog.includes("LockKeyhole"));
-  assert.ok(
-    catalog.includes(
-      "isOpen && enrollment\n      ? `/courses/${course.slug}/learn`\n      : `/courses/${course.slug}`",
-    ),
+  assertContains(catalog, "Public preview", sourceName);
+
+  // No lock affordance: every published card stays reachable.
+  assertOmits(catalog, "LockKeyhole", sourceName);
+
+  // The card only deep-links into /learn for an enrolled viewer of an open
+  // course; everyone else lands on the public preview page.
+  assertContains(
+    catalog,
+    "isOpen && enrollment ? `/courses/${course.slug}/learn` : `/courses/${course.slug}`",
+    sourceName,
   );
-  assert.ok(
-    catalog.includes(
-      '<Link href={href} className={cardClassName}>',
-    ),
+
+  // The whole card is the link, so there is no separate gated action.
+  assertContains(
+    catalog,
+    "<Link href={href} className={cardClassName}>",
+    sourceName,
   );
 });
 
 test("anonymous course requests receive only the sanitized published preview", () => {
-  const route = readSource("src/app/api/courses/[id]/route.ts");
+  const sourceName = "src/app/api/courses/[id]/route.ts";
+  const route = readSource(sourceName);
 
-  assert.ok(route.includes("if (!course.is_published && !viewer.isAdmin)"));
-  assert.ok(route.includes("sanitizeCourseForPreview(enrichedCourse)"));
-  assert.ok(
-    route.includes(
-      "viewer.isAdmin || (wantsFullAccess && canViewFullCourse)",
-    ),
+  assertContains(
+    route,
+    "if (!course.is_published && !viewer.isAdmin)",
+    sourceName,
   );
-  assert.ok(
-    route.includes(
-      "wantsFullAccess && !courseAvailable && !viewer.isAdmin",
-    ),
+  assertContains(route, "sanitizeCourseForPreview(enrichedCourse)", sourceName);
+  assertContains(
+    route,
+    "viewer.isAdmin || (wantsFullAccess && canViewFullCourse)",
+    sourceName,
   );
-  assert.ok(route.includes("matchCourseTextsFromContent"));
-  assert.ok(!route.includes("matchAndPersistCourseTexts"));
+  assertContains(
+    route,
+    "wantsFullAccess && !courseAvailable && !viewer.isAdmin",
+    sourceName,
+  );
+  assertContains(route, "matchCourseTextsFromContent", sourceName);
+  assertOmits(route, "matchAndPersistCourseTexts", sourceName);
 });
