@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -19,6 +19,70 @@ import { LENSES } from "@/lib/parallax/lenses";
 import { getLensColorStyle } from "@/lib/utils/lens-colors";
 
 const sevenLenses = Object.values(LENSES);
+
+// 400-unit SVG grid the hero prism is drawn on, matching the upright
+// triangle in app/icon.svg (apex up, centered) rather than a sideways one.
+// Ray endpoints are expressed in both that grid (for the tracks) and
+// parent-relative percent (for the photon/point divs, which move via
+// `left`/`top`, not `transform`).
+const PRISM_APEX = { x: 200, y: 52 };
+const PRISM_BASE_LEFT = { x: 56, y: 348 };
+const PRISM_BASE_RIGHT = { x: 344, y: 348 };
+const PRISM_EXIT = { x: 276, y: 208 };
+const RAY_LENGTH = 110;
+const RAY_SPREAD_DEG = 100;
+
+function getRayGeometry(index: number, total: number) {
+  const angleDeg =
+    -RAY_SPREAD_DEG / 2 + (index * RAY_SPREAD_DEG) / (total - 1);
+  const angleRad = (angleDeg * Math.PI) / 180;
+  const x = PRISM_EXIT.x + RAY_LENGTH * Math.cos(angleRad);
+  const y = PRISM_EXIT.y + RAY_LENGTH * Math.sin(angleRad);
+  return { x, y, leftPct: (x / 400) * 100, topPct: (y / 400) * 100 };
+}
+
+// Wiggly ray track: an S-curve whose two control points swing perpendicular
+// to the ray in opposite phase. Five keyframes (0/90/180/270/360deg) that
+// start and end straight, fed to an SVG SMIL <animate> on `d` — CSS can't
+// animate path data, but SMIL is declarative and needs no client JS.
+function getWigglyRayFrames(x1: number, y1: number, x2: number, y2: number) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  const perpX = -uy;
+  const perpY = ux;
+  const amplitude = 14;
+  const p1 = { x: x1 + (ux * len) / 3, y: y1 + (uy * len) / 3 };
+  const p2 = { x: x1 + (ux * len * 2) / 3, y: y1 + (uy * len * 2) / 3 };
+
+  return [0, 90, 180, 270, 360]
+    .map((deg) => {
+      const s = Math.sin((deg * Math.PI) / 180);
+      const c1x = p1.x + perpX * amplitude * s;
+      const c1y = p1.y + perpY * amplitude * s;
+      const c2x = p2.x - perpX * amplitude * s;
+      const c2y = p2.y - perpY * amplitude * s;
+      return `M${x1},${y1} C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${x2},${y2}`;
+    })
+    .join(";");
+}
+
+const lensRays = sevenLenses.map((lens, index) => {
+  const geometry = getRayGeometry(index, sevenLenses.length);
+  return {
+    lens,
+    color: getLensColorStyle(lens.id),
+    geometry,
+    wiggleFrames: getWigglyRayFrames(
+      PRISM_EXIT.x,
+      PRISM_EXIT.y,
+      geometry.x,
+      geometry.y,
+    ),
+  };
+});
 
 interface PublicHomeViewProps {
   platformTotals: PlatformTotals;
@@ -155,8 +219,10 @@ function CourseCandidateCard({
 
 function VoteFallback({
   status,
+  startingCourseTitle,
 }: {
   status: PublicLaunchPresentation["voteStatus"];
+  startingCourseTitle: string;
 }) {
   const message =
     status === "open"
@@ -165,7 +231,7 @@ function VoteFallback({
         ? "Voting is closed. The audience result and editorial decision will appear here when they are recorded."
         : status === "unavailable"
           ? "The ballot is temporarily unavailable. Both public course previews still work, and no vote has been recorded from this page."
-        : "The ballot opens on PRE’s launch day. No sign-in will be required.";
+        : `The ballot opens when ${startingCourseTitle} launches. No sign-in will be required.`;
 
   return (
     <div
@@ -207,7 +273,7 @@ export default function PublicHomeView({
   const youtubeHref =
     launch.youtube.prePlaylistUrl ?? launch.youtube.channelUrl;
   const youtubeLabel = launch.youtube.prePlaylistUrl
-    ? "Watch the PRE series"
+    ? `Watch the ${pre.title} series`
     : "Visit our YouTube channel";
 
   return (
@@ -239,7 +305,7 @@ export default function PublicHomeView({
                 href={pre.href}
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-amber-300 px-6 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-200 focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-4 focus-visible:ring-offset-zinc-950 focus-visible:outline-none"
               >
-                Begin with PRE
+                Begin with {pre.title}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link
@@ -256,27 +322,115 @@ export default function PublicHomeView({
           </div>
 
           <div className="mx-auto w-full max-w-[27rem]">
-            <div className="relative aspect-square w-full" aria-hidden="true">
-              <div className="absolute inset-[4%] rounded-full border border-amber-300/15" />
-              <div className="absolute inset-[15%] rotate-45 rounded-[2.5rem] border border-cyan-300/15" />
-              <div className="absolute inset-[27%] rounded-full border border-white/10" />
-              <div className="absolute inset-[37%] rotate-45 border border-amber-200/10" />
+            <div
+              className="relative aspect-square w-full [perspective:1200px]"
+              aria-hidden="true"
+            >
+              <div
+                className="pointer-events-none absolute inset-[8%] rounded-full"
+                style={{
+                  background:
+                    "radial-gradient(circle at 50% 55%, rgba(34,211,238,0.14), transparent 62%)",
+                }}
+              />
+
+              {/* incoming beam: static track + traveling photon */}
               <svg
                 viewBox="0 0 400 400"
-                className="absolute inset-0 h-full w-full text-amber-200/28"
+                className="absolute inset-0 h-full w-full"
                 fill="none"
               >
-                <path d="M200 24 352 288H48L200 24Z" stroke="currentColor" />
-                <path d="m200 376-152-264h304L200 376Z" stroke="currentColor" />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="116"
-                  stroke="currentColor"
-                  strokeDasharray="3 8"
+                <line
+                  x1="20"
+                  y1={PRISM_EXIT.y}
+                  x2="124"
+                  y2={PRISM_EXIT.y}
+                  stroke="rgba(253,230,190,0.35)"
+                  strokeWidth="1.5"
                 />
-                <circle cx="200" cy="200" r="6" fill="currentColor" />
               </svg>
+              <div
+                className="absolute h-1.5 w-1.5 -translate-y-1/2 animate-prism-beam-photon rounded-full bg-amber-100"
+                style={{
+                  top: `${(PRISM_EXIT.y / 400) * 100}%`,
+                  boxShadow: "0 0 8px 2px rgba(253,230,190,0.65)",
+                }}
+              />
+
+              {/* the prism: cyan glass, spinning to catch the light —
+                  upright, matching the app icon (app/icon.svg) */}
+              <div className="absolute inset-0 animate-prism-spin">
+                <svg
+                  viewBox="0 0 400 400"
+                  className="absolute inset-0 h-full w-full"
+                  fill="none"
+                >
+                  <polygon
+                    points={`${PRISM_APEX.x},${PRISM_APEX.y} ${PRISM_BASE_RIGHT.x},${PRISM_BASE_RIGHT.y} ${PRISM_BASE_LEFT.x},${PRISM_BASE_LEFT.y}`}
+                    fill="#22D3EE"
+                    className="animate-prism-glass-glow"
+                    fillOpacity="0.55"
+                    stroke="#67E8F9"
+                    strokeWidth="1.75"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+
+              {/* outgoing rays: wiggling tracks + traveling photons, one per lens */}
+              <svg
+                viewBox="0 0 400 400"
+                className="absolute inset-0 h-full w-full"
+                fill="none"
+              >
+                {lensRays.map(({ lens, color, wiggleFrames }, index) => (
+                  <path
+                    key={lens.id}
+                    d={wiggleFrames.split(";")[0]}
+                    fill="none"
+                    stroke={color.hex}
+                    strokeOpacity="0.3"
+                    strokeWidth="1.25"
+                    strokeLinecap="round"
+                  >
+                    <animate
+                      attributeName="d"
+                      values={wiggleFrames}
+                      dur="2.2s"
+                      begin={`${-index * 0.25}s`}
+                      repeatCount="indefinite"
+                    />
+                  </path>
+                ))}
+              </svg>
+              {lensRays.map(({ lens, color, geometry }, index) => (
+                <div
+                  key={`photon-${lens.id}`}
+                  className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 animate-prism-ray-photon rounded-full"
+                  style={
+                    {
+                      backgroundColor: color.hex,
+                      boxShadow: `0 0 8px 2px ${color.glow}`,
+                      animationDelay: `${1.3 + index * 0.08}s`,
+                      "--ray-left": `${geometry.leftPct}%`,
+                      "--ray-top": `${geometry.topPct}%`,
+                    } as CSSProperties
+                  }
+                />
+              ))}
+              {lensRays.map(({ lens, color, geometry }, index) => (
+                <div
+                  key={`point-${lens.id}`}
+                  className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 animate-lens-point-pulse rounded-full"
+                  style={{
+                    left: `${geometry.leftPct}%`,
+                    top: `${geometry.topPct}%`,
+                    backgroundColor: color.hex,
+                    boxShadow: `0 0 10px 2px ${color.glow}`,
+                    animationDelay: `${index * 0.32}s`,
+                  }}
+                />
+              ))}
             </div>
 
             <p className="mt-7 text-center font-mono text-[0.65rem] tracking-[0.24em] text-zinc-500 uppercase">
@@ -305,6 +459,59 @@ export default function PublicHomeView({
       </section>
 
       <section
+        id="how-it-works"
+        aria-labelledby="tools-heading"
+        className="scroll-mt-24 border-t border-white/5 bg-black/20"
+      >
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold tracking-[0.28em] text-cyan-300/70 uppercase">
+                Five ways to investigate
+              </p>
+              <h2
+                id="tools-heading"
+                className="mt-4 font-serif text-4xl leading-tight text-zinc-50 sm:text-5xl"
+              >
+                One question. More than one way in.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-6 text-zinc-400">
+              Start with a course, a book, a concept, or a connection. The tools
+              meet again as your understanding grows.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {questionTools.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <Link
+                  key={tool.title}
+                  href={tool.href}
+                  className="group flex min-h-56 flex-col rounded-[1.5rem] border border-white/10 bg-white/[0.025] p-6 transition duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none motion-reduce:transform-none motion-reduce:transition-none"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-6 font-serif text-xl text-zinc-50">
+                    {tool.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-zinc-400">
+                    {tool.description}
+                  </p>
+                  <ArrowRight
+                    className="mt-auto h-4 w-4 self-end text-cyan-200 transition-transform group-hover:translate-x-1 motion-reduce:transition-none"
+                    aria-hidden="true"
+                  />
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section
         id="start-with-pre"
         aria-labelledby="pre-launch-heading"
         className="scroll-mt-24 border-y border-white/5 bg-zinc-950/55"
@@ -328,7 +535,7 @@ export default function PublicHomeView({
                     First on YouTube
                   </span>
                   <span className="font-mono text-[0.68rem] tracking-[0.16em] text-zinc-400 uppercase">
-                    {pre.code} · {pre.durationWeeks} weeks
+                    {pre.pathLabel} · {pre.durationWeeks} weeks
                   </span>
                 </div>
 
@@ -336,13 +543,13 @@ export default function PublicHomeView({
                   id="pre-launch-heading"
                   className="mt-7 max-w-3xl font-serif text-4xl leading-tight text-zinc-50 sm:text-5xl lg:text-6xl"
                 >
-                  We’re starting together with PRE.
+                  We’re starting together with {pre.title}.
                 </h2>
                 <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
                   <span className="font-semibold text-amber-100">
                     Highly recommended, never required.
                   </span>{" "}
-                  PRE is the first Prismarium course series launching on
+                  {pre.title} is the first Prismarium course series launching on
                   YouTube—a recorded study series we can follow together. This
                   short orientation introduces how we keep uncertainty open
                   without giving up evidence, care, or judgment.
@@ -361,7 +568,7 @@ export default function PublicHomeView({
                     href={pre.href}
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-200 focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-4 focus-visible:ring-offset-zinc-950 focus-visible:outline-none"
                   >
-                    Preview PRE
+                    Preview {pre.title}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                   {youtubeHref ? (
@@ -413,7 +620,7 @@ export default function PublicHomeView({
             className="scroll-mt-24 pt-8"
             aria-label="Choose the next Prismarium YouTube series"
           >
-            {pollPanel ?? <VoteFallback status={launch.voteStatus} />}
+            {pollPanel ?? <VoteFallback status={launch.voteStatus} startingCourseTitle={pre.title} />}
           </div>
         </div>
       </section>
@@ -461,59 +668,6 @@ export default function PublicHomeView({
         </div>
       </section>
 
-      <section
-        id="how-it-works"
-        aria-labelledby="tools-heading"
-        className="scroll-mt-24 border-y border-white/5 bg-black/20"
-      >
-        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-xs font-semibold tracking-[0.28em] text-cyan-300/70 uppercase">
-                Five ways to investigate
-              </p>
-              <h2
-                id="tools-heading"
-                className="mt-4 font-serif text-4xl leading-tight text-zinc-50 sm:text-5xl"
-              >
-                One question. More than one way in.
-              </h2>
-            </div>
-            <p className="max-w-md text-sm leading-6 text-zinc-400">
-              Start with a course, a book, a concept, or a connection. The tools
-              meet again as your understanding grows.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {questionTools.map((tool) => {
-              const Icon = tool.icon;
-              return (
-                <Link
-                  key={tool.title}
-                  href={tool.href}
-                  className="group flex min-h-56 flex-col rounded-[1.5rem] border border-white/10 bg-white/[0.025] p-6 transition duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-white/[0.05] focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none motion-reduce:transform-none motion-reduce:transition-none"
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <h3 className="mt-6 font-serif text-xl text-zinc-50">
-                    {tool.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-6 text-zinc-400">
-                    {tool.description}
-                  </p>
-                  <ArrowRight
-                    className="mt-auto h-4 w-4 self-end text-cyan-200 transition-transform group-hover:translate-x-1 motion-reduce:transition-none"
-                    aria-hidden="true"
-                  />
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       <section>
         <div className="mx-auto max-w-5xl px-6 py-20 text-center lg:px-8 lg:py-28">
           <Sparkles
@@ -533,7 +687,7 @@ export default function PublicHomeView({
               href={pre.href}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-zinc-100 transition-colors hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-zinc-200 focus-visible:outline-none"
             >
-              Preview PRE
+              Preview {pre.title}
             </Link>
             <Link
               href="/register"

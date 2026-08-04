@@ -5,6 +5,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import {
   COURSE_RELEASE_CONFIGURATION,
   getCourseReleaseStatus,
+  isIntroductionCourse,
   isMainCourse,
   type CourseReleaseStatus,
 } from "@/lib/courses/presentation";
@@ -246,10 +247,12 @@ export async function getSharedCoursePreviews(
   }
 
   const courses = (data ?? []) as CourseRow[];
+  // The current path may be the introduction course (PRE), which is not a
+  // main course — mirrors groupCoursesByRelease in @/lib/courses/presentation.
   const currentCourse = courses.find(
     (course) =>
       course.slug === COURSE_RELEASE_CONFIGURATION.currentCourseSlug &&
-      isMainCourse(course) &&
+      (isMainCourse(course) || isIntroductionCourse(course)) &&
       getCourseReleaseStatus(course) === "open-now",
   );
   const nextCourse = courses.find(

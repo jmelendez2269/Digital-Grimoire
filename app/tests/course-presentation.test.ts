@@ -128,15 +128,22 @@ test('invalid release-slot collisions never create a contradictory coming-next c
   }
 });
 
-test('PRE cannot occupy the current shared main-path slot', () => {
-  const invalidCurrent: CourseReleaseConfiguration = {
+test('PRE can spotlight as the current shared path while staying in open paths', () => {
+  const preAsCurrent: CourseReleaseConfiguration = {
     currentCourseSlug: 'pre-how-to-hold-two-things-at-once',
     nextCourseSlug: 'c02-symbol-myth-and-psychotechnology',
     previouslyOpenedCourseSlugs: [],
   };
-  const groups = groupCoursesByRelease(courses, invalidCurrent);
+  const groups = groupCoursesByRelease(courses, preAsCurrent);
 
-  assert.equal(groups.current, null);
-  assert.equal(getCourseReleaseStatus(courses[0], invalidCurrent), 'open-now');
+  assert.equal(groups.current?.slug, 'pre-how-to-hold-two-things-at-once');
+  assert.equal(getCourseReleaseStatus(courses[0], preAsCurrent), 'open-now');
   assert.equal(groups.next?.slug, 'c02-symbol-myth-and-psychotechnology');
+
+  // The introduction stays listed even while it spotlights as current.
+  assert.ok(
+    groups.open.some(
+      (course) => course.slug === 'pre-how-to-hold-two-things-at-once',
+    ),
+  );
 });

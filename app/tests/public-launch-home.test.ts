@@ -13,7 +13,7 @@ function readSource(relativePath: string): string {
 test("public launch page presents PRE before two equally visible candidates", () => {
   const source = readSource("src/components/home/PublicHomeView.tsx");
 
-  const prePosition = source.indexOf("We’re starting together with PRE.");
+  const prePosition = source.indexOf("We’re starting together with {pre.title}.");
   const candidatePosition = source.indexOf(
     "Which question should become the next series?",
   );
@@ -25,7 +25,7 @@ test("public launch page presents PRE before two equally visible candidates", ()
   assert.ok(source.includes("Highly recommended, never required."));
   assert.ok(
     source.includes(
-      "PRE is the first Prismarium course series launching on",
+      "{pre.title} is the first Prismarium course series launching on",
     ),
   );
   assert.ok(source.includes("Compare both"));

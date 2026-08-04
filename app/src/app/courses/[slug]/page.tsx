@@ -571,9 +571,9 @@ function CourseDetailContent() {
                           <>
                             <p className="text-xs text-zinc-400 mb-5">
                               {upgradeRequired
-                                ? 'PRE and taster paths are open to everyone. Join Prismarium to start this path.'
+                                ? 'How to Hold Two Things at Once and taster paths are open to everyone. Join Prismarium to start this path.'
                                 : introductionCourse
-                                  ? 'PRE stays open as the introduction. Start whenever you’re ready.'
+                                  ? `${course?.title} stays open as the introduction. Start whenever you’re ready.`
                                   : isFreeCourse
                                     ? 'This taster path is open to everyone. Start whenever you’re ready.'
                                     : 'Start this path and keep your reading, notes, and progress together.'}
