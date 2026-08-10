@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { createServiceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 import { getAbsoluteUrl } from '@/lib/utils';
 
@@ -125,11 +126,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const serviceSupabase = createServiceClient();
+
     // Get or create Stripe customer
     let customerId: string | undefined;
 
     // Check if user already has a Stripe customer ID
-    const { data: userData } = await supabase
+    const { data: userData } = await serviceSupabase
       .from('users')
       .select('stripe_customer_id')
       .eq('id', user.id)
@@ -151,7 +154,7 @@ export async function POST(request: NextRequest) {
           console.log(`⚠️  Customer ${userData.stripe_customer_id} doesn't exist in this Stripe account. Creating new customer.`);
           
           // Clear the invalid customer ID
-          await supabase
+          await serviceSupabase
             .from('users')
             .update({ stripe_customer_id: null })
             .eq('id', user.id);
@@ -182,7 +185,7 @@ export async function POST(request: NextRequest) {
         customerId = customer.id;
 
         // Save customer ID to database
-        const { error: updateError } = await supabase
+        const { error: updateError } = await serviceSupabase
           .from('users')
           .update({ stripe_customer_id: customer.id })
           .eq('id', user.id);

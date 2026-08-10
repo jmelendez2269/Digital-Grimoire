@@ -1,6 +1,7 @@
 
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 import { hybridSearch, HybridSearchResult } from '@/lib/parallax/hybrid-retrieval';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
@@ -158,6 +159,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const serviceSupabase = createServiceClient();
+
         // Check rate limit
         const rateLimit = await checkRateLimit(user.id);
         if (!rateLimit.allowed) {
@@ -288,7 +291,7 @@ Generate the Deep Search response JSON.`;
 
         // 6. Save to Cache
         try {
-            await supabase
+            await serviceSupabase
                 .from('search_cache')
                 .upsert({
                     query: normalizedQuery,

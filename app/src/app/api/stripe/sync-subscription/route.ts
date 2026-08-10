@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { createServiceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 
 function getStripeClient(): Stripe {
@@ -50,8 +51,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const serviceSupabase = createServiceClient();
+
     // Get user's data from database
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await serviceSupabase
       .from('users')
       .select('stripe_customer_id, stripe_subscription_id, email')
       .eq('id', user.id)
@@ -257,7 +260,7 @@ export async function POST(request: NextRequest) {
       updateData,
     });
 
-    const { data: updatedData, error: updateError } = await supabase
+    const { data: updatedData, error: updateError } = await serviceSupabase
       .from('users')
       .update(updateData)
       .eq('id', user.id)

@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { chunkText, TextChunk } from './chunking';
 import { logApiUsage } from '@/lib/usage-tracker';
 
@@ -44,10 +44,10 @@ export async function generateTextEmbeddings(
   textId: string,
   content: string
 ): Promise<number> {
-  const supabase = await createClient();
+  const serviceSupabase = createServiceClient();
 
   // First, check if embeddings already exist
-  const { data: existingChunks } = await supabase
+  const { data: existingChunks } = await serviceSupabase
     .from('text_chunks')
     .select('id')
     .eq('text_id', textId)
@@ -83,7 +83,7 @@ export async function generateTextEmbeddings(
 
       // Store chunk with embedding
       // pgvector in Supabase expects the array directly
-      const { error } = await supabase
+      const { error } = await serviceSupabase
         .from('text_chunks')
         .insert({
           text_id: textId,
@@ -112,7 +112,7 @@ export async function generateTextEmbeddings(
 
   // Also generate embedding for the full text summary (for text-level search)
   // Use short_summary or long_summary if available, otherwise use first chunk
-  const { data: textData } = await supabase
+  const { data: textData } = await serviceSupabase
     .from('texts')
     .select('short_summary, long_summary, uploaded_by')
     .eq('id', textId)
@@ -124,7 +124,7 @@ export async function generateTextEmbeddings(
       const res = await generateEmbedding(summaryText);
       totalInputTokens += res.usage.prompt_tokens;
 
-      await supabase
+      await serviceSupabase
         .from('texts')
         .update({
           embedding: res.embedding, // pgvector expects array directly
@@ -166,7 +166,7 @@ export async function backfillAllTextEmbeddings(
   batchSize: number = 10,
   maxTexts?: number
 ): Promise<{ textsProcessed: number; totalChunks: number; errors: number }> {
-  const supabase = await createClient();
+  const serviceSupabase = createServiceClient();
 
   // 1. Get ALL text IDs that have content (lightweight query)
   // We use range to ensure we get past 1000 limit
@@ -174,7 +174,7 @@ export async function backfillAllTextEmbeddings(
   let from = 0;
   let hasMore = true;
   while (hasMore) {
-    const { data, error: idError } = await supabase
+    const { data, error: idError } = await serviceSupabase
       .from('texts')
       .select('id')
       .not('content', 'is', null)
@@ -193,7 +193,7 @@ export async function backfillAllTextEmbeddings(
   }
 
   // 2. Get all unique text IDs that already have chunks using efficient RPC
-  const { data: indexedIdsData } = await supabase.rpc('get_indexed_text_ids');
+  const { data: indexedIdsData } = await serviceSupabase.rpc('get_indexed_text_ids');
   const indexedIds = new Set(indexedIdsData?.map((t: { text_id: string }) => t.text_id) || []);
 
   // 3. Identify missing texts
@@ -211,7 +211,7 @@ export async function backfillAllTextEmbeddings(
   // but backfill defaults to 10 at a time in terms of concurrent processing.
   // Actually backfill processes all 'subset' in a loop.
 
-  const { data: texts, error: fetchError } = await supabase
+  const { data: texts, error: fetchError } = await serviceSupabase
     .from('texts')
     .select('id, content, title')
     .in('id', idsToProcess);
