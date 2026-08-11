@@ -9,9 +9,7 @@ import { generateTranscript } from '@/lib/transcript-generator';
 import { generateBookCover } from '@/lib/getimg-cover';
 import { logStorageUpload, logUserActivity } from '@/lib/usage-tracker';
 import { findSimilarDocuments } from '@/lib/utils/similarity-check';
-
-// Initialize R2 client for cleanup on error
-const s3Client = getR2Client();
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 /**
  * Determine media type from MIME type
@@ -48,6 +46,12 @@ async function extractFileMetadata(
 }
 
 export async function POST(request: NextRequest) {
+  const unavailable = guardCommercialAction('media_processing');
+  if (unavailable) return unavailable;
+
+  // Keep provider client construction behind the default-closed guard.
+  const s3Client = getR2Client();
+
   let body;
   try {
     body = await request.json();

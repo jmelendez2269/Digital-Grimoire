@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { assemblePalette, assemblePaletteForSlugs } from "@/lib/working/assemble";
 import { resolveIntentSemantic } from "@/lib/working/resolve-intent";
 import { synthesizeRitual } from "@/lib/working/synthesize";
+import { guardCommercialAction } from "@/lib/commercial-availability";
 
 /**
  * POST /api/working/generate
@@ -16,6 +17,9 @@ import { synthesizeRitual } from "@/lib/working/synthesize";
 export const maxDuration = 60; // ritual synthesis can take ~15–35s
 
 export async function POST(req: Request) {
+  const unavailable = guardCommercialAction("working_generation");
+  if (unavailable) return unavailable;
+
   try {
     const auth = await createClient();
     const { data: { user }, error: authError } = await auth.auth.getUser();

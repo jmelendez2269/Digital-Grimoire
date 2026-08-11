@@ -3,12 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import { logApiUsage } from '@/lib/usage-tracker';
 import { aiOrchestrator } from '@/lib/ai/ai-orchestrator';
 import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 /**
  * POST /api/ai/gpt
  * Chat endpoint for GPT (OpenAI)
  */
 export async function POST(request: Request) {
+  const unavailable = guardCommercialAction('gpt_proxy');
+  if (unavailable) return unavailable;
+
   try {
     const supabase = await createClient();
 

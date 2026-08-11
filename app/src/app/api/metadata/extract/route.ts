@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseOrRepairAiJsonObject } from '@/lib/ai/json';
 import { getDefaultOpenRouterMetadataModel, getOpenRouterClient } from '@/lib/ai/openrouter-client';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 /**
  * Extract metadata from document using OpenRouter-compatible chat completions
  * Analyzes first page/cover to extract title, author, year, type, etc.
  */
 export async function POST(request: NextRequest) {
+  const unavailable = guardCommercialAction('metadata_extraction');
+  if (unavailable) return unavailable;
+
   try {
     // Verify authentication
     const supabase = await createClient();

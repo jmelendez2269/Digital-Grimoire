@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
 import { createSSEStream } from '@/lib/parallax/streaming';
 import { LensWeights, ResponseLength } from '@/lib/parallax/lens-orchestrator';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 /**
  * POST /api/parallax/query
@@ -15,6 +16,9 @@ import { LensWeights, ResponseLength } from '@/lib/parallax/lens-orchestrator';
  * }
  */
 export async function POST(request: NextRequest) {
+  const unavailable = guardCommercialAction('seven_lenses_generation');
+  if (unavailable) return unavailable;
+
   try {
     const supabase = await createClient();
 

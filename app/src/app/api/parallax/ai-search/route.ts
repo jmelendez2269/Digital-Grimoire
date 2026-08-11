@@ -7,6 +7,7 @@ import { hybridSearch, HybridSearchResult } from '@/lib/parallax/hybrid-retrieva
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
 import { parseAiJsonObject } from '@/lib/ai/json';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 interface AiSearchResult {
     summary: string;
@@ -143,6 +144,9 @@ function normalizeAiResult(
 }
 
 export async function POST(request: NextRequest) {
+    const unavailable = guardCommercialAction('deep_search_generation');
+    if (unavailable) return unavailable;
+
     try {
         const supabase = await createClient();
 

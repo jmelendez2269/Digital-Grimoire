@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 import { createServiceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 
@@ -33,6 +34,9 @@ function getTierFromPriceId(priceId: string): 'student' | 'scholar' | 'adept' | 
  * This is a fallback for when webhooks haven't fired yet (e.g., local development)
  */
 export async function POST(request: NextRequest) {
+  const unavailable = guardCommercialAction('checkout');
+  if (unavailable) return unavailable;
+
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json(
