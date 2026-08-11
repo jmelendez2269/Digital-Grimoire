@@ -32,13 +32,27 @@ function assertUsesServiceClient(
 }
 
 test("Stripe authority writes use the service role after request authentication", () => {
-  assertUsesServiceClient(
+  const checkout = readSource(
     "src/app/api/stripe/create-checkout-session/route.ts",
-    /serviceSupabase \.from\("users"\) \.update\(/,
   );
+  assert.match(
+    checkout,
+    /import \{ createServiceClient \} from ["']@\/lib\/supabase\/service["'];/,
+  );
+  assert.match(checkout, /const serviceSupabase = createServiceClient\(\);/);
+  assert.match(
+    checkout,
+    /serviceSupabase \.from\("billing_checkout_requests"\) \.insert\(/,
+  );
+  assert.match(
+    checkout,
+    /serviceSupabase \.from\("billing_checkout_requests"\) \.update\(/,
+  );
+  assert.doesNotMatch(checkout, /\.from\("users"\)/);
+  assert.doesNotMatch(checkout, /stripe\.customers\.(?:create|retrieve|update)/);
   assertUsesServiceClient(
     "src/app/api/stripe/sync-subscription/route.ts",
-    /serviceSupabase \.from\('users'\) \.update\(/,
+    /serviceSupabase\.rpc\( "reconcile_billing_membership_snapshot_v1"/,
   );
 
   const webhook = readSource("src/app/api/stripe/webhook/route.ts");
@@ -47,8 +61,47 @@ test("Stripe authority writes use the service role after request authentication"
     /import \{ createServiceClient \} from ["']@\/lib\/supabase\/service["'];/,
   );
   assert.match(webhook, /const serviceSupabase = createServiceClient\(\);/);
-  assert.match(webhook, /serviceSupabase \.from\('users'\) \.update\(/);
+  assert.match(
+    webhook,
+    /serviceSupabase\.rpc\( "process_billing_webhook_event"/,
+  );
+  assert.doesNotMatch(webhook, /\.from\(["']users["']\)/);
   assert.doesNotMatch(webhook, /createClient\(\)/);
+});
+
+test("Stripe projection fails closed for unknown Prices and avoids sensitive logs", () => {
+  const sync = readSource("src/app/api/stripe/sync-subscription/route.ts");
+  const webhook = readSource("src/app/api/stripe/webhook/route.ts");
+  const webhookNormalizer = readSource(
+    "src/lib/membership/membership-webhook.server.ts",
+  );
+  const catalog = readSource("src/lib/membership/membership-catalog.server.ts");
+  const serviceClient = readSource("src/lib/supabase/service.ts");
+
+  const billing = readSource(
+    "src/lib/membership/membership-billing.server.ts",
+  );
+  for (const source of [webhookNormalizer]) {
+    assert.match(source, /resolveMembershipOfferByStripePriceId/);
+    assert.doesNotMatch(source, /default to scholar/i);
+    assert.doesNotMatch(source, /:\s*'scholar';/);
+    assert.doesNotMatch(source, /NEXT_PUBLIC_STRIPE_PRICE_ID_/);
+  }
+
+  assert.match(billing, /normalizeMembershipSubscriptionSnapshot/);
+  assert.doesNotMatch(billing, /NEXT_PUBLIC_STRIPE_PRICE_ID_/);
+  assert.match(sync, /reconcile_billing_membership_snapshot_v1/);
+  assert.match(webhookNormalizer, /"UNKNOWN_SUBSCRIPTION_PRICE"/);
+  assert.match(catalog, /if \(matches\.length !== 1\) return null;/);
+  assert.doesNotMatch(
+    sync,
+    /console\.(?:log|info|error)\([^)]*(?:userId|customerId|subscriptionId|updateData)/,
+  );
+  assert.doesNotMatch(
+    webhook,
+    /console\.(?:log|info|error)\([^)]*(?:eventId|userId|customerId|subscriptionId)/,
+  );
+  assert.doesNotMatch(serviceClient, /keyPrefix|substring\(0, 10\)/);
 });
 
 test("shared cache and authoritative usage writes use the service role", () => {

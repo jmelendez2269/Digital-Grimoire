@@ -133,24 +133,27 @@ test("Checkout fails closed before request parsing, Supabase, or Stripe", () => 
   const handler = postHandlerSource(path);
   const actionGuard = handler.indexOf('guardCommercialAction("checkout")');
   const requestParse = handler.indexOf("request.json()");
-  const offerGuard = handler.indexOf("guardCheckoutOffer(priceId)");
+  const serverResolution = handler.indexOf("resolveMembershipCheckoutOffer(");
+  const offerGuard = handler.indexOf(
+    "guardCheckoutOffer(serverOffer.stripePriceId)",
+  );
   const supabaseClient = handler.indexOf("createClient()");
   const stripeClient = handler.indexOf("getStripeClient()");
 
   assert.ok(actionGuard >= 0 && actionGuard < requestParse);
+  assert.ok(serverResolution > requestParse && serverResolution < supabaseClient);
   assert.ok(offerGuard > requestParse && offerGuard < supabaseClient);
   assert.ok(offerGuard < stripeClient);
 
   const source = readSource(path);
   assert.doesNotMatch(source, /NEXT_PUBLIC_STRIPE_PRICE_ID_/);
-  assert.doesNotMatch(source, /body\.tier/);
+  assert.doesNotMatch(source, /body\.(?:priceId|amount|mode|tier|customerId)/);
   assert.match(source, /mode:\s*"subscription"/);
 });
 
 test("customer-reachable unmetered routes guard before cost or mutation work", () => {
   const guardedRoutes: Array<[string, string, string[]]> = [
     ["src/app/api/working/generate/route.ts", "working_generation", ["createClient()", "synthesizeRitual("]],
-    ["src/app/api/stripe/sync-subscription/route.ts", "checkout", ["createClient()", "getStripeClient("]],
     ["src/app/api/parallax/query/route.ts", "seven_lenses_generation", ["createClient()", "createSSEStream("]],
     ["src/app/api/parallax/ai-search/route.ts", "deep_search_generation", ["createClient()", "hybridSearch(", "aiOrchestrator.chatComplete("]],
     ["src/app/api/parallax/lens/[lensId]/route.ts", "seven_lenses_expansion", ["createClient()", "hybridSearch(", "generateLensResponse("]],
@@ -168,6 +171,18 @@ test("customer-reachable unmetered routes guard before cost or mutation work", (
   for (const [path, action, markers] of guardedRoutes) {
     assertGuardPrecedes(path, action, markers);
   }
+});
+
+test("billing reconciliation has its own default-closed gate before auth or Stripe", () => {
+  const path = "src/app/api/stripe/sync-subscription/route.ts";
+  const handler = postHandlerSource(path);
+  const gate = handler.indexOf("billingOperationsEnabled()");
+  const auth = handler.indexOf("createClient()");
+  const stripe = handler.indexOf("getStripeClient()");
+
+  assert.ok(gate >= 0 && gate < auth);
+  assert.ok(gate < stripe);
+  assert.doesNotMatch(handler, /guardCommercialAction\(["']checkout["']\)/);
 });
 
 test("sacred-text imports preserve non-AI mode and guard AI mode before work", () => {

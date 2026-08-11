@@ -81,7 +81,7 @@ The 1/1/2/3 weights are launch hypotheses, not claims that the economics are alr
 - There is no annual billing at launch.
 - A database course row marked `published` is content state, not membership-release authority.
 - A server-owned release allowlist defines free/public courses and member-released paid courses. A separate `student_launch_course_slug` must name exactly one member-released paid course before Student sales open.
-- Student receives only `student_launch_course_slug` during the single-course launch. The initial slug is a business decision to record after PRE/C01/FD01 sequencing; it is not inferred from database order or the first `published` row.
+- Student receives only `student_launch_course_slug` during the single-course launch. Jen approved `c01-how-humans-know-what-they-know` as the exact initial slug on August 11, 2026; it is not inferred from database order or the first `published` row. Approval alone does not release the course or enable paid sales.
 - Before a second paid course opens, Prismarium must add an explicit Student course-selection and switching flow that preserves prior work.
 - Scholar and Adept receive every paid course on the explicit member-release allowlist.
 - Reader may keep at most 50 active Journal pages; paid tiers are unlimited. Archiving remains the zero-cost way to make room.
@@ -258,9 +258,10 @@ The following are not hidden obligations inside this launch:
 - The course-production tracker controls editorial/video progress; membership points never inflate it.
 - The full blueprint is a reference, not a backlog that must be completed before launch.
 - A scope change requires a dated decision in the live tracker and an updated point total before implementation begins.
+- The 2026-08-11 `LEAN-L2-06` acceptance counts the verified local contract plus real Stripe test-mode lifecycle as L2 completion. It does not satisfy or authorize the `LEAN-L5-05` production deployment, live Portal, canary, or paid-activation gates.
 - “Frozen” launch numbers are implementation targets, not permission to ignore failed cost evidence. A prelaunch `hold` or dated `revise` decision overrides public sale/copy until the documents agree again.
 - Production, Stripe, pricing, or public-sales changes require explicit evidence and the appropriate launch gate; planning approval alone does not authorize a risky production mutation.
 
 ## 10. Immediate next move
 
-Start `LEAN-L0-01` in the implementation tracker: a read-only, privacy-safe production/schema/Stripe preflight. Do not edit pricing UI, create Stripe objects, or mutate production during that packet. Once the evidence is reviewed, proceed to adversarial authorization tests and the permission hotfix.
+Phase L2 is complete at 22/22. On August 11, Jen accepted `LEAN-L2-06` from its verified local billing/Portal contract plus a real Stripe test-mode $15 Checkout, signed created/deleted webhook projection, Student entitlement, terminal cancellation, and Reader fallback. The stacked L0-L2 branch is 51/114 verified points (44.7%), with `LEAN-L3-01` ready for the next local packet. Keep every paid offer, billing operation, member-course release, Checkout UI, real credit action, and metered route default closed. Production billing deployment/migrations, the named live Portal configuration, an eligible non-admin production canary, and live paid activation remain separate `LEAN-L5-05` requirements; L2 completion does not authorize them.

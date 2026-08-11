@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { createClient } from '@supabase/supabase-js';
 
 /**
@@ -15,7 +17,6 @@ export function createServiceClient() {
     console.error('Missing Supabase credentials:', {
       hasUrl: !!supabaseUrl,
       hasKey: !!supabaseServiceKey,
-      keyPrefix: supabaseServiceKey?.substring(0, 10)
     });
     throw new Error('Supabase URL or Service Role Key not configured');
   }
@@ -31,15 +32,12 @@ export function createServiceClient() {
       const keyRef = payload.ref;
       
       if (urlRef && keyRef && urlRef !== keyRef) {
-        console.error('⚠️ SUPABASE PROJECT MISMATCH DETECTED:', {
-          urlProjectRef: urlRef,
-          keyProjectRef: keyRef,
-          message: 'The service role key is from a different Supabase project than the URL. This will cause "Invalid API key" errors.',
-          fix: 'Get the service_role key from the Supabase project matching your URL: ' + supabaseUrl
-        });
+        console.error(
+          'Supabase project mismatch detected. Check the server URL and service-role configuration.',
+        );
       }
     }
-  } catch (e) {
+  } catch {
     // If we can't decode, that's okay - just continue
   }
 

@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import MembershipAvailability from "@/components/membership/MembershipAvailability";
 import { toast } from "sonner";
 import {
   Sparkles,
-  Zap,
   Crown,
-  Check,
   Loader2,
   CreditCard,
   Calendar,
@@ -16,8 +15,6 @@ import {
   Info,
   BookOpen,
   GraduationCap,
-  ArrowUp,
-  ArrowDown
 } from "lucide-react";
 
 type SubscriptionTier = 'free' | 'student' | 'scholar' | 'adept';
@@ -31,10 +28,6 @@ interface SubscriptionStatus {
 
 interface TierInfo {
   name: string;
-  price: number;
-  priceId?: string;
-  queries: string;
-  features: string[];
   icon: React.ReactNode;
   color: string;
   borderColor: string;
@@ -399,108 +392,6 @@ export default function SubscriptionTab() {
     }
   };
 
-  const handleUpgrade = async (tier: 'student' | 'scholar' | 'adept') => {
-    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-      toast.error('Stripe is not configured. Please contact support.');
-      return;
-    }
-
-    setProcessing(tier);
-    try {
-      // Send tier name — server resolves price ID from env vars
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier, mode: 'subscription' }),
-      });
-
-      let data: any = {};
-      try {
-        const responseText = await response.text();
-        if (responseText) {
-          data = JSON.parse(responseText);
-        }
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        throw new Error(`Server returned invalid response (${response.status} ${response.statusText})`);
-      }
-
-      if (!response.ok) {
-        const errorMessage = data.error || data.message || `Failed to create checkout session (${response.status})`;
-        const fullErrorDetails = JSON.stringify(data, null, 2);
-        console.error('❌ Checkout session error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: data.error || 'No error field in response',
-          message: data.message || 'No message field in response',
-          details: data.details || 'No details field',
-          fullResponse: fullErrorDetails,
-        });
-        // Log the full error details for debugging
-        console.error('Full error response:', fullErrorDetails);
-        throw new Error(errorMessage);
-      }
-
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
-    } catch (error) {
-      const errorDetails = {
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
-        fullError: error,
-      };
-      console.error('❌ Error creating checkout session:', errorDetails);
-      // Also log the error as a string for better visibility
-      console.error('Error message:', error instanceof Error ? error.message : String(error));
-
-      const errorMessage = error instanceof Error
-        ? error.message
-        : typeof error === 'string'
-          ? error
-          : 'Failed to start checkout. Please try again or contact support.';
-      toast.error(errorMessage);
-    } finally {
-      setProcessing(null);
-    }
-  };
-
-  const handleManualSync = async () => {
-    setProcessing('sync');
-    try {
-      console.log('🔄 Manual sync triggered');
-      const syncResponse = await fetch('/api/stripe/sync-subscription', {
-        method: 'POST',
-      });
-
-      if (syncResponse.ok) {
-        const syncData = await syncResponse.json();
-        console.log('📦 Manual sync response:', syncData);
-
-        if (syncData.synced) {
-          toast.success(`Subscription synced! You're now on the ${syncData.tier} tier.`);
-          await fetchSubscriptionStatus();
-        } else {
-          toast.info(syncData.message || 'No subscription found to sync');
-          await fetchSubscriptionStatus(); // Refresh anyway
-        }
-      } else {
-        const errorData = await syncResponse.json().catch(() => ({}));
-        console.error('❌ Manual sync failed:', errorData);
-        toast.error(errorData.error || errorData.message || 'Failed to sync subscription');
-      }
-    } catch (error) {
-      console.error('Error in manual sync:', error);
-      toast.error('Failed to sync subscription. Please try again.');
-    } finally {
-      setProcessing(null);
-    }
-  };
-
   const handleManageSubscription = async () => {
     if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
       toast.error('Stripe is not configured. Please contact support.');
@@ -513,7 +404,7 @@ export default function SubscriptionTab() {
         method: 'POST',
       });
 
-      let data: any = {};
+      let data: Record<string, unknown> = {};
       try {
         const responseText = await response.text();
         if (responseText) {
@@ -525,7 +416,10 @@ export default function SubscriptionTab() {
       }
 
       if (!response.ok) {
-        const errorMessage = data.error || data.message || `Failed to create portal session (${response.status})`;
+        const errorMessage =
+          (typeof data.error === 'string' && data.error) ||
+          (typeof data.message === 'string' && data.message) ||
+          `Failed to create portal session (${response.status})`;
         console.error('Portal session error:', {
           status: response.status,
           statusText: response.statusText,
@@ -537,7 +431,7 @@ export default function SubscriptionTab() {
       }
 
       // Redirect to Stripe Customer Portal
-      if (data.url) {
+      if (typeof data.url === 'string') {
         window.location.href = data.url;
       } else {
         throw new Error('No portal URL received');
@@ -565,18 +459,6 @@ export default function SubscriptionTab() {
       case 'free':
         return {
           name: 'The Reader',
-          price: 0,
-          queries: '5',
-          features: [
-            '5 AI queries per month',
-            '25 journal pages',
-            'Full library access',
-            'Full graph access',
-            'Basic search',
-            'Pre-course and taster courses',
-            'Unlimited annotations',
-            'Unlimited collections',
-          ],
           icon: <BookOpen className="w-5 h-5" />,
           color: 'text-zinc-400',
           borderColor: 'border-zinc-700',
@@ -585,20 +467,6 @@ export default function SubscriptionTab() {
       case 'student':
         return {
           name: 'The Student',
-          price: 15,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT,
-          queries: '5',
-          features: [
-            'Full course access',
-            'Structured 8-week learning paths',
-            'Course workbook and synthesis artifacts',
-            '5 AI queries per month',
-            'Unlimited journal pages',
-            'Full library access',
-            'Full graph access',
-            'Unlimited annotations',
-            'Unlimited collections',
-          ],
           icon: <GraduationCap className="w-5 h-5" />,
           color: 'text-blue-400',
           borderColor: 'border-blue-600/30',
@@ -607,21 +475,6 @@ export default function SubscriptionTab() {
       case 'scholar':
         return {
           name: 'The Scholar',
-          price: 29,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR,
-          queries: '25',
-          features: [
-            'Everything in Student',
-            '25 AI research queries per month',
-            'Seven Lenses study workflows',
-            'Concept search and advanced research tools',
-            'Unlimited journal pages',
-            'Full library access',
-            'Full graph access',
-            'Unlimited annotations',
-            'Unlimited collections',
-            'Priority support',
-          ],
           icon: <Sparkles className="w-5 h-5" />,
           color: 'text-purple-400',
           borderColor: 'border-purple-600/30',
@@ -630,21 +483,6 @@ export default function SubscriptionTab() {
       case 'adept':
         return {
           name: 'The Adept',
-          price: 49,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT,
-          queries: '50',
-          features: [
-            'Everything in Scholar',
-            '50 AI research queries per month',
-            'Highest research limits',
-            'Early access to new course and AI features',
-            'Unlimited journal pages',
-            'Full library access',
-            'Full graph access',
-            'Unlimited annotations',
-            'Unlimited collections',
-            'Priority support',
-          ],
           icon: <Crown className="w-5 h-5" />,
           color: 'text-amber-400',
           borderColor: 'border-amber-600/30',
@@ -724,31 +562,6 @@ export default function SubscriptionTab() {
             </div>
           )}
 
-          {/* Manual Sync Button - Show if subscription is free but user might have Stripe customer */}
-          {subscription.tier === 'free' && (
-            <div className="pt-4 border-t border-zinc-800">
-              <button
-                onClick={handleManualSync}
-                disabled={processing !== null}
-                className="w-full py-2 px-4 border border-amber-700/50 bg-amber-900/20 hover:bg-amber-900/30 text-amber-300 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {processing === 'sync' ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4" />
-                    Sync Subscription Status
-                  </>
-                )}
-              </button>
-              <p className="text-xs text-zinc-500 text-center mt-2">
-                If you recently subscribed, click to sync your subscription status
-              </p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -768,199 +581,7 @@ export default function SubscriptionTab() {
         </div>
       )}
 
-      {/* Subscription Tiers */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-amber-100">Available Plans</h3>
-
-        {/* Student Tier */}
-        <div className={`rounded-lg border ${subscription.tier === 'student' ? 'border-blue-600 ring-2 ring-blue-600/50' : 'border-blue-800/30'} bg-blue-900/10 p-6`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-900/30 rounded-lg">
-                <GraduationCap className="w-6 h-6 text-blue-400" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-amber-100">The Student</h4>
-                <p className="text-sm text-zinc-400">Unlock full courses and workbook depth</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$15</div>
-              <div className="text-sm text-zinc-400">/month</div>
-            </div>
-          </div>
-
-          <div className="mb-4 space-y-2">
-            {getTierInfo('student')?.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-zinc-300">
-                <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          {subscription.tier === 'student' ? (
-            <button
-              disabled
-              className="w-full py-2 bg-blue-600/50 text-blue-200 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Current Plan
-            </button>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('student')}
-              disabled={processing !== null || !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {processing === 'student' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : subscription.tier === 'free' ? (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  Subscribe to Student
-                </>
-              ) : (
-                <>
-                  <ArrowDown className="w-4 h-4" />
-                  Downgrade to Student
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Scholar Tier */}
-        <div className={`rounded-lg border ${subscription.tier === 'scholar' ? 'border-purple-600 ring-2 ring-purple-600/50' : 'border-purple-800/30'} bg-purple-900/10 p-6`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-900/30 rounded-lg">
-                <Sparkles className="w-6 h-6 text-purple-400" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-amber-100">The Scholar</h4>
-                <p className="text-sm text-zinc-400">For serious comparative study</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$29</div>
-              <div className="text-sm text-zinc-400">/month</div>
-            </div>
-          </div>
-
-          <div className="mb-4 space-y-2">
-            {getTierInfo('scholar')?.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-zinc-300">
-                <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          {subscription.tier === 'scholar' ? (
-            <button
-              disabled
-              className="w-full py-2 bg-purple-600/50 text-purple-200 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Current Plan
-            </button>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('scholar')}
-              disabled={processing !== null || !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {processing === 'scholar' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : subscription.tier === 'free' ? (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  Subscribe to Scholar
-                </>
-              ) : subscription.tier === 'student' ? (
-                <>
-                  <ArrowUp className="w-4 h-4" />
-                  Upgrade to Scholar
-                </>
-              ) : (
-                <>
-                  <ArrowDown className="w-4 h-4" />
-                  Downgrade to Scholar
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Adept Tier */}
-        <div className={`rounded-lg border ${subscription.tier === 'adept' ? 'border-amber-600 ring-2 ring-amber-600/50' : 'border-amber-800/30'} bg-amber-900/10 p-6`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-900/30 rounded-lg">
-                <Crown className="w-6 h-6 text-amber-400" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-amber-100">The Adept</h4>
-                <p className="text-sm text-zinc-400">Maximum research depth</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$49</div>
-              <div className="text-sm text-zinc-400">/month</div>
-            </div>
-          </div>
-
-          <div className="mb-4 space-y-2">
-            {getTierInfo('adept')?.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-zinc-300">
-                <Check className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          {subscription.tier === 'adept' ? (
-            <button
-              disabled
-              className="w-full py-2 bg-amber-600/50 text-amber-200 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Current Plan
-            </button>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('adept')}
-              disabled={processing !== null || !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {processing === 'adept' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : subscription.tier === 'free' ? (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  Subscribe to Adept
-                </>
-              ) : (
-                <>
-                  <ArrowUp className="w-4 h-4" />
-                  Upgrade to Adept
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
+      <MembershipAvailability />
       {/* Management Section for Paid Users */}
       {isPaid && (
         <div className={`rounded-lg border ${currentTierInfo?.borderColor} ${currentTierInfo?.bgColor} p-6`}>

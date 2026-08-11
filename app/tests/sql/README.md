@@ -24,6 +24,7 @@ migration and its rollback-only fixture story from `app/`:
 
 ```powershell
 npm.cmd run test:learner-journal:local
+npm.cmd run test:membership-billing-schema:local
 ```
 
 The runner accepts only `local`, finds exactly one local Supabase database
