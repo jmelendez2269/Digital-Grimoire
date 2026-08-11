@@ -27,6 +27,7 @@ import Header from '@/components/Header';
 import { formatLensName } from '@/lib/utils/formatting';
 import { getLensColorClasses } from '@/lib/utils/lens-colors';
 import { CourseLearnerRenderer } from '@/components/courses/CourseLearnerRenderer';
+import { PRE_LEARNER_COURSE_SLUG } from '@/lib/courses/learner-save-client';
 import type { CourseContent } from '@/lib/parsers/course-markdown-parser';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -401,6 +402,11 @@ function CourseLearnContent() {
                             href: `/library/${courseText.text_id}`,
                         }));
                     })}
+                    persistence={
+                        slug === PRE_LEARNER_COURSE_SLUG
+                            ? { courseSlug: PRE_LEARNER_COURSE_SLUG, journalName }
+                            : undefined
+                    }
                 />
             </div>
         );

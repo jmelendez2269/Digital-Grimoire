@@ -1,5 +1,78 @@
 # Staging SQL integration tests
 
+## LEAN-L0-02 authorization baseline
+
+`lean-l0-02-authorization-baseline.sql` captures the current customer-role
+authorization baseline without repairing it. The suite creates two synthetic
+non-admin users and all dependent rows inside one transaction, switches to the
+real `authenticated`/`anon` database roles, records secure expectations versus
+observed behavior, rolls back, and verifies zero fixture residue.
+
+Run the harness against the isolated local Supabase stack from `app/`:
+
+```powershell
+npm.cmd run test:authorization-baseline:local
+```
+
+Local results validate the harness only when the local migration ledger differs
+from the deployed ledger. They are not production evidence.
+
+## LEAN-L1-03 learner workbook Journal saves
+
+After starting the isolated local Supabase stack, run the forward-only Journal
+migration and its rollback-only fixture story from `app/`:
+
+```powershell
+npm.cmd run test:learner-journal:local
+```
+
+The runner accepts only `local`, finds exactly one local Supabase database
+container, and never accepts a database URL. It proves PRE ownership, week and
+source identity, revision/replay behavior, owner-only reload visibility, the
+50-active-page Reader boundary, paid unlimited pages, and the no-loss downgrade
+rule. Its synthetic users, enrollments, courses, pages, and request rows roll
+back, followed by a zero-residue check.
+
+## LEAN-L0-03 permission hotfix
+
+After the local migration stack includes
+`20260810210000_lean_l0_03_permission_hotfix.sql`, run the complete forward,
+reversal, and forward-restoration check from `app/`:
+
+```powershell
+npm.cmd run test:permission-hotfix:local
+```
+
+The runner is local-only. It requires exactly one running local Supabase
+database container and never accepts a database URL. It proves:
+
+- all 48 L0-02 probes change from 11 secure passes / 37 failures to 48 / 0;
+- protected API-role table mutations and unintended definer-function execution
+  are absent;
+- shared reference reads, auth-trigger profile creation, and service-owned
+  profile/enrollment/cache/usage writes still work;
+- the reviewed reversal reproduces the 11 / 37 baseline locally;
+- reapplying the forward SQL restores 48 / 0; and
+- every fixture transaction leaves zero residue.
+
+The reversal snippet is not part of the migration chain. Its production guard
+exists for a separately approved emergency only; this runner supplies only the
+`local` target.
+
+For a live staging database that is confirmed distinct from production, use a
+database-owner connection and the explicit staging guard:
+
+```powershell
+psql.exe "$env:PRISMARIUM_STAGING_DATABASE_URL" `
+  --set=ON_ERROR_STOP=1 `
+  --set=prismarium_target=staging `
+  --file=app/tests/sql/lean-l0-02-authorization-baseline.sql
+```
+
+Never pass a production database URL. The SQL refuses targets other than
+`local` and `staging`, suppresses raw error messages, prints no fixture IDs or
+emails, and ends with `cleanup_residue = 0` when rollback succeeds.
+
 ## Course-path ballot
 
 `course-path-polls.staging.sql` exercises the real PostgreSQL functions added by

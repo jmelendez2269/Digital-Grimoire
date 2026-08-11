@@ -900,6 +900,14 @@ function parseV2ReadingIdentity(heading: string): {
 
   const cleanLeft = cleanReadingHeadingPart(left);
   const cleanRight = cleanReadingHeadingPart(right);
+  const [rightLeading, ...rightRemainder] = cleanRight.split(',');
+  if (looksLikePersonName(rightLeading)) {
+    return {
+      title: cleanLeft || cleanRight || heading.trim(),
+      author: rightLeading.trim(),
+      section: rightRemainder.join(',').trim() || undefined,
+    };
+  }
   if (looksLikePersonName(cleanLeft)) {
     return {
       title: cleanRight || cleanLeft,

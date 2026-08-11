@@ -160,6 +160,7 @@ test("text ID metadata enriches a title variant without renaming the syllabus re
   ]);
 
   assert.equal(result[0].title, "The Kena Upanishad");
+  assert.equal(result[0].libraryTitle, "The Upanishads");
   assert.equal(result[0].author, "Swami Paramananda");
   assert.equal(result[0].href, "/library/upanishads-123");
 });

@@ -75,7 +75,7 @@ export async function PUT(
     const { title, content, icon, is_archived, tags, is_pinned } = body;
 
     // Build update data
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (title !== undefined) {
       if (title.trim() === '') {
@@ -124,6 +124,16 @@ export async function PUT(
       .single();
 
     if (error) {
+      if (error.message?.includes('LEAN_L1_03:JOURNAL_LIMIT_REACHED')) {
+        return NextResponse.json(
+          {
+            error: 'Journal limit reached',
+            code: 'JOURNAL_LIMIT_REACHED',
+            message: 'Reader accounts can keep up to 50 active Journal pages. Archive a page before restoring this one.',
+          },
+          { status: 403 }
+        );
+      }
       if (error.code === 'PGRST116') {
         return NextResponse.json(
           { error: 'Page not found' },

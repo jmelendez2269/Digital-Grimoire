@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -35,7 +42,14 @@ import {
 } from "lucide-react";
 import { CourseBookGallery } from "@/components/courses/CourseBookGallery";
 import {
+  LearnerProgressStatus,
+  LearnerWeekJournalPanel,
+  useLearnerCoursePersistence,
+  type LearnerCoursePersistence,
+} from "@/components/courses/LearnerCoursePersistence";
+import {
   buildCourseBookDisplay,
+  type CourseBookDisplay,
   type CourseBookMetadata,
 } from "@/lib/courses/course-book-presentation";
 import type {
@@ -757,7 +771,7 @@ function ToolPracticeChooser({
         </h4>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
           {hasMultipleOptions
-            ? "Pick one path. The tool opens in a new tab, so this course and your place in it stay here."
+            ? "Choose one or try them all. Each one opens in a new tab, so your place in the course stays here. These tools deepen the exploration; they are not a test of whether you understood the course."
             : "The tool opens in a new tab, so this course and your place in it stay here."}
         </p>
       </div>
@@ -1061,14 +1075,15 @@ function CourseOverview({
 
       {content?.key_tensions?.length ? (
         <Surface tone="violet" className="p-5 md:p-7">
-          <Kicker icon={Layers3}>Ideas to hold in tension</Kicker>
+          <Kicker icon={Layers3}>Ideas to explore together</Kicker>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-            These are questions to revisit, not facts to memorize.
+            These pairs can help us notice different parts of a question. They
+            are not facts to memorize or sides you have to choose between.
           </p>
           <div className="mt-5">
             <SlideDeck
               items={content.key_tensions}
-              label="Key tensions"
+              label="Ideas to explore together"
               getTitle={(tension) => tension.label}
               renderItem={(tension) => (
                 <div className="flex min-h-44 flex-col justify-center rounded-2xl border border-violet-300/15 bg-violet-300/[0.04] p-6 md:p-8">
@@ -1098,7 +1113,73 @@ function CourseOverview({
   );
 }
 
-function ReadingCard({ reading }: { reading: CourseReading }) {
+function normalizedWords(value: string): string[] {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+}
+
+function readingLocation(
+  section: string | undefined,
+  verifiedAuthor: string | null
+): string | null {
+  const value = section?.trim();
+  if (!value) return null;
+
+  const authorWords = normalizedWords(verifiedAuthor ?? "");
+  const [leading, ...rest] = value.split(",");
+  const leadingWords = normalizedWords(leading);
+  const sameAuthor =
+    authorWords.length > 0 &&
+    leadingWords.length > 0 &&
+    authorWords.at(-1) === leadingWords.at(-1);
+
+  if (sameAuthor && rest.length === 0) return null;
+  if (sameAuthor && rest.length > 0) return rest.join(",").trim() || null;
+  return value;
+}
+
+function SourceLink({ book }: { book: CourseBookDisplay }) {
+  if (!book.href) {
+    return <span className="font-semibold text-zinc-100">{book.libraryTitle}</span>;
+  }
+
+  const className =
+    "inline-flex items-center gap-1.5 font-semibold text-cyan-300 transition hover:text-cyan-200 focus-visible:ring-2 focus-visible:ring-cyan-200";
+  if (book.href.startsWith("/")) {
+    return (
+      <Link href={book.href} className={className}>
+        {book.libraryTitle}
+        <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={book.href}
+      target="_blank"
+      rel="noreferrer noopener"
+      className={className}
+    >
+      {book.libraryTitle}
+      <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+    </a>
+  );
+}
+
+function ReadingCard({
+  reading,
+  book,
+}: {
+  reading: CourseReading;
+  book?: CourseBookDisplay;
+}) {
   const [tier, setTier] = useState<keyof typeof TIER_LABELS>("keystone");
   const tierKeys = Object.keys(TIER_LABELS) as Array<keyof typeof TIER_LABELS>;
   const availableTiers = tierKeys.filter((key) =>
@@ -1106,11 +1187,25 @@ function ReadingCard({ reading }: { reading: CourseReading }) {
   );
   const activeTier = availableTiers.includes(tier) ? tier : availableTiers[0];
   const tierData = activeTier ? reading.tiers[activeTier] : undefined;
+  const verifiedAuthor = book?.author || reading.author || null;
+  const location = readingLocation(reading.section, verifiedAuthor);
+  const tierExplanation =
+    tierData?.description?.trim() ||
+    reading.selection_rationale?.trim() ||
+    reading.reading_note?.trim() ||
+    "";
+  const readingNoteIsTierExplanation =
+    !tierData?.description?.trim() &&
+    !reading.selection_rationale?.trim() &&
+    Boolean(reading.reading_note?.trim());
   const notes = [
     { title: "Source role", body: reading.source_role },
     { title: "Historical context", body: reading.historical_note },
     { title: "Translation note", body: reading.translation_note },
-    { title: "Reading note", body: reading.reading_note },
+    {
+      title: "Reading note",
+      body: readingNoteIsTierExplanation ? undefined : reading.reading_note,
+    },
     { title: "Interpretive caution", body: reading.interpretive_caution },
   ].filter((note) => note.body?.trim());
 
@@ -1121,8 +1216,13 @@ function ReadingCard({ reading }: { reading: CourseReading }) {
         <h4 className="mt-3 text-2xl font-semibold text-white md:text-3xl">
           {reading.title}
         </h4>
-        {reading.author ? (
-          <p className="mt-2 text-base text-amber-200">{reading.author}</p>
+        {verifiedAuthor ? (
+          <p className="mt-2 text-base text-amber-200">{verifiedAuthor}</p>
+        ) : null}
+        {location ? (
+          <p className="mt-1 text-sm text-zinc-400">
+            Assigned from <span className="text-zinc-200">{location}</span>
+          </p>
         ) : null}
         {reading.selection_rationale ? (
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
@@ -1181,8 +1281,37 @@ function ReadingCard({ reading }: { reading: CourseReading }) {
               <p className="mb-3 text-sm text-zinc-400">
                 {TIER_LABELS[activeTier].description}
               </p>
-              <Markdown>{tierData.reference}</Markdown>
-              <Markdown compact>{tierData.description}</Markdown>
+              <div className="grid gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+                <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+                  <p className="text-[11px] font-semibold tracking-[0.16em] text-zinc-500 uppercase">
+                    Source
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    {book ? <SourceLink book={book} /> : reading.title}
+                  </p>
+                  {location ? (
+                    <p className="mt-1 text-xs leading-5 text-zinc-500">
+                      {location}
+                    </p>
+                  ) : null}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold tracking-[0.16em] text-zinc-500 uppercase">
+                    Assigned selection
+                  </p>
+                  <div className="mt-1 text-zinc-100">
+                    <Markdown>{tierData.reference}</Markdown>
+                  </div>
+                </div>
+              </div>
+              {tierExplanation ? (
+                <div className="mt-5 border-t border-white/10 pt-4">
+                  <p className="mb-1 text-[11px] font-semibold tracking-[0.16em] text-amber-200/70 uppercase">
+                    What this selection gives you
+                  </p>
+                  <Markdown compact>{tierExplanation}</Markdown>
+                </div>
+              ) : null}
             </div>
           </>
         ) : (
@@ -1388,20 +1517,26 @@ function LearningStudio({
 
 function WeekView({
   week,
+  books,
   courseSlug,
   cases = [],
   workedExample,
   completionPathways = [],
   stage,
   onStageChange,
+  persistence,
+  journalName,
 }: {
   week: CourseWeek;
+  books: ReturnType<typeof buildCourseBookDisplay>;
   courseSlug?: string;
   cases?: LearnerMarkdownSection[];
   workedExample?: LearnerMarkdownSection;
   completionPathways?: CourseContent["completion_pathways"];
   stage: WeekStage;
   onStageChange: (stage: WeekStage) => void;
+  persistence?: LearnerCoursePersistence;
+  journalName?: string;
 }) {
   const studioSections = (week.sections ?? []).filter((section) => {
     const heading = section.heading.toLowerCase();
@@ -1475,8 +1610,8 @@ function WeekView({
           <div className="mt-7 flex flex-wrap gap-2">
             {week.key_tension ? (
               <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-zinc-300">
-                <span className="text-zinc-500">Tension:</span>{" "}
-                {week.key_tension}
+                <span className="text-zinc-500">Exploring:</span>{" "}
+                {week.key_tension.replace(/\s+vs\s+/i, " and ")}
               </span>
             ) : null}
             {week.lens_focus.map((lens) => (
@@ -1583,7 +1718,18 @@ function WeekView({
                   items={week.readings}
                   label={`Week ${week.week_number} readings`}
                   getTitle={(reading) => reading.title}
-                  renderItem={(reading) => <ReadingCard reading={reading} />}
+                  renderItem={(reading, readingOrder) => (
+                    <ReadingCard
+                      reading={reading}
+                      book={books.find((book) =>
+                        book.weekAssignments.some(
+                          (assignment) =>
+                            assignment.weekNumber === week.week_number &&
+                            assignment.readingOrder === readingOrder
+                        )
+                      )}
+                    />
+                  )}
                 />
               </div>
             ) : null}
@@ -1666,6 +1812,19 @@ function WeekView({
                   <Markdown>{week.synthesis_prompt.prompt}</Markdown>
                 </div>
               </Surface>
+            ) : null}
+            {persistence && journalName ? (
+              <LearnerWeekJournalPanel
+                week={week}
+                journalName={journalName}
+                draft={persistence.draftForWeek(week.week_number)}
+                onChange={(text) =>
+                  persistence.updateWeekDraft(week.week_number, text)
+                }
+                onSave={() => persistence.saveWeekDraft(week)}
+                onRetry={() => persistence.retryWeekDraft(week)}
+                onReload={persistence.reloadSavedWork}
+              />
             ) : null}
             {week.final_reflection ? (
               <Surface className="p-5 md:p-7">
@@ -1815,11 +1974,16 @@ export function CourseLearnerRenderer({
   warnings = [],
   preview = false,
   bookMetadata = EMPTY_BOOK_METADATA,
+  persistence: persistenceConfig,
 }: {
   course: LearnerRenderableCourse;
   warnings?: string[];
   preview?: boolean;
   bookMetadata?: readonly CourseBookMetadata[];
+  persistence?: {
+    courseSlug: string;
+    journalName: string;
+  };
 }) {
   const weeks = useMemo(
     () =>
@@ -1870,6 +2034,20 @@ export function CourseLearnerRenderer({
   const [debug, setDebug] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [warningsOpen, setWarningsOpen] = useState(false);
+  const restoreProgress = useCallback(
+    (weekNumber: number, stage: WeekStage) => {
+      setSelection(weekNumber);
+      setWeekStage(stage);
+    },
+    [setSelection, setWeekStage],
+  );
+  const learnerPersistence = useLearnerCoursePersistence({
+    enabled: Boolean(persistenceConfig) && !preview,
+    courseSlug: persistenceConfig?.courseSlug ?? "",
+    courseTitle: course.title,
+    weeks,
+    onRestoreProgress: restoreProgress,
+  });
   const currentIndex = Math.max(
     0,
     stops.findIndex((stop) => stop.id === selection)
@@ -1908,6 +2086,9 @@ export function CourseLearnerRenderer({
     setSelection(next);
     setWeekStage("start");
     setNavOpen(false);
+    if (typeof next === "number" && persistenceConfig && !preview) {
+      learnerPersistence.saveProgress(next, "start");
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const go = (direction: -1 | 1) => {
@@ -1979,6 +2160,14 @@ export function CourseLearnerRenderer({
         </div>
       </header>
 
+      {persistenceConfig && !preview ? (
+        <LearnerProgressStatus
+          status={learnerPersistence.progressStatus}
+          onRetry={learnerPersistence.retryProgress}
+          onReload={learnerPersistence.reloadSavedWork}
+        />
+      ) : null}
+
       {warnings.length ? (
         <div className="relative z-30 border-b border-amber-300/15 bg-amber-300/[0.055]">
           <div className="mx-auto max-w-[90rem] px-4 py-2 md:px-6">
@@ -2037,6 +2226,7 @@ export function CourseLearnerRenderer({
               <WeekView
                 key={week.week_number}
                 week={week}
+                books={books}
                 courseSlug={course.content?.production_slug}
                 cases={weekCases}
                 workedExample={weekWorkedExample}
@@ -2046,7 +2236,21 @@ export function CourseLearnerRenderer({
                     : []
                 }
                 stage={weekStage}
-                onStageChange={setWeekStage}
+                onStageChange={(nextStage) => {
+                  setWeekStage(nextStage);
+                  if (persistenceConfig && !preview) {
+                    learnerPersistence.saveProgress(
+                      week.week_number,
+                      nextStage,
+                    );
+                  }
+                }}
+                persistence={
+                  persistenceConfig && !preview
+                    ? learnerPersistence
+                    : undefined
+                }
+                journalName={persistenceConfig?.journalName}
               />
             ) : null}
 

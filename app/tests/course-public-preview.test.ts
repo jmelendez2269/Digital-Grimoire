@@ -67,6 +67,22 @@ test("published course cards always open a public preview", () => {
   );
 });
 
+test("course cards wait for enrollment before choosing their destination", () => {
+  const sourceName = "src/app/courses/page.tsx";
+  const catalog = readSource(sourceName);
+
+  assertContains(
+    catalog,
+    "const presentationLoading = loading || authLoading || enrollmentsLoading",
+    sourceName,
+  );
+  assertContains(
+    catalog,
+    "!presentationLoading && courses.length > 0",
+    sourceName,
+  );
+});
+
 test("anonymous course requests receive only the sanitized published preview", () => {
   const sourceName = "src/app/api/courses/[id]/route.ts";
   const route = readSource(sourceName);
