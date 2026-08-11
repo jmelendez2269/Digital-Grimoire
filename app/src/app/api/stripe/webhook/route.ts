@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { headers } from 'next/headers';
 
 function getStripeClient(): Stripe {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
 
     // Handle different event types
     switch (event.type) {
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
             const tier = priceId ? getTierFromPriceId(priceId) : 'scholar'; // Default to scholar for legacy
 
             // Update user subscription status
-            await supabase
+            await serviceSupabase
               .from('users')
               .update({
                 subscription_status: tier,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
           : subscription.customer.id;
 
         // Find user by customer ID
-        const { data: userData } = await supabase
+        const { data: userData } = await serviceSupabase
           .from('users')
           .select('id')
           .eq('stripe_customer_id', customerId)
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
             const priceId = subscription.items.data[0]?.price?.id;
             const tier = priceId ? getTierFromPriceId(priceId) : 'scholar'; // Default to scholar for legacy
 
-            await supabase
+            await serviceSupabase
               .from('users')
               .update({
                 subscription_status: tier,
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
               .eq('id', userData.id);
           } else {
             // Subscription is not active - set to free
-            await supabase
+            await serviceSupabase
               .from('users')
               .update({
                 subscription_status: 'free',
@@ -160,14 +160,14 @@ export async function POST(request: NextRequest) {
           : subscription.customer.id;
 
         // Find user by customer ID
-        const { data: userData } = await supabase
+        const { data: userData } = await serviceSupabase
           .from('users')
           .select('id')
           .eq('stripe_customer_id', customerId)
           .single();
 
         if (userData) {
-          await supabase
+          await serviceSupabase
             .from('users')
             .update({
               subscription_status: 'free',
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
             ? invoice.customer
             : invoice.customer.id;
 
-          const { data: userData } = await supabase
+          const { data: userData } = await serviceSupabase
             .from('users')
             .select('id')
             .eq('stripe_customer_id', customerId)
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
             const priceId = subscription.items.data[0]?.price?.id;
             const tier = priceId ? getTierFromPriceId(priceId) : 'scholar'; // Default to scholar for legacy
 
-            await supabase
+            await serviceSupabase
               .from('users')
               .update({ subscription_status: tier })
               .eq('id', userData.id);

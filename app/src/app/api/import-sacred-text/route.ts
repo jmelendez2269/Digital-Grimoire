@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseWebText } from '@/lib/parsers/sacred-texts-parser';
 import { extractMetadata } from '@/lib/claude-metadata';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 interface ImportRequestBody {
   url: string;
@@ -24,6 +25,19 @@ interface ImportRequestBody {
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
+  // Preserve explicitly non-AI imports while keeping the default AI-enhanced
+  // path closed before authentication, remote fetching, or provider work.
+  const requestsAiMetadata = await request
+    .clone()
+    .json()
+    .then((body) => body?.useAI !== false)
+    .catch(() => true);
+
+  if (requestsAiMetadata) {
+    const unavailable = guardCommercialAction('sacred_text_ai_metadata');
+    if (unavailable) return unavailable;
+  }
+
   try {
     const supabase = await createClient();
     

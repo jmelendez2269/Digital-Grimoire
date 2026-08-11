@@ -5,6 +5,7 @@ import { hybridSearch } from '@/lib/parallax/hybrid-retrieval';
 import { getLens } from '@/lib/parallax/lenses';
 import { logApiUsage } from '@/lib/usage-tracker';
 import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 /**
  * POST /api/parallax/lens/[lensId]
@@ -20,6 +21,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ lensId: string }> }
 ) {
+  const unavailable = guardCommercialAction('seven_lenses_expansion');
+  if (unavailable) return unavailable;
+
   try {
     const supabase = await createClient();
 

@@ -1,11 +1,13 @@
 
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 import { hybridSearch, HybridSearchResult } from '@/lib/parallax/hybrid-retrieval';
 import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
 import { parseAiJsonObject } from '@/lib/ai/json';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 interface AiSearchResult {
     summary: string;
@@ -142,6 +144,9 @@ function normalizeAiResult(
 }
 
 export async function POST(request: NextRequest) {
+    const unavailable = guardCommercialAction('deep_search_generation');
+    if (unavailable) return unavailable;
+
     try {
         const supabase = await createClient();
 
@@ -157,6 +162,8 @@ export async function POST(request: NextRequest) {
                 { status: 401 }
             );
         }
+
+        const serviceSupabase = createServiceClient();
 
         // Check rate limit
         const rateLimit = await checkRateLimit(user.id);
@@ -288,7 +295,7 @@ Generate the Deep Search response JSON.`;
 
         // 6. Save to Cache
         try {
-            await supabase
+            await serviceSupabase
                 .from('search_cache')
                 .upsert({
                     query: normalizedQuery,

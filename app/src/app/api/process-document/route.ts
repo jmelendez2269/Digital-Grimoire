@@ -10,9 +10,7 @@ import { findSimilarDocuments, shouldWarnAboutDuplicate } from '@/lib/utils/simi
 import { generateTextEmbeddings } from '@/lib/parallax/embeddings';
 import { extractPdfTextLocally, isTextSubstantial } from '@/lib/utils/server-pdf-extractor';
 import { performLocalImageOCR } from '@/lib/utils/local-ocr';
-
-// Initialize R2 client for cleanup on error
-const s3Client = getR2Client();
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 /**
  * Sanitizes a string for use in HTTP headers (S3/R2 metadata).
@@ -84,6 +82,12 @@ function shouldFallbackToMinimalMetadata(error: unknown): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const unavailable = guardCommercialAction('document_processing');
+  if (unavailable) return unavailable;
+
+  // Keep provider client construction behind the default-closed guard.
+  const s3Client = getR2Client();
+
   let body;
   try {
     body = await request.json();
