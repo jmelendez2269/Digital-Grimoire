@@ -757,7 +757,7 @@ function ToolPracticeChooser({
         </h4>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
           {hasMultipleOptions
-            ? "Pick one path. The tool opens in a new tab, so this course and your place in it stay here."
+            ? "Choose one or try them all. Each one opens in a new tab, so your place in the course stays here. These tools deepen the exploration; they are not a test of whether you understood the course."
             : "The tool opens in a new tab, so this course and your place in it stay here."}
         </p>
       </div>
@@ -1061,14 +1061,15 @@ function CourseOverview({
 
       {content?.key_tensions?.length ? (
         <Surface tone="violet" className="p-5 md:p-7">
-          <Kicker icon={Layers3}>Ideas to hold in tension</Kicker>
+          <Kicker icon={Layers3}>Ideas to explore together</Kicker>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-            These are questions to revisit, not facts to memorize.
+            These pairs can help us notice different parts of a question. They
+            are not facts to memorize or sides you have to choose between.
           </p>
           <div className="mt-5">
             <SlideDeck
               items={content.key_tensions}
-              label="Key tensions"
+              label="Ideas to explore together"
               getTitle={(tension) => tension.label}
               renderItem={(tension) => (
                 <div className="flex min-h-44 flex-col justify-center rounded-2xl border border-violet-300/15 bg-violet-300/[0.04] p-6 md:p-8">
@@ -1475,8 +1476,8 @@ function WeekView({
           <div className="mt-7 flex flex-wrap gap-2">
             {week.key_tension ? (
               <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-zinc-300">
-                <span className="text-zinc-500">Tension:</span>{" "}
-                {week.key_tension}
+                <span className="text-zinc-500">Exploring:</span>{" "}
+                {week.key_tension.replace(/\s+vs\s+/i, " and ")}
               </span>
             ) : null}
             {week.lens_focus.map((lens) => (
