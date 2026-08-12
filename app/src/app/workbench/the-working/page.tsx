@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   FlaskConical, Loader2, Sparkles, CalendarCheck,
@@ -12,9 +12,14 @@ import type { AssembledPalette } from "@/lib/working/assemble";
 import type { WorkingConditions } from "@/lib/working/conditions";
 
 type GenerateResult = {
+  id: string;
+  createdAt: string;
   palette: AssembledPalette;
   ritual: string;
+  modelUsed: string;
   interpretation?: string;
+  replayed: boolean;
+  chargedCredits: number;
 };
 
 type WorkingListItem = {
@@ -27,7 +32,11 @@ type WorkingListItem = {
   created_at: string;
 };
 
-type Stage = "idle" | "loading" | "result" | "saving" | "saved";
+type Stage = "idle" | "loading" | "result" | "casting" | "saved";
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 function WorkingRow({ w }: { w: WorkingListItem }) {
   const hasCast = !!w.cast_at;
@@ -81,6 +90,7 @@ export default function TheWorkingPage() {
   const [error, setError] = useState<string | null>(null);
   const [workings, setWorkings] = useState<WorkingListItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
+  const requestIdRef = useRef<string | null>(null);
 
   const loadWorkings = useCallback(async () => {
     try {
@@ -104,52 +114,53 @@ export default function TheWorkingPage() {
     setResult(null);
     setSavedId(null);
     try {
+      const requestId = requestIdRef.current ?? crypto.randomUUID();
+      requestIdRef.current = requestId;
       const res = await fetch("/api/working/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ intention: intention.trim() }),
+        body: JSON.stringify({ intention: intention.trim(), requestId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Generation failed");
+      if (!res.ok) {
+        if (data.code === "METERING_SETTLEMENT_FAILED") {
+          loadWorkings();
+        }
+        if (
+          data.code !== "METERING_REQUEST_IN_PROGRESS" &&
+          data.code !== "METERING_SETTLEMENT_FAILED"
+        ) {
+          requestIdRef.current = null;
+        }
+        throw new Error(data.error || "Generation failed");
+      }
+      requestIdRef.current = null;
       setResult(data);
+      setSavedId(data.id);
       setStage("result");
-    } catch (err: any) {
-      setError(err.message);
+      loadWorkings();
+    } catch (err: unknown) {
+      setError(errorMessage(err, "Generation failed"));
       setStage("idle");
     }
   }
 
-  async function handleSave(andCast: boolean) {
-    if (!result || stage === "saving") return;
-    setStage("saving");
+  async function handleCast() {
+    if (!result || !savedId || stage === "casting") return;
+    setStage("casting");
     setError(null);
     try {
-      const saveRes = await fetch("/api/working/save", {
+      const castRes = await fetch(`/api/working/${savedId}/cast`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intent_text: intention,
-          palette: result.palette,
-          ritual: result.ritual,
-          model_used: "claude-haiku-4-5",
-        }),
       });
-      const saveData = await saveRes.json();
-      if (!saveRes.ok) throw new Error(saveData.error || "Save failed");
-
-      if (andCast) {
-        const castRes = await fetch(`/api/working/${saveData.id}/cast`, { method: "POST" });
-        if (!castRes.ok) {
-          const castData = await castRes.json();
-          throw new Error(castData.error || "Cast failed");
-        }
+      if (!castRes.ok) {
+        const castData = await castRes.json();
+        throw new Error(castData.error || "Cast failed");
       }
-
-      setSavedId(saveData.id);
       setStage("saved");
       loadWorkings();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(errorMessage(err, "Cast failed"));
       setStage("result");
     }
   }
@@ -159,6 +170,7 @@ export default function TheWorkingPage() {
     setResult(null);
     setSavedId(null);
     setError(null);
+    requestIdRef.current = null;
   }
 
   return (
@@ -197,8 +209,13 @@ export default function TheWorkingPage() {
               />
             </div>
 
+            <p id="working-credit-cost" className="text-xs text-zinc-500 leading-relaxed">
+              Launch cost: <span className="font-medium text-zinc-300">1 Prism Credit</span>.
+              Your credit is returned automatically if generation or saving fails.
+            </p>
+
             {error && (
-              <p className="text-sm text-red-400 bg-red-900/10 border border-red-800/30 rounded-lg px-4 py-2.5">
+              <p role="alert" className="text-sm text-red-400 bg-red-900/10 border border-red-800/30 rounded-lg px-4 py-2.5">
                 {error}
               </p>
             )}
@@ -212,7 +229,8 @@ export default function TheWorkingPage() {
               <button
                 type="submit"
                 disabled={!intention.trim()}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
+                aria-describedby="working-credit-cost"
+                className="flex min-h-11 cursor-pointer items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
               >
                 <Sparkles size={14} />
                 Begin the working
@@ -221,7 +239,7 @@ export default function TheWorkingPage() {
           </form>
         )}
 
-        {(stage === "result" || stage === "saving") && result && (
+        {(stage === "result" || stage === "casting") && result && (
           <div className="space-y-5">
             {result.interpretation && (
               <div className="text-xs text-zinc-500 font-mono bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-2.5 leading-relaxed">
@@ -240,13 +258,17 @@ export default function TheWorkingPage() {
 
             <PalettePanel palette={result.palette} />
 
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              Saved automatically as a private draft before the credit was settled.
+            </p>
+
             <div className="flex items-center gap-3 flex-wrap pt-1">
               <button
-                onClick={() => handleSave(true)}
-                disabled={stage === "saving"}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
+                onClick={handleCast}
+                disabled={stage === "casting"}
+                className="flex min-h-11 cursor-pointer items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
               >
-                {stage === "saving" ? (
+                {stage === "casting" ? (
                   <Loader2 size={14} className="animate-spin" />
                 ) : (
                   <CalendarCheck size={14} />
@@ -254,30 +276,25 @@ export default function TheWorkingPage() {
                 I cast this
               </button>
 
-              <button
-                onClick={() => handleSave(false)}
-                disabled={stage === "saving"}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-200 font-medium text-sm transition-colors"
+              <Link
+                href={`/workbench/the-working/${savedId}`}
+                className="flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-sm transition-colors"
               >
-                {stage === "saving" ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <BookMarked size={14} />
-                )}
-                Save as draft
-              </button>
+                <BookMarked size={14} />
+                View saved draft
+              </Link>
 
               <button
                 onClick={handleReset}
-                disabled={stage === "saving"}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-zinc-500 hover:text-zinc-300 font-medium text-sm transition-colors"
+                disabled={stage === "casting"}
+                className="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg text-zinc-500 hover:text-zinc-300 font-medium text-sm transition-colors"
               >
                 <RotateCcw size={13} />
                 New working
               </button>
 
               {error && (
-                <p className="text-sm text-red-400 w-full">{error}</p>
+                <p role="alert" className="text-sm text-red-400 w-full">{error}</p>
               )}
             </div>
           </div>
@@ -305,7 +322,7 @@ export default function TheWorkingPage() {
 
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-sm transition-colors"
+              className="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-sm transition-colors"
             >
               <RotateCcw size={13} />
               New working

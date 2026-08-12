@@ -166,6 +166,41 @@ async function inspect() {
   );
 }
 
+async function resetPassword() {
+  const password = required("LEAN_L2_LOCAL_TEST_USER_PASSWORD");
+  const fixture = await ownedFixture();
+  if (!fixture) throw new Error("Fixture user is missing");
+
+  const { error: updateError } = await service.auth.admin.updateUserById(
+    fixture.account.id,
+    { password },
+  );
+  if (updateError) throw updateError;
+
+  const publicClient = createClient(
+    url,
+    required("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+  const { data: signIn, error: signInError } =
+    await publicClient.auth.signInWithPassword({
+      email: FIXTURE_EMAIL,
+      password,
+    });
+  if (signInError || signIn.user?.id !== fixture.account.id) {
+    throw signInError ?? new Error("Fixture password reset verification failed");
+  }
+  await publicClient.auth.signOut();
+
+  console.log(
+    JSON.stringify({
+      result: "fixture-password-reset",
+      userFingerprint: fingerprint(fixture.account.id),
+      passwordSignInVerified: true,
+    }),
+  );
+}
+
 async function cleanup() {
   const fixture = await ownedFixture();
   if (!fixture) {
@@ -200,9 +235,10 @@ async function main() {
   const [command] = process.argv.slice(2);
   if (command === "setup") return setup();
   if (command === "inspect") return inspect();
+  if (command === "reset-password") return resetPassword();
   if (command === "cleanup") return cleanup();
   throw new Error(
-    "Usage: lean-l2-local-test-user.ts <setup|inspect|cleanup>",
+    "Usage: lean-l2-local-test-user.ts <setup|inspect|reset-password|cleanup>",
   );
 }
 

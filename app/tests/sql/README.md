@@ -1,5 +1,46 @@
 # Staging SQL integration tests
 
+## LEAN-L4-01 shared metering foundation
+
+With the isolated local Supabase stack running, apply the L3 dependencies and
+the inert L4-01 metering migration, then run the database gate from `app/`:
+
+```powershell
+npm.cmd run test:membership-metering-schema:local
+```
+
+The runner accepts only `local`, discovers exactly one local Supabase database
+container, reruns the forward migration, and never accepts a database URL. Its
+rollback story proves forced RLS and service-only authority, request replay and
+conflict behavior, plan matching, concurrency and velocity limits, shadow and
+enforce lifecycles, exact failure release, privacy-safe telemetry, temporary
+override auditing, paid-plan isolation, and UTC-month reset. A separate real
+two-session race leaves exactly one Reader request in flight at the budget edge
+and safely pauses the other; both fixture stories finish at zero residue. No
+application route is connected or enabled by this runner.
+
+## LEAN-L4-06 enabled-generation full story
+
+The L4-06 SQL files support an explicitly authorized, local-only authenticated
+browser/API/provider story. They are not a general runner and must never be
+used against a remote database:
+
+- `lean-l4-06-full-story-setup.sql` requires the exact marker-owned local
+  Reader fixture, proves no earlier L3/L4 residue exists, backs up its billing
+  projection, creates exact tagged graph context, and prepares a disposable
+  credit balance;
+- `lean-l4-06-full-story-drain.sql` creates the exact tagged adjustment needed
+  to exercise the insufficient-credit boundary; and
+- `lean-l4-06-full-story-cleanup.sql` deletes all packet-owned ledger,
+  metering, result, and graph rows, restores the original billing projection,
+  drops the temporary backup schema, and asserts zero residue while retaining
+  the marker-owned account.
+
+External provider calls require separate approval and must contain only
+synthetic fixture prompts/context. The cleanup script is intentionally exact
+and marker-guarded; it must be run after success or failure before the local
+fixture is reused.
+
 ## LEAN-L3-05 credit-core phase gate
 
 With the isolated local Supabase stack running, execute the complete L3

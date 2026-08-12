@@ -7,6 +7,31 @@ import { getDefaultOpenRouterModel, getOpenRouterClient } from './openrouter-cli
 
 export { type AIProvider, type AIModel, type ChatMessage, type CompletionOptions, type AIResponse };
 
+function awaitWithAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+    if (!signal) return promise;
+    signal.throwIfAborted();
+    return new Promise<T>((resolve, reject) => {
+        const onAbort = () => {
+            reject(
+                signal.reason instanceof Error
+                    ? signal.reason
+                    : new DOMException('The operation was aborted', 'AbortError'),
+            );
+        };
+        signal.addEventListener('abort', onAbort, { once: true });
+        promise.then(
+            (value) => {
+                signal.removeEventListener('abort', onAbort);
+                resolve(value);
+            },
+            (error: unknown) => {
+                signal.removeEventListener('abort', onAbort);
+                reject(error);
+            },
+        );
+    });
+}
+
 class AIOrchestrator {
     private openai: OpenAI | null = null;
     private anthropic: Anthropic | null = null;
@@ -70,6 +95,7 @@ class AIOrchestrator {
         const provider = this.getProviderForModel(model);
 
         try {
+            options.signal?.throwIfAborted();
             switch (provider) {
                 case 'openrouter':
                     return await this.openRouterChat(messages, { ...options, model });
@@ -82,8 +108,14 @@ class AIOrchestrator {
                 default:
                     throw new Error(`Unsupported provider: ${provider}`);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(`AI Error (${model} / ${provider}):`, error);
+
+            if (options.signal?.aborted) {
+                throw options.signal.reason instanceof Error
+                    ? options.signal.reason
+                    : error;
+            }
 
             // Prefer a free OpenRouter fallback before touching paid provider defaults.
             const fallbackModel = getDefaultOpenRouterModel();
@@ -96,16 +128,27 @@ class AIOrchestrator {
     }
 
     private async openRouterChat(messages: ChatMessage[], options: CompletionOptions): Promise<AIResponse> {
-        const response = await getOpenRouterClient().chat.completions.create({
-            model: options.model || getDefaultOpenRouterModel(),
-            messages: messages.map(m => ({ role: m.role, content: m.content })),
-            temperature: options.temperature ?? 0.7,
-            max_tokens: options.maxTokens,
-            response_format: options.jsonMode ? { type: 'json_object' } : undefined,
-        });
+        const response = await getOpenRouterClient().chat.completions.create(
+            {
+                model: options.model || getDefaultOpenRouterModel(),
+                messages: messages.map(m => ({ role: m.role, content: m.content })),
+                temperature: options.temperature ?? 0.7,
+                max_tokens: options.maxTokens,
+                response_format: options.jsonMode ? { type: 'json_object' } : undefined,
+            },
+            { signal: options.signal },
+        );
+        const usage = response.usage as
+            | (typeof response.usage & { cost?: number })
+            | undefined;
 
         return {
             content: response.choices[0].message.content || '',
+            providerRequestId: response.id,
+            estimatedCostUsd:
+                typeof usage?.cost === 'number' && Number.isFinite(usage.cost)
+                    ? usage.cost
+                    : null,
             usage: {
                 promptTokens: response.usage?.prompt_tokens || 0,
                 completionTokens: response.usage?.completion_tokens || 0,
@@ -117,16 +160,20 @@ class AIOrchestrator {
     }
 
     private async openaiChat(messages: ChatMessage[], options: CompletionOptions): Promise<AIResponse> {
-        const response = await this.getOpenAIClient().chat.completions.create({
-            model: options.model || 'gpt-4o',
-            messages: messages.map(m => ({ role: m.role, content: m.content })),
-            temperature: options.temperature ?? 0.7,
-            max_tokens: options.maxTokens,
-            response_format: options.jsonMode ? { type: 'json_object' } : undefined,
-        });
+        const response = await this.getOpenAIClient().chat.completions.create(
+            {
+                model: options.model || 'gpt-4o',
+                messages: messages.map(m => ({ role: m.role, content: m.content })),
+                temperature: options.temperature ?? 0.7,
+                max_tokens: options.maxTokens,
+                response_format: options.jsonMode ? { type: 'json_object' } : undefined,
+            },
+            { signal: options.signal },
+        );
 
         return {
             content: response.choices[0].message.content || '',
+            providerRequestId: response.id,
             usage: {
                 promptTokens: response.usage?.prompt_tokens || 0,
                 completionTokens: response.usage?.completion_tokens || 0,
@@ -141,17 +188,20 @@ class AIOrchestrator {
         const systemMessage = messages.find(m => m.role === 'system')?.content;
         const userMessages = messages.filter(m => m.role !== 'system');
 
-        const response = await this.getAnthropicClient().messages.create({
-            model: (options.model as any) || 'claude-sonnet-5',
-            system: systemMessage,
-            messages: userMessages.map(m => ({
-                role: m.role as 'user' | 'assistant',
-                content: m.content
-            })),
-            max_tokens: options.maxTokens || 1024,
-            // claude-sonnet-5 and the Opus 4.6+ family reject an explicit `temperature` outright
-            ...(options.temperature !== undefined ? { temperature: options.temperature } : {}),
-        });
+        const response = await this.getAnthropicClient().messages.create(
+            {
+                model: options.model || 'claude-sonnet-5',
+                system: systemMessage,
+                messages: userMessages.map(m => ({
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content
+                })),
+                max_tokens: options.maxTokens || 1024,
+                // claude-sonnet-5 and the Opus 4.6+ family reject an explicit `temperature` outright
+                ...(options.temperature !== undefined ? { temperature: options.temperature } : {}),
+            },
+            { signal: options.signal },
+        );
 
         // Adaptive thinking (on by default on claude-sonnet-5+) puts a `thinking` block
         // before the `text` block, so the text isn't necessarily at index 0.
@@ -160,6 +210,7 @@ class AIOrchestrator {
 
         return {
             content,
+            providerRequestId: response.id,
             usage: {
                 promptTokens: response.usage.input_tokens,
                 completionTokens: response.usage.output_tokens,
@@ -171,6 +222,7 @@ class AIOrchestrator {
     }
 
     private async googleChat(messages: ChatMessage[], options: CompletionOptions): Promise<AIResponse> {
+        options.signal?.throwIfAborted();
         const modelId = options.model || 'gemini-1-5-pro';
         const model = this.getGoogleClient().getGenerativeModel({ model: modelId });
 
@@ -186,7 +238,7 @@ class AIOrchestrator {
         const lastMessage = messages[messages.length - 1].content;
 
         const chat = model.startChat({
-            history: chatHistory as any,
+            history: chatHistory,
             generationConfig: {
                 maxOutputTokens: options.maxTokens,
                 temperature: options.temperature ?? 0.7,
@@ -195,7 +247,13 @@ class AIOrchestrator {
             systemInstruction: systemMessage,
         });
 
-        const result = await chat.sendMessage(lastMessage);
+        // The Google SDK does not accept an AbortSignal on this method. Racing
+        // still releases the metering hold promptly if the browser leaves.
+        const result = await awaitWithAbort(
+            chat.sendMessage(lastMessage),
+            options.signal,
+        );
+        options.signal?.throwIfAborted();
         const response = await result.response;
 
         // Gemini SDK doesn't always provide token usage in the same way as OpenAI

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Sparkles, Send, Loader2, Info, BookOpen } from 'lucide-react';
+import { Sparkles, Send, Info } from 'lucide-react';
 import Link from 'next/link';
 
 import DocumentationLink from "@/components/DocumentationLink";
@@ -15,11 +15,9 @@ import StelloquyOrb from '@/components/ui/StelloquyOrb';
 import LensIntensitySelector from '@/components/parallax/LensIntensitySelector';
 import LensPresets from '@/components/parallax/LensPresets';
 import ResponseLengthSlider from '@/components/parallax/ResponseLengthSlider';
-import RateLimitDisplay from '@/components/parallax/RateLimitDisplay';
-import PremiumGate from '@/components/parallax/PremiumGate';
 import ConversationHistory from '@/components/parallax/ConversationHistory';
 import { getAllLenses } from '@/lib/parallax/lenses';
-import { LensWeights, ResponseLength } from '@/lib/parallax/lens-orchestrator';
+import type { LensWeights, MultiLensResponse } from '@/lib/parallax/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Save, Check } from 'lucide-react';
 
@@ -43,6 +41,36 @@ const DEFAULT_WEIGHTS: LensWeights = {
   mathematical: 30, // Standard
 };
 
+interface ClientSevenLensesResponse extends MultiLensResponse {
+  id?: string;
+  createdAt?: string;
+  responseLength?: 'short' | 'medium' | 'long';
+  resultUrl?: string;
+}
+
+interface HistoryConversation {
+  id: string;
+  query: string;
+  lensWeights: LensWeights;
+  synthesis: string;
+  response?: unknown;
+  sources?: MultiLensResponse['sources'];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isClientResponse(value: unknown): value is ClientSevenLensesResponse {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.query === 'string' &&
+    typeof value.synthesis === 'string' &&
+    Array.isArray(value.responses) &&
+    Array.isArray(value.sources)
+  );
+}
+
 function ParallaxEngineContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -50,35 +78,24 @@ function ParallaxEngineContent() {
   const queryInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [lensWeights, setLensWeights] = useState<LensWeights>(DEFAULT_WEIGHTS);
   const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('short');
-  const [response, setResponse] = useState<any>(null);
+  const [response, setResponse] = useState<ClientSevenLensesResponse | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savingDefault, setSavingDefault] = useState(false);
   const [defaultSaved, setDefaultSaved] = useState(false);
-  const [rateLimitLoading, setRateLimitLoading] = useState(true);
-  const [rateLimit, setRateLimit] = useState<{
-    remaining: number;
-    limit: number;
-    resetDate: Date | string;
-    isPremium: boolean;
-    tier?: string;
-    trial?: { isInTrial: boolean; trialExpired: boolean; daysRemaining: number; trialEndsAt: string | null };
-  } | null>(null);
   const [currentResponseId, setCurrentResponseId] = useState<string | null>(null);
   const [historyRefreshTrigger, setHistoryRefreshTrigger] = useState(0);
+  const retryRequestIdRef = useRef<string | null>(null);
+  const activeRequestControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    fetchRateLimit();
-    loadUserDefaults();
-  }, []);
-
-  // Load user's saved defaults
-  async function loadUserDefaults() {
     if (!user) return;
+    let cancelled = false;
 
-    try {
-      const res = await fetch('/api/user/parallax-preferences');
-      if (res.ok) {
+    async function loadUserDefaults() {
+      try {
+        const res = await fetch('/api/user/parallax-preferences');
+        if (!res.ok || cancelled) return;
         const data = await res.json();
         if (data.preferences?.lensWeights) {
           setLensWeights(data.preferences.lensWeights);
@@ -86,12 +103,20 @@ function ParallaxEngineContent() {
         if (data.preferences?.responseLength) {
           setResponseLength(data.preferences.responseLength);
         }
+      } catch (err) {
+        console.error('Error loading user defaults:', err);
       }
-    } catch (err) {
-      console.error('Error loading user defaults:', err);
-      // Silently fail - use system defaults
     }
-  }
+
+    void loadUserDefaults();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    return () => activeRequestControllerRef.current?.abort();
+  }, []);
 
   // Save current configuration as default
   async function saveAsDefault() {
@@ -146,20 +171,6 @@ function ParallaxEngineContent() {
     }
   }, [searchParams]);
 
-  async function fetchRateLimit() {
-    try {
-      const res = await fetch('/api/parallax/rate-limit');
-      if (res.ok) {
-        const data = await res.json();
-        setRateLimit(data);
-      }
-    } catch (err) {
-      console.error('Error fetching rate limit:', err);
-    } finally {
-      setRateLimitLoading(false);
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -178,19 +189,23 @@ function ParallaxEngineContent() {
     setError(null);
     setResponse(null);
     setIsStreaming(true);
+    const requestId = retryRequestIdRef.current ?? crypto.randomUUID();
+    retryRequestIdRef.current = requestId;
+    const requestController = new AbortController();
+    activeRequestControllerRef.current = requestController;
 
     try {
       const res = await fetch('/api/parallax/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, lensWeights, responseLength }),
+        body: JSON.stringify({ query, lensWeights, responseLength, requestId }),
+        signal: requestController.signal,
       });
 
       if (res.status === 429) {
         const data = await res.json();
         setError(`Rate limit exceeded. ${data.remaining} queries remaining.`);
         setIsStreaming(false);
-        await fetchRateLimit();
         return;
       }
 
@@ -203,7 +218,8 @@ function ParallaxEngineContent() {
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let finalResponse: any = null;
+      let finalResponse: ClientSevenLensesResponse | null = null;
+      let streamError: { message: string; code?: string } | null = null;
 
       if (!reader) {
         throw new Error('No response stream');
@@ -219,51 +235,79 @@ function ParallaxEngineContent() {
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
+            let data: Record<string, unknown>;
             try {
-              const data = JSON.parse(line.slice(6));
+              const parsed: unknown = JSON.parse(line.slice(6));
+              if (!isRecord(parsed)) continue;
+              data = parsed;
 
-              if (data.type === 'done' && data.response) {
+              if (data.type === 'done' && isClientResponse(data.response)) {
                 finalResponse = data.response;
                 setResponse(finalResponse);
                 setIsStreaming(false);
-                setCurrentResponseId(null); // Clear history selection for new response
-                // Save conversation to history
-                saveConversationToHistory(query, lensWeights, finalResponse);
+                setCurrentResponseId(finalResponse.id ?? null);
+                retryRequestIdRef.current = null;
+                void saveConversationToHistory(query, lensWeights, finalResponse);
               } else if (data.type === 'synthesis') {
-                // Update synthesis immediately
-                setResponse((prev: any) => ({
+                // The server emits content only after durable persistence and settlement.
+                setResponse((prev) => ({
                   ...(prev || { query, responses: [], sources: [], synthesis: '' }),
                   query: query, // Ensure query is set
-                  synthesis: data.content || '',
-                  sources: data.sources || prev?.sources || [],
+                  synthesis: typeof data.content === 'string' ? data.content : '',
+                  sources: Array.isArray(data.sources) ? data.sources : (prev?.sources || []),
                 }));
               } else if (data.type === 'lens_placeholder') {
                 // Lens placeholder - will be loaded on demand
                 // No action needed, ResponseStream will handle it
               } else if (data.type === 'error') {
-                throw new Error(data.message);
+                streamError = {
+                  message: typeof data.message === 'string' ? data.message : 'Failed to get response',
+                  code: typeof data.code === 'string' ? data.code : undefined,
+                };
               }
             } catch (err) {
               console.error('Error parsing SSE data:', err);
             }
           }
         }
+
+        if (streamError) break;
       }
 
-      // Refresh rate limit after query
-      await fetchRateLimit();
+      if (streamError) {
+        if (streamError.code === 'METERING_SETTLEMENT_FAILED') {
+          setHistoryRefreshTrigger((previous) => previous + 1);
+        }
+        if (
+          streamError.code !== 'METERING_SETTLEMENT_FAILED' &&
+          streamError.code !== 'METERING_REQUEST_IN_PROGRESS'
+        ) {
+          retryRequestIdRef.current = null;
+        }
+        throw new Error(streamError.message);
+      }
+      if (!finalResponse) {
+        throw new Error('The stream ended before the saved analysis arrived. Retry to reopen it safely.');
+      }
+
     } catch (err) {
       console.error('Error submitting query:', err);
       setError(err instanceof Error ? err.message : 'Failed to get response');
       setIsStreaming(false);
+    } finally {
+      if (activeRequestControllerRef.current === requestController) {
+        activeRequestControllerRef.current = null;
+      }
     }
   }
 
   function handlePresetSelect(weights: LensWeights) {
+    retryRequestIdRef.current = null;
     setLensWeights(weights);
   }
 
   function handleLensChange(lensId: keyof LensWeights, value: number) {
+    retryRequestIdRef.current = null;
     setLensWeights(prev => ({
       ...prev,
       [lensId]: value,
@@ -274,49 +318,43 @@ function ParallaxEngineContent() {
   async function saveConversationToHistory(
     query: string,
     lensWeights: LensWeights,
-    response: any
+    response: ClientSevenLensesResponse
   ) {
     if (!response || !response.synthesis) return;
 
     const conversationEntry = {
-      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: response.id,
       query,
       lensWeights,
       synthesis: response.synthesis,
       responsePreview: response.synthesis.substring(0, 150),
       response: response, // Save full response object
-      timestamp: new Date(),
+      timestamp: response.createdAt || new Date(),
       sources: response.sources || [],
     };
 
     // Save to localStorage immediately
-    const localKey = user ? `convergence_history_${user.id}` : 'convergence_history_guest';
+    const localKey = user ? `parallax_history_${user.id}` : 'parallax_history_guest';
     if (typeof window !== 'undefined') {
       const existing = localStorage.getItem(localKey);
-      const history = existing ? JSON.parse(existing) : [];
+      let history: unknown[] = [];
+      try {
+        history = existing ? JSON.parse(existing) : [];
+        if (!Array.isArray(history)) history = [];
+      } catch {
+        history = [];
+      }
       history.unshift(conversationEntry);
       // Keep only last 50 entries
       const limited = history.slice(0, 50);
       localStorage.setItem(localKey, JSON.stringify(limited));
     }
 
-    // Save to database if user is authenticated
+    // Add the already-durable result to unified search if authenticated.
     if (user) {
       try {
-        // 1. Save to Project Parallax specific history
-        await fetch('/api/parallax/history', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query,
-            lensWeights,
-            response: JSON.stringify(response),
-            synthesis: response.synthesis,
-            sources: response.sources || [],
-          }),
-        });
-
-        // 2. Save to Unified Search history
+        // The metered endpoint already owns durable Parallax persistence.
+        // This separate write only makes the saved result discoverable in unified search.
         await fetch('/api/search/history', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -342,7 +380,7 @@ function ParallaxEngineContent() {
   }
 
   // Handle conversation selection from history
-  function handleSelectConversation(conversation: any) {
+  function handleSelectConversation(conversation: HistoryConversation) {
     setQuery(conversation.query);
     setLensWeights(conversation.lensWeights);
 
@@ -350,7 +388,7 @@ function ParallaxEngineContent() {
     if (conversation.response) {
       try {
         // Ensure response has the correct structure
-        let responseData = conversation.response;
+        let responseData: unknown = conversation.response;
 
         // Parse if it's a string
         if (typeof responseData === 'string') {
@@ -362,11 +400,13 @@ function ParallaxEngineContent() {
           }
         }
 
-        if (responseData) {
+        if (isRecord(responseData)) {
           // Ensure it has all required fields matching ResponseStream interface
           const formattedResponse = {
             query: conversation.query,
-            synthesis: responseData.synthesis || conversation.synthesis || '',
+            synthesis: typeof responseData.synthesis === 'string'
+              ? responseData.synthesis
+              : conversation.synthesis,
             responses: Array.isArray(responseData.responses) ? responseData.responses : [],
             sources: Array.isArray(responseData.sources)
               ? responseData.sources
@@ -418,12 +458,6 @@ function ParallaxEngineContent() {
   // Memoize lenses array - getAllLenses() returns a new array on every call
   const lenses = useMemo(() => getAllLenses(), []);
 
-  // Memoize totalWeight calculation - recalculated on every render otherwise
-  const totalWeight = useMemo(
-    () => Object.values(lensWeights).reduce((sum, w) => sum + w, 0),
-    [lensWeights]
-  );
-
   return (
     <div className="flex min-h-screen flex-col bg-black selection:bg-amber-500/30">
       <Header />
@@ -460,32 +494,17 @@ function ParallaxEngineContent() {
           </div>
         </div>
 
-        {/* Rate Limit Display */}
-        {rateLimit && (
-          <div className="mb-6">
-            <RateLimitDisplay
-              remaining={rateLimit.remaining}
-              limit={rateLimit.limit}
-              resetDate={rateLimit.resetDate}
-              isPremium={rateLimit.isPremium}
-              tier={rateLimit.tier}
-            />
-          </div>
-        )}
-
-        <PremiumGate
-          isPremium={rateLimit?.isPremium || false}
-          rateLimitRemaining={rateLimitLoading ? 1 : (rateLimit?.remaining || 0)}
-          limit={rateLimit?.limit}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: Lens Sliders */}
             <div className="lg:col-span-1 space-y-6">
               {/* Response Length Slider */}
               <div>
                 <ResponseLengthSlider
                   value={responseLength}
-                  onChange={setResponseLength}
+                  onChange={(value) => {
+                    retryRequestIdRef.current = null;
+                    setResponseLength(value);
+                  }}
                   disabled={isStreaming}
                 />
               </div>
@@ -559,7 +578,10 @@ function ParallaxEngineContent() {
                     id="query"
                     ref={queryInputRef}
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                      retryRequestIdRef.current = null;
+                      setQuery(e.target.value);
+                    }}
                     disabled={isStreaming}
                     rows={4}
                     className="w-full px-4 py-3 bg-zinc-900/50 border border-amber-900/20 rounded-lg text-amber-100 placeholder-amber-100/40 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
@@ -568,15 +590,20 @@ function ParallaxEngineContent() {
                 </div>
 
                 {error && (
-                  <div className="p-3 bg-red-900/20 border border-red-600/30 rounded-lg">
+                  <div role="alert" className="p-3 bg-red-900/20 border border-red-600/30 rounded-lg">
                     <p className="text-sm text-red-400">{error}</p>
                   </div>
                 )}
 
+                <p className="text-sm text-amber-100/65">
+                  {responseLength === 'long' ? 'Long analysis: 3 Prism Credits' : 'Standard analysis: 2 Prism Credits'}.
+                  {' '}Your question stays here if the request fails.
+                </p>
+
                 <button
                   type="submit"
                   disabled={isStreaming || !query.trim()}
-                  className="w-full px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="min-h-11 w-full px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   {isStreaming ? (
                     <>
@@ -586,7 +613,7 @@ function ParallaxEngineContent() {
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      Analyze
+                      Analyze · {responseLength === 'long' ? '3' : '2'} Prism Credits
                     </>
                   )}
                 </button>
@@ -597,9 +624,8 @@ function ParallaxEngineContent() {
                 <ResponseStream
                   response={response}
                   isStreaming={isStreaming}
-                  query={query}
                   lensWeights={lensWeights}
-                  responseLength={responseLength}
+                  parentResponseId={currentResponseId}
                 />
               </div>
 
@@ -611,8 +637,7 @@ function ParallaxEngineContent() {
                 refreshTrigger={historyRefreshTrigger}
               />
             </div>
-          </div>
-        </PremiumGate>
+        </div>
       </main>
 
       <Footer />
