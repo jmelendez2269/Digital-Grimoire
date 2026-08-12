@@ -11,6 +11,7 @@
 
 ## Recent Commits (for context)
 
+- `511f694` Complete Lean Membership Phase L4
 - `1344eb1` Complete Lean Membership Phase L3
 - `a93c6b7` Complete Lean Membership Phase L2
 - `5191f12` Record lean membership plans and verification
@@ -26,7 +27,7 @@
 
 Lean membership Phase L4 is complete locally at 21/21 points. Total verified launch progress is 93/114 (81.6%), and `LEAN-L5-01` is the next ready packet. The shared server-only metering adapter now controls The Working (1 credit), Seven Lenses short/medium (2), long (3), and an owned one-lens expansion (1), with durable replay, reserve/commit/release settlement, privacy-safe provider usage, concurrency/velocity controls, Reader spend protection, and global/per-action kills. `LEAN-L4-06` passed an authenticated local browser/API/PostgreSQL/real-provider story across success, replay, concurrency, provider failure, insufficient balance, controls, and eleven legacy bypass probes. The retained marker-owned local Reader was restored exactly with zero L4 residue. No production deployment, remote migration, Stripe action, paid offer, course release, or public metered-action enablement occurred.
 
-Publishing is not complete. The GitHub CLI default account has an invalid token and requires `gh auth login -h github.com`. The worktree also contains unrelated course-parser and local Supabase configuration changes that must not be staged with the membership work unless Jen explicitly changes the scope.
+Phase L4 was committed as `511f694` (`Complete Lean Membership Phase L4`) and pushed to `origin/agent/lean-membership-l2`. Existing draft PR [#5](https://github.com/jmelendez2269/Digital-Grimoire/pull/5) was updated in place as `Complete Lean Membership Phases L2-L4`; it remains intentionally stacked on `agent/lean-membership-l0-l1`. The worktree still contains unrelated course-parser and local Supabase configuration changes that were not included in the membership commit and must remain preserved unless Jen explicitly changes their scope.
 
 ## Codebase Understanding
 
@@ -96,7 +97,7 @@ Only Checkout and the three integrated metered route classes are configurable co
 
 ## Files Modified
 
-The intended publish scope is all accumulated L4 membership implementation, tests, migrations, evidence, and L4 handoffs. It includes:
+The published `511f694` scope is all accumulated L4 membership implementation, tests, migrations, evidence, and L4 handoffs. It includes:
 
 - `app/package.json`
 - `app/scripts/lean-l2-local-test-user.ts`
@@ -160,16 +161,15 @@ Do **not** stage these unrelated user/local-environment edits:
 
 ## Immediate Next Steps
 
-1. Restore GitHub CLI authentication with `gh auth login -h github.com`, then verify `gh auth status`.
-2. Confirm the intended publish scope is the accumulated L4 membership set above, including L4 handoffs, while excluding the four unrelated files.
-3. Stage explicit paths only, review `git diff --cached --stat` and `git diff --cached --check`, commit tersely (suggested: `Complete Lean Membership Phase L4`), push `agent/lean-membership-l2`, and open or update a draft PR targeting `develop`.
-4. Start `LEAN-L5-01`: inspect the shared safe catalog projection and current pricing surfaces before editing; keep Checkout and all public flags closed.
+1. Start `LEAN-L5-01`: inspect the shared safe catalog projection and every current public pricing surface before editing.
+2. Implement the exact Reader/Student/Scholar and conditionally Adept monthly pricing UI from the shared catalog, including the named Student launch course, Journal limits, tool-only value, optional-course positioning, and honest YouTube wording.
+3. Keep Checkout, paid offers, member-course release, production metering, and every public activation flag closed while verifying responsive, keyboard, accessibility, and stale-copy removal behavior.
+4. Preserve the four unrelated dirty-worktree files and verify draft PR #5 checks/review separately from L5 implementation.
 
 ## Blockers/Open Questions
 
-- [ ] GitHub CLI authentication is expired. User action is required before push/PR discovery or creation.
-- [ ] Confirm whether the four untracked earlier L4 continuation handoffs plus this handoff belong in the L4 commit. Recommended: include them as the existing handoff chain.
-- [ ] Confirm whether an existing PR already targets `develop` from `agent/lean-membership-l2` after GitHub authentication is restored; update it rather than creating a duplicate.
+- No current blocker for starting `LEAN-L5-01` locally.
+- Draft PR #5 is stacked on `agent/lean-membership-l0-l1`, not the repository default branch. Do not change that base without reviewing the existing membership branch chain with Jen.
 
 ## Deferred Items
 
@@ -189,13 +189,13 @@ Do **not** stage these unrelated user/local-environment edits:
 - Preserve the unrelated course-parser changes and local Supabase port/tool-version changes. Do not reset, stash, stage, or rewrite them.
 - The L4 real-provider authorization covered only synthetic prompts/tagged local context. It does not extend to customer content or future provider runs.
 - The marker-owned Reader account intentionally remains in local Supabase for reuse. Its packet-generated credit/result data does not.
-- The current branch is already tracking `origin/agent/lean-membership-l2`; do not create a new branch unless Jen asks.
-- The branch has accumulated L2 and L3 commits. The pending commit should contain Phase L4 only.
+- The current branch tracks `origin/agent/lean-membership-l2`; Phase L4 commit `511f694` is pushed and included in draft PR #5.
+- The branch contains the Phase L2, L3, and L4 commits stacked over `agent/lean-membership-l0-l1`.
 
 ## Assumptions Made
 
-- `develop` remains the repository's default/PR base, based on `origin/develop` and the branch lineage; verify with GitHub after authentication.
-- The accumulated L4 implementation and its evidence/handoffs form one coherent commit and draft-PR update.
+- GitHub reports `main` as the repository default branch, while draft PR #5 intentionally uses `agent/lean-membership-l0-l1` as its stacked base.
+- The accumulated L4 implementation and its evidence/handoffs were published as one coherent commit plus this final handoff-state follow-up.
 - Local Supabase may remain running for future work, but no Next.js L4 test server should be active.
 
 ## Potential Gotchas
@@ -217,7 +217,7 @@ Do **not** stage these unrelated user/local-environment edits:
 - Chromium automation session: closed.
 - Next.js L4 server on port 3106: stopped; no listener remains.
 - Anthropic/OpenRouter: used only under the approved synthetic L4-06 boundary.
-- GitHub CLI: installed, but default account token invalid at handoff creation.
+- GitHub CLI: installed and authenticated as `jmelendez2269`; draft PR #5 is open.
 
 ## Active Processes
 
@@ -245,6 +245,7 @@ Names relevant to future local verification only; never record their values:
 - [L4-01 metering foundation evidence](../../docs/audits/lean-l4-01-metering-foundation-local-2026-08-11.md)
 - [L4-05 bypass-containment evidence](../../docs/audits/lean-l4-05-generation-bypass-containment-local-2026-08-12.md)
 - [L4 SQL test notes](../../app/tests/sql/README.md)
+- [Draft PR #5: Complete Lean Membership Phases L2-L4](https://github.com/jmelendez2269/Digital-Grimoire/pull/5)
 
 ---
 
