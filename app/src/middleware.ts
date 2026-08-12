@@ -2,9 +2,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  if (request.method === "GET" && pathname === "/api/membership/catalog") {
+    return NextResponse.next();
+  }
+
   if (
-    process.env.NODE_ENV === "development"
-    && request.nextUrl.pathname === "/dev/course-parser-preview"
+    process.env.NODE_ENV === "development" &&
+    (pathname === "/dev/course-parser-preview" ||
+      pathname === "/dev/membership-catalog")
   ) {
     return NextResponse.next();
   }

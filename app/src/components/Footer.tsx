@@ -63,6 +63,7 @@ export default function Footer() {
             <h3 className="text-[10px] font-mono font-bold text-amber-500/50 uppercase tracking-widest">Explore</h3>
             <div className="flex flex-col gap-2">
               <Link href="/courses" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Courses</Link>
+              <Link href="/pricing" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Membership</Link>
               <Link href="/library" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Library</Link>
               <Link href="/search" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Concept Search</Link>
               <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Knowledge Graph</Link>
@@ -124,4 +125,3 @@ export default function Footer() {
     </footer>
   );
 }
-

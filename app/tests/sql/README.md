@@ -1,5 +1,158 @@
 # Staging SQL integration tests
 
+## LEAN-L4-01 shared metering foundation
+
+With the isolated local Supabase stack running, apply the L3 dependencies and
+the inert L4-01 metering migration, then run the database gate from `app/`:
+
+```powershell
+npm.cmd run test:membership-metering-schema:local
+```
+
+The runner accepts only `local`, discovers exactly one local Supabase database
+container, reruns the forward migration, and never accepts a database URL. Its
+rollback story proves forced RLS and service-only authority, request replay and
+conflict behavior, plan matching, concurrency and velocity limits, shadow and
+enforce lifecycles, exact failure release, privacy-safe telemetry, temporary
+override auditing, paid-plan isolation, and UTC-month reset. A separate real
+two-session race leaves exactly one Reader request in flight at the budget edge
+and safely pauses the other; both fixture stories finish at zero residue. No
+application route is connected or enabled by this runner.
+
+## LEAN-L4-06 enabled-generation full story
+
+The L4-06 SQL files support an explicitly authorized, local-only authenticated
+browser/API/provider story. They are not a general runner and must never be
+used against a remote database:
+
+- `lean-l4-06-full-story-setup.sql` requires the exact marker-owned local
+  Reader fixture, proves no earlier L3/L4 residue exists, backs up its billing
+  projection, creates exact tagged graph context, and prepares a disposable
+  credit balance;
+- `lean-l4-06-full-story-drain.sql` creates the exact tagged adjustment needed
+  to exercise the insufficient-credit boundary; and
+- `lean-l4-06-full-story-cleanup.sql` deletes all packet-owned ledger,
+  metering, result, and graph rows, restores the original billing projection,
+  drops the temporary backup schema, and asserts zero residue while retaining
+  the marker-owned account.
+
+External provider calls require separate approval and must contain only
+synthetic fixture prompts/context. The cleanup script is intentionally exact
+and marker-guarded; it must be run after success or failure before the local
+fixture is reused.
+
+## LEAN-L3-05 credit-core phase gate
+
+With the isolated local Supabase stack running, execute the complete L3
+invariant, adversarial RLS, concurrency, settlement, and cleanup gate from
+`app/`:
+
+```powershell
+npm.cmd run test:membership-credit-gate:local
+```
+
+The runner accepts only `local` and never accepts a database URL. Its
+rollback-only fixture matrix independently recomputes every account from the
+active grant plus adjustments minus committed debits and pending reservations,
+then compares the result with the cached account and complete ledger deltas. It
+also inspects and exercises all five table ACL/RLS surfaces and all six L3
+function ACLs. A separate twenty-session race must produce exactly ten Reader
+reservations and ten safe insufficiency results; every winning hold is then
+released exactly once, leaving no pending reservation before exact fixture
+deletion and zero residue.
+
+## LEAN-L3-04 safe wallet summary and history
+
+With the isolated local Supabase stack running, apply the L3 dependencies and
+the service-only wallet projection, then execute its rollback-only privacy and
+lifecycle story from `app/`:
+
+```powershell
+npm.cmd run test:membership-wallet-schema:local
+```
+
+The runner accepts only `local` and never accepts a database URL. It verifies
+service-only execution, denial of authenticated table reads/writes, exact
+Reader balance and reset/expiry, allowlisted pending/history shapes, bounded
+history, ambiguous billing fail-closed behavior, release and stale-recovery
+projection, accounting mismatch rejection, migration rerun, and zero fixture
+residue. The separate `test:membership-wallet` suite verifies that the API
+derives scope only from `auth.getUser()` and strips unexpected fields.
+
+## LEAN-L0-02 authorization baseline
+
+`lean-l0-02-authorization-baseline.sql` captures the current customer-role
+authorization baseline without repairing it. The suite creates two synthetic
+non-admin users and all dependent rows inside one transaction, switches to the
+real `authenticated`/`anon` database roles, records secure expectations versus
+observed behavior, rolls back, and verifies zero fixture residue.
+
+Run the harness against the isolated local Supabase stack from `app/`:
+
+```powershell
+npm.cmd run test:authorization-baseline:local
+```
+
+Local results validate the harness only when the local migration ledger differs
+from the deployed ledger. They are not production evidence.
+
+## LEAN-L1-03 learner workbook Journal saves
+
+After starting the isolated local Supabase stack, run the forward-only Journal
+migration and its rollback-only fixture story from `app/`:
+
+```powershell
+npm.cmd run test:learner-journal:local
+npm.cmd run test:membership-billing-schema:local
+```
+
+The runner accepts only `local`, finds exactly one local Supabase database
+container, and never accepts a database URL. It proves PRE ownership, week and
+source identity, revision/replay behavior, owner-only reload visibility, the
+50-active-page Reader boundary, paid unlimited pages, and the no-loss downgrade
+rule. Its synthetic users, enrollments, courses, pages, and request rows roll
+back, followed by a zero-residue check.
+
+## LEAN-L0-03 permission hotfix
+
+After the local migration stack includes
+`20260810210000_lean_l0_03_permission_hotfix.sql`, run the complete forward,
+reversal, and forward-restoration check from `app/`:
+
+```powershell
+npm.cmd run test:permission-hotfix:local
+```
+
+The runner is local-only. It requires exactly one running local Supabase
+database container and never accepts a database URL. It proves:
+
+- all 48 L0-02 probes change from 11 secure passes / 37 failures to 48 / 0;
+- protected API-role table mutations and unintended definer-function execution
+  are absent;
+- shared reference reads, auth-trigger profile creation, and service-owned
+  profile/enrollment/cache/usage writes still work;
+- the reviewed reversal reproduces the 11 / 37 baseline locally;
+- reapplying the forward SQL restores 48 / 0; and
+- every fixture transaction leaves zero residue.
+
+The reversal snippet is not part of the migration chain. Its production guard
+exists for a separately approved emergency only; this runner supplies only the
+`local` target.
+
+For a live staging database that is confirmed distinct from production, use a
+database-owner connection and the explicit staging guard:
+
+```powershell
+psql.exe "$env:PRISMARIUM_STAGING_DATABASE_URL" `
+  --set=ON_ERROR_STOP=1 `
+  --set=prismarium_target=staging `
+  --file=app/tests/sql/lean-l0-02-authorization-baseline.sql
+```
+
+Never pass a production database URL. The SQL refuses targets other than
+`local` and `staging`, suppresses raw error messages, prints no fixture IDs or
+emails, and ends with `cleanup_residue = 0` when rollback succeeds.
+
 ## Course-path ballot
 
 `course-path-polls.staging.sql` exercises the real PostgreSQL functions added by

@@ -1,5 +1,13 @@
+import "server-only";
+
 import Anthropic from "@anthropic-ai/sdk";
 import type { AssembledPalette } from "./assemble";
+import {
+  WORKING_PROVIDER_MODEL,
+  workingProviderRequestOptions,
+  workingProviderUsage,
+  type WorkingProviderUsage,
+} from "./provider-usage";
 
 /**
  * The Working — ritual synthesis.
@@ -11,7 +19,7 @@ import type { AssembledPalette } from "./assemble";
  * (best quality/speed/cost balance from the bake-off).
  */
 
-export const WORKING_SYNTHESIS_MODEL = "claude-haiku-4-5";
+export const WORKING_SYNTHESIS_MODEL = WORKING_PROVIDER_MODEL;
 
 function trunc(s: string | null, n = 220) {
   if (!s) return "";
@@ -82,6 +90,8 @@ export function buildSynthesisPrompt(palette: AssembledPalette): { system: strin
 export type SynthesizedRitual = {
   text: string;
   model: string;
+  usage: WorkingProviderUsage;
+  moderated: boolean;
 };
 
 /**
@@ -90,7 +100,12 @@ export type SynthesizedRitual = {
  */
 export async function synthesizeRitual(
   palette: AssembledPalette,
-  opts: { model?: string; apiKey?: string } = {},
+  opts: {
+    model?: string;
+    apiKey?: string;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+  } = {},
 ): Promise<SynthesizedRitual> {
   const apiKey = opts.apiKey || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
@@ -99,12 +114,21 @@ export async function synthesizeRitual(
   const { system, user } = buildSynthesisPrompt(palette);
 
   const client = new Anthropic({ apiKey });
-  const res = await client.messages.create({
-    model,
-    max_tokens: 1400,
-    temperature: 1,
-    system,
-    messages: [{ role: "user", content: user }],
+  const res = await client.messages.create(
+    {
+      model,
+      max_tokens: 1400,
+      temperature: 1,
+      system,
+      messages: [{ role: "user", content: user }],
+    },
+    workingProviderRequestOptions(opts),
+  );
+
+  const usage = workingProviderUsage({
+    providerRequestId: res.id,
+    inputTokens: res.usage.input_tokens,
+    outputTokens: res.usage.output_tokens,
   });
 
   const text = res.content
@@ -113,5 +137,10 @@ export async function synthesizeRitual(
     .join("")
     .trim();
 
-  return { text: text || "", model };
+  return {
+    text: text || "",
+    model,
+    usage,
+    moderated: (res.stop_reason as string | null) === "refusal",
+  };
 }

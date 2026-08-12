@@ -11,12 +11,21 @@ import Footer from "@/components/Footer";
 import AvatarCropModal from "@/components/AvatarCropModal";
 import JournalNamePreference from "@/components/JournalNamePreference";
 import SubscriptionTab from "@/components/SubscriptionTab";
+import CreditWalletTab from "@/components/membership/CreditWalletTab";
 
-type TabType = "profile" | "subscription";
+type TabType = "profile" | "subscription" | "credits";
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error && error.message ? error.message : "Unknown error";
+}
 
 function ProfileContent() {
   const searchParams = useSearchParams();
-  const activeTab = (searchParams.get("tab") || "profile") as TabType;
+  const requestedTab = searchParams.get("tab");
+  const activeTab: TabType =
+    requestedTab === "subscription" || requestedTab === "credits"
+      ? requestedTab
+      : "profile";
   const { user, loading: authLoading, supabase } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -191,8 +200,8 @@ function ProfileContent() {
 
       setAvatarUrl(publicUrl);
       toast.success("Avatar updated successfully!");
-    } catch (err: any) {
-      toast.error("Error uploading avatar: " + (err.message || "Unknown error"));
+    } catch (err: unknown) {
+      toast.error("Error uploading avatar: " + errorMessage(err));
     } finally {
       setUploading(false);
       setImageToCrop(null);
@@ -231,8 +240,8 @@ function ProfileContent() {
 
       setAvatarUrl("");
       toast.success("Avatar removed successfully!");
-    } catch (err: any) {
-      toast.error("Error removing avatar: " + (err.message || "Unknown error"));
+    } catch (err: unknown) {
+      toast.error("Error removing avatar: " + errorMessage(err));
     } finally {
       setUploading(false);
     }
@@ -258,7 +267,7 @@ function ProfileContent() {
       } else {
         toast.success("Profile updated successfully!");
       }
-    } catch (err) {
+    } catch {
       toast.error("An unexpected error occurred");
     } finally {
       setSaving(false);
@@ -289,10 +298,10 @@ function ProfileContent() {
 
           {/* Tabs */}
           <div className="mb-8 border-b border-zinc-800">
-            <nav className="flex gap-1" aria-label="Tabs">
+            <nav className="grid grid-cols-3 gap-1" aria-label="Profile sections">
               <Link
                 href="/profile?tab=profile"
-                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "profile"
+                className={`flex min-h-11 items-center justify-center rounded-t-lg px-2 py-3 text-center text-sm font-medium transition-colors sm:px-6 ${activeTab === "profile"
                   ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
                   : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
                   }`}
@@ -301,12 +310,21 @@ function ProfileContent() {
               </Link>
               <Link
                 href="/profile?tab=subscription"
-                className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "subscription"
+                className={`flex min-h-11 items-center justify-center rounded-t-lg px-2 py-3 text-center text-sm font-medium transition-colors sm:px-6 ${activeTab === "subscription"
                   ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
                   : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
                   }`}
               >
                 Subscription
+              </Link>
+              <Link
+                href="/profile?tab=credits"
+                className={`flex min-h-11 items-center justify-center rounded-t-lg px-2 py-3 text-center text-sm font-medium transition-colors sm:px-6 ${activeTab === "credits"
+                  ? "bg-zinc-900/50 text-amber-100 border-t border-x border-zinc-800"
+                  : "text-zinc-400 hover:text-amber-100 hover:bg-zinc-900/30"
+                  }`}
+              >
+                Credits
               </Link>
             </nav>
           </div>
@@ -314,6 +332,8 @@ function ProfileContent() {
           {/* Tab Content */}
           {activeTab === "subscription" ? (
             <SubscriptionTab />
+          ) : activeTab === "credits" ? (
+            <CreditWalletTab />
           ) : (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {/* Profile Card */}

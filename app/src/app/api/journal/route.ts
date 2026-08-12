@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare page data
-    const pageData: any = {
+    const pageData: Record<string, unknown> = {
       user_id: user.id,
       title: title.trim(),
       content: content || { type: 'doc', content: [] },
@@ -167,6 +167,16 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating journal page:', error);
+      if (error.message?.includes('LEAN_L1_03:JOURNAL_LIMIT_REACHED')) {
+        return NextResponse.json(
+          {
+            error: 'Journal limit reached',
+            code: 'JOURNAL_LIMIT_REACHED',
+            message: 'Reader accounts can keep up to 50 active Journal pages. Archive a page before trying again.',
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         { error: 'Failed to create journal page' },
         { status: 500 }
