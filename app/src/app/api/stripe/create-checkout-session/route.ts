@@ -2,16 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import {
-  guardCheckoutOffer,
-  guardCommercialAction,
-} from "@/lib/commercial-availability";
-import {
   MembershipCheckoutError,
   createMembershipCheckout,
   parseMembershipCheckoutRequest,
   type CheckoutRequestRecord,
 } from "@/lib/membership/membership-checkout.server";
-import { resolveMembershipCheckoutOffer } from "@/lib/membership/membership-catalog.server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/utils";
@@ -39,9 +34,6 @@ function jsonResponse(
  * Price, amount, tier, mode, customer, or subscription authority.
  */
 export async function POST(request: NextRequest) {
-  const unavailable = guardCommercialAction("checkout");
-  if (unavailable) return unavailable;
-
   let checkoutRequest;
   try {
     checkoutRequest = parseMembershipCheckoutRequest(await request.json());
@@ -55,21 +47,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const serverOffer = resolveMembershipCheckoutOffer(
-    checkoutRequest.offerCode,
-  );
-  if (!serverOffer) {
-    return jsonResponse(
-      {
-        error: "This action is temporarily unavailable.",
-        code: "ACTION_TEMPORARILY_UNAVAILABLE",
-      },
-      503,
-    );
-  }
-  const unsupportedOffer = guardCheckoutOffer(serverOffer.stripePriceId);
-  if (unsupportedOffer) return unsupportedOffer;
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -81,11 +58,23 @@ export async function POST(request: NextRequest) {
 
   try {
     const serviceSupabase = createServiceClient();
-    const stripe = getStripeClient();
+    const profile = await serviceSupabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile.error || typeof profile.data?.role !== "string") {
+      return jsonResponse(
+        { error: "Checkout is temporarily unavailable", code: "CHECKOUT_UNAVAILABLE" },
+        503,
+      );
+    }
+
     const result = await createMembershipCheckout(
       {
         userId: user.id,
         userEmail: user.email ?? null,
+        userRole: profile.data.role,
         request: checkoutRequest,
       },
       {
@@ -182,6 +171,7 @@ export async function POST(request: NextRequest) {
           }
         },
         async createSession(input) {
+          const stripe = getStripeClient();
           const customer = input.customerId
             ? { customer: input.customerId }
             : { customer_email: input.customerEmail ?? undefined };

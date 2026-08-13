@@ -12,12 +12,18 @@ import {
   type CheckoutRequestRecord,
   type MembershipCheckoutDependencies,
 } from "../src/lib/membership/membership-checkout.server";
-import { resolveMembershipCheckoutOffer } from "../src/lib/membership/membership-catalog.server";
+import {
+  getSafeMembershipCatalog,
+  resolveMembershipCanaryCheckoutOfferForUser,
+  resolveMembershipCheckoutOffer,
+} from "../src/lib/membership/membership-catalog.server";
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const userId = "11111111-1111-4111-8111-111111111111";
 const requestId = "22222222-2222-4222-8222-222222222222";
 const environment = {
+  PRISMARIUM_ENABLED_COMMERCIAL_ACTIONS: "checkout",
+  PRISMARIUM_CHECKOUT_ALLOWED_PRICE_IDS: "price_student15,price_scholar39",
   PRISMARIUM_PAID_MEMBERSHIP_SALES_ENABLED: "true",
   PRISMARIUM_ENABLED_MEMBERSHIP_OFFERS:
     "student_founding_monthly,scholar_monthly",
@@ -30,6 +36,16 @@ const environment = {
   PRISMARIUM_STRIPE_PRICE_STUDENT_STANDARD_MONTHLY: "price_student19",
   PRISMARIUM_STRIPE_PRICE_SCHOLAR_MONTHLY: "price_scholar39",
   PRISMARIUM_STRIPE_PRICE_ADEPT_MONTHLY: "price_adept69",
+};
+const canaryEnvironment = {
+  ...environment,
+  PRISMARIUM_PAID_MEMBERSHIP_SALES_ENABLED: "false",
+  PRISMARIUM_ENABLED_MEMBERSHIP_OFFERS: "",
+  PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: "",
+  PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG: "",
+  PRISMARIUM_MEMBERSHIP_CANARY_ENABLED: "true",
+  PRISMARIUM_MEMBERSHIP_CANARY_USER_IDS: userId,
+  PRISMARIUM_MEMBERSHIP_CANARY_OFFERS: "student_founding_monthly",
 };
 
 function errorCode(error: unknown): string | undefined {
@@ -128,11 +144,142 @@ test("server catalog resolves only an enabled launch offer to a Price", () => {
   assert.equal(resolveMembershipCheckoutOffer("student_founding_monthly", {}), null);
 });
 
+test("one exact non-admin canary resolves only the founding offer while public sales stay closed", () => {
+  const safeCatalog = getSafeMembershipCatalog(canaryEnvironment);
+  assert.equal(safeCatalog.launch.paidSalesEnabled, false);
+  assert.equal(
+    safeCatalog.offers.some((offer) => offer.publiclyAvailable),
+    false,
+  );
+
+  assert.equal(
+    resolveMembershipCanaryCheckoutOfferForUser(
+      "student_founding_monthly",
+      userId,
+      "user",
+      canaryEnvironment,
+    )?.stripePriceId,
+    "price_student15",
+  );
+  assert.equal(
+    resolveMembershipCanaryCheckoutOfferForUser(
+      "scholar_monthly",
+      userId,
+      "user",
+      canaryEnvironment,
+    ),
+    null,
+  );
+});
+
+test("malformed, broader, non-canary, and admin canary configuration fails closed", async () => {
+  const invalidEnvironments = [
+    {
+      ...canaryEnvironment,
+      PRISMARIUM_MEMBERSHIP_CANARY_USER_IDS:
+        `${userId},33333333-3333-4333-8333-333333333333`,
+    },
+    {
+      ...canaryEnvironment,
+      PRISMARIUM_MEMBERSHIP_CANARY_USER_IDS: `${userId},${userId}`,
+    },
+    {
+      ...canaryEnvironment,
+      PRISMARIUM_MEMBERSHIP_CANARY_OFFERS:
+        "student_founding_monthly,scholar_monthly",
+    },
+    {
+      ...canaryEnvironment,
+      PRISMARIUM_MEMBERSHIP_CANARY_ENABLED: "TRUE",
+    },
+  ];
+
+  for (const candidate of invalidEnvironments) {
+    assert.equal(
+      resolveMembershipCanaryCheckoutOfferForUser(
+        "student_founding_monthly",
+        userId,
+        "user",
+        candidate,
+      ),
+      null,
+    );
+  }
+  assert.equal(
+    resolveMembershipCanaryCheckoutOfferForUser(
+      "student_founding_monthly",
+      "33333333-3333-4333-8333-333333333333",
+      "user",
+      canaryEnvironment,
+    ),
+    null,
+  );
+  assert.equal(
+    resolveMembershipCanaryCheckoutOfferForUser(
+      "student_founding_monthly",
+      userId,
+      "admin",
+      canaryEnvironment,
+    ),
+    null,
+  );
+
+  for (const candidate of [
+    canaryEnvironment,
+    { ...canaryEnvironment, PRISMARIUM_MEMBERSHIP_CANARY_USER_IDS: "not-a-uuid" },
+  ]) {
+    let touched = false;
+    const fixture = makeDependencies();
+    fixture.dependencies.environment = candidate;
+    fixture.dependencies.loadMembership = async () => {
+      touched = true;
+      return null;
+    };
+    const candidateUserId =
+      candidate === canaryEnvironment
+        ? "33333333-3333-4333-8333-333333333333"
+        : userId;
+    await assert.rejects(
+      createMembershipCheckout(
+        {
+          userId: candidateUserId,
+          userEmail: "reader@example.invalid",
+          userRole: "user",
+          request: { offerCode: "student_founding_monthly", requestId },
+        },
+        fixture.dependencies,
+      ),
+      (error) => errorCode(error) === "CHECKOUT_UNAVAILABLE",
+    );
+    assert.equal(touched, false);
+    assert.equal(fixture.getStripeCreateCalls(), 0);
+  }
+});
+
+test("the exact canary reaches one idempotent Checkout path without public sales", async () => {
+  const fixture = makeDependencies();
+  fixture.dependencies.environment = canaryEnvironment;
+  const result = await createMembershipCheckout(
+    {
+      userId,
+      userEmail: "reader@example.invalid",
+      userRole: "user",
+      request: { offerCode: "student_founding_monthly", requestId },
+    },
+    fixture.dependencies,
+  );
+
+  assert.equal(result.replayed, false);
+  assert.equal(fixture.getStripeCreateCalls(), 1);
+  assert.equal(fixture.getStripeSessionCount(), 1);
+});
+
 test("sequential replay returns one Checkout Session", async () => {
   const fixture = makeDependencies();
   const input = {
     userId,
     userEmail: "reader@example.invalid",
+    userRole: "user",
     request: { offerCode: "student_founding_monthly" as const, requestId },
   };
   const first = await createMembershipCheckout(input, fixture.dependencies);
@@ -151,6 +298,7 @@ test("concurrent replay uses one Stripe idempotency identity", async () => {
   const input = {
     userId,
     userEmail: "reader@example.invalid",
+    userRole: "user",
     request: { offerCode: "student_founding_monthly" as const, requestId },
   };
   const [first, second] = await Promise.all([
@@ -169,6 +317,7 @@ test("same user/request ID cannot be rebound to another offer", async () => {
     {
       userId,
       userEmail: "reader@example.invalid",
+      userRole: "user",
       request: { offerCode: "student_founding_monthly", requestId },
     },
     fixture.dependencies,
@@ -179,6 +328,7 @@ test("same user/request ID cannot be rebound to another offer", async () => {
       {
         userId,
         userEmail: "reader@example.invalid",
+        userRole: "user",
         request: { offerCode: "scholar_monthly", requestId },
       },
       fixture.dependencies,
@@ -218,6 +368,7 @@ test("existing paid or uncertain membership state blocks before Stripe", async (
         {
           userId,
           userEmail: "reader@example.invalid",
+          userRole: "user",
           request: { offerCode: "student_founding_monthly", requestId },
         },
         fixture.dependencies,
@@ -256,6 +407,7 @@ test("default-closed catalog stops before membership, ledger, or Stripe", async 
       {
         userId,
         userEmail: "reader@example.invalid",
+        userRole: "user",
         request: { offerCode: "student_founding_monthly", requestId },
       },
       fixture.dependencies,
@@ -271,9 +423,19 @@ test("route contains only server-authoritative Checkout mutations", () => {
     resolve(appRoot, "src/app/api/stripe/create-checkout-session/route.ts"),
     "utf8",
   );
-  assert.match(source, /guardCommercialAction\("checkout"\)/);
-  assert.match(source, /resolveMembershipCheckoutOffer/);
-  assert.match(source, /guardCheckoutOffer\(serverOffer\.stripePriceId\)/);
+  const checkoutSource = readFileSync(
+    resolve(appRoot, "src/lib/membership/membership-checkout.server.ts"),
+    "utf8",
+  );
+  assert.match(checkoutSource, /resolveMembershipCheckoutOffer/);
+  assert.match(checkoutSource, /resolveMembershipCanaryCheckoutOfferForUser/);
+  assert.match(checkoutSource, /isCheckoutPriceAllowed\(offer\.stripePriceId/);
+  assert.ok(
+    checkoutSource.indexOf("isCheckoutPriceAllowed(offer.stripePriceId") <
+      checkoutSource.indexOf("dependencies.loadMembership(input.userId)"),
+  );
+  assert.match(source, /\.from\("users"\)[\s\S]*\.select\("role"\)/);
+  assert.match(source, /userRole: profile\.data\.role/);
   assert.match(source, /stripe\.checkout\.sessions\.create\(/);
   assert.match(source, /idempotencyKey: input\.idempotencyKey/);
   assert.match(source, /mode: "subscription"/);

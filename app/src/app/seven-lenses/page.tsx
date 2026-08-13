@@ -16,6 +16,16 @@ import LensIntensitySelector from '@/components/parallax/LensIntensitySelector';
 import LensPresets from '@/components/parallax/LensPresets';
 import ResponseLengthSlider from '@/components/parallax/ResponseLengthSlider';
 import ConversationHistory from '@/components/parallax/ConversationHistory';
+import {
+  CreditWalletProvider,
+  useCreditWallet,
+  useToolCreditState,
+} from '@/components/membership/CreditWalletProvider';
+import ToolCreditStatus from '@/components/membership/ToolCreditStatus';
+import {
+  toolRunStateForCode,
+  type ToolRunState,
+} from '@/lib/membership/metering-customer-presentation';
 import { getAllLenses } from '@/lib/parallax/lenses';
 import type { LensWeights, MultiLensResponse } from '@/lib/parallax/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -87,6 +97,14 @@ function ParallaxEngineContent() {
   const [historyRefreshTrigger, setHistoryRefreshTrigger] = useState(0);
   const retryRequestIdRef = useRef<string | null>(null);
   const activeRequestControllerRef = useRef<AbortController | null>(null);
+  const [hasRetry, setHasRetry] = useState(false);
+  const [runState, setRunState] = useState<ToolRunState>('idle');
+  const [capacityResetAt, setCapacityResetAt] = useState<string | null>(null);
+  const toolActionCode = responseLength === 'long'
+    ? 'seven_lenses.long'
+    : 'seven_lenses.standard';
+  const toolCreditState = useToolCreditState(toolActionCode);
+  const { refresh: refreshWallet } = useCreditWallet();
 
   useEffect(() => {
     if (!user) return;
@@ -189,6 +207,9 @@ function ParallaxEngineContent() {
     setError(null);
     setResponse(null);
     setIsStreaming(true);
+    setRunState('reserved');
+    setCapacityResetAt(null);
+    let structuredFailure = false;
     const requestId = retryRequestIdRef.current ?? crypto.randomUUID();
     retryRequestIdRef.current = requestId;
     const requestController = new AbortController();
@@ -210,7 +231,21 @@ function ParallaxEngineContent() {
       }
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json() as {
+          error?: string;
+          code?: string;
+          resetAt?: string;
+        };
+        structuredFailure = true;
+        const nextRunState = toolRunStateForCode(data.code);
+        setRunState(nextRunState);
+        setCapacityResetAt(typeof data.resetAt === 'string' ? data.resetAt : null);
+        const retryable = nextRunState === 'retry';
+        setHasRetry(retryable);
+        if (!retryable && nextRunState !== 'reconcile') {
+          retryRequestIdRef.current = null;
+        }
+        await refreshWallet();
         throw new Error(data.error || 'Failed to get response');
       }
 
@@ -219,7 +254,7 @@ function ParallaxEngineContent() {
       const decoder = new TextDecoder();
       let buffer = '';
       let finalResponse: ClientSevenLensesResponse | null = null;
-      let streamError: { message: string; code?: string } | null = null;
+      let streamError: { message: string; code?: string; resetAt?: string } | null = null;
 
       if (!reader) {
         throw new Error('No response stream');
@@ -263,6 +298,7 @@ function ParallaxEngineContent() {
                 streamError = {
                   message: typeof data.message === 'string' ? data.message : 'Failed to get response',
                   code: typeof data.code === 'string' ? data.code : undefined,
+                  resetAt: typeof data.resetAt === 'string' ? data.resetAt : undefined,
                 };
               }
             } catch (err) {
@@ -275,22 +311,35 @@ function ParallaxEngineContent() {
       }
 
       if (streamError) {
+        structuredFailure = true;
         if (streamError.code === 'METERING_SETTLEMENT_FAILED') {
           setHistoryRefreshTrigger((previous) => previous + 1);
         }
-        if (
-          streamError.code !== 'METERING_SETTLEMENT_FAILED' &&
-          streamError.code !== 'METERING_REQUEST_IN_PROGRESS'
-        ) {
+        const nextRunState = toolRunStateForCode(streamError.code);
+        setRunState(nextRunState);
+        setCapacityResetAt(streamError.resetAt ?? null);
+        const retryable = nextRunState === 'retry';
+        setHasRetry(retryable);
+        if (!retryable && nextRunState !== 'reconcile') {
           retryRequestIdRef.current = null;
         }
+        await refreshWallet();
         throw new Error(streamError.message);
       }
       if (!finalResponse) {
+        setRunState('retry');
+        setHasRetry(true);
         throw new Error('The stream ended before the saved analysis arrived. Retry to reopen it safely.');
       }
+      setRunState('committed');
+      setHasRetry(false);
+      await refreshWallet();
 
     } catch (err) {
+      if (!structuredFailure && runState !== 'retry') {
+        setRunState('retry');
+        setHasRetry(true);
+      }
       console.error('Error submitting query:', err);
       setError(err instanceof Error ? err.message : 'Failed to get response');
       setIsStreaming(false);
@@ -303,11 +352,15 @@ function ParallaxEngineContent() {
 
   function handlePresetSelect(weights: LensWeights) {
     retryRequestIdRef.current = null;
+    setHasRetry(false);
+    setRunState('idle');
     setLensWeights(weights);
   }
 
   function handleLensChange(lensId: keyof LensWeights, value: number) {
     retryRequestIdRef.current = null;
+    setHasRetry(false);
+    setRunState('idle');
     setLensWeights(prev => ({
       ...prev,
       [lensId]: value,
@@ -503,6 +556,8 @@ function ParallaxEngineContent() {
                   value={responseLength}
                   onChange={(value) => {
                     retryRequestIdRef.current = null;
+                    setHasRetry(false);
+                    setRunState('idle');
                     setResponseLength(value);
                   }}
                   disabled={isStreaming}
@@ -580,6 +635,8 @@ function ParallaxEngineContent() {
                     value={query}
                     onChange={(e) => {
                       retryRequestIdRef.current = null;
+                      setHasRetry(false);
+                      setRunState('idle');
                       setQuery(e.target.value);
                     }}
                     disabled={isStreaming}
@@ -595,14 +652,21 @@ function ParallaxEngineContent() {
                   </div>
                 )}
 
-                <p className="text-sm text-amber-100/65">
-                  {responseLength === 'long' ? 'Long analysis: 3 Prism Credits' : 'Standard analysis: 2 Prism Credits'}.
-                  {' '}Your question stays here if the request fails.
-                </p>
+                <ToolCreditStatus
+                  actionCode={toolActionCode}
+                  runState={runState}
+                  capacityResetAt={capacityResetAt}
+                />
 
                 <button
                   type="submit"
-                  disabled={isStreaming || !query.trim()}
+                  disabled={
+                    isStreaming ||
+                    !query.trim() ||
+                    runState === 'capacity_paused' ||
+                    runState === 'reconcile' ||
+                    (!toolCreditState.canSubmit && !hasRetry)
+                  }
                   className="min-h-11 w-full px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   {isStreaming ? (
@@ -613,7 +677,9 @@ function ParallaxEngineContent() {
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      Analyze · {responseLength === 'long' ? '3' : '2'} Prism Credits
+                      {hasRetry
+                        ? 'Retry the same analysis'
+                        : `Analyze · ${responseLength === 'long' ? '3' : '2'} Prism Credits`}
                     </>
                   )}
                 </button>
@@ -647,9 +713,11 @@ function ParallaxEngineContent() {
 
 export default function ParallaxEnginePage() {
   return (
-    <Suspense fallback={<AppLoader fullScreen />}>
-      <ParallaxEngineContent />
-    </Suspense>
+    <CreditWalletProvider>
+      <Suspense fallback={<AppLoader fullScreen />}>
+        <ParallaxEngineContent />
+      </Suspense>
+    </CreditWalletProvider>
   );
 }
 

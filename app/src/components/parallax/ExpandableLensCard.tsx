@@ -4,6 +4,15 @@ import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { ChevronDown, ChevronUp, Sparkles, Loader2 } from 'lucide-react';
 import { getLensColorClasses, getLensColorStyle } from '@/lib/utils/lens-colors';
+import {
+  useCreditWallet,
+  useToolCreditState,
+} from '@/components/membership/CreditWalletProvider';
+import ToolCreditStatus from '@/components/membership/ToolCreditStatus';
+import {
+  toolRunStateForCode,
+  type ToolRunState,
+} from '@/lib/membership/metering-customer-presentation';
 
 interface ExpandableLensCardProps {
   lensId: string;
@@ -38,6 +47,11 @@ export default function ExpandableLensCard({
   const lensStyle = getLensColorStyle(lensId);
   const retryRequestIdRef = useRef<string | null>(null);
   const activeControllerRef = useRef<AbortController | null>(null);
+  const [hasRetry, setHasRetry] = useState(false);
+  const [runState, setRunState] = useState<ToolRunState>('idle');
+  const [capacityResetAt, setCapacityResetAt] = useState<string | null>(null);
+  const toolCreditState = useToolCreditState('seven_lenses.expand');
+  const { refresh: refreshWallet } = useCreditWallet();
 
   useEffect(() => {
     return () => activeControllerRef.current?.abort();
@@ -57,6 +71,9 @@ export default function ExpandableLensCard({
 
     setLoading(true);
     setError(null);
+    setRunState('reserved');
+    setCapacityResetAt(null);
+    let structuredFailure = false;
     const requestId = retryRequestIdRef.current ?? crypto.randomUUID();
     retryRequestIdRef.current = requestId;
     const controller = new AbortController();
@@ -78,10 +95,18 @@ export default function ExpandableLensCard({
         const data = await res.json().catch(() => ({})) as {
           error?: string;
           code?: string;
+          resetAt?: string;
         };
-        if (!data.code || !AMBIGUOUS_RETRY_CODES.has(data.code)) {
+        structuredFailure = true;
+        const nextRunState = toolRunStateForCode(data.code);
+        setRunState(nextRunState);
+        setCapacityResetAt(typeof data.resetAt === 'string' ? data.resetAt : null);
+        const retryable = data.code ? AMBIGUOUS_RETRY_CODES.has(data.code) : false;
+        setHasRetry(retryable && nextRunState !== 'reconcile');
+        if (!retryable) {
           retryRequestIdRef.current = null;
         }
+        await refreshWallet();
         throw new Error(data.error || `Failed to load ${lensName} perspective`);
       }
 
@@ -97,9 +122,17 @@ export default function ExpandableLensCard({
         sources: raw?.sources ?? [],
       });
       setExpanded(true);
+      setRunState('committed');
+      setHasRetry(false);
+      retryRequestIdRef.current = null;
       onExpand?.(lensId);
+      await refreshWallet();
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (!structuredFailure) {
+        setRunState('retry');
+        setHasRetry(true);
+      }
       setError(err instanceof Error ? err.message : 'Failed to load response');
     } finally {
       if (activeControllerRef.current === controller) {
@@ -124,7 +157,13 @@ export default function ExpandableLensCard({
         </div>
         <button
           onClick={handleLoad}
-          disabled={loading || !parentResponseId}
+          disabled={
+            loading ||
+            !parentResponseId ||
+            (!expanded && !lensResponse && !toolCreditState.canSubmit && !hasRetry) ||
+            runState === 'capacity_paused' ||
+            runState === 'reconcile'
+          }
           className={`flex items-center gap-2 px-4 py-2 ${lensColor.bg} ${lensColor.hoverBg} border ${lensColor.border} rounded-lg text-sm text-amber-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed`}
         >
           {loading ? (
@@ -138,7 +177,9 @@ export default function ExpandableLensCard({
                 {expanded
                   ? 'Collapse'
                   : parentResponseId
-                    ? 'Load Response · 1 Prism Credit'
+                    ? hasRetry
+                      ? 'Retry same expansion'
+                      : 'Load Response · 1 Prism Credit'
                     : 'Analysis saving...'}
               </span>
               {expanded ? (
@@ -153,10 +194,16 @@ export default function ExpandableLensCard({
 
       {/* Content area */}
       {!expanded && !loading && !lensResponse && (
-        <p className="px-6 pb-6 text-sm text-amber-100/60">
-          Expand the {lensName.toLowerCase()} perspective for 1 Prism Credit.
-          The saved parent analysis remains available if expansion fails.
-        </p>
+        <div className="px-6 pb-6">
+          <ToolCreditStatus
+            actionCode="seven_lenses.expand"
+            runState={runState}
+            capacityResetAt={capacityResetAt}
+          />
+          <p className="mt-2 text-sm text-amber-100/60">
+            The saved parent analysis remains available if expansion fails.
+          </p>
+        </div>
       )}
 
       {error && (

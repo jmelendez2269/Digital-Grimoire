@@ -158,12 +158,13 @@ test("Anthropic request options omit an absent timeout instead of passing undefi
   });
 });
 
-test("The Working client displays one credit, sends an idempotency UUID, preserves input, and never calls the old save route", () => {
+test("The Working client consumes server-owned wallet cost, sends an idempotency UUID, preserves input, and never calls the old save route", () => {
   const source = readFileSync(
     resolve(appRoot, "src/app/workbench/the-working/page.tsx"),
     "utf8",
   );
-  assert.match(source, /1 Prism Credit/);
+  assert.match(source, /useToolCreditState\("working\.generate"\)/);
+  assert.match(source, /actionCode="working\.generate"/);
   assert.match(source, /crypto\.randomUUID\(\)/);
   assert.match(source, /JSON\.stringify\(\{ intention: intention\.trim\(\), requestId \}\)/);
   assert.doesNotMatch(source, /setIntention\(""\)/);

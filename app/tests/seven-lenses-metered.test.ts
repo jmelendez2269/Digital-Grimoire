@@ -587,8 +587,9 @@ test("client cost and streaming contract is UUID-based, durable-first, input-pre
     page,
     /JSON\.stringify\(\{ query, lensWeights, responseLength, requestId \}\)/,
   );
-  assert.match(page, /Standard analysis: 2 Prism Credits/);
-  assert.match(page, /Long analysis: 3 Prism Credits/);
+  assert.match(page, /seven_lenses\.standard/);
+  assert.match(page, /seven_lenses\.long/);
+  assert.match(page, /<ToolCreditStatus/);
   assert.doesNotMatch(page, /\/api\/parallax\/rate-limit/);
   assert.doesNotMatch(page, /<PremiumGate|<RateLimitDisplay/);
   assert.doesNotMatch(page, /setQuery\(['"]['"]\)/);

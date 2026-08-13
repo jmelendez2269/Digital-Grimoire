@@ -1,5 +1,6 @@
 import { guardCommercialAction } from "@/lib/commercial-availability";
 import { MeteringError } from "@/lib/membership/metering-adapter.server";
+import { nextUtcMonthBoundary } from "@/lib/membership/metering-customer-presentation";
 import {
   executeMeteredSevenLenses,
   type SevenLensesGenerationResult,
@@ -200,6 +201,10 @@ export async function POST(request: Request) {
         safeEnqueue(controller, {
           type: "error",
           code,
+          resetAt:
+            code === "READER_AI_CAPACITY_PAUSED"
+              ? nextUtcMonthBoundary()
+              : null,
           retryAfterSeconds:
             error instanceof MeteringError ? error.retryAfterSeconds : null,
           message:

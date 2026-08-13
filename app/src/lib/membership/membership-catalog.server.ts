@@ -6,6 +6,8 @@ export const MEMBERSHIP_CATALOG_VERSION = 1 as const;
 
 export const APPROVED_STUDENT_LAUNCH_COURSE_SLUG =
   "c01-how-humans-know-what-they-know" as const;
+export const APPROVED_STUDENT_LAUNCH_COURSE_TITLE =
+  "How Humans Know What They Know" as const;
 
 export const MEMBERSHIP_PLAN_CODES = [
   "reader",
@@ -81,6 +83,7 @@ export interface SafeMembershipCatalog {
     freeCourseSlugs: string[];
     memberReleasedCourseSlugs: string[];
     studentLaunchCourseSlug: string | null;
+    studentLaunchCourseTitle: string | null;
   };
   launch: {
     paidSalesEnabled: boolean;
@@ -109,6 +112,9 @@ const ENV = Object.freeze({
   memberReleasedCourses: "PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS",
   studentLaunchCourse: "PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG",
   adeptDecision: "PRISMARIUM_ADEPT_LAUNCH_DECISION",
+  canaryEnabled: "PRISMARIUM_MEMBERSHIP_CANARY_ENABLED",
+  canaryUserIds: "PRISMARIUM_MEMBERSHIP_CANARY_USER_IDS",
+  canaryOffers: "PRISMARIUM_MEMBERSHIP_CANARY_OFFERS",
 } as const);
 
 const PLAN_DEFINITIONS = Object.freeze<readonly PlanDefinition[]>([
@@ -228,6 +234,8 @@ const ACTION_DEFINITIONS = Object.freeze<readonly ActionDefinition[]>([
 
 const COURSE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const STRIPE_PRICE_PATTERN = /^price_[A-Za-z0-9]+$/;
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function exactCsv(value: string | undefined): {
   values: string[];
@@ -390,6 +398,9 @@ export function getSafeMembershipCatalog(
       studentLaunchCourseSlug: courses.initialPaidCourseConfigurationValid
         ? courses.studentLaunchCourseSlug
         : null,
+      studentLaunchCourseTitle: courses.initialPaidCourseConfigurationValid
+        ? APPROVED_STUDENT_LAUNCH_COURSE_TITLE
+        : null,
     },
     launch: {
       paidSalesEnabled,
@@ -450,6 +461,60 @@ export function resolveMembershipCheckoutOffer(
     (offer) => offer.code === offerCode,
   );
   if (!definition || safeOffer?.publiclyAvailable !== true) return null;
+
+  const stripePriceId = getConfiguredStripePrice(definition, environment);
+  if (!stripePriceId) return null;
+
+  const reverse = resolveMembershipOfferByStripePriceId(
+    stripePriceId,
+    environment,
+  );
+  if (!reverse || reverse.code !== definition.code) return null;
+
+  return { ...reverse, stripePriceId };
+}
+
+/**
+ * Resolve one production canary user to the founding offer without opening the
+ * public catalog. The canary configuration is deliberately narrower than the
+ * public launch catalog: exactly one UUID, exactly one founding offer, and a
+ * normal non-admin profile are required. Any malformed or broader value fails
+ * closed and no canary details are included in the safe catalog projection.
+ */
+export function resolveMembershipCanaryCheckoutOfferForUser(
+  offerCode: unknown,
+  userId: unknown,
+  userRole: unknown,
+  environment: CatalogEnvironment = process.env,
+): ResolvedMembershipCheckoutOffer | null {
+  if (
+    !exactEnabled(environment[ENV.canaryEnabled]) ||
+    typeof userId !== "string" ||
+    !UUID_V4_PATTERN.test(userId) ||
+    userRole !== "user" ||
+    offerCode !== "student_founding_monthly"
+  ) {
+    return null;
+  }
+
+  const users = exactCsv(environment[ENV.canaryUserIds]);
+  const offers = exactCsv(environment[ENV.canaryOffers]);
+  if (
+    !users.valid ||
+    users.values.length !== 1 ||
+    !UUID_V4_PATTERN.test(users.values[0]) ||
+    users.values[0].toLowerCase() !== userId.toLowerCase() ||
+    !offers.valid ||
+    offers.values.length !== 1 ||
+    offers.values[0] !== "student_founding_monthly"
+  ) {
+    return null;
+  }
+
+  const definition = OFFER_DEFINITIONS.find(
+    (offer) => offer.code === "student_founding_monthly",
+  );
+  if (!definition?.acceptsNewCheckout) return null;
 
   const stripePriceId = getConfiguredStripePrice(definition, environment);
   if (!stripePriceId) return null;

@@ -277,11 +277,11 @@ async function main() {
 
   const request = { offerCode: OFFER_CODE, requestId };
   const created = await createMembershipCheckout(
-    { userId: profile.id, userEmail: FIXTURE_EMAIL, request },
+    { userId: profile.id, userEmail: FIXTURE_EMAIL, userRole: "user", request },
     dependencies,
   );
   const replayed = await createMembershipCheckout(
-    { userId: profile.id, userEmail: FIXTURE_EMAIL, request },
+    { userId: profile.id, userEmail: FIXTURE_EMAIL, userRole: "user", request },
     dependencies,
   );
   const session = await stripe.checkout.sessions.retrieve(created.sessionId, {

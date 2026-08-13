@@ -5,11 +5,13 @@ import { createHash } from "node:crypto";
 import {
   MEMBERSHIP_CATALOG_VERSION,
   MEMBERSHIP_PLAN_CODES,
+  resolveMembershipCanaryCheckoutOfferForUser,
   resolveMembershipCheckoutOffer,
   type CatalogEnvironment,
   type MembershipOfferCode,
   type MembershipPlanCode,
 } from "@/lib/membership/membership-catalog.server";
+import { isCheckoutPriceAllowed } from "@/lib/commercial-availability-policy";
 
 // Keep this local to avoid coupling Checkout eligibility to entitlement dates.
 const CHECKOUT_BLOCKING_STATUSES = new Set([
@@ -216,16 +218,21 @@ export async function createMembershipCheckout(
   input: {
     userId: string;
     userEmail: string | null;
+    userRole: string | null;
     request: MembershipCheckoutRequest;
   },
   dependencies: MembershipCheckoutDependencies,
 ): Promise<{ sessionId: string; url: string; replayed: boolean }> {
   const environment = dependencies.environment ?? process.env;
-  const offer = resolveMembershipCheckoutOffer(
-    input.request.offerCode,
-    environment,
-  );
-  if (!offer) {
+  const offer =
+    resolveMembershipCheckoutOffer(input.request.offerCode, environment) ??
+    resolveMembershipCanaryCheckoutOfferForUser(
+      input.request.offerCode,
+      input.userId,
+      input.userRole,
+      environment,
+    );
+  if (!offer || !isCheckoutPriceAllowed(offer.stripePriceId, environment)) {
     throw new MembershipCheckoutError("CHECKOUT_UNAVAILABLE", 503);
   }
 

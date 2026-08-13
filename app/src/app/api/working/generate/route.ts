@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { guardCommercialAction } from "@/lib/commercial-availability";
 import { MeteringError } from "@/lib/membership/metering-adapter.server";
+import { nextUtcMonthBoundary } from "@/lib/membership/metering-customer-presentation";
 import { executeMeteredWorking } from "@/lib/working/metered-working.server";
 
 export const maxDuration = 60;
@@ -57,6 +58,9 @@ function meteringErrorResponse(error: MeteringError): NextResponse {
         CUSTOMER_MESSAGES[error.code] ??
         "The Working is temporarily unavailable. Try again shortly.",
       code: error.code,
+      ...(error.code === "READER_AI_CAPACITY_PAUSED"
+        ? { resetAt: nextUtcMonthBoundary() }
+        : {}),
     },
     { status: error.status, headers: noStoreHeaders(error) },
   );

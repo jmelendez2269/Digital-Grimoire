@@ -48,7 +48,15 @@ test("Stripe authority writes use the service role after request authentication"
     checkout,
     /serviceSupabase \.from\("billing_checkout_requests"\) \.update\(/,
   );
-  assert.doesNotMatch(checkout, /\.from\("users"\)/);
+  assert.match(
+    checkout,
+    /const serviceSupabase = createServiceClient\(\); const profile = await serviceSupabase \.from\("users"\) \.select\("role"\) \.eq\("id", user\.id\) \.maybeSingle\(\);/,
+  );
+  assert.ok(
+    checkout.indexOf("if (authError || !user)") <
+      checkout.indexOf("const serviceSupabase = createServiceClient();"),
+    "Checkout must authenticate before the service-owned role lookup",
+  );
   assert.doesNotMatch(checkout, /stripe\.customers\.(?:create|retrieve|update)/);
   assertUsesServiceClient(
     "src/app/api/stripe/sync-subscription/route.ts",

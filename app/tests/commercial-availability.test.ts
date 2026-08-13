@@ -156,22 +156,39 @@ test("disabled guards return one opaque, non-cacheable 503 response", async () =
   );
 });
 
-test("Checkout fails closed before request parsing, Supabase, or Stripe", () => {
+test("Checkout authenticates before the exact public-or-canary gate and still fails before ledger or Stripe", () => {
   const path = "src/app/api/stripe/create-checkout-session/route.ts";
   const handler = postHandlerSource(path);
-  const actionGuard = handler.indexOf('guardCommercialAction("checkout")');
   const requestParse = handler.indexOf("request.json()");
-  const serverResolution = handler.indexOf("resolveMembershipCheckoutOffer(");
-  const offerGuard = handler.indexOf(
-    "guardCheckoutOffer(serverOffer.stripePriceId)",
-  );
   const supabaseClient = handler.indexOf("createClient()");
-  const stripeClient = handler.indexOf("getStripeClient()");
+  const profileRole = handler.indexOf('.select("role")');
+  const checkout = handler.indexOf("createMembershipCheckout(");
+  const stripeClient = handler.lastIndexOf("getStripeClient()");
 
-  assert.ok(actionGuard >= 0 && actionGuard < requestParse);
-  assert.ok(serverResolution > requestParse && serverResolution < supabaseClient);
-  assert.ok(offerGuard > requestParse && offerGuard < supabaseClient);
-  assert.ok(offerGuard < stripeClient);
+  const checkoutSource = readSource(
+    "src/lib/membership/membership-checkout.server.ts",
+  );
+  const publicResolution = checkoutSource.indexOf(
+    "resolveMembershipCheckoutOffer(",
+  );
+  const canaryResolution = checkoutSource.indexOf(
+    "resolveMembershipCanaryCheckoutOfferForUser(",
+  );
+  const offerGuard = checkoutSource.indexOf(
+    "isCheckoutPriceAllowed(offer.stripePriceId",
+  );
+  const membership = checkoutSource.indexOf(
+    "dependencies.loadMembership(input.userId)",
+  );
+  const reservation = checkoutSource.indexOf("dependencies.reserveRequest(");
+
+  assert.ok(requestParse >= 0 && requestParse < supabaseClient);
+  assert.ok(supabaseClient < profileRole && profileRole < checkout);
+  assert.ok(checkout < stripeClient);
+  assert.ok(publicResolution >= 0 && publicResolution < membership);
+  assert.ok(canaryResolution >= 0 && canaryResolution < membership);
+  assert.ok(offerGuard >= 0 && offerGuard < membership);
+  assert.ok(offerGuard < reservation);
 
   const source = readSource(path);
   assert.doesNotMatch(source, /NEXT_PUBLIC_STRIPE_PRICE_ID_/);

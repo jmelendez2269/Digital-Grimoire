@@ -8,6 +8,16 @@ import {
 } from "lucide-react";
 import RitualMarkdown from "@/components/working/RitualMarkdown";
 import PalettePanel from "@/components/working/PalettePanel";
+import {
+  CreditWalletProvider,
+  useCreditWallet,
+  useToolCreditState,
+} from "@/components/membership/CreditWalletProvider";
+import ToolCreditStatus from "@/components/membership/ToolCreditStatus";
+import {
+  toolRunStateForCode,
+  type ToolRunState,
+} from "@/lib/membership/metering-customer-presentation";
 import type { AssembledPalette } from "@/lib/working/assemble";
 import type { WorkingConditions } from "@/lib/working/conditions";
 
@@ -82,7 +92,7 @@ function WorkingRow({ w }: { w: WorkingListItem }) {
   );
 }
 
-export default function TheWorkingPage() {
+function TheWorkingPageContent() {
   const [stage, setStage] = useState<Stage>("idle");
   const [intention, setIntention] = useState("");
   const [result, setResult] = useState<GenerateResult | null>(null);
@@ -91,6 +101,11 @@ export default function TheWorkingPage() {
   const [workings, setWorkings] = useState<WorkingListItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const requestIdRef = useRef<string | null>(null);
+  const [hasRetry, setHasRetry] = useState(false);
+  const [runState, setRunState] = useState<ToolRunState>("idle");
+  const [capacityResetAt, setCapacityResetAt] = useState<string | null>(null);
+  const toolCreditState = useToolCreditState("working.generate");
+  const { refresh: refreshWallet } = useCreditWallet();
 
   const loadWorkings = useCallback(async () => {
     try {
@@ -113,6 +128,9 @@ export default function TheWorkingPage() {
     setError(null);
     setResult(null);
     setSavedId(null);
+    setRunState("reserved");
+    setCapacityResetAt(null);
+    let structuredFailure = false;
     try {
       const requestId = requestIdRef.current ?? crypto.randomUUID();
       requestIdRef.current = requestId;
@@ -121,25 +139,43 @@ export default function TheWorkingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ intention: intention.trim(), requestId }),
       });
-      const data = await res.json();
+      const data = await res.json() as {
+        error?: string;
+        code?: string;
+        resetAt?: string;
+        id?: string;
+      } & Partial<GenerateResult>;
       if (!res.ok) {
+        structuredFailure = true;
         if (data.code === "METERING_SETTLEMENT_FAILED") {
           loadWorkings();
         }
-        if (
-          data.code !== "METERING_REQUEST_IN_PROGRESS" &&
-          data.code !== "METERING_SETTLEMENT_FAILED"
-        ) {
+        const nextRunState = toolRunStateForCode(data.code);
+        setRunState(nextRunState);
+        setCapacityResetAt(
+          typeof data.resetAt === "string" ? data.resetAt : null,
+        );
+        const retryable = nextRunState === "retry";
+        setHasRetry(retryable);
+        if (!retryable && nextRunState !== "reconcile") {
           requestIdRef.current = null;
         }
+        await refreshWallet();
         throw new Error(data.error || "Generation failed");
       }
       requestIdRef.current = null;
-      setResult(data);
-      setSavedId(data.id);
+      setHasRetry(false);
+      setRunState("committed");
+      setResult(data as GenerateResult);
+      setSavedId(data.id ?? null);
       setStage("result");
       loadWorkings();
+      await refreshWallet();
     } catch (err: unknown) {
+      if (!structuredFailure) {
+        setRunState("retry");
+        setHasRetry(true);
+      }
       setError(errorMessage(err, "Generation failed"));
       setStage("idle");
     }
@@ -171,6 +207,9 @@ export default function TheWorkingPage() {
     setSavedId(null);
     setError(null);
     requestIdRef.current = null;
+    setHasRetry(false);
+    setRunState("idle");
+    setCapacityResetAt(null);
   }
 
   return (
@@ -201,7 +240,12 @@ export default function TheWorkingPage() {
               <textarea
                 id="intention"
                 value={intention}
-                onChange={(e) => setIntention(e.target.value)}
+                onChange={(e) => {
+                  requestIdRef.current = null;
+                  setHasRetry(false);
+                  setRunState("idle");
+                  setIntention(e.target.value);
+                }}
                 placeholder="e.g. attract prosperity · open to love · clarity before a decision"
                 rows={3}
                 disabled={stage === "loading"}
@@ -209,10 +253,13 @@ export default function TheWorkingPage() {
               />
             </div>
 
-            <p id="working-credit-cost" className="text-xs text-zinc-500 leading-relaxed">
-              Launch cost: <span className="font-medium text-zinc-300">1 Prism Credit</span>.
-              Your credit is returned automatically if generation or saving fails.
-            </p>
+            <div id="working-credit-status">
+              <ToolCreditStatus
+                actionCode="working.generate"
+                runState={runState}
+                capacityResetAt={capacityResetAt}
+              />
+            </div>
 
             {error && (
               <p role="alert" className="text-sm text-red-400 bg-red-900/10 border border-red-800/30 rounded-lg px-4 py-2.5">
@@ -228,12 +275,17 @@ export default function TheWorkingPage() {
             ) : (
               <button
                 type="submit"
-                disabled={!intention.trim()}
-                aria-describedby="working-credit-cost"
+                disabled={
+                  !intention.trim() ||
+                  runState === "capacity_paused" ||
+                  runState === "reconcile" ||
+                  (!toolCreditState.canSubmit && !hasRetry)
+                }
+                aria-describedby="working-credit-status"
                 className="flex min-h-11 cursor-pointer items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
               >
                 <Sparkles size={14} />
-                Begin the working
+                {hasRetry ? "Retry the same working" : "Begin the working"}
               </button>
             )}
           </form>
@@ -353,5 +405,13 @@ export default function TheWorkingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TheWorkingPage() {
+  return (
+    <CreditWalletProvider>
+      <TheWorkingPageContent />
+    </CreditWalletProvider>
   );
 }

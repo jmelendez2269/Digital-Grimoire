@@ -2,6 +2,7 @@ import { guardCommercialAction } from "@/lib/commercial-availability";
 import {
   MeteringError,
 } from "@/lib/membership/metering-adapter.server";
+import { nextUtcMonthBoundary } from "@/lib/membership/metering-customer-presentation";
 import { executeMeteredLensExpansion } from "@/lib/parallax/metered-lens-expansion.server";
 
 export const maxDuration = 75;
@@ -62,6 +63,9 @@ function errorResponse(error: MeteringError): Response {
         CUSTOMER_MESSAGES[error.code] ??
         "Lens expansion is temporarily unavailable. Try again shortly.",
       code: error.code,
+      ...(error.code === "READER_AI_CAPACITY_PAUSED"
+        ? { resetAt: nextUtcMonthBoundary() }
+        : {}),
     },
     { status: error.status, headers: headers(error) },
   );
