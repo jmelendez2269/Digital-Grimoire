@@ -1,7 +1,8 @@
 # Prismarium lean membership launch plan
 
 **Date:** August 6, 2026  
-**Status:** Controlling plan for the immediate membership build  
+**Last updated:** August 12, 2026<br>
+**Status:** Minimal membership launch active; 72-hour monitoring in progress<br>
 **Forecast:** 25–35 focused engineering days  
 **Execution tracker:** [Prismarium membership implementation tracker](prismarium-membership-implementation-tracker.md)  
 **Parallel course board:** [Prismarium course production tracker](prismarium-course-production-tracker.md)  
@@ -41,7 +42,7 @@ Those facts do not mean the product lacks value. They mean the next investment s
 | Saved course work and progress | Public/free paths | Included for accessible course | Included | Included |
 | Generative tools | Credit-metered | Credit-metered | Credit-metered | Credit-metered |
 
-“Launch-gated” means Adept is built into the catalog and entitlement model but is not sold until shadow cost data shows that 300 credits at $69 leaves a safe margin. If the evidence is good, it may launch with the other tiers; otherwise its public flag remains off.
+“Launch-gated” means Adept is built into the catalog and entitlement model but is not sold until a later explicit owner decision. The minimal August 12 launch holds Adept even though the shadow economics passed.
 
 ### 2.2 Positioning
 
@@ -195,10 +196,10 @@ If Student or Scholar fails its conservative threshold, its public offer also pa
 | L2 — Monthly billing and catalog | Implement exact monthly offers, trustworthy membership projection, Checkout, webhook, portal, and reconciliation | 4–6 days |
 | L3 — Monthly credit core | Implement 10/30/100/300 monthly grants and atomic reserve/commit/release | 5–7 days |
 | L4 — Initial tool metering | Meter The Working and Seven Lenses; add telemetry, abuse controls, and fail-closed bypasses | 5–7 days |
-| L5 — Customer UI and launch | Update pricing/account/wallet/tool states, shadow costs, canary, and launch safely | 3–5 days |
+| L5 — Customer UI and launch readiness | Update pricing/account/wallet/tool states, shadow costs, closed production readiness, and post-enable monitoring if separately authorized | 3–5 days |
 | Integration allowance | Cross-phase fixes and verification | Included in forecast |
 
-**Total forecast: 25–35 focused engineering days.** This is effort, not guaranteed elapsed calendar time: L5 includes three independent prelaunch shadow batches and 72 hours of post-enable monitoring, which may overlap other work. It is not a publishing deadline. Course writing, recording, editing, and release preparation proceed in parallel on their own board.
+**Total forecast: 25–35 focused engineering days.** This is effort, not guaranteed elapsed calendar time: L5 includes three independent prelaunch shadow batches and the separately authorized 72 hours of post-enable monitoring that began August 12, 2026 at 23:08 EDT. It is not a publishing deadline. Course writing, recording, editing, and release preparation proceed in parallel on their own board.
 
 ## 6. Launch gates
 
@@ -258,10 +259,12 @@ The following are not hidden obligations inside this launch:
 - The course-production tracker controls editorial/video progress; membership points never inflate it.
 - The full blueprint is a reference, not a backlog that must be completed before launch.
 - A scope change requires a dated decision in the live tracker and an updated point total before implementation begins.
-- The 2026-08-11 `LEAN-L2-06` acceptance counts the verified local contract plus real Stripe test-mode lifecycle as L2 completion. It does not satisfy or authorize the `LEAN-L5-05` production deployment, live Portal, canary, or paid-activation gates.
+- The 2026-08-11 `LEAN-L2-06` acceptance counts the verified local contract plus real Stripe test-mode lifecycle as L2 completion. At that time it did not satisfy or authorize the then-pending `LEAN-L5-05` production deployment, live Portal, canary, or paid-activation work; later L5-05 actions and the no-charge scope revision are recorded separately.
 - “Frozen” launch numbers are implementation targets, not permission to ignore failed cost evidence. A prelaunch `hold` or dated `revise` decision overrides public sale/copy until the documents agree again.
 - Production, Stripe, pricing, or public-sales changes require explicit evidence and the appropriate launch gate; planning approval alone does not authorize a risky production mutation.
+- On August 12, 2026, Jen revised `LEAN-L5-05` from a live canary/public-launch exercise to a no-charge production-readiness gate. The existing closed production application/database release, backup/rehearsal, safe Portal, and disabled staged webhook satisfy that packet. This does not claim or authorize a canary, payment/refund, webhook activation/cutover, billing operation, sale, Checkout, course release, credit or metered action, public flag, further deployment/migration, or public launch. `LEAN-L5-06` remains unstarted until a future, separately approved public enablement actually begins its 72-hour monitoring window.
+- Later on August 12, Jen separately authorized that minimal public enablement: PRE stays free/public; C01 is the sole member course; Student founding and Scholar, Checkout, billing operations, monthly credits, The Working, Seven Lenses, the staged webhook, required Vercel configuration/deployments, smoke verification, and 72-hour monitoring are active. Adept remains held. No canary or synthetic charge/refund was created, and the legacy webhook secret was not overwritten. This later decision starts `LEAN-L5-06`; it does not rewrite the historical no-charge completion of L5-05.
 
 ## 10. Immediate next move
 
-Phases L2, L3, and L4 are complete locally at 22/22, 21/21, and 21/21. `LEAN-L5-01` through `LEAN-L5-04` are also complete locally. Combined launch progress remains 107/114 verified points (93.9%). The [completed L5-04 report](../audits/lean-l5-04-shadow-cost-study-complete-2026-08-12.md) records 30/30 successes across three independent localhost batches/accounts, every default/maximum class, $0.064280 accepted provider cost, 52 quoted/zero charged credits, zero Checkout, 32/32 separate resilience tests, conservative base and 5× stress economics, Reader/Student/Scholar/Adept `enable` decisions, and exact zero-residue fixture cleanup. `LEAN-L5-05` is `in_progress` with 0/5 points. Exact containment, read-only production inventory, the 12-hash migration manifest, a detached `origin/main` candidate, 175/175 selected checks, lint, TypeScript, a 139-entry build, a four-file encrypted restricted backup, full network-disabled restore, 12/12 disposable migrations, and the repaired 12/12 zero-residue SQL matrix are complete. The next separately gated boundary is the exact application/database release unit. The [in-progress record](../audits/lean-l5-05-production-canary-in-progress-2026-08-12.md) controls this boundary. Keep every paid offer, billing operation, member-course release, Checkout UI, production credit action, production metered route, production deployment/migration, Stripe/Vercel configuration, named live Portal configuration, canary identity, live payment, cleanup, public flag, and live activation closed until its own evidence gate is crossed.
+Phases L2, L3, and L4 are complete at 22/22, 21/21, and 21/21. `LEAN-L5-01` through the owner-revised `LEAN-L5-05` are complete. The [minimal launch baseline](../audits/lean-l5-06-minimal-membership-launch-monitoring-2026-08-12.md) records the later separately authorized public enablement and starts `LEAN-L5-06`. Combined progress remains 112/114 verified points (98.2%), with Phase L5 at 19/21, until the full 72-hour monitoring gate ends August 15, 2026 at 23:08 EDT. Run the 24/48/72-hour checks; keep Adept, canary/synthetic payments, additional member courses, Deep Search, image/generic generation, annual plans, packs, rollover, and every deferred expansion closed.

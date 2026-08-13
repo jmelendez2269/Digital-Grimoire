@@ -31,6 +31,10 @@ reader-digests/
 # Playwright MCP session data
 .playwright-mcp/
 
+# Local Git worktrees and Vercel project links
+.worktrees/
+.vercel/
+
 # Local book/PDF files
 docs/nonPD books/
 

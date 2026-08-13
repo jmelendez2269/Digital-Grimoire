@@ -372,3 +372,69 @@ test("the public pricing page uses shared catalog truth and exact launch positio
   assert.match(footer, /href="\/pricing"[\s\S]{0,300}Membership/);
   assert.match(sitemap, /`\$\{baseUrl\}\/pricing`/);
 });
+
+test("the public pricing surface renders only catalog-public launch offers", () => {
+  const closedEntries = getPublicPricingEntries(getSafeMembershipCatalog({}));
+  assert.deepEqual(
+    closedEntries.map(({ plan, offer }) => [plan.code, offer?.code ?? null]),
+    [["reader", null]]
+  );
+
+  const launchEntries = getPublicPricingEntries(
+    getSafeMembershipCatalog(launchEnvironment())
+  );
+  assert.deepEqual(
+    launchEntries.map(({ plan, offer }) => [plan.code, offer?.code ?? null]),
+    [
+      ["reader", null],
+      ["student", "student_founding_monthly"],
+      ["scholar", "scholar_monthly"],
+    ]
+  );
+  assert.ok(
+    launchEntries.every(
+      ({ offer }) => offer?.code !== "student_standard_monthly"
+    )
+  );
+
+  const adeptEntries = getPublicPricingEntries(
+    getSafeMembershipCatalog(
+      launchEnvironment({ PRISMARIUM_ADEPT_LAUNCH_DECISION: "enable" })
+    )
+  );
+  assert.deepEqual(
+    adeptEntries.map(({ plan }) => plan.code),
+    ["reader", "student", "scholar", "adept"]
+  );
+});
+
+test("the public pricing page uses shared catalog truth and exact launch positioning", () => {
+  const page = readSource("src/app/pricing/page.tsx");
+  const pricing = readSource("src/components/membership/MembershipPricing.tsx");
+  const pricingProjection = readSource(
+    "src/lib/membership/membership-pricing.ts"
+  );
+  const header = readSource("src/components/Header.tsx");
+  const footer = readSource("src/components/Footer.tsx");
+  const sitemap = readSource("src/app/sitemap.ts");
+
+  assert.match(page, /getSafeMembershipCatalog\(\)/);
+  assert.match(page, /<MembershipPricing catalog=\{catalog\} \/>/);
+  assert.match(pricingProjection, /offer\.publiclyAvailable/);
+  assert.match(pricingProjection, /offer\.acceptsNewCheckout/);
+  assert.match(pricing, /studentLaunchCourseTitle/);
+  assert.match(pricing, /Unlimited active Journal pages/);
+  assert.match(
+    pricing,
+    /Up to \$\{plan\.journalActivePageLimit\} active Journal pages/
+  );
+  assert.match(pricing, /Courses are optional\./);
+  assert.match(pricing, /Both are complete ways to use Prismarium\./);
+  assert.match(pricing, /does not promise a\s+new-video schedule/);
+  assert.doesNotMatch(pricing, /student_standard_monthly|\$19/);
+  assert.doesNotMatch(pricing, /stripePrice|price_/i);
+  assert.doesNotMatch(pricing, /create-checkout-session|handleUpgrade/);
+  assert.match(header, /\{ name: "Membership", path: "\/pricing" \}/);
+  assert.match(footer, /href="\/pricing"[\s\S]{0,300}Membership/);
+  assert.match(sitemap, /`\$\{baseUrl\}\/pricing`/);
+});

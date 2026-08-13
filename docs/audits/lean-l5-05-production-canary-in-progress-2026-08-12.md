@@ -1,9 +1,9 @@
-# LEAN-L5-05 production canary and public launch gate — in progress
+# LEAN-L5-05 production canary and public launch gate — superseded
 
 **Started:** August 12, 2026  
-**Status:** Local containment, read-only production inventory, isolated release-candidate verification, and fresh backup/disposable migration rehearsal complete; 0/5 packet points earned  
+**Historical status at capture:** Local containment, read-only production inventory, isolated release-candidate verification, and fresh backup/disposable migration rehearsal complete; 0/5 packet points earned  
 **Authorization:** Jen explicitly authorized starting `LEAN-L5-05` with “all right lets go!” after the L5-04 handoff was verified  
-**Launch effect:** None yet. Public sales, Checkout UI, billing operations, member-course release, production credits, production metered routes, deployment, migrations, live canary, and public flags remain closed.
+**Current status:** Superseded by the owner-approved [no-charge production-readiness completion](lean-l5-05-no-charge-production-readiness-complete-2026-08-12.md). No canary or public launch occurred.
 
 ## Authorization boundary
 
@@ -50,7 +50,7 @@ Card data, passwords, raw environment values, raw user/Stripe identifiers, Check
 | 11 | `20260812040000_lean_l4_01_metering_foundation.sql` | `62FEAECA705AF3069B3BFAFAE5CDB4DF3F56017089368FBEA47208AE90F42152` |
 | 12 | `20260812110000_lean_l4_04_lens_expansions.sql` | `68BDE05833EE0B4DC3BBB6D24BCC65A2AFC55872A274AE46DF8604FE74401C05` |
 
-No migration has been applied by L5-05.
+All 12 migrations were later applied through the separately authorized closed production release and are recorded in the [production release evidence](lean-l5-05-production-release-2026-08-12.md). Broad `supabase db push` was not used.
 
 ## Local canary containment
 
@@ -82,7 +82,7 @@ Malformed, duplicated, broader, non-canary, or admin inputs fail before membersh
 
 The release candidate is assembled in a separate detached worktree based on production baseline `origin/main` `7ae0ce789a1a426bf93ade1b5ff7d194eeda3182`. The primary dirty worktree remains intact. Candidate review detected and removed a repository-wide README rewrite, sixteen historical handoff files, and an unrelated course-parser change plus its test before verification. The candidate contains no `supabase/config.toml`, Supabase temp state, post-lean roadmap, dirty course-parser V2 test, or source-worktree environment profile.
 
-A single detached local candidate commit was created and amended in place after the rehearsal exposed one stale cross-version SQL fixture. No branch update, push, pull request, deployment, production migration, environment mutation, or service-side mutation has been made. The exact final commit is reported with the operator handoff because a commit cannot embed its own resulting hash.
+A single detached local candidate commit was created and amended in place after the rehearsal exposed one stale cross-version SQL fixture. The final commit is `8b67e5300b4096ade5a827778fcde460c581ecbe`. It was later pushed only to `release/lean-l5-05-canary-20260812` and used for the separately authorized [closed production application/database release](lean-l5-05-production-release-2026-08-12.md); `origin/main` was not updated.
 
 ## Fresh restricted backup and disposable rehearsal
 
@@ -123,7 +123,9 @@ Two harness-only interruptions were also resolved without changing production or
 
 One read-only Stripe verification attempt was rejected as evidence because `vercel env run` loaded `app/.env.local` ahead of Production values. It reached the local test Stripe account, found no lean mappings, performed only Account/Product/Price reads, and made zero mutations. This is the same isolation trap documented by the earlier L2-06 audit. Future live verification must run from a clean linked directory and enforce the approved live account fingerprint before catalog reads.
 
-## Open owner decisions before the live payment unit
+## Historical owner decisions retired by the scope revision
+
+The following were open under the former live-payment boundary. They are not required for the revised L5-05 gate and are not authorized work:
 
 - dedicated non-admin email alias controlled by Jen;
 - ordinary verified signup versus the guarded Supabase Admin helper;
@@ -137,4 +139,4 @@ Stop before mutation if the frozen source/manifest changes, backup/restore proof
 
 ## Current disposition
 
-`LEAN-L5-05` is `in_progress` with 0/5 points. The candidate and backup/rehearsal prerequisites are locally complete. The next boundary requires separate approval for any application release, production migration, Stripe/Vercel configuration, canary identity, live payment, lifecycle/cleanup, or public flag. No production application/database row or schema, Stripe, Vercel, customer, financial, deployment, release, credit, or metered-route mutation has occurred.
+This record preserves the former canary plan as history. Jen later revised the packet to the [no-charge production-readiness gate](lean-l5-05-no-charge-production-readiness-complete-2026-08-12.md), which is `done` at 5/5 points. No canary identity, live payment, lifecycle cleanup, webhook activation/cutover, public flag, sale, course release, production credit, metered route, billing operation, further deployment/migration, or activation occurred or is authorized. `LEAN-L5-06` remains `not_started`.
