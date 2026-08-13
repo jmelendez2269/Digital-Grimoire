@@ -116,8 +116,15 @@ test('revised C01 retains its complete learner-facing structure', () => {
   assert.equal(result.course.content.format_version, 2);
   assert.equal(result.course.slug, 'c01-how-humans-know-what-they-know');
   assert.equal(result.course.duration_weeks, 8);
+  assert.ok(result.course.premise.includes('Reality may be larger than any one of us can see'));
+  assert.ok(result.course.content.scope_limits?.includes('A care note before we begin'));
+  assert.ok(result.course.content.scope_limits?.includes('will not pressure you toward a particular conclusion'));
   assert.equal(result.course.learning_outcomes.length, 7);
   assert.equal(result.course.content.key_tensions.length, 6);
+  assert.deepEqual(result.course.content.key_tensions[0], {
+    label: 'Certainty and confidence',
+    description: 'Does knowing require complete certainty? How can our confidence reflect the support we have?',
+  });
   assert.equal(result.course.content.completion_pathways.length, 7);
   assert.equal(result.course.content.learner_case_deck?.length, 8);
   assert.deepEqual(
@@ -140,9 +147,7 @@ test('revised C01 retains its complete learner-facing structure', () => {
   assert.equal(firstReading.tiers.keystone.reference, '514a–517a, the prisoners and shadows.');
   assert.ok(firstReading.reading_note?.includes('political responsibility'));
 
-  assert.deepEqual(result.warnings, [
-    'Week 7, reading "Tao Te Ching" is missing reading tiers: Keystone, Passage, Full Text',
-  ]);
+  assert.deepEqual(result.warnings, []);
 });
 
 test('revised C01 round trip preserves readings, companions, cases, pathways, and warnings', () => {

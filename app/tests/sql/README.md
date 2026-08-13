@@ -1,5 +1,84 @@
 # Staging SQL integration tests
 
+## LEAN-L4-01 shared metering foundation
+
+With the isolated local Supabase stack running, apply the L3 dependencies and
+the inert L4-01 metering migration, then run the database gate from `app/`:
+
+```powershell
+npm.cmd run test:membership-metering-schema:local
+```
+
+The runner accepts only `local`, discovers exactly one local Supabase database
+container, reruns the forward migration, and never accepts a database URL. Its
+rollback story proves forced RLS and service-only authority, request replay and
+conflict behavior, plan matching, concurrency and velocity limits, shadow and
+enforce lifecycles, exact failure release, privacy-safe telemetry, temporary
+override auditing, paid-plan isolation, and UTC-month reset. A separate real
+two-session race leaves exactly one Reader request in flight at the budget edge
+and safely pauses the other; both fixture stories finish at zero residue. No
+application route is connected or enabled by this runner.
+
+## LEAN-L4-06 enabled-generation full story
+
+The L4-06 SQL files support an explicitly authorized, local-only authenticated
+browser/API/provider story. They are not a general runner and must never be
+used against a remote database:
+
+- `lean-l4-06-full-story-setup.sql` requires the exact marker-owned local
+  Reader fixture, proves no earlier L3/L4 residue exists, backs up its billing
+  projection, creates exact tagged graph context, and prepares a disposable
+  credit balance;
+- `lean-l4-06-full-story-drain.sql` creates the exact tagged adjustment needed
+  to exercise the insufficient-credit boundary; and
+- `lean-l4-06-full-story-cleanup.sql` deletes all packet-owned ledger,
+  metering, result, and graph rows, restores the original billing projection,
+  drops the temporary backup schema, and asserts zero residue while retaining
+  the marker-owned account.
+
+External provider calls require separate approval and must contain only
+synthetic fixture prompts/context. The cleanup script is intentionally exact
+and marker-guarded; it must be run after success or failure before the local
+fixture is reused.
+
+## LEAN-L3-05 credit-core phase gate
+
+With the isolated local Supabase stack running, execute the complete L3
+invariant, adversarial RLS, concurrency, settlement, and cleanup gate from
+`app/`:
+
+```powershell
+npm.cmd run test:membership-credit-gate:local
+```
+
+The runner accepts only `local` and never accepts a database URL. Its
+rollback-only fixture matrix independently recomputes every account from the
+active grant plus adjustments minus committed debits and pending reservations,
+then compares the result with the cached account and complete ledger deltas. It
+also inspects and exercises all five table ACL/RLS surfaces and all six L3
+function ACLs. A separate twenty-session race must produce exactly ten Reader
+reservations and ten safe insufficiency results; every winning hold is then
+released exactly once, leaving no pending reservation before exact fixture
+deletion and zero residue.
+
+## LEAN-L3-04 safe wallet summary and history
+
+With the isolated local Supabase stack running, apply the L3 dependencies and
+the service-only wallet projection, then execute its rollback-only privacy and
+lifecycle story from `app/`:
+
+```powershell
+npm.cmd run test:membership-wallet-schema:local
+```
+
+The runner accepts only `local` and never accepts a database URL. It verifies
+service-only execution, denial of authenticated table reads/writes, exact
+Reader balance and reset/expiry, allowlisted pending/history shapes, bounded
+history, ambiguous billing fail-closed behavior, release and stale-recovery
+projection, accounting mismatch rejection, migration rerun, and zero fixture
+residue. The separate `test:membership-wallet` suite verifies that the API
+derives scope only from `auth.getUser()` and strips unexpected fields.
+
 ## LEAN-L0-02 authorization baseline
 
 `lean-l0-02-authorization-baseline.sql` captures the current customer-role
@@ -24,6 +103,7 @@ migration and its rollback-only fixture story from `app/`:
 
 ```powershell
 npm.cmd run test:learner-journal:local
+npm.cmd run test:membership-billing-schema:local
 ```
 
 The runner accepts only `local`, finds exactly one local Supabase database

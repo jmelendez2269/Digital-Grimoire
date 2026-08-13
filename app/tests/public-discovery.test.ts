@@ -11,6 +11,8 @@ test("public discovery routes do not expose protected Library descendants", () =
   assert.equal(isPublicPath("/library"), true);
   assert.equal(isPublicPath("/library/"), true);
   assert.equal(isPublicPath("/explore"), true);
+  assert.equal(isPublicPath("/pricing"), true);
+  assert.equal(isPublicPath("/pricing/"), true);
   assert.equal(isPublicPath("/api/library/catalog"), true);
 
   assert.equal(isPublicPath("/library/book-id"), false);

@@ -66,6 +66,43 @@ set subscription_status = case
 end
 where id in (:'reader_id'::uuid, :'paid_id'::uuid, :'outsider_id'::uuid);
 
+-- L1 runs this story before the authoritative membership projection exists.
+-- Full-chain rehearsals run it after L2 has retired the legacy users field as
+-- paid authority, so give the same synthetic paid fixture one exact active
+-- service-owned membership when that table is present.
+select to_regclass('public.billing_memberships') is not null
+  as lean_l1_03_has_authoritative_membership
+\gset
+\if :lean_l1_03_has_authoritative_membership
+set local role service_role;
+insert into public.billing_memberships (
+  user_id,
+  plan_code,
+  stripe_status,
+  pricing_cohort,
+  offer_code,
+  billing_interval,
+  current_period_start,
+  current_period_end,
+  access_until,
+  billing_hold,
+  status_observed_at
+) values (
+  :'paid_id',
+  'student',
+  'active',
+  'founding',
+  'student_founding_monthly',
+  'month',
+  now() - interval '1 day',
+  now() + interval '29 days',
+  now() + interval '29 days',
+  false,
+  now()
+);
+reset role;
+\endif
+
 insert into public.courses (title, slug, content, is_published)
 values (
   'LEAN L1-03 PRE fixture',
@@ -314,6 +351,11 @@ select public.save_learner_journal_page_v1(
 \gset
 reset role;
 
+\if :lean_l1_03_has_authoritative_membership
+set local role service_role;
+delete from public.billing_memberships where user_id = :'paid_id'::uuid;
+reset role;
+\endif
 update public.users set subscription_status = 'free' where id = :'paid_id'::uuid;
 
 select set_config('request.jwt.claim.sub', :'paid_id', true);

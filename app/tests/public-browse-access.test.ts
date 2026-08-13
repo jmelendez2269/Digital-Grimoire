@@ -20,6 +20,8 @@ test("public browse routes do not expose protected Library routes", () => {
   assert.equal(isPublicPath("/library"), true);
   assert.equal(isPublicPath("/library/"), true);
   assert.equal(isPublicPath("/explore"), true);
+  assert.equal(isPublicPath("/pricing"), true);
+  assert.equal(isPublicPath("/pricing/"), true);
   assert.equal(isPublicPath("/explore/workings"), true);
   assert.equal(isPublicPath("/explore/workings/shared-id"), true);
   assert.equal(isPublicPath("/api/library/catalog"), true);

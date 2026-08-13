@@ -1,1025 +1,353 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import MembershipAvailability from "@/components/membership/MembershipAvailability";
 import {
-  Sparkles,
-  Zap,
-  Crown,
-  Check,
-  Loader2,
-  CreditCard,
-  Calendar,
+  billingTimelineFromSummary,
+  parseSafeBillingSummary,
+  type SafeBillingSummary,
+} from "@/lib/membership/membership-billing-presentation";
+import {
   AlertCircle,
-  Info,
   BookOpen,
-  GraduationCap,
-  ArrowUp,
-  ArrowDown
+  CalendarDays,
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  ShieldCheck,
 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
-type SubscriptionTier = 'free' | 'student' | 'scholar' | 'adept';
+const STATUS_LABELS: Record<SafeBillingSummary["stripeStatus"], string> = {
+  none: "Reader access",
+  active: "Active",
+  canceled: "Canceled",
+  incomplete: "Incomplete",
+  incomplete_expired: "Expired",
+  past_due: "Past due",
+  paused: "Paused",
+  trialing: "Trialing",
+  unpaid: "Unpaid",
+  unknown: "Unavailable",
+};
 
-interface SubscriptionStatus {
-  tier: SubscriptionTier;
-  queryCount: number;
-  queryLimit: number;
-  resetDate: Date | null;
+const COHORT_LABELS: Record<SafeBillingSummary["pricingCohort"], string> = {
+  none: "Not applicable",
+  founding: "Founding rate",
+  standard: "Standard rate",
+  legacy: "Legacy rate",
+  unknown: "Unavailable",
+};
+
+const TIMELINE_LABELS = {
+  renewal: "Renews on",
+  scheduled_end: "Scheduled to end on",
+  access_end: "Access through",
+} as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-interface TierInfo {
-  name: string;
-  price: number;
-  priceId?: string;
-  queries: string;
-  features: string[];
-  icon: React.ReactNode;
-  color: string;
-  borderColor: string;
-  bgColor: string;
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}
+
+function formatMonthlyPrice(billing: SafeBillingSummary): string {
+  if (
+    billing.amountCents === null ||
+    billing.currency !== "usd" ||
+    billing.billingInterval !== "month"
+  ) {
+    return "Included with Reader";
+  }
+
+  return `${new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(billing.amountCents / 100)}/month`;
 }
 
 export default function SubscriptionTab() {
-  // Aggressive debugging - these should ALWAYS appear if component renders
-  if (typeof window !== 'undefined') {
-    console.log('🎯 SubscriptionTab component rendering');
-    console.log('🎯 Window location:', window.location.href);
-    console.log('🎯 Search params from window:', window.location.search);
-  }
-
-  const searchParams = useSearchParams();
-  const { user, supabase } = useAuth();
+  const [billing, setBilling] = useState<SafeBillingSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
+  const [error, setError] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
-  // Log immediately after hooks
-  if (typeof window !== 'undefined') {
-    console.log('🎯 SubscriptionTab after hooks:', {
-      hasUser: !!user,
-      userId: user?.id,
-      searchParamsString: window.location.search,
-      searchParamsSuccess: searchParams.get("success"),
-      searchParamsCanceled: searchParams.get("canceled")
-    });
-  }
-
-  useEffect(() => {
-    if (user) {
-      fetchSubscriptionStatus();
-    }
-  }, [user]);
-
-  // Auto-sync if user has Stripe customer but no subscription status
-  // This catches cases where checkout completed but sync failed
-  useEffect(() => {
-    const autoSyncIfNeeded = async () => {
-      if (!user || !subscription) return; // Wait for subscription to load
-
-      // Check if user has Stripe customer but subscription is still free
-      const { data: userData } = await supabase
-        .from('users')
-        .select('stripe_customer_id, subscription_status, stripe_subscription_id')
-        .eq('id', user.id)
-        .single();
-
-      if (userData?.stripe_customer_id &&
-        (!userData.subscription_status || userData.subscription_status === 'free') &&
-        !userData.stripe_subscription_id &&
-        subscription.tier === 'free') {
-
-        console.log('🔄 Auto-syncing: User has Stripe customer but no subscription status');
-
-        // Check if we've already tried syncing recently
-        const syncKey = `subscription_sync_${user.id}`;
-        const hasSynced = typeof window !== 'undefined' ? sessionStorage.getItem(syncKey) : null;
-        const syncTimestamp = typeof window !== 'undefined' ? sessionStorage.getItem(`${syncKey}_timestamp`) : null;
-        const now = Date.now();
-        const fiveMinutesAgo = now - (5 * 60 * 1000);
-
-        // Only auto-sync if we haven't synced in the last 5 minutes
-        if (!hasSynced || !syncTimestamp || parseInt(syncTimestamp) < fiveMinutesAgo) {
-          try {
-            const syncResponse = await fetch('/api/stripe/sync-subscription', {
-              method: 'POST',
-            });
-
-            if (syncResponse.ok) {
-              const syncData = await syncResponse.json();
-              if (syncData.synced) {
-                console.log('✅ Auto-sync successful:', syncData);
-                await fetchSubscriptionStatus();
-              }
-            }
-          } catch (error) {
-            console.error('Auto-sync error:', error);
-          }
-        }
-      }
-    };
-
-    // Run after a short delay to let subscription load
-    const timeout = setTimeout(() => {
-      autoSyncIfNeeded();
-    }, 2000);
-
-    return () => clearTimeout(timeout);
-  }, [user, subscription, supabase]);
-
-  // Handle success/cancel from Stripe checkout
-  useEffect(() => {
-    console.log('🔍 SubscriptionTab useEffect RUNNING - this should always appear');
-
-    const success = searchParams.get("success");
-    const canceled = searchParams.get("canceled");
-
-    console.log('🔍 SubscriptionTab useEffect triggered:', {
-      success,
-      canceled,
-      hasUser: !!user,
-      userId: user?.id,
-      fullSearch: typeof window !== 'undefined' ? window.location.search : 'N/A'
-    });
-
-    // Use sessionStorage to track if we've synced (survives page reloads but not browser restarts)
-    // This is more reliable than useRef which can persist across Fast Refresh
-    // Use a simpler key that doesn't depend on URL params
-    const syncKey = `subscription_sync_${user?.id || 'anonymous'}`;
-    const hasSynced = typeof window !== 'undefined' ? sessionStorage.getItem(syncKey) : null;
-
-    console.log('🔍 Sync check:', {
-      syncKey,
-      hasSynced,
-      willSync: success === "true" && !hasSynced
-    });
-
-    // If we have success=true but sessionStorage says we synced, check if subscription actually exists
-    // Use a timestamp-based approach: if sync was more than 2 minutes ago, allow retry
-    if (success === "true" && hasSynced && user) {
-      const syncTimestamp = typeof window !== 'undefined' ? sessionStorage.getItem(`${syncKey}_timestamp`) : null;
-      const now = Date.now();
-      const twoMinutesAgo = now - (2 * 60 * 1000);
-
-      // If no timestamp or timestamp is old, or if subscription is still free, clear and retry
-      if (!syncTimestamp || parseInt(syncTimestamp) < twoMinutesAgo) {
-        console.log('⚠️ Sync timestamp expired or missing - clearing flag to retry');
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem(syncKey);
-          sessionStorage.removeItem(`${syncKey}_timestamp`);
-        }
-      } else if (subscription?.tier === 'free') {
-        // If we have a recent timestamp but subscription is still free, something went wrong - retry
-        console.log('⚠️ Recent sync but subscription still free - clearing flag to retry');
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem(syncKey);
-          sessionStorage.removeItem(`${syncKey}_timestamp`);
-        }
-      }
-    }
-
-    // Prevent multiple syncs - check sessionStorage (might have been cleared above)
-    const currentHasSynced = typeof window !== 'undefined' ? sessionStorage.getItem(syncKey) : null;
-    if (success === "true" && !currentHasSynced) {
-      // Mark as syncing immediately to prevent duplicate calls
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(syncKey, 'true');
-        sessionStorage.setItem(`${syncKey}_timestamp`, Date.now().toString());
-      }
-
-      // Sync subscription from Stripe first (in case webhook hasn't fired)
-      const syncAndRefresh = async () => {
-        let toastShown = false;
-        const maxRetries = 3;
-        let retryCount = 0;
-
-        const attemptSync = async (): Promise<void> => {
-          try {
-            console.log(`🔄 Starting subscription sync (attempt ${retryCount + 1}/${maxRetries})...`);
-
-            // Wait a bit for Stripe to process the subscription (especially on first attempt)
-            if (retryCount > 0) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-            }
-
-            // Try to sync from Stripe (this handles cases where webhooks haven't fired)
-            const syncResponse = await fetch('/api/stripe/sync-subscription', {
-              method: 'POST',
-            });
-
-            if (syncResponse.ok) {
-              const syncData = await syncResponse.json();
-              console.log('📦 Sync response:', syncData);
-
-              if (syncData.synced) {
-                console.log('✅ Subscription synced from Stripe:', syncData);
-                // Wait a moment for database to update
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Refresh subscription status from database
-                if (user) {
-                  await fetchSubscriptionStatus();
-
-                  // Only show toast once
-                  if (!toastShown) {
-                    const tierName = syncData.tier === 'student' ? 'Student'
-                      : syncData.tier === 'scholar' ? 'Scholar'
-                        : syncData.tier === 'adept' ? 'Adept'
-                          : 'Premium';
-                    toast.success(`Subscription activated! You're now on the ${tierName} tier.`);
-                    toastShown = true;
-                  }
-                }
-
-                // Clean up URL params after successful sync
-                const url = new URL(window.location.href);
-                url.searchParams.delete('success');
-                window.history.replaceState({}, '', url.toString());
-
-                // Clear sessionStorage after successful sync so it can run again if needed
-                if (typeof window !== 'undefined') {
-                  sessionStorage.removeItem(syncKey);
-                  sessionStorage.removeItem(`${syncKey}_timestamp`);
-                }
-
-                return; // Success, exit retry loop
-              } else {
-                // No subscription found yet, but might be available soon
-                console.log(`ℹ️ No subscription found to sync (attempt ${retryCount + 1}):`, syncData.message);
-
-                // If we've exhausted retries, refresh anyway and show a message
-                if (retryCount >= maxRetries - 1) {
-                  if (user) {
-                    await fetchSubscriptionStatus();
-                    if (!toastShown) {
-                      toast.success("Subscription activated! Your subscription status will update shortly.");
-                      toastShown = true;
-                    }
-                  }
-
-                  // Clean up URL params even if sync didn't work
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete('success');
-                  window.history.replaceState({}, '', url.toString());
-
-                  return;
-                }
-
-                // Retry
-                retryCount++;
-                return attemptSync();
-              }
-            } else {
-              const errorData = await syncResponse.json().catch(() => ({}));
-              console.error(`❌ Failed to sync subscription (attempt ${retryCount + 1}):`, errorData);
-
-              // If we've exhausted retries, refresh anyway
-              if (retryCount >= maxRetries - 1) {
-                if (user) {
-                  await fetchSubscriptionStatus();
-                  if (!toastShown) {
-                    toast.success("Subscription activated! Your subscription status will update shortly.");
-                    toastShown = true;
-                  }
-                }
-
-                // Clean up URL params even on error
-                const url = new URL(window.location.href);
-                url.searchParams.delete('success');
-                window.history.replaceState({}, '', url.toString());
-
-                return;
-              }
-
-              // Retry
-              retryCount++;
-              return attemptSync();
-            }
-          } catch (error) {
-            console.error(`Error syncing subscription (attempt ${retryCount + 1}):`, error);
-
-            // If we've exhausted retries, refresh anyway
-            if (retryCount >= maxRetries - 1) {
-              if (user) {
-                await fetchSubscriptionStatus();
-                if (!toastShown) {
-                  toast.success("Subscription activated! Your subscription status will update shortly.");
-                  toastShown = true;
-                }
-              }
-
-              // Clean up URL params even on error
-              const url = new URL(window.location.href);
-              url.searchParams.delete('success');
-              window.history.replaceState({}, '', url.toString());
-
-              return;
-            }
-
-            // Retry
-            retryCount++;
-            return attemptSync();
-          }
-        };
-
-        attemptSync();
-      };
-
-      syncAndRefresh();
-    } else if (canceled === "true") {
-      toast.info("Checkout canceled");
-      // Clean up URL params
-      const url = new URL(window.location.href);
-      url.searchParams.delete('canceled');
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, [searchParams, user]);
-
-  const fetchSubscriptionStatus = async () => {
-    if (!user) return;
-
+  const loadBilling = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
+    setError(false);
+
     try {
-      // Fetch subscription status from database
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('subscription_status, role, stripe_customer_id, stripe_subscription_id')
-        .eq('id', user.id)
-        .single();
+      const response = await fetch("/api/membership/billing-summary", {
+        cache: "no-store",
+        signal,
+      });
+      const body: unknown = await response.json();
+      const safeBilling =
+        isRecord(body) && "billing" in body
+          ? parseSafeBillingSummary(body.billing)
+          : null;
 
-      if (userError) {
-        console.error('Error fetching subscription status:', userError);
-        toast.error('Failed to load subscription status');
-        setLoading(false);
-        return;
+      if (!response.ok || !safeBilling) {
+        throw new Error("BILLING_SUMMARY_UNAVAILABLE");
       }
 
-      console.log('📊 Current subscription data from database:', {
-        subscription_status: userData?.subscription_status,
-        role: userData?.role,
-        hasStripeCustomer: !!userData?.stripe_customer_id,
-        hasStripeSubscription: !!userData?.stripe_subscription_id,
-      });
-
-      // Determine tier
-      let tier: SubscriptionTier = 'free';
-      if (userData?.role === 'admin') {
-        tier = 'adept';
-      } else {
-        const status = userData?.subscription_status;
-        if (status === 'student') tier = 'student';
-        else if (status === 'scholar') tier = 'scholar';
-        else if (status === 'adept') tier = 'adept';
-        else if (status === 'premium' || status === 'active') {
-          // Legacy: treat as scholar for now
-          tier = 'scholar';
-        }
-      }
-
-      console.log('🎯 Determined tier:', tier);
-
-      // Fetch rate limit info
-      const rateLimitResponse = await fetch('/api/parallax/rate-limit');
-      const rateLimitData = rateLimitResponse.ok
-        ? await rateLimitResponse.json()
-        : { remaining: 5, limit: 5, resetDate: new Date() };
-
-      setSubscription({
-        tier,
-        queryCount: rateLimitData.limit - rateLimitData.remaining,
-        queryLimit: rateLimitData.limit,
-        resetDate: rateLimitData.resetDate ? new Date(rateLimitData.resetDate) : null,
-      });
-    } catch (error) {
-      console.error('Error fetching subscription:', error);
-      toast.error('Failed to load subscription information');
+      setBilling(safeBilling);
+    } catch {
+      if (signal?.aborted) return;
+      setBilling(null);
+      setError(true);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
-  };
+  }, []);
 
-  const handleUpgrade = async (tier: 'student' | 'scholar' | 'adept') => {
-    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-      toast.error('Stripe is not configured. Please contact support.');
-      return;
-    }
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadBilling(controller.signal);
+    return () => controller.abort();
+  }, [loadBilling]);
 
-    setProcessing(tier);
+  const openBillingPortal = async () => {
+    if (!billing?.portalAvailable || portalLoading) return;
+
+    setPortalLoading(true);
+    setPortalError(null);
     try {
-      // Send tier name — server resolves price ID from env vars
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier, mode: 'subscription' }),
+      const response = await fetch("/api/stripe/create-portal-session", {
+        method: "POST",
+        headers: { Accept: "application/json" },
       });
-
-      let data: any = {};
-      try {
-        const responseText = await response.text();
-        if (responseText) {
-          data = JSON.parse(responseText);
-        }
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        throw new Error(`Server returned invalid response (${response.status} ${response.statusText})`);
+      const body: unknown = await response.json();
+      const portalUrl = isRecord(body) ? body.url : null;
+      if (!response.ok || typeof portalUrl !== "string") {
+        throw new Error("BILLING_PORTAL_UNAVAILABLE");
       }
 
-      if (!response.ok) {
-        const errorMessage = data.error || data.message || `Failed to create checkout session (${response.status})`;
-        const fullErrorDetails = JSON.stringify(data, null, 2);
-        console.error('❌ Checkout session error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: data.error || 'No error field in response',
-          message: data.message || 'No message field in response',
-          details: data.details || 'No details field',
-          fullResponse: fullErrorDetails,
-        });
-        // Log the full error details for debugging
-        console.error('Full error response:', fullErrorDetails);
-        throw new Error(errorMessage);
+      const parsedUrl = new URL(portalUrl);
+      if (parsedUrl.protocol !== "https:") {
+        throw new Error("BILLING_PORTAL_UNAVAILABLE");
       }
-
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
-    } catch (error) {
-      const errorDetails = {
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
-        fullError: error,
-      };
-      console.error('❌ Error creating checkout session:', errorDetails);
-      // Also log the error as a string for better visibility
-      console.error('Error message:', error instanceof Error ? error.message : String(error));
-
-      const errorMessage = error instanceof Error
-        ? error.message
-        : typeof error === 'string'
-          ? error
-          : 'Failed to start checkout. Please try again or contact support.';
-      toast.error(errorMessage);
-    } finally {
-      setProcessing(null);
-    }
-  };
-
-  const handleManualSync = async () => {
-    setProcessing('sync');
-    try {
-      console.log('🔄 Manual sync triggered');
-      const syncResponse = await fetch('/api/stripe/sync-subscription', {
-        method: 'POST',
-      });
-
-      if (syncResponse.ok) {
-        const syncData = await syncResponse.json();
-        console.log('📦 Manual sync response:', syncData);
-
-        if (syncData.synced) {
-          toast.success(`Subscription synced! You're now on the ${syncData.tier} tier.`);
-          await fetchSubscriptionStatus();
-        } else {
-          toast.info(syncData.message || 'No subscription found to sync');
-          await fetchSubscriptionStatus(); // Refresh anyway
-        }
-      } else {
-        const errorData = await syncResponse.json().catch(() => ({}));
-        console.error('❌ Manual sync failed:', errorData);
-        toast.error(errorData.error || errorData.message || 'Failed to sync subscription');
-      }
-    } catch (error) {
-      console.error('Error in manual sync:', error);
-      toast.error('Failed to sync subscription. Please try again.');
-    } finally {
-      setProcessing(null);
-    }
-  };
-
-  const handleManageSubscription = async () => {
-    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-      toast.error('Stripe is not configured. Please contact support.');
-      return;
-    }
-
-    setProcessing('manage');
-    try {
-      const response = await fetch('/api/stripe/create-portal-session', {
-        method: 'POST',
-      });
-
-      let data: any = {};
-      try {
-        const responseText = await response.text();
-        if (responseText) {
-          data = JSON.parse(responseText);
-        }
-      } catch (parseError) {
-        console.error('Failed to parse portal session response as JSON:', parseError);
-        throw new Error(`Server returned invalid response (${response.status} ${response.statusText})`);
-      }
-
-      if (!response.ok) {
-        const errorMessage = data.error || data.message || `Failed to create portal session (${response.status})`;
-        console.error('Portal session error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: data.error || 'No error field in response',
-          message: data.message || 'No message field in response',
-          fullData: Object.keys(data).length > 0 ? data : 'Response body was empty',
-        });
-        throw new Error(errorMessage);
-      }
-
-      // Redirect to Stripe Customer Portal
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No portal URL received');
-      }
-    } catch (error) {
-      console.error('Error creating portal session:', {
-        error,
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
-      });
-      const errorMessage = error instanceof Error
-        ? error.message
-        : typeof error === 'string'
-          ? error
-          : 'Failed to open subscription management. Please try again or contact support.';
-      toast.error(errorMessage);
-    } finally {
-      setProcessing(null);
-    }
-  };
-
-  const getTierInfo = (tier: SubscriptionTier): TierInfo | null => {
-    switch (tier) {
-      case 'free':
-        return {
-          name: 'The Reader',
-          price: 0,
-          queries: '5',
-          features: [
-            '5 AI queries per month',
-            '25 journal pages',
-            'Full library access',
-            'Full graph access',
-            'Basic search',
-            'Pre-course and taster courses',
-            'Unlimited annotations',
-            'Unlimited collections',
-          ],
-          icon: <BookOpen className="w-5 h-5" />,
-          color: 'text-zinc-400',
-          borderColor: 'border-zinc-700',
-          bgColor: 'bg-zinc-900/30',
-        };
-      case 'student':
-        return {
-          name: 'The Student',
-          price: 15,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT,
-          queries: '5',
-          features: [
-            'Full course access',
-            'Structured 8-week learning paths',
-            'Course workbook and synthesis artifacts',
-            '5 AI queries per month',
-            'Unlimited journal pages',
-            'Full library access',
-            'Full graph access',
-            'Unlimited annotations',
-            'Unlimited collections',
-          ],
-          icon: <GraduationCap className="w-5 h-5" />,
-          color: 'text-blue-400',
-          borderColor: 'border-blue-600/30',
-          bgColor: 'bg-blue-900/10',
-        };
-      case 'scholar':
-        return {
-          name: 'The Scholar',
-          price: 29,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR,
-          queries: '25',
-          features: [
-            'Everything in Student',
-            '25 AI research queries per month',
-            'Seven Lenses study workflows',
-            'Concept search and advanced research tools',
-            'Unlimited journal pages',
-            'Full library access',
-            'Full graph access',
-            'Unlimited annotations',
-            'Unlimited collections',
-            'Priority support',
-          ],
-          icon: <Sparkles className="w-5 h-5" />,
-          color: 'text-purple-400',
-          borderColor: 'border-purple-600/30',
-          bgColor: 'bg-purple-900/10',
-        };
-      case 'adept':
-        return {
-          name: 'The Adept',
-          price: 49,
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT,
-          queries: '50',
-          features: [
-            'Everything in Scholar',
-            '50 AI research queries per month',
-            'Highest research limits',
-            'Early access to new course and AI features',
-            'Unlimited journal pages',
-            'Full library access',
-            'Full graph access',
-            'Unlimited annotations',
-            'Unlimited collections',
-            'Priority support',
-          ],
-          icon: <Crown className="w-5 h-5" />,
-          color: 'text-amber-400',
-          borderColor: 'border-amber-600/30',
-          bgColor: 'bg-amber-900/10',
-        };
-      default:
-        return null;
+      window.location.assign(parsedUrl.toString());
+    } catch {
+      setPortalError(
+        "Billing management is temporarily unavailable. Your plan has not changed. Please try again later."
+      );
+      setPortalLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+      <div
+        className="flex min-h-40 items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 text-zinc-300"
+        role="status"
+      >
+        <Loader2
+          className="h-5 w-5 animate-spin text-amber-400 motion-reduce:animate-none"
+          aria-hidden="true"
+        />
+        Loading your billing details…
       </div>
     );
   }
 
-  if (!subscription) {
+  if (error || !billing) {
     return (
-      <div className="rounded-lg border border-red-800 bg-red-900/20 p-6 text-center">
-        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-        <p className="text-red-400">Failed to load subscription information</p>
+      <div
+        className="rounded-xl border border-red-900/70 bg-red-950/30 p-6"
+        role="alert"
+      >
+        <div className="flex items-start gap-3">
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 shrink-0 text-red-300"
+            aria-hidden="true"
+          />
+          <div>
+            <h2 className="font-semibold text-red-100">
+              Billing details are temporarily unavailable
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-red-200/80">
+              No billing action was taken. Try loading your server-verified
+              account details again.
+            </p>
+            <button
+              type="button"
+              onClick={() => void loadBilling()}
+              className="mt-4 min-h-11 rounded-lg border border-red-700 px-4 py-2 text-sm font-semibold text-red-100 transition-colors hover:bg-red-900/40 focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:outline-none"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const currentTierInfo = getTierInfo(subscription.tier);
-  const isPaid = subscription.tier !== 'free';
+  const timeline = billingTimelineFromSummary(billing);
+  const isReader = billing.planCode === "reader";
 
   return (
-    <div className="space-y-6">
-      {/* Current Subscription Status */}
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-amber-100">Current Plan</h3>
-          {currentTierInfo && (
-            <div className={`flex items-center gap-2 px-3 py-1 ${currentTierInfo.bgColor} border ${currentTierInfo.borderColor} rounded-full`}>
-              {currentTierInfo.icon}
-              <span className={`text-sm font-semibold ${currentTierInfo.color}`}>
-                {currentTierInfo.name}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          {/* Status Details */}
-          <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-8">
+      <section
+        className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50"
+        aria-labelledby="current-plan-heading"
+      >
+        <div className="border-b border-zinc-800 px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-zinc-500 mb-1">Subscription Tier</p>
-              <p className="text-lg font-semibold text-amber-100">
-                {currentTierInfo?.name || 'Free'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-zinc-500 mb-1">Query Usage</p>
-              <p className="text-lg font-semibold text-amber-100">
-                {subscription.queryCount} / {subscription.queryLimit}
-              </p>
-            </div>
-          </div>
-
-          {/* Reset Date */}
-          {subscription.resetDate && (
-            <div className="pt-4 border-t border-zinc-800">
-              <div className="flex items-center gap-2 text-sm text-zinc-400">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  Queries reset on {subscription.resetDate.toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Manual Sync Button - Show if subscription is free but user might have Stripe customer */}
-          {subscription.tier === 'free' && (
-            <div className="pt-4 border-t border-zinc-800">
-              <button
-                onClick={handleManualSync}
-                disabled={processing !== null}
-                className="w-full py-2 px-4 border border-amber-700/50 bg-amber-900/20 hover:bg-amber-900/30 text-amber-300 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              <p className="text-sm font-medium text-amber-400">Current plan</p>
+              <h2
+                id="current-plan-heading"
+                className="mt-1 text-2xl font-bold text-amber-100"
               >
-                {processing === 'sync' ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4" />
-                    Sync Subscription Status
-                  </>
-                )}
-              </button>
-              <p className="text-xs text-zinc-500 text-center mt-2">
-                If you recently subscribed, click to sync your subscription status
-              </p>
+                {billing.planName}
+              </h2>
             </div>
-          )}
+            <div className="flex items-center gap-2 self-start rounded-full border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm font-semibold text-zinc-200">
+              {billing.paidEntitlementsActive ? (
+                <CheckCircle2
+                  className="h-4 w-4 text-emerald-400"
+                  aria-hidden="true"
+                />
+              ) : (
+                <BookOpen
+                  className="h-4 w-4 text-amber-400"
+                  aria-hidden="true"
+                />
+              )}
+              {STATUS_LABELS[billing.stripeStatus]}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Beta Messaging */}
-      {(subscription.tier === 'scholar' || subscription.tier === 'adept') && (
-        <div className="rounded-lg border border-amber-800/30 bg-amber-900/10 p-4">
+        <dl className="grid gap-px bg-zinc-800 sm:grid-cols-2">
+          <div className="bg-zinc-950/50 px-5 py-4 sm:px-6">
+            <dt className="text-sm text-zinc-400">Price</dt>
+            <dd className="mt-1 text-lg font-semibold text-zinc-100 tabular-nums">
+              {formatMonthlyPrice(billing)}
+            </dd>
+          </div>
+          <div className="bg-zinc-950/50 px-5 py-4 sm:px-6">
+            <dt className="text-sm text-zinc-400">Rate</dt>
+            <dd className="mt-1 text-lg font-semibold text-zinc-100">
+              {COHORT_LABELS[billing.pricingCohort]}
+            </dd>
+          </div>
+          <div className="bg-zinc-950/50 px-5 py-4 sm:px-6">
+            <dt className="text-sm text-zinc-400">Billing status</dt>
+            <dd className="mt-1 text-lg font-semibold text-zinc-100">
+              {STATUS_LABELS[billing.stripeStatus]}
+            </dd>
+          </div>
+          <div className="bg-zinc-950/50 px-5 py-4 sm:px-6">
+            <dt className="text-sm text-zinc-400">
+              {timeline ? TIMELINE_LABELS[timeline.kind] : "Billing schedule"}
+            </dt>
+            <dd className="mt-1 text-lg font-semibold text-zinc-100 tabular-nums">
+              {timeline ? formatDate(timeline.date) : "No renewal date"}
+            </dd>
+          </div>
+        </dl>
+
+        {billing.pricingCohort === "founding" && (
+          <div className="border-t border-amber-900/50 bg-amber-950/20 px-5 py-4 text-sm leading-6 text-amber-100/80 sm:px-6">
+            <strong className="font-semibold text-amber-100">
+              Founding rate:
+            </strong>{" "}
+            your current rate continues while this subscription remains
+            uninterrupted. A terminal lapse does not preserve founding
+            eligibility after the offer closes.
+          </div>
+        )}
+
+        {billing.cancelAtPeriodEnd && (
+          <div className="border-t border-orange-900/60 bg-orange-950/30 px-5 py-4 text-sm leading-6 text-orange-100 sm:px-6">
+            Cancellation is scheduled. Your saved work remains yours, and the
+            access date above comes from the billing server.
+          </div>
+        )}
+
+        {billing.billingHold && (
+          <div
+            className="border-t border-red-900/70 bg-red-950/30 px-5 py-4 text-sm leading-6 text-red-100 sm:px-6"
+            role="alert"
+          >
+            This membership is on a billing hold. Paid access stays closed until
+            the server confirms a safe billing state.
+          </div>
+        )}
+      </section>
+
+      {!isReader && (
+        <section
+          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-6"
+          aria-labelledby="billing-management-heading"
+        >
           <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-amber-100/80">
-              <p className="font-semibold mb-1">Research Query Limits</p>
-              <p className="text-amber-100/60">
-                Prismarium subscriptions are priced around guided study and research value, not raw token usage.
-                Query limits keep the research tools sustainable while courses, the library, and the graph remain central.
+            <ShieldCheck
+              className="mt-0.5 h-5 w-5 shrink-0 text-amber-400"
+              aria-hidden="true"
+            />
+            <div className="min-w-0 flex-1">
+              <h2
+                id="billing-management-heading"
+                className="text-lg font-bold text-amber-100"
+              >
+                Billing management
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                Use the secure billing portal for your payment method, invoices,
+                or cancellation. Plan switching is not available in the lean
+                portal.
               </p>
+
+              {billing.portalAvailable ? (
+                <button
+                  type="button"
+                  onClick={() => void openBillingPortal()}
+                  disabled={portalLoading}
+                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-amber-700/70 bg-amber-500 px-4 py-2 text-sm font-bold text-zinc-950 transition-colors hover:bg-amber-400 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                >
+                  {portalLoading ? (
+                    <Loader2
+                      className="h-4 w-4 animate-spin motion-reduce:animate-none"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <CreditCard className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {portalLoading ? "Opening secure portal…" : "Manage billing"}
+                </button>
+              ) : (
+                <div className="mt-5 flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-4 text-sm leading-6 text-zinc-400">
+                  <CalendarDays
+                    className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500"
+                    aria-hidden="true"
+                  />
+                  Billing operations are safely closed. Your current server-
+                  verified plan remains unchanged.
+                </div>
+              )}
+
+              {portalError && (
+                <p className="mt-3 text-sm leading-6 text-red-300" role="alert">
+                  {portalError}
+                </p>
+              )}
             </div>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Subscription Tiers */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-amber-100">Available Plans</h3>
-
-        {/* Student Tier */}
-        <div className={`rounded-lg border ${subscription.tier === 'student' ? 'border-blue-600 ring-2 ring-blue-600/50' : 'border-blue-800/30'} bg-blue-900/10 p-6`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-900/30 rounded-lg">
-                <GraduationCap className="w-6 h-6 text-blue-400" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-amber-100">The Student</h4>
-                <p className="text-sm text-zinc-400">Unlock full courses and workbook depth</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$15</div>
-              <div className="text-sm text-zinc-400">/month</div>
-            </div>
-          </div>
-
-          <div className="mb-4 space-y-2">
-            {getTierInfo('student')?.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-zinc-300">
-                <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          {subscription.tier === 'student' ? (
-            <button
-              disabled
-              className="w-full py-2 bg-blue-600/50 text-blue-200 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Current Plan
-            </button>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('student')}
-              disabled={processing !== null || !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {processing === 'student' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : subscription.tier === 'free' ? (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  Subscribe to Student
-                </>
-              ) : (
-                <>
-                  <ArrowDown className="w-4 h-4" />
-                  Downgrade to Student
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Scholar Tier */}
-        <div className={`rounded-lg border ${subscription.tier === 'scholar' ? 'border-purple-600 ring-2 ring-purple-600/50' : 'border-purple-800/30'} bg-purple-900/10 p-6`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-900/30 rounded-lg">
-                <Sparkles className="w-6 h-6 text-purple-400" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-amber-100">The Scholar</h4>
-                <p className="text-sm text-zinc-400">For serious comparative study</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$29</div>
-              <div className="text-sm text-zinc-400">/month</div>
-            </div>
-          </div>
-
-          <div className="mb-4 space-y-2">
-            {getTierInfo('scholar')?.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-zinc-300">
-                <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          {subscription.tier === 'scholar' ? (
-            <button
-              disabled
-              className="w-full py-2 bg-purple-600/50 text-purple-200 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Current Plan
-            </button>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('scholar')}
-              disabled={processing !== null || !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {processing === 'scholar' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : subscription.tier === 'free' ? (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  Subscribe to Scholar
-                </>
-              ) : subscription.tier === 'student' ? (
-                <>
-                  <ArrowUp className="w-4 h-4" />
-                  Upgrade to Scholar
-                </>
-              ) : (
-                <>
-                  <ArrowDown className="w-4 h-4" />
-                  Downgrade to Scholar
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Adept Tier */}
-        <div className={`rounded-lg border ${subscription.tier === 'adept' ? 'border-amber-600 ring-2 ring-amber-600/50' : 'border-amber-800/30'} bg-amber-900/10 p-6`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-900/30 rounded-lg">
-                <Crown className="w-6 h-6 text-amber-400" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-amber-100">The Adept</h4>
-                <p className="text-sm text-zinc-400">Maximum research depth</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-amber-100">$49</div>
-              <div className="text-sm text-zinc-400">/month</div>
-            </div>
-          </div>
-
-          <div className="mb-4 space-y-2">
-            {getTierInfo('adept')?.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-zinc-300">
-                <Check className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          {subscription.tier === 'adept' ? (
-            <button
-              disabled
-              className="w-full py-2 bg-amber-600/50 text-amber-200 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Current Plan
-            </button>
-          ) : (
-            <button
-              onClick={() => handleUpgrade('adept')}
-              disabled={processing !== null || !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {processing === 'adept' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : subscription.tier === 'free' ? (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  Subscribe to Adept
-                </>
-              ) : (
-                <>
-                  <ArrowUp className="w-4 h-4" />
-                  Upgrade to Adept
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Management Section for Paid Users */}
-      {isPaid && (
-        <div className={`rounded-lg border ${currentTierInfo?.borderColor} ${currentTierInfo?.bgColor} p-6`}>
-          <div className="flex items-start gap-4 mb-4">
-            <div className={`p-3 ${currentTierInfo?.bgColor} rounded-lg`}>
-              {currentTierInfo?.icon}
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-amber-100 mb-2">
-                Subscription Management
-              </h3>
-              <p className="text-zinc-400 text-sm mb-4">
-                Manage your subscription, update payment methods, or view billing history.
-              </p>
-            </div>
-          </div>
-
-          {/* Management Options */}
-          <div className="space-y-3">
-            <button
-              onClick={handleManageSubscription}
-              disabled={processing !== null || !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-              className="w-full py-2 px-4 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {processing === 'manage' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  Manage Subscription
-                </>
-              )}
-            </button>
-            {!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
-              <p className="text-xs text-zinc-500 text-center">
-                Subscription management not configured
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Info Box */}
-      <div className="rounded-lg border border-amber-800/30 bg-amber-900/10 p-4">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-100/80">
-            <p className="font-semibold mb-1">About Subscriptions</p>
-            <p className="text-amber-100/60">
-              Subscriptions support the development and maintenance of Prismarium.
-              Reader access keeps the library and correspondence graph open. Paid plans unlock the structured course
-              experience, workbook depth, and advanced research tools that make Prismarium sustainable.
-            </p>
-          </div>
-        </div>
-      </div>
+      {isReader && <MembershipAvailability />}
     </div>
   );
 }

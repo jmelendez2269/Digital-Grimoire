@@ -38,9 +38,8 @@ interface ResponseStreamProps {
     sources: Source[];
   } | null;
   isStreaming: boolean;
-  query?: string;
   lensWeights?: LensWeights;
-  responseLength?: 'short' | 'medium' | 'long';
+  parentResponseId?: string | null;
   onLensExpand?: (lensId: string) => void;
 }
 
@@ -54,9 +53,8 @@ interface JournalPage {
 export default function ResponseStream({
   response,
   isStreaming,
-  query = '',
   lensWeights,
-  responseLength = 'short',
+  parentResponseId = null,
   onLensExpand
 }: ResponseStreamProps) {
   const router = useRouter();
@@ -886,13 +884,11 @@ export default function ResponseStream({
               .filter(lens => activeLensIds.has(lens.id))
               .map(lens => (
                 <ExpandableLensCard
-                  key={lens.id}
+                  key={`${parentResponseId ?? 'pending'}:${lens.id}`}
                   lensId={lens.id}
                   lensName={lens.name}
-                  query={query || response?.query || ''}
-                  lensWeights={lensWeights}
-                  responseLength={responseLength}
-                  onExpand={() => { if (onLensExpand) onLensExpand(lens.id); }}
+                  parentResponseId={parentResponseId}
+                  onExpand={onLensExpand}
                 />
               ))
           )}

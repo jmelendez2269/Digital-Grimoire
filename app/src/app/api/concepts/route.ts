@@ -4,14 +4,12 @@ import { createClient as createSupabaseServerClient } from "@/lib/supabase/serve
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugifyEntityName } from "@/lib/graph/entity-utils";
 import { validateConceptData } from "@/lib/parallax/validation";
-import {
-  scoreConceptsWithAI,
-  shouldUseAIScoring,
-  getCachedScores,
-  cacheScores,
-} from "@/lib/concepts/ai-relevance";
 
 import { getSubscriptionTier } from "@/lib/parallax/rate-limit";
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 async function isAdmin() {
   const supabase = await createSupabaseServerClient();
@@ -176,12 +174,12 @@ export async function GET(req: NextRequest) {
     response.headers.set('X-Cache', 'MISS');
 
     return response;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Unexpected error in GET /api/concepts:', err);
-    console.error('Error stack:', err?.stack);
+    console.error('Error stack:', err instanceof Error ? err.stack : undefined);
     return NextResponse.json(
       {
-        error: err?.message || "Failed to fetch concepts",
+        error: errorMessage(err, "Failed to fetch concepts"),
         details: process.env.NODE_ENV === 'development' ? String(err) : undefined
       },
       { status: 500 }
@@ -310,9 +308,9 @@ export async function POST(req: NextRequest) {
       .single();
     if (error) throw error;
     return NextResponse.json({ concept: data }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: err?.message || "Failed to create concept" },
+      { error: errorMessage(err, "Failed to create concept") },
       { status: 500 }
     );
   }

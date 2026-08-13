@@ -1062,9 +1062,10 @@ function parseV2KeyTensions(section: string): KeyTension[] {
 
   return parsePipeTable(section)
     .map((row) => ({
-      label: row.tension?.trim() || '',
+      label: (row.tension || row.ideas)?.trim() || '',
       description: (
         row['question underneath it']
+        || row['questions we can ask']
         || row.question
         || row.description
         || ''
@@ -1300,7 +1301,7 @@ function parseCourseMarkdownV2(markdown: string): ParseResult {
     "jack's curator note",
     'limits of this investigation', 'scope and limits', 'tone & safety note',
     'scope, context, and safety', 'care note',
-    'learning outcomes', 'key tensions', 'completion pathways', 'how to use this course',
+    'learning outcomes', 'key tensions', "ideas we'll explore together", 'completion pathways', 'how to use this course',
     'how the course works', 'the six questions we will ask of a claim',
     'the five distinctions we will keep making',
     'reading guidance', 'source/context notes',
@@ -1324,7 +1325,9 @@ function parseCourseMarkdownV2(markdown: string): ParseResult {
     ? tailSections.filter((section) => !completedExamples.includes(section))
     : [];
   const outcomes = parseV2LearningOutcomes(sectionMap.get('learning outcomes') || '');
-  const tensions = parseV2KeyTensions(sectionMap.get('key tensions') || '');
+  const tensions = parseV2KeyTensions(
+    sectionMap.get('key tensions') || sectionMap.get("ideas we'll explore together") || ''
+  );
   const weekPathwaySection = weeks
     .flatMap((week) => week.sections ?? [])
     .find((section) => section.heading.toLowerCase().startsWith('completion pathways'));
@@ -1494,8 +1497,10 @@ export function parseCourseMarkdown(markdown: string): ParseResult {
     if (learning_outcomes.length === 0) warnings.push('No learning outcomes found');
 
     const tensionsSection =
+      sections["IDEAS WE'LL EXPLORE TOGETHER"] ||
       sections['KEY TENSIONS (Course Spine)'] ||
       sections['KEY TENSIONS'] ||
+      Object.entries(sections).find(([key]) => key.startsWith("IDEAS WE'LL EXPLORE"))?.[1] ||
       Object.entries(sections).find(([key]) => key.startsWith('KEY TENSIONS'))?.[1] ||
       '';
     const key_tensions = parseKeyTensions(tensionsSection);

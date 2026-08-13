@@ -7,7 +7,9 @@ import { fileURLToPath } from "node:url";
 import {
   CHECKOUT_ALLOWED_PRICE_IDS_ENV,
   COMMERCIAL_ACTIONS,
+  CONFIGURABLE_COMMERCIAL_ACTIONS,
   ENABLED_COMMERCIAL_ACTIONS_ENV,
+  HARD_CLOSED_GENERATION_ACTIONS,
   isCheckoutPriceAllowed,
   isCommercialActionEnabled,
 } from "../src/lib/commercial-availability-policy";
@@ -83,6 +85,26 @@ test("only exact action tokens enable a contained path", () => {
   );
 });
 
+test("unmetered generation actions cannot be reopened by configuration", () => {
+  assert.deepEqual(
+    new Set([
+      ...CONFIGURABLE_COMMERCIAL_ACTIONS,
+      ...HARD_CLOSED_GENERATION_ACTIONS,
+    ]),
+    new Set(COMMERCIAL_ACTIONS),
+  );
+
+  for (const action of HARD_CLOSED_GENERATION_ACTIONS) {
+    assert.equal(
+      isCommercialActionEnabled(action, {
+        [ENABLED_COMMERCIAL_ACTIONS_ENV]: action,
+      }),
+      false,
+      action,
+    );
+  }
+});
+
 test("Checkout requires action enablement and an exact server-only Price allowlist", () => {
   const enabled = {
     [ENABLED_COMMERCIAL_ACTIONS_ENV]: "checkout",
@@ -120,6 +142,12 @@ test("disabled guards return one opaque, non-cacheable 503 response", async () =
     null,
   );
 
+  const hardClosed = guardCommercialAction("deep_search_generation", {
+    [ENABLED_COMMERCIAL_ACTIONS_ENV]: "deep_search_generation",
+  });
+  assert.ok(hardClosed);
+  assert.equal(hardClosed.status, 503);
+
   assert.ok(
     guardCheckoutOffer("price_unknown000", {
       [ENABLED_COMMERCIAL_ACTIONS_ENV]: "checkout",
@@ -128,46 +156,128 @@ test("disabled guards return one opaque, non-cacheable 503 response", async () =
   );
 });
 
-test("Checkout fails closed before request parsing, Supabase, or Stripe", () => {
+test("Checkout authenticates before the exact public-or-canary gate and still fails before ledger or Stripe", () => {
   const path = "src/app/api/stripe/create-checkout-session/route.ts";
   const handler = postHandlerSource(path);
-  const actionGuard = handler.indexOf('guardCommercialAction("checkout")');
   const requestParse = handler.indexOf("request.json()");
-  const offerGuard = handler.indexOf("guardCheckoutOffer(priceId)");
   const supabaseClient = handler.indexOf("createClient()");
-  const stripeClient = handler.indexOf("getStripeClient()");
+  const profileRole = handler.indexOf('.select("role")');
+  const checkout = handler.indexOf("createMembershipCheckout(");
+  const stripeClient = handler.lastIndexOf("getStripeClient()");
 
-  assert.ok(actionGuard >= 0 && actionGuard < requestParse);
-  assert.ok(offerGuard > requestParse && offerGuard < supabaseClient);
-  assert.ok(offerGuard < stripeClient);
+  const checkoutSource = readSource(
+    "src/lib/membership/membership-checkout.server.ts",
+  );
+  const publicResolution = checkoutSource.indexOf(
+    "resolveMembershipCheckoutOffer(",
+  );
+  const canaryResolution = checkoutSource.indexOf(
+    "resolveMembershipCanaryCheckoutOfferForUser(",
+  );
+  const offerGuard = checkoutSource.indexOf(
+    "isCheckoutPriceAllowed(offer.stripePriceId",
+  );
+  const membership = checkoutSource.indexOf(
+    "dependencies.loadMembership(input.userId)",
+  );
+  const reservation = checkoutSource.indexOf("dependencies.reserveRequest(");
+
+  assert.ok(requestParse >= 0 && requestParse < supabaseClient);
+  assert.ok(supabaseClient < profileRole && profileRole < checkout);
+  assert.ok(checkout < stripeClient);
+  assert.ok(publicResolution >= 0 && publicResolution < membership);
+  assert.ok(canaryResolution >= 0 && canaryResolution < membership);
+  assert.ok(offerGuard >= 0 && offerGuard < membership);
+  assert.ok(offerGuard < reservation);
 
   const source = readSource(path);
   assert.doesNotMatch(source, /NEXT_PUBLIC_STRIPE_PRICE_ID_/);
-  assert.doesNotMatch(source, /body\.tier/);
+  assert.doesNotMatch(source, /body\.(?:priceId|amount|mode|tier|customerId)/);
   assert.match(source, /mode:\s*"subscription"/);
 });
 
 test("customer-reachable unmetered routes guard before cost or mutation work", () => {
   const guardedRoutes: Array<[string, string, string[]]> = [
-    ["src/app/api/working/generate/route.ts", "working_generation", ["createClient()", "synthesizeRitual("]],
-    ["src/app/api/stripe/sync-subscription/route.ts", "checkout", ["createClient()", "getStripeClient("]],
-    ["src/app/api/parallax/query/route.ts", "seven_lenses_generation", ["createClient()", "createSSEStream("]],
-    ["src/app/api/parallax/ai-search/route.ts", "deep_search_generation", ["createClient()", "hybridSearch(", "aiOrchestrator.chatComplete("]],
-    ["src/app/api/parallax/lens/[lensId]/route.ts", "seven_lenses_expansion", ["createClient()", "hybridSearch(", "generateLensResponse("]],
-    ["src/app/api/ai/gpt/route.ts", "gpt_proxy", ["createClient()", "aiOrchestrator.chatComplete("]],
-    ["src/app/api/ai/claude/route.ts", "claude_proxy", ["createClient()", "aiOrchestrator.chatComplete("]],
-    ["src/app/api/ai/gemini/route.ts", "gemini_proxy", ["createClient()", "aiOrchestrator.chatComplete("]],
-    ["src/app/api/practitioner/tarot/generate/route.ts", "tarot_image_generation", ["new OpenAI(", "openai.images.generate("]],
-    ["src/app/api/covers/generate/route.ts", "cover_image_generation", ["generateWithReplicate(", "createClient()"]],
-    ["src/app/api/chapters/generate-names/route.ts", "chapter_name_generation", ["createClient()", "getOpenRouterClient()"]],
-    ["src/app/api/metadata/extract/route.ts", "metadata_extraction", ["createClient()", "getOpenRouterClient()"]],
-    ["src/app/api/process-document/route.ts", "document_processing", ["getR2Client()", "extractMetadata("]],
-    ["src/app/api/process-media/route.ts", "media_processing", ["getR2Client()", "generateTranscript("]],
+    ["src/app/api/working/generate/route.ts", "working_generation", ["executeMeteredWorking("]],
+    ["src/app/api/parallax/query/route.ts", "seven_lenses_generation", ["executeMeteredSevenLenses("]],
+    ["src/app/api/parallax/ai-search/route.ts", "deep_search_generation", ["createClient()", "request.json()", "hybridSearch(", "aiOrchestrator.chatComplete("]],
+    ["src/app/api/parallax/lens/[lensId]/route.ts", "seven_lenses_expansion", ["executeMeteredLensExpansion("]],
+    ["src/app/api/ai/gpt/route.ts", "gpt_proxy", ["createClient()", "request.json()", "aiOrchestrator.chatComplete("]],
+    ["src/app/api/ai/claude/route.ts", "claude_proxy", ["createClient()", "request.json()", "aiOrchestrator.chatComplete("]],
+    ["src/app/api/ai/gemini/route.ts", "gemini_proxy", ["createClient()", "request.json()", "aiOrchestrator.chatComplete("]],
+    ["src/app/api/practitioner/tarot/generate/route.ts", "tarot_image_generation", ["new OpenAI(", "req.json()", "openai.images.generate("]],
+    ["src/app/api/covers/generate/route.ts", "cover_image_generation", ["request.json()", "generateWithReplicate(", "createClient()"]],
+    ["src/app/api/chapters/generate-names/route.ts", "chapter_name_generation", ["createClient()", "request.json()", "getOpenRouterClient()"]],
+    ["src/app/api/metadata/extract/route.ts", "metadata_extraction", ["createClient()", "request.json()", "getOpenRouterClient()"]],
+    ["src/app/api/process-document/route.ts", "document_processing", ["getR2Client()", "request.json()", "extractMetadata("]],
+    ["src/app/api/process-media/route.ts", "media_processing", ["getR2Client()", "request.json()", "generateTranscript("]],
   ];
 
   for (const [path, action, markers] of guardedRoutes) {
     assertGuardPrecedes(path, action, markers);
   }
+});
+
+test("curator-only generation routes prove admin authority before prompts or providers", () => {
+  const adminRoutes: Array<[string, string[]]> = [
+    [
+      "src/app/api/documents/generate-metadata/route.ts",
+      ["request.json()", "getOpenRouterClient()", "chat.completions.create("],
+    ],
+    [
+      "src/app/api/documents/rescan-all-metadata/route.ts",
+      ["request.json()", "getR2Client()", "extractMetadata("],
+    ],
+  ];
+
+  for (const [path, markers] of adminRoutes) {
+    const handler = postHandlerSource(path);
+    const adminCheck = handler.indexOf("profile?.role !== 'admin'");
+    assert.notEqual(adminCheck, -1, `${path} must require the admin role`);
+    for (const marker of markers) {
+      const markerIndex = handler.indexOf(marker);
+      assert.notEqual(markerIndex, -1, `${path} must contain ${marker}`);
+      assert.ok(adminCheck < markerIndex, `${path} must authorize before ${marker}`);
+    }
+  }
+});
+
+test("zero-credit read, search, graph, Journal, and reopen surfaces stay outside commercial gating", () => {
+  const freeSurfaces = [
+    "src/app/library/page.tsx",
+    "src/app/graph/page.tsx",
+    "src/app/journal/page.tsx",
+    "src/app/api/concepts/route.ts",
+    "src/app/api/search/history/route.ts",
+  ];
+
+  for (const path of freeSurfaces) {
+    assert.doesNotMatch(readSource(path), /guardCommercialAction\(/, path);
+  }
+
+  const conceptsGet = readSource("src/app/api/concepts/route.ts").split(
+    "export async function POST",
+  )[0];
+  assert.doesNotMatch(
+    conceptsGet,
+    /scoreConceptsWithAI|chat\.completions\.create|aiOrchestrator\.chatComplete/,
+  );
+
+  const sevenLenses = readSource("src/app/seven-lenses/page.tsx");
+  assert.match(sevenLenses, /setCurrentResponseId\(conversation\.id\)/);
+  assert.match(sevenLenses, /setResponse\(formattedResponse\)/);
+});
+
+test("billing reconciliation has its own default-closed gate before auth or Stripe", () => {
+  const path = "src/app/api/stripe/sync-subscription/route.ts";
+  const handler = postHandlerSource(path);
+  const gate = handler.indexOf("billingOperationsEnabled()");
+  const auth = handler.indexOf("createClient()");
+  const stripe = handler.indexOf("getStripeClient()");
+
+  assert.ok(gate >= 0 && gate < auth);
+  assert.ok(gate < stripe);
+  assert.doesNotMatch(handler, /guardCommercialAction\(["']checkout["']\)/);
 });
 
 test("sacred-text imports preserve non-AI mode and guard AI mode before work", () => {

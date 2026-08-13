@@ -22,10 +22,13 @@ export interface CompletionOptions {
     maxTokens?: number;
     stream?: boolean;
     jsonMode?: boolean;
+    signal?: AbortSignal;
 }
 
 export interface AIResponse {
     content: string;
+    providerRequestId?: string | null;
+    estimatedCostUsd?: number | null;
     usage: {
         promptTokens: number;
         completionTokens: number;

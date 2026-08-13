@@ -31,6 +31,7 @@ const PUBLIC_EXACT_ROUTES = [
   "/",
   "/library",
   "/explore",
+  "/pricing",
   "/api/library/catalog",
 ] as const;
 

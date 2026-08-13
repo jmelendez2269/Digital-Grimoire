@@ -1,7 +1,8 @@
 # Prismarium lean membership launch plan
 
 **Date:** August 6, 2026  
-**Status:** Controlling plan for the immediate membership build  
+**Last updated:** August 12, 2026<br>
+**Status:** Minimal membership launch active; 72-hour monitoring in progress<br>
 **Forecast:** 25–35 focused engineering days  
 **Execution tracker:** [Prismarium membership implementation tracker](prismarium-membership-implementation-tracker.md)  
 **Parallel course board:** [Prismarium course production tracker](prismarium-course-production-tracker.md)  
@@ -41,7 +42,7 @@ Those facts do not mean the product lacks value. They mean the next investment s
 | Saved course work and progress | Public/free paths | Included for accessible course | Included | Included |
 | Generative tools | Credit-metered | Credit-metered | Credit-metered | Credit-metered |
 
-“Launch-gated” means Adept is built into the catalog and entitlement model but is not sold until shadow cost data shows that 300 credits at $69 leaves a safe margin. If the evidence is good, it may launch with the other tiers; otherwise its public flag remains off.
+“Launch-gated” means Adept is built into the catalog and entitlement model but is not sold until a later explicit owner decision. The minimal August 12 launch holds Adept even though the shadow economics passed.
 
 ### 2.2 Positioning
 
@@ -81,7 +82,7 @@ The 1/1/2/3 weights are launch hypotheses, not claims that the economics are alr
 - There is no annual billing at launch.
 - A database course row marked `published` is content state, not membership-release authority.
 - A server-owned release allowlist defines free/public courses and member-released paid courses. A separate `student_launch_course_slug` must name exactly one member-released paid course before Student sales open.
-- Student receives only `student_launch_course_slug` during the single-course launch. The initial slug is a business decision to record after PRE/C01/FD01 sequencing; it is not inferred from database order or the first `published` row.
+- Student receives only `student_launch_course_slug` during the single-course launch. Jen approved `c01-how-humans-know-what-they-know` as the exact initial slug on August 11, 2026; it is not inferred from database order or the first `published` row. Approval alone does not release the course or enable paid sales.
 - Before a second paid course opens, Prismarium must add an explicit Student course-selection and switching flow that preserves prior work.
 - Scholar and Adept receive every paid course on the explicit member-release allowlist.
 - Reader may keep at most 50 active Journal pages; paid tiers are unlimited. Archiving remains the zero-cost way to make room.
@@ -169,7 +170,7 @@ The first end-to-end proof uses free PRE. C01 and FD01 previews do not by themse
 
 ### 4.6 Predeclared economics guardrails
 
-The cost study must test both observed behavior and conservative full-use scenarios. A tiny average-use sample cannot prove that a high-volume allowance is safe. Its minimum evidence window is 7 consecutive shadow days and 30 successful samples across at least 3 internal test accounts. Each of the four enabled billable variants—The Working, lens expansion, Seven Lenses standard, and Seven Lenses long—must have at least 5 successes; the sample set must exercise default and maximum permitted request sizes. Failure, timeout, abort, and retry paths are tested separately and do not count toward the 30 successes. The conservative full-use model uses the costliest permitted action mix. Meeting this minimum still does not force a tier to pass.
+The cost study must test both observed behavior and conservative full-use scenarios. A tiny average-use sample cannot prove that a high-volume allowance is safe. Per Jen's August 12, 2026 scope decision, its minimum evidence window is 30 successful samples across 3 independent execution batches and at least 3 internal test accounts; calendar spacing is not required for the synthetic localhost study. Each batch restarts the application, rotates fixture credentials, and uses fresh request IDs. Each of the four enabled billable variants—The Working, lens expansion, Seven Lenses standard, and Seven Lenses long—must have at least 5 successes; the sample set must exercise default and maximum permitted request sizes. Failure, timeout, abort, and retry paths are tested separately and do not count toward the 30 successes. The conservative full-use model uses the costliest permitted action mix. Meeting this minimum still does not force a tier to pass.
 
 Initial go/no-go thresholds are:
 
@@ -195,10 +196,10 @@ If Student or Scholar fails its conservative threshold, its public offer also pa
 | L2 — Monthly billing and catalog | Implement exact monthly offers, trustworthy membership projection, Checkout, webhook, portal, and reconciliation | 4–6 days |
 | L3 — Monthly credit core | Implement 10/30/100/300 monthly grants and atomic reserve/commit/release | 5–7 days |
 | L4 — Initial tool metering | Meter The Working and Seven Lenses; add telemetry, abuse controls, and fail-closed bypasses | 5–7 days |
-| L5 — Customer UI and launch | Update pricing/account/wallet/tool states, shadow costs, canary, and launch safely | 3–5 days |
+| L5 — Customer UI and launch readiness | Update pricing/account/wallet/tool states, shadow costs, closed production readiness, and post-enable monitoring if separately authorized | 3–5 days |
 | Integration allowance | Cross-phase fixes and verification | Included in forecast |
 
-**Total forecast: 25–35 focused engineering days.** This is effort, not guaranteed elapsed calendar time: L5 includes at least 7 consecutive shadow days and 72 hours of post-enable monitoring, which may overlap other work. It is not a publishing deadline. Course writing, recording, editing, and release preparation proceed in parallel on their own board.
+**Total forecast: 25–35 focused engineering days.** This is effort, not guaranteed elapsed calendar time: L5 includes three independent prelaunch shadow batches and the separately authorized 72 hours of post-enable monitoring that began August 12, 2026 at 23:08 EDT. It is not a publishing deadline. Course writing, recording, editing, and release preparation proceed in parallel on their own board.
 
 ## 6. Launch gates
 
@@ -258,9 +259,12 @@ The following are not hidden obligations inside this launch:
 - The course-production tracker controls editorial/video progress; membership points never inflate it.
 - The full blueprint is a reference, not a backlog that must be completed before launch.
 - A scope change requires a dated decision in the live tracker and an updated point total before implementation begins.
+- The 2026-08-11 `LEAN-L2-06` acceptance counts the verified local contract plus real Stripe test-mode lifecycle as L2 completion. At that time it did not satisfy or authorize the then-pending `LEAN-L5-05` production deployment, live Portal, canary, or paid-activation work; later L5-05 actions and the no-charge scope revision are recorded separately.
 - “Frozen” launch numbers are implementation targets, not permission to ignore failed cost evidence. A prelaunch `hold` or dated `revise` decision overrides public sale/copy until the documents agree again.
 - Production, Stripe, pricing, or public-sales changes require explicit evidence and the appropriate launch gate; planning approval alone does not authorize a risky production mutation.
+- On August 12, 2026, Jen revised `LEAN-L5-05` from a live canary/public-launch exercise to a no-charge production-readiness gate. The existing closed production application/database release, backup/rehearsal, safe Portal, and disabled staged webhook satisfy that packet. This does not claim or authorize a canary, payment/refund, webhook activation/cutover, billing operation, sale, Checkout, course release, credit or metered action, public flag, further deployment/migration, or public launch. `LEAN-L5-06` remains unstarted until a future, separately approved public enablement actually begins its 72-hour monitoring window.
+- Later on August 12, Jen separately authorized that minimal public enablement: PRE stays free/public; C01 is the sole member course; Student founding and Scholar, Checkout, billing operations, monthly credits, The Working, Seven Lenses, the staged webhook, required Vercel configuration/deployments, smoke verification, and 72-hour monitoring are active. Adept remains held. No canary or synthetic charge/refund was created, and the legacy webhook secret was not overwritten. This later decision starts `LEAN-L5-06`; it does not rewrite the historical no-charge completion of L5-05.
 
 ## 10. Immediate next move
 
-Start `LEAN-L0-01` in the implementation tracker: a read-only, privacy-safe production/schema/Stripe preflight. Do not edit pricing UI, create Stripe objects, or mutate production during that packet. Once the evidence is reviewed, proceed to adversarial authorization tests and the permission hotfix.
+Phases L2, L3, and L4 are complete at 22/22, 21/21, and 21/21. `LEAN-L5-01` through the owner-revised `LEAN-L5-05` are complete. The [minimal launch baseline](../audits/lean-l5-06-minimal-membership-launch-monitoring-2026-08-12.md) records the later separately authorized public enablement and starts `LEAN-L5-06`. Combined progress remains 112/114 verified points (98.2%), with Phase L5 at 19/21, until the full 72-hour monitoring gate ends August 15, 2026 at 23:08 EDT. Run the 24/48/72-hour checks; keep Adept, canary/synthetic payments, additional member courses, Deep Search, image/generic generation, annual plans, packs, rollover, and every deferred expansion closed.
