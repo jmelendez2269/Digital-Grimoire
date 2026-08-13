@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { logApiUsage } from '@/lib/usage-tracker';
 import { getDefaultOpenRouterMetadataModel, getOpenRouterClient } from '@/lib/ai/openrouter-client';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 interface Chapter {
   id: string;
@@ -11,6 +12,9 @@ interface Chapter {
 }
 
 export async function POST(request: NextRequest) {
+  const unavailable = guardCommercialAction('chapter_name_generation');
+  if (unavailable) return unavailable;
+
   try {
     const supabase = await createClient();
     const {

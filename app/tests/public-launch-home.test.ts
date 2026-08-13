@@ -86,3 +86,10 @@ test("the homepage isolates ballot failure and mounts the live panel only when a
   assert.ok(pollLoader.includes('lifecycleStatus === "draft"'));
   assert.ok(home.includes("pollPanel ?? <VoteFallback"));
 });
+
+test("the homepage loads the safe shared course preview with service authority", () => {
+  const page = readSource("src/app/(home)/page.tsx");
+
+  assert.ok(page.includes("getSharedCoursePreviews(serviceSupabase)"));
+  assert.ok(!page.includes("getSharedCoursePreviews(supabase)"));
+});

@@ -1,221 +1,354 @@
 /**
- * Utility script to verify Stripe price IDs exist in your account
- * 
- * Usage:
- *   cd "C:\Users\Jen_a\OneDrive\Documents\Projects\Digital Grimore\Digital-Grimoire\app"
- *   npx tsx scripts/verify-stripe-prices.ts
+ * LEAN-L2-03 privacy-safe, read-only Stripe catalog verifier.
+ *
+ * Allowed Stripe operations:
+ * - accounts.retrieve
+ * - products.list
+ * - prices.list
+ *
+ * The output never includes raw keys, account/Product/Price IDs, customer data,
+ * product copy, or metadata values. Stable Stripe IDs are represented only by
+ * short SHA-256 fingerprints suitable for comparing audit runs.
  */
 
-import Stripe from 'stripe';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { createHash } from "node:crypto";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-// Load environment variables from .env.local
-dotenv.config({ path: path.join(__dirname, '../.env.local') });
+import * as dotenv from "dotenv";
+import Stripe from "stripe";
 
-async function verifyStripePrices() {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-  
-  if (!secretKey) {
-    console.error('❌ STRIPE_SECRET_KEY not found in environment variables');
-    console.log('Make sure you have a .env.local file with your Stripe keys.');
-    process.exit(1);
-  }
+const OFFER_EXPECTATIONS = [
+  {
+    code: "student_founding_monthly",
+    environmentKey: "PRISMARIUM_STRIPE_PRICE_STUDENT_FOUNDING_MONTHLY",
+    amountCents: 1500,
+  },
+  {
+    code: "student_standard_monthly",
+    environmentKey: "PRISMARIUM_STRIPE_PRICE_STUDENT_STANDARD_MONTHLY",
+    amountCents: 1900,
+  },
+  {
+    code: "scholar_monthly",
+    environmentKey: "PRISMARIUM_STRIPE_PRICE_SCHOLAR_MONTHLY",
+    amountCents: 3900,
+  },
+  {
+    code: "adept_monthly",
+    environmentKey: "PRISMARIUM_STRIPE_PRICE_ADEPT_MONTHLY",
+    amountCents: 6900,
+  },
+] as const;
 
-  const isTestKey = secretKey.startsWith('sk_test_');
-  const isLiveKey = secretKey.startsWith('sk_live_');
-  
-  console.log(`\n🔑 Using ${isTestKey ? 'TEST' : isLiveKey ? 'LIVE' : 'UNKNOWN'} Stripe key\n`);
+const LEGACY_PRICE_KEYS = [
+  "NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT",
+  "NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR",
+  "NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT",
+] as const;
 
-  const stripe = new Stripe(secretKey);
+type StripeMode = "live" | "test" | "unknown";
 
-  // Get account information to verify which account/sandbox we're accessing
-  try {
-    const account = await stripe.accounts.retrieve();
-    console.log('🏢 Stripe Account Information:');
-    console.log('─'.repeat(60));
-    console.log(`   Account ID: ${account.id}`);
-    console.log(`   Display Name: ${account.settings?.dashboard?.display_name || 'N/A'}`);
-    console.log(`   Country: ${account.country || 'N/A'}`);
-    if (account.email) {
-      console.log(`   Email: ${account.email}`);
-    }
-    console.log('─'.repeat(60));
-    console.log('');
-  } catch (accountError) {
-    // Account retrieval might fail for restricted keys, that's okay
-    console.log('⚠️  Could not retrieve account information (this is normal for restricted keys)\n');
-  }
+interface ProductProjection {
+  id: string;
+  active: boolean;
+}
 
-  // Get configured price IDs from environment
-  const configuredPrices = {
-    student: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STUDENT,
-    scholar: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_SCHOLAR,
-    adept: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ADEPT,
+interface PriceProjection {
+  id: string;
+  active: boolean;
+  livemode: boolean;
+  currency: string;
+  unitAmount: number | null;
+  type: string;
+  recurringInterval: string | null;
+  recurringIntervalCount: number | null;
+  recurringUsageType: string | null;
+  productId: string | null;
+}
+
+export interface OfferVerification {
+  code: (typeof OFFER_EXPECTATIONS)[number]["code"];
+  configured: boolean;
+  configuredPriceFingerprint: string | null;
+  expected: {
+    amountCents: number;
+    currency: "usd";
+    type: "recurring";
+    interval: "month";
+    intervalCount: 1;
+    usageType: "licensed";
+    active: true;
+  };
+  status:
+    | "verified"
+    | "missing_configuration"
+    | "configured_price_not_found"
+    | "configured_price_mismatch";
+  checks: Record<string, boolean> | null;
+  exactCandidateCount: number;
+  exactCandidateFingerprints: string[];
+}
+
+function fingerprint(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 12);
+}
+
+export function stripeModeFromKey(secretKey: string): StripeMode {
+  if (/^(?:sk|rk)_live_/.test(secretKey)) return "live";
+  if (/^(?:sk|rk)_test_/.test(secretKey)) return "test";
+  return "unknown";
+}
+
+function priceChecks(
+  price: PriceProjection,
+  product: ProductProjection | undefined,
+  amountCents: number,
+  mode: StripeMode,
+): Record<string, boolean> {
+  return {
+    accountModeKnown: mode !== "unknown",
+    modeMatchesAccountKey:
+      mode === "live" ? price.livemode : mode === "test" && !price.livemode,
+    productExists: product !== undefined,
+    productActive: product?.active === true,
+    priceActive: price.active,
+    currencyUsd: price.currency === "usd",
+    exactAmount: price.unitAmount === amountCents,
+    recurring: price.type === "recurring",
+    monthlyInterval: price.recurringInterval === "month",
+    intervalCountOne: price.recurringIntervalCount === 1,
+    licensedUsage: price.recurringUsageType === "licensed",
+  };
+}
+
+function checksPass(checks: Record<string, boolean>): boolean {
+  return Object.values(checks).every(Boolean);
+}
+
+export function verifyOffer(
+  expectation: (typeof OFFER_EXPECTATIONS)[number],
+  configuredPriceId: string | undefined,
+  prices: PriceProjection[],
+  products: Map<string, ProductProjection>,
+  mode: StripeMode,
+): OfferVerification {
+  const exactCandidates = prices.filter((price) => {
+    const product = price.productId
+      ? products.get(price.productId)
+      : undefined;
+    return checksPass(
+      priceChecks(price, product, expectation.amountCents, mode),
+    );
+  });
+  const exactCandidateFingerprints = exactCandidates
+    .map((price) => fingerprint(price.id))
+    .sort();
+
+  const expected = {
+    amountCents: expectation.amountCents,
+    currency: "usd" as const,
+    type: "recurring" as const,
+    interval: "month" as const,
+    intervalCount: 1 as const,
+    usageType: "licensed" as const,
+    active: true as const,
   };
 
-  console.log('📋 Configured Price IDs in .env.local:');
-  console.log('─'.repeat(60));
-  for (const [tier, priceId] of Object.entries(configuredPrices)) {
-    if (priceId) {
-      console.log(`  ${tier.padEnd(10)}: ${priceId}`);
-    } else {
-      console.log(`  ${tier.padEnd(10)}: ❌ NOT SET`);
-    }
+  if (!configuredPriceId) {
+    return {
+      code: expectation.code,
+      configured: false,
+      configuredPriceFingerprint: null,
+      expected,
+      status: "missing_configuration",
+      checks: null,
+      exactCandidateCount: exactCandidates.length,
+      exactCandidateFingerprints,
+    };
   }
-  console.log('─'.repeat(60));
 
-  // List all products and prices from Stripe
-  console.log('\n🔍 Fetching all products and prices from Stripe...\n');
+  const configuredPrice = prices.find(
+    (price) => price.id === configuredPriceId,
+  );
+  if (!configuredPrice) {
+    return {
+      code: expectation.code,
+      configured: true,
+      configuredPriceFingerprint: fingerprint(configuredPriceId),
+      expected,
+      status: "configured_price_not_found",
+      checks: null,
+      exactCandidateCount: exactCandidates.length,
+      exactCandidateFingerprints,
+    };
+  }
+
+  const product = configuredPrice.productId
+    ? products.get(configuredPrice.productId)
+    : undefined;
+  const checks = priceChecks(
+    configuredPrice,
+    product,
+    expectation.amountCents,
+    mode,
+  );
+  return {
+    code: expectation.code,
+    configured: true,
+    configuredPriceFingerprint: fingerprint(configuredPrice.id),
+    expected,
+    status: checksPass(checks) ? "verified" : "configured_price_mismatch",
+    checks,
+    exactCandidateCount: exactCandidates.length,
+    exactCandidateFingerprints,
+  };
+}
+
+function projectProduct(product: Stripe.Product): ProductProjection {
+  return { id: product.id, active: product.active };
+}
+
+function projectPrice(price: Stripe.Price): PriceProjection {
+  return {
+    id: price.id,
+    active: price.active,
+    livemode: price.livemode,
+    currency: price.currency,
+    unitAmount: price.unit_amount,
+    type: price.type,
+    recurringInterval: price.recurring?.interval ?? null,
+    recurringIntervalCount: price.recurring?.interval_count ?? null,
+    recurringUsageType: price.recurring?.usage_type ?? null,
+    productId:
+      typeof price.product === "string" ? price.product : price.product?.id ?? null,
+  };
+}
+
+async function main(): Promise<void> {
+  if (!process.argv.includes("--no-local-env")) {
+    const scriptDirectory = dirname(fileURLToPath(import.meta.url));
+    dotenv.config({
+      path: resolve(scriptDirectory, "../.env.local"),
+      quiet: true,
+    });
+  }
+
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    console.log(
+      JSON.stringify({
+        verificationVersion: 1,
+        result: "blocked_missing_stripe_key",
+        externalMutations: 0,
+      }),
+    );
+    process.exitCode = 2;
+    return;
+  }
+
+  const mode = stripeModeFromKey(secretKey);
+  const stripe = new Stripe(secretKey, { maxNetworkRetries: 1 });
 
   try {
-    // Get both active and all products/prices to see what's available
-    const products = await stripe.products.list({ limit: 100, active: true });
-    const allProducts = await stripe.products.list({ limit: 100 });
-    const prices = await stripe.prices.list({ limit: 100, active: true });
-    const allPrices = await stripe.prices.list({ limit: 100 });
-
-    console.log(`✅ Found ${products.data.length} active product(s) and ${prices.data.length} active price(s)`);
-    console.log(`   (Total: ${allProducts.data.length} products, ${allPrices.data.length} prices including archived)\n`);
-
-    // Group prices by product
-    const pricesByProduct = new Map<string, Stripe.Price[]>();
-    for (const price of prices.data) {
-      const productId = typeof price.product === 'string' ? price.product : price.product.id;
-      if (!pricesByProduct.has(productId)) {
-        pricesByProduct.set(productId, []);
-      }
-      pricesByProduct.get(productId)!.push(price);
-    }
-
-    // Display products and their prices
-    console.log('📦 Products and Prices in your Stripe account:');
-    console.log('═'.repeat(80));
-    
-    for (const product of products.data) {
-      const productPrices = pricesByProduct.get(product.id) || [];
-      
-      console.log(`\n📦 Product: ${product.name}`);
-      console.log(`   ID: ${product.id}`);
-      console.log(`   Description: ${product.description || 'N/A'}`);
-      
-      if (productPrices.length === 0) {
-        console.log(`   ⚠️  No active prices found for this product`);
-      } else {
-        console.log(`   💰 Prices:`);
-        for (const price of productPrices) {
-          const amount = price.unit_amount ? (price.unit_amount / 100).toFixed(2) : 'N/A';
-          const currency = price.currency.toUpperCase();
-          const interval = price.recurring?.interval || 'one-time';
-          const isConfigured = Object.values(configuredPrices).includes(price.id);
-          const status = isConfigured ? '✅ IN USE' : '   ';
-          
-          console.log(`      ${status} ${price.id}`);
-          console.log(`         ${currency} $${amount} per ${interval}`);
-        }
-      }
-      console.log('─'.repeat(80));
-    }
-
-    // Check which configured prices exist
-    console.log('\n🔎 Verification Results:');
-    console.log('═'.repeat(80));
-    
-    let allValid = true;
-    for (const [tier, priceId] of Object.entries(configuredPrices)) {
-      if (!priceId) {
-        console.log(`❌ ${tier.padEnd(10)}: NOT CONFIGURED in .env.local`);
-        allValid = false;
-      } else {
-        const priceExists = prices.data.some(p => p.id === priceId);
-        if (priceExists) {
-          const price = prices.data.find(p => p.id === priceId)!;
-          const amount = price.unit_amount ? (price.unit_amount / 100).toFixed(2) : 'N/A';
-          const currency = price.currency.toUpperCase();
-          const interval = price.recurring?.interval || 'one-time';
-          console.log(`✅ ${tier.padEnd(10)}: ${priceId}`);
-          console.log(`   ${currency} $${amount} per ${interval} - EXISTS ✅`);
-        } else {
-          console.log(`❌ ${tier.padEnd(10)}: ${priceId}`);
-          console.log(`   DOES NOT EXIST in your Stripe account ❌`);
-          allValid = false;
-        }
-      }
-    }
-
-    console.log('═'.repeat(80));
-
-    if (allValid) {
-      console.log('\n✅ All configured price IDs exist in your Stripe account!');
-    } else {
-      console.log('\n❌ Some price IDs are missing or invalid.');
-      console.log('\n📝 To fix this:');
-      console.log('   1. Go to https://dashboard.stripe.com/test/products (or /products for live)');
-      console.log('   2. Create the missing products if they don\'t exist');
-      console.log('   3. For each product, copy the Price ID (starts with "price_")');
-      console.log('   4. Update your .env.local file with the correct Price IDs');
-      console.log('   5. Restart your development server');
-    }
-
-    // Also check archived prices and all prices
-    console.log('\n🔍 Checking for archived prices...');
-    const archivedPrices = await stripe.prices.list({ limit: 100, active: false });
-    const archivedMatches = archivedPrices.data.filter(p => 
-      Object.values(configuredPrices).includes(p.id)
+    const [account, stripeProducts, stripePrices] = await Promise.all([
+      stripe.accounts.retrieve(),
+      stripe.products.list({ limit: 100 }).autoPagingToArray({ limit: 1000 }),
+      stripe.prices.list({ limit: 100 }).autoPagingToArray({ limit: 1000 }),
+    ]);
+    const products = stripeProducts.map(projectProduct);
+    const prices = stripePrices.map(projectPrice);
+    const productsById = new Map(products.map((product) => [product.id, product]));
+    const offers = OFFER_EXPECTATIONS.map((expectation) =>
+      verifyOffer(
+        expectation,
+        process.env[expectation.environmentKey],
+        prices,
+        productsById,
+        mode,
+      ),
     );
-    
-    if (archivedMatches.length > 0) {
-      console.log(`\n⚠️  Found ${archivedMatches.length} configured price ID(s) that are ARCHIVED:`);
-      for (const price of archivedMatches) {
-        console.log(`   ❌ ${price.id} - This price is archived and cannot be used`);
-      }
-      console.log('\n   You need to create new prices or reactivate these in Stripe Dashboard.');
-    }
-
-    // Check if prices exist in any form (active or archived)
-    console.log('\n🔍 Checking all prices (active + archived) for configured IDs...');
-    const allPriceIds = allPrices.data.map(p => p.id);
-    const foundInAnyForm = Object.entries(configuredPrices).filter(([tier, priceId]) => {
-      if (!priceId) return false;
-      return allPriceIds.includes(priceId);
+    const legacyPrices = LEGACY_PRICE_KEYS.map((environmentKey) => {
+      const priceId = process.env[environmentKey];
+      const price = priceId
+        ? prices.find((candidate) => candidate.id === priceId)
+        : undefined;
+      return {
+        environmentKey,
+        configured: Boolean(priceId),
+        fingerprint: priceId ? fingerprint(priceId) : null,
+        found: price !== undefined,
+        active: price?.active ?? null,
+        livemode: price?.livemode ?? null,
+        amountCents: price?.unitAmount ?? null,
+        currency: price?.currency ?? null,
+        interval: price?.recurringInterval ?? null,
+      };
     });
+    const allOffersVerified = offers.every(
+      (offer) => offer.status === "verified",
+    );
 
-    if (foundInAnyForm.length > 0) {
-      console.log(`\n⚠️  Found ${foundInAnyForm.length} configured price ID(s) that exist but may be in a different state:`);
-      for (const [tier, priceId] of foundInAnyForm) {
-        const price = allPrices.data.find(p => p.id === priceId);
-        if (price) {
-          const status = price.active ? 'ACTIVE' : 'ARCHIVED';
-          console.log(`   ${tier.padEnd(10)}: ${priceId} - ${status}`);
-        }
-      }
-    }
-
-    // Show account mismatch warning if no products found
-    if (products.data.length === 0 && allProducts.data.length === 0) {
-      console.log('\n⚠️  ACCOUNT/SANDBOX MISMATCH DETECTED!');
-      console.log('─'.repeat(60));
-      console.log('Your API key is accessing account: acct_1SXMoIHvoBA4hFOl');
-      console.log('But your products might be in a different sandbox/account.');
-      console.log('\nTo fix this:');
-      console.log('1. Go to https://dashboard.stripe.com/test/apikeys');
-      console.log('2. Check which sandbox your API key belongs to');
-      console.log('3. Either:');
-      console.log('   - Use the API key from the sandbox where your products are, OR');
-      console.log('   - Copy the Price IDs from the sandbox this API key can access');
-      console.log('─'.repeat(60));
-    }
-
-  } catch (error) {
-    console.error('\n❌ Error fetching data from Stripe:');
-    if (error instanceof Error) {
-      console.error(`   ${error.message}`);
-    } else {
-      console.error(error);
-    }
-    process.exit(1);
+    console.log(
+      JSON.stringify(
+        {
+          verificationVersion: 1,
+          executedAt: new Date().toISOString(),
+          result: allOffersVerified
+            ? "verified"
+            : "hold_missing_or_mismatched_configuration",
+          readOnlyOperations: [
+            "accounts.retrieve",
+            "products.list",
+            "prices.list",
+          ],
+          externalMutations: 0,
+          account: {
+            mode,
+            fingerprint: fingerprint(account.id),
+            retrieved: true,
+          },
+          catalog: {
+            productCount: products.length,
+            activeProductCount: products.filter((product) => product.active)
+              .length,
+            priceCount: prices.length,
+            activePriceCount: prices.filter((price) => price.active).length,
+            recurringPriceCount: prices.filter(
+              (price) => price.type === "recurring",
+            ).length,
+          },
+          offers,
+          legacyPrices,
+          privacy: {
+            rawAccountIdsEmitted: false,
+            rawProductIdsEmitted: false,
+            rawPriceIdsEmitted: false,
+            productCopyEmitted: false,
+            customerOrSubscriptionDataAccessed: false,
+          },
+        },
+        null,
+        2,
+      ),
+    );
+    if (!allOffersVerified) process.exitCode = 2;
+  } catch {
+    console.log(
+      JSON.stringify({
+        verificationVersion: 1,
+        result: "stripe_read_failed",
+        externalMutations: 0,
+        privacy: { rawStripeErrorEmitted: false },
+      }),
+    );
+    process.exitCode = 1;
   }
 }
 
-verifyStripePrices().catch(console.error);
-
+const entrypoint = process.argv[1]
+  ? pathToFileURL(resolve(process.argv[1])).href
+  : null;
+if (entrypoint === import.meta.url) {
+  void main();
+}

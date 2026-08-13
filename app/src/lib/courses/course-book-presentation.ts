@@ -14,6 +14,7 @@ export interface CourseBookMetadata {
 export interface CourseBookDisplay {
   key: string;
   title: string;
+  libraryTitle: string;
   author: string | null;
   coverImageUrl: string | null;
   href: string | null;
@@ -198,6 +199,9 @@ export function buildCourseBookDisplay(
         // The syllabus title is learner-facing and remains authoritative even
         // when the matched library record is a broader edition or collection.
         title: reading.title,
+        // Keep the verified catalog title as well so a reading card can explain
+        // which larger work contains a syllabus excerpt.
+        libraryTitle: match?.title || reading.title,
         author: match?.author || reading.author || null,
         coverImageUrl: match?.coverImageUrl || null,
         href:

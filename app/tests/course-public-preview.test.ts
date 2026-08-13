@@ -67,6 +67,22 @@ test("published course cards always open a public preview", () => {
   );
 });
 
+test("course cards wait for enrollment before choosing their destination", () => {
+  const sourceName = "src/app/courses/page.tsx";
+  const catalog = readSource(sourceName);
+
+  assertContains(
+    catalog,
+    "const presentationLoading = loading || authLoading || enrollmentsLoading",
+    sourceName,
+  );
+  assertContains(
+    catalog,
+    "!presentationLoading && courses.length > 0",
+    sourceName,
+  );
+});
+
 test("anonymous course requests receive only the sanitized published preview", () => {
   const sourceName = "src/app/api/courses/[id]/route.ts";
   const route = readSource(sourceName);
@@ -88,5 +104,19 @@ test("anonymous course requests receive only the sanitized published preview", (
     sourceName,
   );
   assertContains(route, "matchCourseTextsFromContent", sourceName);
+  assertContains(route, "resolveMembershipEntitlement", sourceName);
+  assertContains(route, "entitlement?.course.entitled === true", sourceName);
+  assertOmits(route, "subscription_status", sourceName);
+  assertOmits(route, "hasPaidCourseAccess", sourceName);
   assertOmits(route, "matchAndPersistCourseTexts", sourceName);
+});
+
+test("course enrollment uses the service-owned membership projection", () => {
+  const sourceName = "src/app/api/courses/[id]/enroll/route.ts";
+  const route = readSource(sourceName);
+
+  assertContains(route, "resolveMembershipEntitlement", sourceName);
+  assertContains(route, "courseSlug: String(course.slug)", sourceName);
+  assertOmits(route, "subscription_status", sourceName);
+  assertOmits(route, "hasPaidCourseAccess", sourceName);
 });

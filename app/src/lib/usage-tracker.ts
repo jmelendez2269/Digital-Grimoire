@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 
 // Cost constants (update these with your actual pricing)
 export const PRICING = {
@@ -49,12 +50,12 @@ export interface UsageLogParams {
  */
 export async function logApiUsage(params: UsageLogParams): Promise<void> {
   try {
-    const supabase = await createClient();
+    const serviceSupabase = createServiceClient();
 
     // Calculate cost if not provided
     const cost = params.estimatedCost ?? calculateCost(params.service, params.unitsUsed, params.unitType);
 
-    const { data, error } = await supabase.from('api_usage').insert({
+    const { data, error } = await serviceSupabase.from('api_usage').insert({
       service: params.service,
       endpoint: params.endpoint,
       operation: params.operation,

@@ -1,120 +1,152 @@
-import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { generateLensResponse, getResponseLengthConfig, ResponseLength } from '@/lib/parallax/lens-orchestrator';
-import { hybridSearch } from '@/lib/parallax/hybrid-retrieval';
-import { getLens } from '@/lib/parallax/lenses';
-import { logApiUsage } from '@/lib/usage-tracker';
-import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
+import { guardCommercialAction } from "@/lib/commercial-availability";
+import {
+  MeteringError,
+} from "@/lib/membership/metering-adapter.server";
+import { nextUtcMonthBoundary } from "@/lib/membership/metering-customer-presentation";
+import { executeMeteredLensExpansion } from "@/lib/parallax/metered-lens-expansion.server";
+
+export const maxDuration = 75;
+
+const CUSTOMER_MESSAGES: Record<string, string> = {
+  METERING_UNAUTHORIZED: "Sign in to expand this lens.",
+  METERING_VERIFIED_EMAIL_REQUIRED:
+    "Verify your email before expanding a lens.",
+  METERING_INSUFFICIENT_CREDITS:
+    "You do not have enough Prism Credits for this expansion.",
+  METERING_INVALID_INPUT: "This expansion request is invalid.",
+  LENS_EXPANSION_PARENT_NOT_FOUND:
+    "The saved parent analysis could not be found.",
+  LENS_EXPANSION_PARENT_INVALID:
+    "This saved analysis cannot be expanded safely.",
+  LENS_EXPANSION_PARENT_UNAVAILABLE:
+    "The saved parent analysis is temporarily unavailable.",
+  LENS_EXPANSION_LENS_NOT_IN_PARENT:
+    "That lens was not part of the saved parent analysis.",
+  METERING_CONCURRENCY_LIMITED:
+    "Another expansion is still running. Wait a moment and try again.",
+  METERING_VELOCITY_LIMITED:
+    "Lens expansion needs a short pause before another request.",
+  METERING_REQUEST_IN_PROGRESS:
+    "This expansion is still running. Wait a moment and retry.",
+  METERING_PROVIDER_TIMEOUT:
+    "The expansion took too long. Your credit was returned; try again.",
+  METERING_PROVIDER_ABORTED:
+    "The expansion was interrupted. Your credit was returned; try again.",
+  METERING_EMPTY_RESULT:
+    "The lens did not produce a usable response. Your credit was returned; try again.",
+  METERING_PERSISTENCE_FAILED:
+    "The expansion could not be saved, so your credit was returned. Try again.",
+  READER_AI_CAPACITY_PAUSED:
+    "Reader AI capacity is temporarily paused. Your saved analysis is still available.",
+  METERING_ACTION_OFF: "Lens expansion is temporarily unavailable.",
+  METERING_ACTION_KILLED: "Lens expansion is temporarily unavailable.",
+  METERING_ENTITLEMENT_UNAVAILABLE:
+    "Membership status could not be verified. Try again shortly.",
+  METERING_REQUEST_REPLAY_FAILED:
+    "The saved expansion could not be reopened. Try again shortly.",
+  METERING_SETTLEMENT_FAILED:
+    "The expansion was saved, but its credit record needs reconciliation. Retry with the same request; do not start a new expansion.",
+};
+
+function headers(error?: MeteringError): HeadersInit {
+  const value: Record<string, string> = { "Cache-Control": "no-store" };
+  if (error?.retryAfterSeconds) {
+    value["Retry-After"] = String(error.retryAfterSeconds);
+  }
+  return value;
+}
+
+function errorResponse(error: MeteringError): Response {
+  return Response.json(
+    {
+      error:
+        CUSTOMER_MESSAGES[error.code] ??
+        "Lens expansion is temporarily unavailable. Try again shortly.",
+      code: error.code,
+      ...(error.code === "READER_AI_CAPACITY_PAUSED"
+        ? { resetAt: nextUtcMonthBoundary() }
+        : {}),
+    },
+    { status: error.status, headers: headers(error) },
+  );
+}
 
 /**
  * POST /api/parallax/lens/[lensId]
- * Generate detailed lens response on demand
- * 
- * Body: {
- *   query: string,
- *   lensWeights: LensWeights,
- *   responseLength?: ResponseLength
- * }
+ * Body: { parentResponseId: uuid, requestId: uuid }
+ *
+ * Query, lens weights, response length, action code, and one-credit price are
+ * server-owned. The expansion is durable and settled before content is sent.
  */
 export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ lensId: string }> }
+  request: Request,
+  { params }: { params: Promise<{ lensId: string }> },
 ) {
-  try {
-    const supabase = await createClient();
+  const unavailable = guardCommercialAction("seven_lenses_expansion");
+  if (unavailable) return unavailable;
 
-    // Check authentication
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { lensId } = await params;
-
-    // Parse request body
-    const body = await request.json();
-    const { query, lensWeights, responseLength = 'medium' } = body;
-
-    // Validate input
-    if (!query || typeof query !== 'string' || query.trim().length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Query is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get lens
-    const lens = getLens(lensId as any);
-    if (!lens) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid lens ID' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get response length config
-    const lengthConfig = getResponseLengthConfig(responseLength as ResponseLength);
-
-    // Hybrid retrieval to get context
-    const context = await hybridSearch(query, {
-      lenses: [lensId],
-      limit: 10,
-    });
-
-    if (!context || context.length === 0) {
-      console.warn(`No context found for lens ${lensId} and query: ${query}`);
-    }
-
-    // Generate lens response
-    const lensResponse = await generateLensResponse(
-      query,
-      lens,
-      context,
-      lengthConfig.lensMaxTokens
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return Response.json(
+      { error: "A valid request body is required.", code: "INVALID_REQUEST" },
+      { status: 400, headers: headers() },
     );
+  }
+  const candidate = body as Record<string, unknown>;
+  if (
+    Object.keys(candidate).some(
+      (key) => key !== "parentResponseId" && key !== "requestId",
+    )
+  ) {
+    return Response.json(
+      {
+        error: "Only the saved parent and request ID may be supplied.",
+        code: "INVALID_REQUEST_FIELDS",
+      },
+      { status: 400, headers: headers() },
+    );
+  }
+  const parentResponseId =
+    typeof candidate.parentResponseId === "string"
+      ? candidate.parentResponseId.trim()
+      : "";
+  const requestId =
+    typeof candidate.requestId === "string" ? candidate.requestId.trim() : "";
+  const { lensId } = await params;
+  if (!parentResponseId || !requestId) {
+    return Response.json(
+      {
+        error: "A saved parent and request ID are required.",
+        code: "EXPANSION_IDS_REQUIRED",
+      },
+      { status: 400, headers: headers() },
+    );
+  }
 
-    // AI Usage tracking
-    if (lensResponse.tokenUsage) {
-      await logApiUsage({
-        service: 'parallax_query',
-        operation: `lens_detail_${lensId}`,
-        unitsUsed: lensResponse.tokenUsage.inputTokens + lensResponse.tokenUsage.outputTokens,
-        unitType: 'tokens',
-        userId: user.id,
-        requestMetadata: {
-          lensId,
-          model: process.env.PARALLAX_LENS_MODEL || getDefaultOpenRouterModel(),
-          inputTokens: lensResponse.tokenUsage.inputTokens,
-          outputTokens: lensResponse.tokenUsage.outputTokens,
-          query: query.substring(0, 100)
-        }
-      });
-    }
-
-    return new Response(
-      JSON.stringify({ lensResponse }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+  try {
+    const result = await executeMeteredLensExpansion({
+      parentResponseId,
+      lensId,
+      requestId,
+      signal: request.signal,
+    });
+    return Response.json(
+      {
+        lensResponse: result.value,
+        replayed: result.replayed,
+        chargedCredits: result.chargedCredits,
+        quoteVersion: result.quoteVersion,
+      },
+      { headers: headers() },
     );
   } catch (error) {
-    console.error('Error generating lens response:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    if (error instanceof MeteringError) return errorResponse(error);
+    return Response.json(
+      {
+        error: "Lens expansion is temporarily unavailable. Try again shortly.",
+        code: "LENS_EXPANSION_FAILED",
+      },
+      { status: 500, headers: headers() },
     );
   }
 }
-

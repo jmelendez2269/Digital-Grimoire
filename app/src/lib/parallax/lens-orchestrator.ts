@@ -1,10 +1,16 @@
-import { Lens, LensType, getLens, getActiveLenses, getAllLenses } from './lenses';
-import { hybridSearch, HybridSearchResult } from './hybrid-retrieval';
-import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
+import { Lens, getActiveLenses, getAllLenses } from './lenses';
+import type { HybridSearchResult } from './hybrid-retrieval';
+import { aiOrchestrator, ChatMessage, type AIResponse } from '@/lib/ai/ai-orchestrator';
 import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
 import { LensWeights, ResponseLength, ResponseLengthConfig, LensResponse, MultiLensResponse, TokenUsage } from './types';
 
 export { type LensWeights, type ResponseLength, type ResponseLengthConfig, type LensResponse, type MultiLensResponse, type TokenUsage };
+
+export interface ParallaxGenerationOptions {
+  signal?: AbortSignal;
+  throwOnProviderError?: boolean;
+  onProviderAttempt?: (response: AIResponse) => void;
+}
 
 /**
  * Get max tokens based on response length preference
@@ -286,7 +292,8 @@ export async function generateLensSummary(
   query: string,
   lens: Lens,
   context: HybridSearchResult[],
-  maxTokens: number = 200
+  maxTokens: number = 200,
+  options: ParallaxGenerationOptions = {},
 ): Promise<{ summary: string; tokenUsage: TokenUsage }> {
   const contextText = context
     .slice(0, 3) // Use top 3 results for summary
@@ -318,7 +325,9 @@ Provide a brief summary from the ${lens.name} perspective.`;
       model,
       temperature: 0.7,
       maxTokens,
+      signal: options.signal,
     });
+    options.onProviderAttempt?.(completion);
 
     const tokenUsage: TokenUsage = {
       inputTokens: completion.usage.promptTokens,
@@ -333,6 +342,7 @@ Provide a brief summary from the ${lens.name} perspective.`;
     };
   } catch (error) {
     console.error(`Error generating ${lens.name} summary:`, error);
+    if (options.throwOnProviderError) throw error;
     return {
       summary: '',
       tokenUsage: { inputTokens: 0, outputTokens: 0 },
@@ -347,7 +357,8 @@ export async function generateLensResponse(
   query: string,
   lens: Lens,
   context: HybridSearchResult[],
-  maxTokens: number = 1000
+  maxTokens: number = 1000,
+  options: ParallaxGenerationOptions = {},
 ): Promise<LensResponse & { tokenUsage: TokenUsage }> {
   // Prepare context for the lens
   const contextText = context
@@ -381,7 +392,9 @@ Please answer the question from the ${lens.name} perspective.`;
       model,
       temperature: 0.7,
       maxTokens,
+      signal: options.signal,
     });
+    options.onProviderAttempt?.(completion);
 
     const tokenUsage: TokenUsage = {
       inputTokens: completion.usage.promptTokens,
@@ -390,7 +403,9 @@ Please answer the question from the ${lens.name} perspective.`;
 
     console.log(`[Token Tracking] ${lens.name} response (${model}): ${tokenUsage.inputTokens} input, ${tokenUsage.outputTokens} output tokens`);
 
-    const content = completion.content || 'No response generated.';
+    const content =
+      completion.content.trim() ||
+      (options.throwOnProviderError ? '' : 'No response generated.');
 
     // Extract sources from context with preview
     const sources = context.slice(0, 5).map(result => ({
@@ -412,6 +427,7 @@ Please answer the question from the ${lens.name} perspective.`;
     };
   } catch (error) {
     console.error(`Error generating ${lens.name} response:`, error);
+    if (options.throwOnProviderError) throw error;
     return {
       lens: lens.id,
       lensName: lens.name,
@@ -429,7 +445,8 @@ export async function generateSynthesisFromSummaries(
   query: string,
   lensWeights: LensWeights,
   context: HybridSearchResult[],
-  lengthConfig: ResponseLengthConfig
+  lengthConfig: ResponseLengthConfig,
+  options: ParallaxGenerationOptions = {},
 ): Promise<{ synthesis: string; tokenUsage: TokenUsage }> {
   const activeLenses = getActiveLenses(lensWeights);
 
@@ -440,12 +457,29 @@ export async function generateSynthesisFromSummaries(
     };
   }
 
-  // Generate brief summaries for each active lens (in parallel)
-  const lensSummaryResults = await Promise.all(
-    activeLenses.map(lens =>
-      generateLensSummary(query, lens, context, lengthConfig.lensSummaryMaxTokens)
+  // Generate summaries in parallel, but never settle metering while siblings
+  // are still spending. On the first failure, cancel and await every attempt.
+  const summaryAbort = new AbortController();
+  const summarySignal = options.signal
+    ? AbortSignal.any([options.signal, summaryAbort.signal])
+    : summaryAbort.signal;
+  const summaryPromises = activeLenses.map(lens =>
+    generateLensSummary(
+      query,
+      lens,
+      context,
+      lengthConfig.lensSummaryMaxTokens,
+      { ...options, signal: summarySignal },
     )
   );
+  let lensSummaryResults: Awaited<ReturnType<typeof generateLensSummary>>[];
+  try {
+    lensSummaryResults = await Promise.all(summaryPromises);
+  } catch (error) {
+    summaryAbort.abort(error);
+    await Promise.allSettled(summaryPromises);
+    throw error;
+  }
 
   // Extract summaries and accumulate token usage
   const lensSummaries = lensSummaryResults.map(r => r.summary);
@@ -459,7 +493,6 @@ export async function generateSynthesisFromSummaries(
   // Build weighted synthesis prompt from summaries with intensity labels
   const perspectivesText = activeLenses
     .map((lens, idx) => {
-      const weight = lensWeights[lens.id] || 0;
       const normalized = normalizedWeights[lens.id];
       const intensity = normalized?.intensity || 'OFF';
       const percentage = normalized?.normalized || 0;
@@ -469,8 +502,8 @@ export async function generateSynthesisFromSummaries(
 
   // Check if one lens has 100% raw weight (exclusive focus)
   const rawWeights = Object.entries(lensWeights);
-  const dominantLensRaw = rawWeights.find(([_, weight]) => weight === 100);
-  const hasExclusiveDominant = dominantLensRaw && rawWeights.filter(([_, weight]) => weight > 0).length === 1;
+  const dominantLensRaw = rawWeights.find(([, weight]) => weight === 100);
+  const hasExclusiveDominant = dominantLensRaw && rawWeights.filter(([, weight]) => weight > 0).length === 1;
 
   // Build intensity-aware instructions
   const { dominanceInstructions, openingInstructions } = buildIntensityAwareInstructions(
@@ -547,7 +580,9 @@ AVOID: "It is important to note that..." / "In conclusion..." / "The truth is...
       model: process.env.PARALLAX_SYNTHESIS_MODEL || getDefaultOpenRouterModel(),
       temperature: 0.7,
       maxTokens: lengthConfig.synthesisMaxTokens,
+      signal: options.signal,
     });
+    options.onProviderAttempt?.(completion);
 
     // Accumulate token usage from synthesis call
     totalInputTokens += completion.usage.promptTokens;
@@ -566,6 +601,7 @@ AVOID: "It is important to note that..." / "In conclusion..." / "The truth is...
     };
   } catch (error) {
     console.error('Error generating synthesis:', error);
+    if (options.throwOnProviderError) throw error;
     return {
       synthesis: 'Synthesis generation failed.',
       tokenUsage: { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
@@ -604,7 +640,12 @@ export async function generateMultiLensResponse(
   const synthesisResult = await mergeLensResponses(lensResponses, lensWeights, query, config.synthesisMaxTokens);
 
   // Extract lens responses without tokenUsage for the response object
-  const lensResponsesWithoutTokens: LensResponse[] = lensResponses.map(({ tokenUsage, ...rest }) => rest);
+  const lensResponsesWithoutTokens: LensResponse[] = lensResponses.map((response) => ({
+    lens: response.lens,
+    lensName: response.lensName,
+    content: response.content,
+    sources: response.sources,
+  }));
 
   // Collect unique sources (prefer highest relevance)
   const sourceMap = new Map<string, {
@@ -674,7 +715,6 @@ export async function mergeLensResponses(
   // Build weighted synthesis prompt with intensity labels
   const perspectivesText = responses
     .map(response => {
-      const weight = weights[response.lens] || 0;
       const normalized = normalizedWeights[response.lens];
       const intensity = normalized?.intensity || 'OFF';
       const percentage = normalized?.normalized || 0;
@@ -699,8 +739,8 @@ export async function mergeLensResponses(
 
   // Check if one lens has 100% raw weight (exclusive focus)
   const rawWeights = Object.entries(weights);
-  const dominantLensRaw = rawWeights.find(([_, weight]) => weight === 100);
-  const hasExclusiveDominant = dominantLensRaw && rawWeights.filter(([_, weight]) => weight > 0).length === 1;
+  const dominantLensRaw = rawWeights.find(([, weight]) => weight === 100);
+  const hasExclusiveDominant = dominantLensRaw && rawWeights.filter(([, weight]) => weight > 0).length === 1;
 
   // Vary prompt structure based on dominance pattern
   let promptStructure = '';

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 
 interface TTSPreferences {
@@ -31,8 +32,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const serviceSupabase = createServiceClient();
+
     // Fetch user with TTS preferences
-    const { data, error } = await supabase
+    const { data, error } = await serviceSupabase
       .from('users')
       .select('tts_preferences')
       .eq('id', user.id)
@@ -74,6 +77,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const serviceSupabase = createServiceClient();
+
     const body = await request.json();
 
     // Validate engine if provided
@@ -101,7 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build preferences object (merge with existing)
-    const { data: currentData } = await supabase
+    const { data: currentData } = await serviceSupabase
       .from('users')
       .select('tts_preferences')
       .eq('id', user.id)
@@ -114,7 +119,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Update user preferences
-    const { error } = await supabase
+    const { error } = await serviceSupabase
       .from('users')
       .update({ tts_preferences: updatedPreferences })
       .eq('id', user.id);

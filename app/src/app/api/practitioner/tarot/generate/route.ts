@@ -2,15 +2,19 @@
 import { OpenAI } from 'openai';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 export const maxDuration = 60; // Allow 60 seconds for image generation
 
 export async function POST(req: Request) {
+    const unavailable = guardCommercialAction('tarot_image_generation');
+    if (unavailable) return unavailable;
+
     try {
+        const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+
         const supabase = await createClient();
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 

@@ -3,12 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import { logApiUsage } from '@/lib/usage-tracker';
 import { aiOrchestrator } from '@/lib/ai/ai-orchestrator';
 import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 /**
  * POST /api/ai/gemini
  * Chat endpoint for Gemini (Google)
  */
 export async function POST(request: Request) {
+  const unavailable = guardCommercialAction('gemini_proxy');
+  if (unavailable) return unavailable;
+
   try {
     const supabase = await createClient();
 

@@ -120,6 +120,9 @@ function getTitleCandidateFromSection(section: string | undefined): string | nul
   if (!section) return null;
   const [candidate] = section.split(',');
   const clean = candidate?.trim();
+  if (/^(book|chapter|part|section|volume|tractate|canto|lecture)\s+(?:[ivxlcdm]+|\d+)\b/i.test(clean || '')) {
+    return null;
+  }
   return clean || null;
 }
 

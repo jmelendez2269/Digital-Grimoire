@@ -1371,6 +1371,7 @@ function CoursesPageContent() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [enrollmentsLoading, setEnrollmentsLoading] = useState(true);
   const [totals, setTotals] = useState<PlatformTotals>(EMPTY_PLATFORM_TOTALS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1437,21 +1438,37 @@ function CoursesPageContent() {
 
   // Fetch enrolled courses
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (authLoading) return;
+
+    if (!user) {
+      setEnrolledCourses([]);
+      setEnrollmentsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
 
     const fetchEnrolled = async () => {
+      setEnrolledCourses([]);
+      setEnrollmentsLoading(true);
       try {
         const res = await fetch('/api/courses/my-courses');
         const data = await res.json();
-        if (data.success && data.courses) {
+        if (!cancelled && data.success && data.courses) {
           setEnrolledCourses(data.courses.filter((c: EnrolledCourse) => c.enrollment));
         }
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
+      } finally {
+        if (!cancelled) setEnrollmentsLoading(false);
       }
     };
 
     fetchEnrolled();
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, user]);
 
   // Build arc buckets (client-side, filtered by search but not by chip filters,
@@ -1466,6 +1483,11 @@ function CoursesPageContent() {
       setActiveArcKey((enrolledArc ?? arcs[0]).key);
     }
   }, [arcs, activeArcKey, enrollmentMap]);
+
+  // Course destinations depend on enrollment. Keep the loading affordance in
+  // place until that state is known so a slow local request cannot briefly
+  // expose a preview link for a course the viewer has already started.
+  const presentationLoading = loading || authLoading || enrollmentsLoading;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-200 font-sans">
@@ -1526,7 +1548,7 @@ function CoursesPageContent() {
         </div>
 
         <div className="max-w-screen-2xl mx-auto px-6 py-8">
-          {!loading && courses.length > 0 && (
+          {!presentationLoading && courses.length > 0 && (
             <ReleaseOverview
               courses={courses}
               arcs={arcs}
@@ -1535,7 +1557,7 @@ function CoursesPageContent() {
           )}
 
           {/* The larger curriculum map remains available below the release view. */}
-          {!loading && courses.length > 0 && (
+          {!presentationLoading && courses.length > 0 && (
             <section aria-labelledby="larger-map" className="mt-16 border-t border-white/8 pt-10">
               <div className="mb-7">
                 <h2
@@ -1579,7 +1601,7 @@ function CoursesPageContent() {
           )}
 
           {/* Loading / Empty / View */}
-          {loading ? (
+          {presentationLoading ? (
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
                 <div

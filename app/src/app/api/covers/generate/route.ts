@@ -5,8 +5,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateBookCover as generateWithReplicate } from '@/lib/replicate-cover';
 import { generateBookCover as generateWithNanoBanana } from '@/lib/nano-banana-cover';
 import { createClient } from '@/lib/supabase/server';
+import { guardCommercialAction } from '@/lib/commercial-availability';
 
 export async function POST(request: NextRequest) {
+  const unavailable = guardCommercialAction('cover_image_generation');
+  if (unavailable) return unavailable;
+
   try {
     const body = await request.json();
     const { textId, title, author, domain, tags, provider = 'replicate' } = body;

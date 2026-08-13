@@ -47,7 +47,7 @@ const guestPrimaryNav: NavItem[] = [
   { name: "Courses", path: "/courses" },
   { name: "Library", path: "/library" },
   { name: "Explore", path: "/explore" },
-  { name: "About", path: "/#origin" },
+  { name: "Membership", path: "/pricing" },
 ];
 
 const memberPrimaryNav: NavItem[] = [

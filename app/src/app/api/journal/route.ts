@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getSubscriptionTier } from '@/lib/parallax/rate-limit';
+import { resolveMembershipEntitlement } from '@/lib/membership/membership-entitlement-resolver.server';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Enforce 50-entry cap for free-tier users
-    const tier = await getSubscriptionTier(user.id);
-    if (tier === 'free') {
+    const membership = await resolveMembershipEntitlement({ userId: user.id });
+    if (membership.planCode === 'reader' || membership.failClosed) {
       const JOURNAL_CAP = 50;
       const { count, error: countError } = await supabase
         .from('journal_pages')
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare page data
-    const pageData: any = {
+    const pageData: Record<string, unknown> = {
       user_id: user.id,
       title: title.trim(),
       content: content || { type: 'doc', content: [] },
@@ -167,6 +167,16 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating journal page:', error);
+      if (error.message?.includes('LEAN_L1_03:JOURNAL_LIMIT_REACHED')) {
+        return NextResponse.json(
+          {
+            error: 'Journal limit reached',
+            code: 'JOURNAL_LIMIT_REACHED',
+            message: 'Reader accounts can keep up to 50 active Journal pages. Archive a page before trying again.',
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         { error: 'Failed to create journal page' },
         { status: 500 }
