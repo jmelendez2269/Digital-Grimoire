@@ -5,6 +5,7 @@ export type ToolRunState =
   | "returned"
   | "retry"
   | "reconcile"
+  | "paid_required"
   | "capacity_paused"
   | "disabled";
 
@@ -28,6 +29,7 @@ const DISABLED_CODES = new Set([
 ]);
 
 export function toolRunStateForCode(code: string | undefined): ToolRunState {
+  if (code === "METERING_PAID_MEMBERSHIP_REQUIRED") return "paid_required";
   if (code === "READER_AI_CAPACITY_PAUSED") return "capacity_paused";
   if (code === "METERING_SETTLEMENT_FAILED") return "reconcile";
   if (code && RETURNED_CODES.has(code)) return "returned";
@@ -38,6 +40,6 @@ export function toolRunStateForCode(code: string | undefined): ToolRunState {
 
 export function nextUtcMonthBoundary(now: Date = new Date()): string {
   return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)
   ).toISOString();
 }

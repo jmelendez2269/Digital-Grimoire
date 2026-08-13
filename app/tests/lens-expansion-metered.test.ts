@@ -50,7 +50,7 @@ function parent(): OwnedSevenLensesParent {
 
 function expansion(
   id = EXPANSION_ID,
-  lensId: LensType = "scientific",
+  lensId: LensType = "scientific"
 ): LensExpansionResult {
   return {
     id,
@@ -81,7 +81,9 @@ function attempt(): AIResponse {
   };
 }
 
-function mockStore(calls: Array<{ operation: string; input?: unknown }>): MeteringStore {
+function mockStore(
+  calls: Array<{ operation: string; input?: unknown }>
+): MeteringStore {
   return {
     async beginRequest(input) {
       calls.push({ operation: "begin_request", input });
@@ -159,11 +161,11 @@ function metering(store: MeteringStore) {
       emailConfirmedAt: "2026-08-01T00:00:00.000Z",
     }),
     resolveEntitlement: async () => ({
-      planCode: "reader" as const,
-      monthlyCredits: 10,
-      paidEntitlementsActive: false,
+      planCode: "student" as const,
+      monthlyCredits: 30,
+      paidEntitlementsActive: true,
       failClosed: false,
-      reason: "reader_default" as const,
+      reason: "active_membership" as const,
       course: {
         slug: null,
         entitled: false,
@@ -176,7 +178,7 @@ function metering(store: MeteringStore) {
 
 function dependencies(
   calls: Array<{ operation: string; input?: unknown }>,
-  store: MeteringStore,
+  store: MeteringStore
 ): LensExpansionDependencies {
   return {
     loadParent: async () => {
@@ -215,9 +217,12 @@ function dependencies(
         parentResponseId: string;
         response: { lens: LensType };
       },
-      context: MeteredActionContext,
+      context: MeteredActionContext
     ) => {
-      calls.push({ operation: "persist_expansion", input: { id, generated, context } });
+      calls.push({
+        operation: "persist_expansion",
+        input: { id, generated, context },
+      });
       assert.equal(generated.parentResponseId, PARENT_ID);
       assert.equal(context.userId, USER_ID);
       return expansion(id, generated.response.lens);
@@ -235,28 +240,35 @@ test("controlled expansion loads the owned parent before reserving, persists, an
       lensId: "scientific",
       requestId: REQUEST_ID,
     },
-    dependencies(calls, store),
+    dependencies(calls, store)
   );
 
   assert.equal(result.actionCode, "seven_lenses.expand");
   assert.equal(result.chargedCredits, 1);
   assert.equal(result.value.id, EXPANSION_ID);
   assert.equal(result.value.parentResponseId, PARENT_ID);
-  assert.equal(calls.filter((call) => call.operation === "commit_credits").length, 1);
-  assert.equal(calls.filter((call) => call.operation === "release_credits").length, 0);
+  assert.equal(
+    calls.filter((call) => call.operation === "commit_credits").length,
+    1
+  );
+  assert.equal(
+    calls.filter((call) => call.operation === "release_credits").length,
+    0
+  );
   assert.ok(
     calls.findIndex((call) => call.operation === "load_parent") <
-      calls.findIndex((call) => call.operation === "reserve_credits"),
+      calls.findIndex((call) => call.operation === "reserve_credits")
   );
   assert.ok(
     calls.findIndex((call) => call.operation === "persist_expansion") <
-      calls.findIndex((call) => call.operation === "commit_credits"),
+      calls.findIndex((call) => call.operation === "commit_credits")
   );
   const reservation = calls.find((call) => call.operation === "reserve_credits")
     ?.input as { quotedCredits: number; actionCode: string };
   assert.equal(reservation.quotedCredits, 1);
   assert.equal(reservation.actionCode, "seven_lenses.expand");
-  const usage = calls.find((call) => call.operation === "complete_usage")?.input as {
+  const usage = calls.find((call) => call.operation === "complete_usage")
+    ?.input as {
     providerRequestId: string;
     inputUnits: number;
     outputUnits: number;
@@ -274,7 +286,7 @@ test("controlled expansion loads the owned parent before reserving, persists, an
       inputUnits: 120,
       outputUnits: 45,
       estimatedCostUsd: 0.003,
-    },
+    }
   );
 });
 
@@ -311,15 +323,21 @@ test("completed retry reopens the exact child without retrieval, provider, persi
       generateLens: async () => {
         throw new Error("provider must not run on replay");
       },
-    },
+    }
   );
 
   assert.equal(result.replayed, true);
   assert.equal(result.chargedCredits, 0);
   assert.equal(result.value.id, EXPANSION_ID);
-  assert.equal(calls.filter((call) => call.operation === "reserve_credits").length, 0);
+  assert.equal(
+    calls.filter((call) => call.operation === "reserve_credits").length,
+    0
+  );
   assert.equal(calls.filter((call) => call.operation === "provider").length, 0);
-  assert.equal(calls.filter((call) => call.operation === "persist_expansion").length, 0);
+  assert.equal(
+    calls.filter((call) => call.operation === "persist_expansion").length,
+    0
+  );
 });
 
 test("a parent synthesis request UUID cannot replay as an expansion or incur another charge", async () => {
@@ -355,14 +373,20 @@ test("a parent synthesis request UUID cannot replay as an expansion or incur ano
           assert.equal(reference, `seven-lenses:${PARENT_ID}`);
           throw new Error("parent result is not an expansion child");
         },
-      },
+      }
     ),
     (error: unknown) =>
       error instanceof MeteringError &&
-      error.code === "METERING_REQUEST_REPLAY_FAILED",
+      error.code === "METERING_REQUEST_REPLAY_FAILED"
   );
-  assert.equal(calls.filter((call) => call.operation === "reserve_credits").length, 0);
-  assert.equal(calls.filter((call) => call.operation === "commit_credits").length, 0);
+  assert.equal(
+    calls.filter((call) => call.operation === "reserve_credits").length,
+    0
+  );
+  assert.equal(
+    calls.filter((call) => call.operation === "commit_credits").length,
+    0
+  );
 });
 
 test("parent ownership and active lens identity are validated before any hold", async () => {
@@ -397,11 +421,11 @@ test("parent ownership and active lens identity are validated before any hold", 
         {
           ...dependencies(calls, store),
           loadParent: scenario.loadParent,
-        },
+        }
       ),
       (error: unknown) =>
         error instanceof MeteringError && error.code === scenario.expected,
-      scenario.name,
+      scenario.name
     );
     assert.equal(calls.length, 0, scenario.name);
   }
@@ -428,13 +452,16 @@ test("different lenses retain distinct metering fingerprints and durable child I
           observed.push({ lensId: generated.response.lens, resultId: id });
           return expansion(id, generated.response.lens);
         },
-      },
+      }
     );
     assert.equal(result.value.lens, lensId);
     const begin = calls.find((call) => call.operation === "begin_request")
       ?.input as { requestFingerprint: string };
     assert.ok(begin.requestFingerprint);
-    observed.push({ lensId: `fingerprint:${lensId}`, resultId: begin.requestFingerprint });
+    observed.push({
+      lensId: `fingerprint:${lensId}`,
+      resultId: begin.requestFingerprint,
+    });
   }
   assert.notEqual(observed[0].resultId, observed[2].resultId);
   assert.notEqual(observed[1].resultId, observed[3].resultId);
@@ -486,23 +513,22 @@ test("provider, empty, and persistence failures release exactly once", async () 
         {
           ...base,
           generateLens: scenario.generateLens ?? base.generateLens,
-          persistExpansion:
-            scenario.persistExpansion ?? base.persistExpansion,
-        },
+          persistExpansion: scenario.persistExpansion ?? base.persistExpansion,
+        }
       ),
       (error: unknown) =>
         error instanceof MeteringError && error.code === scenario.expected,
-      scenario.name,
+      scenario.name
     );
     assert.equal(
       calls.filter((call) => call.operation === "release_credits").length,
       1,
-      scenario.name,
+      scenario.name
     );
     assert.equal(
       calls.filter((call) => call.operation === "commit_credits").length,
       0,
-      scenario.name,
+      scenario.name
     );
   }
 });
@@ -536,14 +562,12 @@ test("disconnect and deadline abort the provider path and release the hold", asy
                 reject(signal.reason);
                 return;
               }
-              signal.addEventListener(
-                "abort",
-                () => reject(signal.reason),
-                { once: true },
-              );
+              signal.addEventListener("abort", () => reject(signal.reason), {
+                once: true,
+              });
             });
           },
-        },
+        }
       ),
       (error: unknown) =>
         error instanceof MeteringError &&
@@ -551,31 +575,43 @@ test("disconnect and deadline abort the provider path and release the hold", asy
           (scenario.name === "deadline"
             ? "METERING_PROVIDER_TIMEOUT"
             : "METERING_PROVIDER_ABORTED"),
-      scenario.name,
+      scenario.name
     );
-    assert.equal(calls.filter((call) => call.operation === "release_credits").length, 1);
-    assert.equal(calls.filter((call) => call.operation === "commit_credits").length, 0);
+    assert.equal(
+      calls.filter((call) => call.operation === "release_credits").length,
+      1
+    );
+    assert.equal(
+      calls.filter((call) => call.operation === "commit_credits").length,
+      0
+    );
   }
 });
 
 test("route and client expose one server-owned credit with durable parent, UUID retry, and no query telemetry", () => {
   const route = readFileSync(
     resolve(appRoot, "src/app/api/parallax/lens/[lensId]/route.ts"),
-    "utf8",
+    "utf8"
   );
   const card = readFileSync(
     resolve(appRoot, "src/components/parallax/ExpandableLensCard.tsx"),
-    "utf8",
+    "utf8"
   );
   const stream = readFileSync(
     resolve(appRoot, "src/components/parallax/ResponseStream.tsx"),
-    "utf8",
+    "utf8"
   );
-  const page = readFileSync(resolve(appRoot, "src/app/seven-lenses/page.tsx"), "utf8");
+  const page = readFileSync(
+    resolve(appRoot, "src/app/seven-lenses/page.tsx"),
+    "utf8"
+  );
 
   assert.match(route, /executeMeteredLensExpansion/);
   assert.match(route, /Object\.keys\(candidate\)/);
-  assert.doesNotMatch(route, /candidate\.(query|lensWeights|responseLength|creditCost|balance)/);
+  assert.doesNotMatch(
+    route,
+    /candidate\.(query|lensWeights|responseLength|creditCost|balance)/
+  );
   assert.doesNotMatch(route, /logApiUsage|query\.substring/);
   assert.match(card, /1 Prism Credit/);
   assert.match(card, /retryRequestIdRef/);
@@ -592,12 +628,18 @@ test("migration stores expansion children separately with ownership, parent, len
   const migration = readFileSync(
     resolve(
       appRoot,
-      "../supabase/migrations/20260812110000_lean_l4_04_lens_expansions.sql",
+      "../supabase/migrations/20260812110000_lean_l4_04_lens_expansions.sql"
     ),
-    "utf8",
+    "utf8"
   );
-  assert.match(migration, /create table if not exists public\.convergence_lens_expansions/i);
-  assert.match(migration, /parent_response_id uuid not null references public\.convergence_responses/i);
+  assert.match(
+    migration,
+    /create table if not exists public\.convergence_lens_expansions/i
+  );
+  assert.match(
+    migration,
+    /parent_response_id uuid not null references public\.convergence_responses/i
+  );
   assert.match(migration, /user_id uuid not null references auth\.users/i);
   assert.match(migration, /lens_id text not null check/i);
   assert.match(migration, /force row level security/i);

@@ -34,8 +34,7 @@ function launchEnvironment(
       "working.generate,seven_lenses.expand,seven_lenses.standard,seven_lenses.long,deep_search.fresh,image.generate",
     PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS:
       APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
-    PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG:
-      APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
+    PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG: APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
     PRISMARIUM_ADEPT_LAUNCH_DECISION: "hold",
     PRISMARIUM_STRIPE_PRICE_STUDENT_FOUNDING_MONTHLY: "price_studentFounding",
     PRISMARIUM_STRIPE_PRICE_STUDENT_STANDARD_MONTHLY: "price_studentStandard",
@@ -55,7 +54,7 @@ test("the frozen launch contract has the intended plans, prices, credits, and ac
       journalActivePageLimit,
     })),
     [
-      { code: "reader", monthlyCredits: 10, journalActivePageLimit: 50 },
+      { code: "reader", monthlyCredits: 0, journalActivePageLimit: 50 },
       { code: "student", monthlyCredits: 30, journalActivePageLimit: null },
       { code: "scholar", monthlyCredits: 100, journalActivePageLimit: null },
       { code: "adept", monthlyCredits: 300, journalActivePageLimit: null },
@@ -140,7 +139,7 @@ test("paid launch needs one exact non-free course and exact known tokens", () =>
   ]);
   assert.equal(
     valid.courses.studentLaunchCourseSlug,
-    APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
+    APPROVED_STUDENT_LAUNCH_COURSE_SLUG
   );
   assert.equal(
     valid.courses.studentLaunchCourseTitle,
@@ -172,8 +171,7 @@ test("paid launch needs one exact non-free course and exact known tokens", () =>
 
   for (const environment of [
     launchEnvironment({
-      PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS:
-        `${APPROVED_STUDENT_LAUNCH_COURSE_SLUG},c02-another-course`,
+      PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: `${APPROVED_STUDENT_LAUNCH_COURSE_SLUG},c02-another-course`,
     }),
     launchEnvironment({
       PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG: "different-course",
@@ -279,27 +277,33 @@ test("the browser projection omits raw Price IDs and configuration keys", async 
   assert.doesNotMatch(route, /process\.env|NextRequest|request\.json/);
   assert.match(
     middleware,
-    /request\.method === "GET" && pathname === "\/api\/membership\/catalog"/,
+    /request\.method === "GET" && pathname === "\/api\/membership\/catalog"/
   );
   assert.ok(
     middleware.indexOf('pathname === "/api/membership/catalog"') <
-      middleware.indexOf("updateSession(request)"),
+      middleware.indexOf("updateSession(request)")
   );
 });
 
 test("the customer subscription UI creates Checkout only from a public offer code", () => {
   const subscriptionUi = readSource("src/components/SubscriptionTab.tsx");
   const availabilityUi = readSource(
-    "src/components/membership/MembershipAvailability.tsx",
+    "src/components/membership/MembershipAvailability.tsx"
   );
 
   assert.match(subscriptionUi, /<MembershipAvailability \/>/);
   assert.match(availabilityUi, /fetch\("\/api\/membership\/catalog"/);
   assert.match(availabilityUi, /cache: "no-store"/);
   assert.match(availabilityUi, /offer\.publiclyAvailable/);
+  assert.match(availabilityUi, /Access one member course at a time/);
+  assert.match(availabilityUi, /Early access to newly released member courses/);
+  assert.doesNotMatch(availabilityUi, /Currently available:/);
   assert.match(availabilityUi, /catalog\?\.launch\.paidSalesEnabled/);
   assert.match(availabilityUi, /Paid memberships are not open yet/);
-  assert.match(availabilityUi, /fetch\("\/api\/stripe\/create-checkout-session"/);
+  assert.match(
+    availabilityUi,
+    /fetch\("\/api\/stripe\/create-checkout-session"/
+  );
   assert.match(availabilityUi, /offerCode,/);
   assert.match(availabilityUi, /requestId: crypto\.randomUUID\(\)/);
   assert.match(availabilityUi, /No charge was created/);
@@ -356,15 +360,27 @@ test("the public pricing page uses shared catalog truth and exact launch positio
   assert.match(page, /<MembershipPricing catalog=\{catalog\} \/>/);
   assert.match(pricingProjection, /offer\.publiclyAvailable/);
   assert.match(pricingProjection, /offer\.acceptsNewCheckout/);
-  assert.match(pricing, /studentLaunchCourseTitle/);
+  assert.match(pricing, /Access to one member course at a time/);
+  assert.match(pricing, /Early access to newly released member courses/);
+  assert.doesNotMatch(pricing, /Currently available:/);
   assert.match(pricing, /Unlimited active Journal pages/);
   assert.match(
     pricing,
     /Up to \$\{plan\.journalActivePageLimit\} active Journal pages/
   );
-  assert.match(pricing, /Courses are optional\./);
-  assert.match(pricing, /Both are complete ways to use Prismarium\./);
-  assert.match(pricing, /does not promise a\s+new-video schedule/);
+  assert.match(pricing, /Choose how you learn\./);
+  assert.match(
+    pricing,
+    /Move between structured study and independent research/
+  );
+  assert.match(pricing, /Public learning stays open\./);
+  assert.match(
+    pricing,
+    /Paid membership adds full access to your included member\s+courses/
+  );
+  assert.match(pricing, /Generative credits require a paid membership/);
+  assert.doesNotMatch(pricing, /10 monthly credits/);
+  assert.doesNotMatch(pricing, /Courses are optional|new-video schedule/);
   assert.doesNotMatch(pricing, /student_standard_monthly|\$19/);
   assert.doesNotMatch(pricing, /stripePrice|price_/i);
   assert.doesNotMatch(pricing, /create-checkout-session|handleUpgrade/);
@@ -422,15 +438,24 @@ test("the public pricing page uses shared catalog truth and exact launch positio
   assert.match(page, /<MembershipPricing catalog=\{catalog\} \/>/);
   assert.match(pricingProjection, /offer\.publiclyAvailable/);
   assert.match(pricingProjection, /offer\.acceptsNewCheckout/);
-  assert.match(pricing, /studentLaunchCourseTitle/);
+  assert.match(pricing, /Access to one member course at a time/);
+  assert.doesNotMatch(pricing, /Currently available:/);
   assert.match(pricing, /Unlimited active Journal pages/);
   assert.match(
     pricing,
     /Up to \$\{plan\.journalActivePageLimit\} active Journal pages/
   );
-  assert.match(pricing, /Courses are optional\./);
-  assert.match(pricing, /Both are complete ways to use Prismarium\./);
-  assert.match(pricing, /does not promise a\s+new-video schedule/);
+  assert.match(pricing, /Choose how you learn\./);
+  assert.match(
+    pricing,
+    /Move between structured study and independent research/
+  );
+  assert.match(pricing, /Public learning stays open\./);
+  assert.match(
+    pricing,
+    /Paid membership adds full access to your included member\s+courses/
+  );
+  assert.doesNotMatch(pricing, /Courses are optional|new-video schedule/);
   assert.doesNotMatch(pricing, /student_standard_monthly|\$19/);
   assert.doesNotMatch(pricing, /stripePrice|price_/i);
   assert.doesNotMatch(pricing, /create-checkout-session|handleUpgrade/);

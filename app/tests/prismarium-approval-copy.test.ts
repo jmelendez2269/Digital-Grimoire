@@ -203,10 +203,10 @@ test("Explore presents the approved four ways into the collection", () => {
       "Search for an idea across the Library and find the books and passages where it appears.",
       "Seven Lenses",
       "Ask one question through seven perspectives at once — Scientific, Psychological, Philosophical, Religious/Spiritual, Historical/Anthropological, Symbolic/Occult, and Mathematical. Compare what each reveals.",
-      "Shared Workings",
+      "The Working",
+      "Replay an editorial example to see an intention become a correspondence palette, a ritual, and a private record of practice.",
       "Open to everyone",
       "Public preview",
-      "Sign in to use",
     ],
     sourceName
   );
@@ -218,6 +218,7 @@ test("Explore presents the approved four ways into the collection", () => {
       "Three tools for moving through the archive — by connection, by concept, or by lens.",
       'name: "Parallax Engine"',
       "Hermetic, Kabbalistic, Thelemic, Gnostic",
+      "Sign in to use",
     ],
     sourceName
   );
@@ -235,7 +236,7 @@ test("header and footer use the approved public names and routes", () => {
       '{ name: "Courses", path: "/courses" }',
       '{ name: "Library", path: "/library" }',
       '{ name: "Explore", path: "/explore" }',
-      '{ name: "About", path: "/#origin" }',
+      '{ name: "Membership", path: "/pricing" }',
       'name: "Seven Lenses", path: "/seven-lenses"',
       'name: "Workbench", path: "/workbench"',
       'name: "Study Journal", path: "/journal"',

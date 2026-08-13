@@ -50,7 +50,6 @@ function errorMessage(error: unknown, fallback: string): string {
 
 function WorkingRow({ w }: { w: WorkingListItem }) {
   const hasCast = !!w.cast_at;
-  const isShared = w.status === "shared";
   return (
     <Link
       href={`/workbench/the-working/${w.id}`}
@@ -77,14 +76,12 @@ function WorkingRow({ w }: { w: WorkingListItem }) {
       <div className="shrink-0 flex items-center gap-2 mt-0.5">
         <span
           className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
-            isShared
-              ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/5"
-              : hasCast
+            hasCast
               ? "text-amber-400 border-amber-500/20 bg-amber-500/5"
               : "text-zinc-500 border-zinc-700 bg-zinc-900"
           }`}
         >
-          {w.status}
+          {hasCast ? "cast" : "draft"}
         </span>
         <ArrowRight size={12} className="text-zinc-700 group-hover:text-zinc-400 transition-colors" />
       </div>

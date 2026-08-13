@@ -201,9 +201,9 @@ export default function WorkingsLandingPage() {
             </Link>
           </div>
           <p className="text-xs text-zinc-600 mt-5">
-            Already exploring?{" "}
+            Want to see the privacy-safe public experience?{" "}
             <Link href="/explore/workings" className="text-zinc-500 hover:text-zinc-400 underline underline-offset-2 transition-colors">
-              Browse community workings
+              Preview The Working
             </Link>
           </p>
         </div>

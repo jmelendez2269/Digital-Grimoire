@@ -17,6 +17,8 @@ const ACTION_CODES = [
   "image.generate",
 ] as const;
 const WALLET_KEYS = new Set([
+  "planCode",
+  "paidCreditsActive",
   "status",
   "availableCredits",
   "reservedCredits",
@@ -76,6 +78,8 @@ export interface SafeWalletHistoryItem {
 }
 
 export interface SafeCreditWallet {
+  planCode: WalletPlanCode;
+  paidCreditsActive: boolean;
   status: (typeof WALLET_STATUSES)[number];
   availableCredits: number;
   reservedCredits: number;
@@ -166,6 +170,9 @@ function parseHistory(value: unknown): SafeWalletHistoryItem | null {
 export function parseSafeCreditWallet(value: unknown): SafeCreditWallet | null {
   if (!isRecord(value) || !hasExactKeys(value, WALLET_KEYS)) return null;
   if (
+    !PLAN_CODES.includes(value.planCode as WalletPlanCode) ||
+    typeof value.paidCreditsActive !== "boolean" ||
+    (value.planCode === "reader" && value.paidCreditsActive) ||
     !WALLET_STATUSES.includes(value.status as SafeCreditWallet["status"]) ||
     !isNonnegativeInteger(value.availableCredits) ||
     !isNonnegativeInteger(value.reservedCredits) ||
@@ -200,7 +207,10 @@ export function parseSafeCreditWallet(value: unknown): SafeCreditWallet | null {
 
   const pending = value.pending.map(parsePending);
   const history = value.history.map(parseHistory);
-  if (pending.some((item) => item === null) || history.some((item) => item === null)) {
+  if (
+    pending.some((item) => item === null) ||
+    history.some((item) => item === null)
+  ) {
     return null;
   }
   const safePending = pending as SafeWalletPendingItem[];
@@ -212,6 +222,8 @@ export function parseSafeCreditWallet(value: unknown): SafeCreditWallet | null {
   }
 
   return {
+    planCode: value.planCode as WalletPlanCode,
+    paidCreditsActive: value.paidCreditsActive,
     status: value.status as SafeCreditWallet["status"],
     availableCredits: value.availableCredits,
     reservedCredits: value.reservedCredits,
@@ -223,8 +235,11 @@ export function parseSafeCreditWallet(value: unknown): SafeCreditWallet | null {
   };
 }
 
-export function parseSafeWalletResponse(value: unknown): SafeCreditWallet | null {
-  if (!isRecord(value) || !hasExactKeys(value, new Set(["wallet"]))) return null;
+export function parseSafeWalletResponse(
+  value: unknown
+): SafeCreditWallet | null {
+  if (!isRecord(value) || !hasExactKeys(value, new Set(["wallet"])))
+    return null;
   return parseSafeCreditWallet(value.wallet);
 }
 
@@ -265,7 +280,9 @@ export function parseSafeToolCosts(value: unknown): SafeToolCosts | null {
   return { version: value.version, actions };
 }
 
-export function parseSafeToolCostsResponse(value: unknown): SafeToolCosts | null {
+export function parseSafeToolCostsResponse(
+  value: unknown
+): SafeToolCosts | null {
   if (!isRecord(value) || !hasExactKeys(value, new Set(["toolCosts"]))) {
     return null;
   }

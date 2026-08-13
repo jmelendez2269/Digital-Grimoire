@@ -39,7 +39,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object";
 }
 
-function isSafeMembershipCatalog(value: unknown): value is SafeMembershipCatalog {
+function isSafeMembershipCatalog(
+  value: unknown
+): value is SafeMembershipCatalog {
   if (!isRecord(value)) return false;
 
   const { plans, offers, courses, launch } = value;
@@ -49,7 +51,7 @@ function isSafeMembershipCatalog(value: unknown): value is SafeMembershipCatalog
       (plan) =>
         isRecord(plan) &&
         membershipPlanCodes.includes(
-          plan.code as (typeof membershipPlanCodes)[number],
+          plan.code as (typeof membershipPlanCodes)[number]
         ) &&
         typeof plan.name === "string" &&
         typeof plan.monthlyCredits === "number" &&
@@ -57,7 +59,7 @@ function isSafeMembershipCatalog(value: unknown): value is SafeMembershipCatalog
         (plan.journalActivePageLimit === null ||
           (typeof plan.journalActivePageLimit === "number" &&
             Number.isInteger(plan.journalActivePageLimit))) &&
-        typeof plan.publiclyAvailable === "boolean",
+        typeof plan.publiclyAvailable === "boolean"
     ) &&
     Array.isArray(offers) &&
     offers.every(
@@ -65,14 +67,14 @@ function isSafeMembershipCatalog(value: unknown): value is SafeMembershipCatalog
         isRecord(offer) &&
         typeof offer.code === "string" &&
         paidMembershipPlanCodes.includes(
-          offer.planCode as (typeof paidMembershipPlanCodes)[number],
+          offer.planCode as (typeof paidMembershipPlanCodes)[number]
         ) &&
         typeof offer.amountCents === "number" &&
         Number.isInteger(offer.amountCents) &&
         offer.currency === "usd" &&
         offer.interval === "month" &&
         typeof offer.acceptsNewCheckout === "boolean" &&
-        typeof offer.publiclyAvailable === "boolean",
+        typeof offer.publiclyAvailable === "boolean"
     ) &&
     isRecord(courses) &&
     (courses.studentLaunchCourseSlug === null ||
@@ -109,7 +111,8 @@ export default function MembershipAvailability() {
         setCatalog(safeCatalog);
         setUnavailable(false);
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
         setCatalog(null);
         setUnavailable(true);
       } finally {
@@ -156,18 +159,18 @@ export default function MembershipAvailability() {
     } catch {
       setCheckoutOffer(null);
       setCheckoutError(
-        "Secure Checkout is temporarily unavailable. No charge was created. Please try again.",
+        "Secure Checkout is temporarily unavailable. No charge was created. Please try again."
       );
     }
   };
 
   const readerPlan = catalog?.plans.find(
-    (plan) => plan.code === "reader" && plan.publiclyAvailable,
+    (plan) => plan.code === "reader" && plan.publiclyAvailable
   );
   const availableOffers = catalog?.launch.paidSalesEnabled
     ? catalog.offers.filter((offer) => {
         const plan = catalog.plans.find(
-          (candidate) => candidate.code === offer.planCode,
+          (candidate) => candidate.code === offer.planCode
         );
         return (
           offer.publiclyAvailable &&
@@ -212,9 +215,9 @@ export default function MembershipAvailability() {
               </p>
               {readerPlan && (
                 <p className="text-sm text-zinc-300">
-                  Reader remains available with {readerPlan.monthlyCredits} monthly
-                  credits and up to {readerPlan.journalActivePageLimit} active Journal
-                  pages.
+                  Reader remains available for free reading and research, with
+                  up to {readerPlan.journalActivePageLimit} active Journal
+                  pages. Generative credits require a paid membership.
                 </p>
               )}
             </div>
@@ -224,7 +227,7 @@ export default function MembershipAvailability() {
         <div className="grid gap-4 md:grid-cols-2">
           {availableOffers.map((offer) => {
             const plan = catalog?.plans.find(
-              (candidate) => candidate.code === offer.planCode,
+              (candidate) => candidate.code === offer.planCode
             );
             if (!plan) return null;
 
@@ -243,16 +246,20 @@ export default function MembershipAvailability() {
                         : `Up to ${plan.journalActivePageLimit} active Journal pages`}
                     </p>
                   </div>
-                  <p className="whitespace-nowrap text-lg font-bold text-amber-100">
+                  <p className="text-lg font-bold whitespace-nowrap text-amber-100">
                     ${(offer.amountCents / 100).toFixed(0)}/month
                   </p>
                 </div>
-                {offer.planCode === "student" &&
-                  catalog?.courses.studentLaunchCourseSlug && (
-                    <p className="mt-3 text-sm text-zinc-300">
-                      Launch course: {catalog.courses.studentLaunchCourseSlug}
-                    </p>
-                  )}
+                {offer.planCode === "student" ? (
+                  <p className="mt-3 text-sm text-zinc-300">
+                    Access one member course at a time.
+                  </p>
+                ) : null}
+                {offer.planCode === "scholar" ? (
+                  <p className="mt-3 text-sm text-zinc-300">
+                    Early access to newly released member courses.
+                  </p>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => void startCheckout(offer.code)}
@@ -272,7 +279,10 @@ export default function MembershipAvailability() {
             );
           })}
           {checkoutError ? (
-            <p className="md:col-span-2 text-sm leading-6 text-red-300" role="alert">
+            <p
+              className="text-sm leading-6 text-red-300 md:col-span-2"
+              role="alert"
+            >
               {checkoutError}
             </p>
           ) : null}

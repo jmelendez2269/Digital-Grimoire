@@ -1,7 +1,5 @@
 import { guardCommercialAction } from "@/lib/commercial-availability";
-import {
-  MeteringError,
-} from "@/lib/membership/metering-adapter.server";
+import { MeteringError } from "@/lib/membership/metering-adapter.server";
 import { nextUtcMonthBoundary } from "@/lib/membership/metering-customer-presentation";
 import { executeMeteredLensExpansion } from "@/lib/parallax/metered-lens-expansion.server";
 
@@ -11,6 +9,8 @@ const CUSTOMER_MESSAGES: Record<string, string> = {
   METERING_UNAUTHORIZED: "Sign in to expand this lens.",
   METERING_VERIFIED_EMAIL_REQUIRED:
     "Verify your email before expanding a lens.",
+  METERING_PAID_MEMBERSHIP_REQUIRED:
+    "Lens expansion requires a paid membership. Your reading and saved analysis remain available.",
   METERING_INSUFFICIENT_CREDITS:
     "You do not have enough Prism Credits for this expansion.",
   METERING_INVALID_INPUT: "This expansion request is invalid.",
@@ -67,7 +67,7 @@ function errorResponse(error: MeteringError): Response {
         ? { resetAt: nextUtcMonthBoundary() }
         : {}),
     },
-    { status: error.status, headers: headers(error) },
+    { status: error.status, headers: headers(error) }
   );
 }
 
@@ -80,7 +80,7 @@ function errorResponse(error: MeteringError): Response {
  */
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ lensId: string }> },
+  { params }: { params: Promise<{ lensId: string }> }
 ) {
   const unavailable = guardCommercialAction("seven_lenses_expansion");
   if (unavailable) return unavailable;
@@ -89,13 +89,13 @@ export async function POST(
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return Response.json(
       { error: "A valid request body is required.", code: "INVALID_REQUEST" },
-      { status: 400, headers: headers() },
+      { status: 400, headers: headers() }
     );
   }
   const candidate = body as Record<string, unknown>;
   if (
     Object.keys(candidate).some(
-      (key) => key !== "parentResponseId" && key !== "requestId",
+      (key) => key !== "parentResponseId" && key !== "requestId"
     )
   ) {
     return Response.json(
@@ -103,7 +103,7 @@ export async function POST(
         error: "Only the saved parent and request ID may be supplied.",
         code: "INVALID_REQUEST_FIELDS",
       },
-      { status: 400, headers: headers() },
+      { status: 400, headers: headers() }
     );
   }
   const parentResponseId =
@@ -119,7 +119,7 @@ export async function POST(
         error: "A saved parent and request ID are required.",
         code: "EXPANSION_IDS_REQUIRED",
       },
-      { status: 400, headers: headers() },
+      { status: 400, headers: headers() }
     );
   }
 
@@ -137,7 +137,7 @@ export async function POST(
         chargedCredits: result.chargedCredits,
         quoteVersion: result.quoteVersion,
       },
-      { headers: headers() },
+      { headers: headers() }
     );
   } catch (error) {
     if (error instanceof MeteringError) return errorResponse(error);
@@ -146,7 +146,7 @@ export async function POST(
         error: "Lens expansion is temporarily unavailable. Try again shortly.",
         code: "LENS_EXPANSION_FAILED",
       },
-      { status: 500, headers: headers() },
+      { status: 500, headers: headers() }
     );
   }
 }

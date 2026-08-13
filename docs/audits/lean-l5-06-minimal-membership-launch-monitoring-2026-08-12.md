@@ -69,6 +69,26 @@ This section is an interim monitoring preflight, not the 24-hour checkpoint. It 
 - Exact searches of the connected Gmail mailbox found no Prismarium-, domain-, PRE-, C01-, or Seven-Lenses-related support message after launch. One loose phrase match was an unrelated newsletter and was excluded. This is evidence only for the connected mailbox, not for any unconnected support channel.
 - No canary, synthetic charge/refund, Checkout Session, credit use, generation, customer session, deployment, migration, secret write, or feature expansion was created by monitoring.
 
+### Interim source-control anomaly, resolved without production action
+
+At 07:42 EDT on August 13, the isolated release branch had moved from deployed commit `c2ebb18` to user-authored merge `295301b` (`Merge lean membership follow-through`), pushed at 06:52 EDT. Monitoring stopped its quiet wait and inspected the change read-only. The merge added prior handoffs, audit/configuration tooling, tests, monitoring/planning records, `.gitignore`, and local Supabase configuration; the comparison from `c2ebb18` to `295301b` contained no `app/src`, application package, Next configuration, or Vercel configuration delta.
+
+Both `prismarium.xyz` and `www.prismarium.xyz` still resolved to baseline deployment `dpl_9FELW8KUwzbTbrvkqR5dF6ziVRbJ`, Ready and created before the merge. The Production deployment list showed no post-merge deployment. Therefore the branch-head movement is recorded as a resolved source-control anomaly with no observed live-target change, not as a deployment, production incident, or scheduled checkpoint. No rollback, redeploy, alias change, or other production action was taken.
+
+### Customer-visible membership availability anomaly
+
+At 14:10 EDT on August 13, Jen reported that the signed-in Reader Billing view said paid memberships were unavailable while showing Reader with 10 credits. Incident triage found no error-level Vercel entry in the preceding two hours. The live public catalog returned paid sales enabled, Student founding at $15 and Scholar at $39 as the only public Checkout offers, and the complete expected 10/30/100 launch schedule. A fresh browser request to `/pricing` rendered all three plans with no console error or failed membership request.
+
+The reported heading comes from the signed-in Reader `MembershipAvailability` widget. It fetches the catalog once on mount and uses the same “Paid memberships are not open yet” heading for either a closed catalog or a failed/stale client read, with no automatic refetch. The evidence therefore rules out a global paid-sales closure and identifies a stale or failed one-shot widget state as the customer-visible cause; a hard refresh/remount is the immediate recovery. Reader 10 is not a rendering error: it came from frozen 10/30/100 launch planning and monitoring interpreted the later authorization to “enable monthly credits” as enabling that full schedule. No credit configuration, Checkout, deployment, or other production state was changed during diagnosis. UI or Reader-allowance changes require separate owner direction.
+
+#### August 13 owner clarification and correction scope
+
+Jen clarified that the report was about `http://localhost:3000/pricing`, not the signed-in Production Billing widget. The local app had none of the lean paid-launch environment names, so its server catalog correctly failed closed to Reader-only availability; that—not a stale Production catalog read—explains why localhost said no paid memberships were available. The earlier stale-widget diagnosis remains above as the chronological investigation record but is superseded for this report.
+
+Jen also explicitly set the product rule that Prism Credits are paid-only. Reader must show and receive 0 credits and must not begin generative provider work, even if a legacy balance remains temporarily visible while it is retired. A local-only correction now covers catalog, entitlement-derived wallet eligibility, pre-provider metering rejection, customer copy/state, focused tests, and an unapplied forward migration that retires Reader grants while preserving verified paid grants. Student 30 and Scholar 100 are unchanged; Adept remains held at 300.
+
+No Production deployment, migration, live balance change, Checkout/billing/Stripe/webhook action, or sales/configuration mutation was authorized or performed by this correction. Production therefore still advertises and can issue Reader 10 until a separate explicit production gate is approved. That live mismatch is an open monitoring anomaly and cannot be recorded as resolved merely because the local correction passes.
+
 ## Scheduled-checkpoint evidence contract
 
 | Requirement | Privacy-safe evidence at 24h, 48h, and 72h | Interpretation boundary |

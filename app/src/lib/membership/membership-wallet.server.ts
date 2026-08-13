@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  resolveMembershipEntitlement,
+  type MembershipEntitlementResolution,
+} from "@/lib/membership/membership-entitlement-resolver.server";
 import { createServiceClient } from "@/lib/supabase/service";
 
 const UUID_PATTERN =
@@ -37,6 +41,8 @@ export interface CreditWalletHistoryItem {
 }
 
 export interface CreditWallet {
+  planCode: WalletPlanCode;
+  paidCreditsActive: boolean;
   status: WalletStatus;
   availableCredits: number;
   reservedCredits: number;
@@ -57,10 +63,15 @@ interface CreditWalletDependencies {
   loadWallet?: (
     userId: string,
     effectiveAt: string,
-    historyLimit: number,
+    historyLimit: number
   ) => Promise<unknown>;
+  resolveEntitlement?: (
+    userId: string
+  ) => Promise<MembershipEntitlementResolution>;
   now?: () => Date;
 }
+
+type StoredCreditWallet = Omit<CreditWallet, "planCode" | "paidCreditsActive">;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -80,7 +91,7 @@ function isTimestamp(value: unknown): value is string {
 
 function isOneOf<T extends readonly string[]>(
   value: unknown,
-  choices: T,
+  choices: T
 ): value is T[number] {
   return typeof value === "string" && choices.includes(value);
 }
@@ -132,7 +143,7 @@ function parseHistoryItem(value: unknown): CreditWalletHistoryItem {
   };
 }
 
-function parseCreditWallet(value: unknown): CreditWallet {
+function parseCreditWallet(value: unknown): StoredCreditWallet {
   if (!isRecord(value)) throw new Error("CREDIT_WALLET_INVALID_PROJECTION");
   if (
     !isOneOf(value.status, WALLET_STATUSES) ||
@@ -148,7 +159,7 @@ function parseCreditWallet(value: unknown): CreditWallet {
     throw new Error("CREDIT_WALLET_INVALID_PROJECTION");
   }
 
-  let grant: CreditWallet["grant"] = null;
+  let grant: StoredCreditWallet["grant"] = null;
   if (value.grant !== null) {
     if (
       !isRecord(value.grant) ||
@@ -194,7 +205,7 @@ function parseCreditWallet(value: unknown): CreditWallet {
 async function loadWalletFromDatabase(
   userId: string,
   effectiveAt: string,
-  historyLimit: number,
+  historyLimit: number
 ): Promise<unknown> {
   const serviceSupabase = createServiceClient();
   const { data, error } = await serviceSupabase.rpc("get_credit_wallet_v1", {
@@ -213,7 +224,7 @@ async function loadWalletFromDatabase(
  */
 export async function getCreditWalletForUser(
   userId: string,
-  dependencies: CreditWalletDependencies = {},
+  dependencies: CreditWalletDependencies = {}
 ): Promise<CreditWallet> {
   if (!UUID_PATTERN.test(userId)) {
     throw new Error("CREDIT_WALLET_INVALID_USER");
@@ -224,10 +235,24 @@ export async function getCreditWalletForUser(
   }
   const effectiveAt = now.toISOString();
   const historyLimit = 20;
-  const rawWallet = await (dependencies.loadWallet ?? loadWalletFromDatabase)(
-    userId,
-    effectiveAt,
-    historyLimit,
-  );
-  return parseCreditWallet(rawWallet);
+  const [rawWallet, entitlement] = await Promise.all([
+    (dependencies.loadWallet ?? loadWalletFromDatabase)(
+      userId,
+      effectiveAt,
+      historyLimit
+    ),
+    (
+      dependencies.resolveEntitlement ??
+      ((id: string) => resolveMembershipEntitlement({ userId: id }))
+    )(userId),
+  ]);
+  const wallet = parseCreditWallet(rawWallet);
+  return {
+    ...wallet,
+    planCode: entitlement.planCode,
+    paidCreditsActive:
+      entitlement.paidEntitlementsActive &&
+      !entitlement.failClosed &&
+      entitlement.planCode !== "reader",
+  };
 }

@@ -11,6 +11,8 @@ const CUSTOMER_MESSAGES: Record<string, string> = {
   METERING_UNAUTHORIZED: "Sign in to begin a working.",
   METERING_VERIFIED_EMAIL_REQUIRED:
     "Verify your email before using The Working.",
+  METERING_PAID_MEMBERSHIP_REQUIRED:
+    "The Working requires a paid membership. Your reading and saved work remain available.",
   METERING_INSUFFICIENT_CREDITS:
     "You do not have enough Prism Credits for this working.",
   METERING_REQUEST_TOO_LARGE:
@@ -62,7 +64,7 @@ function meteringErrorResponse(error: MeteringError): NextResponse {
         ? { resetAt: nextUtcMonthBoundary() }
         : {}),
     },
-    { status: error.status, headers: noStoreHeaders(error) },
+    { status: error.status, headers: noStoreHeaders(error) }
   );
 }
 
@@ -81,7 +83,7 @@ export async function POST(req: Request) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json(
       { error: "A valid request body is required.", code: "INVALID_REQUEST" },
-      { status: 400, headers: noStoreHeaders() },
+      { status: 400, headers: noStoreHeaders() }
     );
   }
   const intention =
@@ -91,13 +93,13 @@ export async function POST(req: Request) {
   if (!intention) {
     return NextResponse.json(
       { error: "An intention is required.", code: "INTENTION_REQUIRED" },
-      { status: 400, headers: noStoreHeaders() },
+      { status: 400, headers: noStoreHeaders() }
     );
   }
   if (!requestId) {
     return NextResponse.json(
       { error: "A request ID is required.", code: "REQUEST_ID_REQUIRED" },
-      { status: 400, headers: noStoreHeaders() },
+      { status: 400, headers: noStoreHeaders() }
     );
   }
 
@@ -114,7 +116,7 @@ export async function POST(req: Request) {
         chargedCredits: result.chargedCredits,
         quoteVersion: result.quoteVersion,
       },
-      { headers: noStoreHeaders() },
+      { headers: noStoreHeaders() }
     );
   } catch (error) {
     if (error instanceof MeteringError) return meteringErrorResponse(error);
@@ -123,7 +125,7 @@ export async function POST(req: Request) {
         error: "The Working is temporarily unavailable. Try again shortly.",
         code: "WORKING_GENERATION_FAILED",
       },
-      { status: 500, headers: noStoreHeaders() },
+      { status: 500, headers: noStoreHeaders() }
     );
   }
 }

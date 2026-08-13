@@ -11,20 +11,21 @@ const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const PRE_SLUG = "pre-how-to-hold-two-things-at-once";
 
-function releaseEnvironment(overrides: Record<string, string | undefined> = {}) {
+function releaseEnvironment(
+  overrides: Record<string, string | undefined> = {}
+) {
   return {
     PRISMARIUM_PAID_MEMBERSHIP_SALES_ENABLED: "false",
     PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS:
       APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
-    PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG:
-      APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
+    PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG: APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
     ...overrides,
   };
 }
 
 function activeMembership(
   planCode: "student" | "scholar" | "adept",
-  overrides: Record<string, unknown> = {},
+  overrides: Record<string, unknown> = {}
 ) {
   return {
     plan_code: planCode,
@@ -39,11 +40,11 @@ function activeMembership(
 test("missing membership defaults to Reader while retaining the L1 free allowlist", async () => {
   const pre = await resolveMembershipEntitlement(
     { userId: USER_ID, courseSlug: PRE_SLUG },
-    { environment: {}, loadMembership: async () => null },
+    { environment: {}, loadMembership: async () => null }
   );
   const paid = await resolveMembershipEntitlement(
     { userId: USER_ID, courseSlug: APPROVED_STUDENT_LAUNCH_COURSE_SLUG },
-    { environment: releaseEnvironment(), loadMembership: async () => null },
+    { environment: releaseEnvironment(), loadMembership: async () => null }
   );
 
   assert.deepEqual(
@@ -57,7 +58,7 @@ test("missing membership defaults to Reader while retaining the L1 free allowlis
     },
     {
       planCode: "reader",
-      monthlyCredits: 10,
+      monthlyCredits: 0,
       paidEntitlementsActive: false,
       failClosed: false,
       reason: "reader_default",
@@ -66,7 +67,7 @@ test("missing membership defaults to Reader while retaining the L1 free allowlis
         entitled: true,
         source: "free_allowlist",
       },
-    },
+    }
   );
   assert.equal(paid.course.entitled, false);
 });
@@ -82,7 +83,7 @@ test("active paid rows resolve exact plan credits and allowlisted course access"
       {
         environment: releaseEnvironment(),
         loadMembership: async () => activeMembership(planCode),
-      },
+      }
     );
 
     assert.equal(resolution.planCode, planCode);
@@ -108,7 +109,7 @@ test("publication-like input and non-allowlisted courses never grant access", as
         published: true,
         is_published: true,
       }),
-    },
+    }
   );
 
   assert.equal(resolution.planCode, "scholar");
@@ -118,9 +119,9 @@ test("publication-like input and non-allowlisted courses never grant access", as
   const source = readFileSync(
     resolve(
       appRoot,
-      "src/lib/membership/membership-entitlement-resolver.server.ts",
+      "src/lib/membership/membership-entitlement-resolver.server.ts"
     ),
-    "utf8",
+    "utf8"
   );
   assert.doesNotMatch(source, /\.from\(["']courses["']\)/);
   assert.doesNotMatch(source, /is_published|\.published/);
@@ -146,10 +147,10 @@ test("held, terminal, delinquent, unknown, and malformed membership states fail 
       {
         environment: releaseEnvironment(),
         loadMembership: async () => row,
-      },
+      }
     );
     assert.equal(resolution.planCode, "reader");
-    assert.equal(resolution.monthlyCredits, 10);
+    assert.equal(resolution.monthlyCredits, 0);
     assert.equal(resolution.paidEntitlementsActive, false);
     assert.equal(resolution.failClosed, true);
     assert.equal(resolution.course.entitled, false);
@@ -164,7 +165,7 @@ test("lookup failure and invalid identity fail closed without querying membershi
       loadMembership: async () => {
         throw new Error("database unavailable");
       },
-    },
+    }
   );
   let loaderCalled = false;
   const invalid = await resolveMembershipEntitlement(
@@ -175,7 +176,7 @@ test("lookup failure and invalid identity fail closed without querying membershi
         loaderCalled = true;
         return activeMembership("adept");
       },
-    },
+    }
   );
 
   assert.equal(failed.reason, "membership_lookup_failed");
@@ -201,7 +202,7 @@ test("ambiguous or unapproved course release configuration closes paid course ac
       {
         environment,
         loadMembership: async () => activeMembership("scholar"),
-      },
+      }
     );
 
     assert.equal(resolution.planCode, "scholar");

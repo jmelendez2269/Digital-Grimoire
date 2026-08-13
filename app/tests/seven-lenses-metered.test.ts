@@ -69,7 +69,9 @@ function attempt(input: {
   };
 }
 
-function mockStore(calls: Array<{ operation: string; input?: unknown }>): MeteringStore {
+function mockStore(
+  calls: Array<{ operation: string; input?: unknown }>
+): MeteringStore {
   return {
     async beginRequest(input) {
       calls.push({ operation: "begin_request", input });
@@ -147,11 +149,11 @@ function metering(store: MeteringStore) {
       emailConfirmedAt: "2026-08-01T00:00:00.000Z",
     }),
     resolveEntitlement: async () => ({
-      planCode: "reader" as const,
-      monthlyCredits: 10,
-      paidEntitlementsActive: false,
+      planCode: "student" as const,
+      monthlyCredits: 30,
+      paidEntitlementsActive: true,
       failClosed: false,
-      reason: "reader_default" as const,
+      reason: "active_membership" as const,
       course: {
         slug: null,
         entitled: false,
@@ -164,7 +166,7 @@ function metering(store: MeteringStore) {
 
 function baseDependencies(
   calls: Array<{ operation: string; input?: unknown }>,
-  store: MeteringStore,
+  store: MeteringStore
 ) {
   return {
     createResultId: () => {
@@ -188,7 +190,7 @@ function baseDependencies(
     persistResponse: async (
       id: string,
       generated: { response: { synthesis: string } },
-      context: MeteredActionContext,
+      context: MeteredActionContext
     ) => {
       calls.push({ operation: "persist_response", input: { id, context } });
       assert.equal(generated.response.synthesis, response().synthesis);
@@ -212,21 +214,21 @@ test("provider-reported costs aggregate, while missing costs use the conservativ
         attempt({ id: "gen_1", input: 100, output: 20, cost: 0.001 }),
         attempt({ id: "gen_2", input: 200, output: 40, cost: 0.002 }),
       ],
-      0.1,
+      0.1
     ),
     {
       providerRequestId: "gen_1,gen_2",
       inputUnits: 300,
       outputUnits: 60,
       estimatedCostUsd: 0.003,
-    },
+    }
   );
   assert.equal(
     aggregateSevenLensesUsage(
       [attempt({ id: "native_1", input: 100, output: 20, cost: null })],
-      0.15,
+      0.15
     ).estimatedCostUsd,
-    0.15,
+    0.15
   );
 });
 
@@ -242,20 +244,26 @@ test("controlled standard story creates an addressable ID before providers, pers
     },
     {
       ...baseDependencies(calls, store),
-      generateSynthesis: async (_query, _weights, _context, _length, options) => {
+      generateSynthesis: async (
+        _query,
+        _weights,
+        _context,
+        _length,
+        options
+      ) => {
         calls.push({ operation: "provider" });
         options.onProviderAttempt(
-          attempt({ id: "gen_lenses", input: 700, output: 140, cost: 0.004 }),
+          attempt({ id: "gen_lenses", input: 700, output: 140, cost: 0.004 })
         );
         options.onProviderAttempt(
-          attempt({ id: "gen_synthesis", input: 300, output: 80, cost: 0.003 }),
+          attempt({ id: "gen_synthesis", input: 300, output: 80, cost: 0.003 })
         );
         return {
           synthesis: response().synthesis,
           tokenUsage: { inputTokens: 1_000, outputTokens: 220 },
         };
       },
-    },
+    }
   );
 
   assert.equal(result.actionCode, "seven_lenses.standard");
@@ -277,7 +285,7 @@ test("controlled standard story creates an addressable ID before providers, pers
       "commit_credits",
       "complete_request",
       "complete_usage",
-    ],
+    ]
   );
   const usage = calls.find((call) => call.operation === "complete_usage")
     ?.input as {
@@ -296,7 +304,7 @@ test("controlled standard story creates an addressable ID before providers, pers
         resultReference: string;
       }
     ).resultReference,
-    `seven-lenses:${RESPONSE_ID}`,
+    `seven-lenses:${RESPONSE_ID}`
   );
   const privateMeteringInputs = calls
     .filter((call) =>
@@ -307,12 +315,12 @@ test("controlled standard story creates an addressable ID before providers, pers
         "commit_credits",
         "complete_request",
         "complete_usage",
-      ].includes(call.operation),
+      ].includes(call.operation)
     )
     .map((call) => call.input);
   assert.doesNotMatch(
     JSON.stringify(privateMeteringInputs),
-    /How do symbols shape memory|Symbols give memory/,
+    /How do symbols shape memory|Symbols give memory/
   );
 });
 
@@ -332,8 +340,11 @@ test("long execution reserves and commits the server-owned 3-credit quote", asyn
         synthesis: response().synthesis,
         tokenUsage: { inputTokens: 1, outputTokens: 1 },
       }),
-      persistResponse: async (id) => ({ ...response(id), responseLength: "long" }),
-    },
+      persistResponse: async (id) => ({
+        ...response(id),
+        responseLength: "long",
+      }),
+    }
   );
   assert.equal(result.actionCode, "seven_lenses.long");
   assert.equal(result.chargedCredits, 3);
@@ -343,7 +354,7 @@ test("long execution reserves and commits the server-owned 3-credit quote", asyn
         quotedCredits: number;
       }
     ).quotedCredits,
-    3,
+    3
   );
 });
 
@@ -381,7 +392,7 @@ test("completed replay reopens the exact durable response without retrieval, pro
       generateSynthesis: async () => {
         throw new Error("provider must not run on replay");
       },
-    },
+    }
   );
   assert.equal(result.replayed, true);
   assert.equal(result.chargedCredits, 0);
@@ -393,7 +404,7 @@ test("completed replay reopens the exact durable response without retrieval, pro
       "begin_request",
       "get_completed_result",
       "replay_response",
-    ],
+    ]
   );
 });
 
@@ -448,21 +459,21 @@ test("provider, timeout, abort, empty, and persistence failures release exactly 
         {
           ...baseDependencies(calls, store),
           generateSynthesis: scenario.generate,
-        },
+        }
       ),
       (error: unknown) =>
         error instanceof MeteringError && error.code === scenario.expected,
-      scenario.name,
+      scenario.name
     );
     assert.equal(
       calls.filter((call) => call.operation === "release_credits").length,
       1,
-      scenario.name,
+      scenario.name
     );
     assert.equal(
       calls.filter((call) => call.operation === "commit_credits").length,
       0,
-      scenario.name,
+      scenario.name
     );
   }
 
@@ -485,19 +496,19 @@ test("provider, timeout, abort, empty, and persistence failures release exactly 
         persistResponse: async () => {
           throw new Error("database unavailable");
         },
-      },
+      }
     ),
     (error: unknown) =>
       error instanceof MeteringError &&
-      error.code === "METERING_PERSISTENCE_FAILED",
+      error.code === "METERING_PERSISTENCE_FAILED"
   );
   assert.equal(
     calls.filter((call) => call.operation === "release_credits").length,
-    1,
+    1
   );
   assert.equal(
     calls.filter((call) => call.operation === "commit_credits").length,
-    0,
+    0
   );
 });
 
@@ -531,7 +542,13 @@ test("a disconnected request and an expired provider deadline both release the h
         {
           ...baseDependencies(calls, store),
           providerTimeoutMs: scenario.providerTimeoutMs,
-          generateSynthesis: async (_query, _weights, _context, _length, options) =>
+          generateSynthesis: async (
+            _query,
+            _weights,
+            _context,
+            _length,
+            options
+          ) =>
             new Promise((_, reject) => {
               if (options.signal.aborted) {
                 reject(options.signal.reason);
@@ -540,25 +557,25 @@ test("a disconnected request and an expired provider deadline both release the h
               options.signal.addEventListener(
                 "abort",
                 () => reject(options.signal.reason),
-                { once: true },
+                { once: true }
               );
             }),
-        },
+        }
       ),
       (error: unknown) =>
         error instanceof MeteringError &&
         (scenario.name === "deadline"
           ? error.code === "METERING_PROVIDER_TIMEOUT"
           : error.code === "METERING_PROVIDER_ABORTED"),
-      scenario.name,
+      scenario.name
     );
     assert.equal(
       calls.filter((call) => call.operation === "release_credits").length,
-      1,
+      1
     );
     assert.equal(
       calls.filter((call) => call.operation === "commit_credits").length,
-      0,
+      0
     );
   }
 });
@@ -566,26 +583,26 @@ test("a disconnected request and an expired provider deadline both release the h
 test("client cost and streaming contract is UUID-based, durable-first, input-preserving, and server-owned", () => {
   const page = readFileSync(
     resolve(appRoot, "src/app/seven-lenses/page.tsx"),
-    "utf8",
+    "utf8"
   );
   const slider = readFileSync(
     resolve(appRoot, "src/components/parallax/ResponseLengthSlider.tsx"),
-    "utf8",
+    "utf8"
   );
   const route = readFileSync(
     resolve(appRoot, "src/app/api/parallax/query/route.ts"),
-    "utf8",
+    "utf8"
   );
   const orchestrator = readFileSync(
     resolve(appRoot, "src/lib/parallax/lens-orchestrator.ts"),
-    "utf8",
+    "utf8"
   );
   assert.match(page, /crypto\.randomUUID\(\)/);
   assert.match(page, /new AbortController\(\)/);
   assert.match(page, /signal: requestController\.signal/);
   assert.match(
     page,
-    /JSON\.stringify\(\{ query, lensWeights, responseLength, requestId \}\)/,
+    /JSON\.stringify\(\{ query, lensWeights, responseLength, requestId \}\)/
   );
   assert.match(page, /seven_lenses\.standard/);
   assert.match(page, /seven_lenses\.long/);

@@ -56,16 +56,16 @@ export interface MeteredActionRequest<TInput, TProvider, TResult> {
     name: string;
     model: string;
     execute: (
-      context: MeteredActionContext,
+      context: MeteredActionContext
     ) => Promise<MeteredProviderResult<TProvider>>;
   };
   persist: (
     providerValue: TProvider,
-    context: MeteredActionContext,
+    context: MeteredActionContext
   ) => Promise<MeteredPersistenceResult<TResult>>;
   replay?: (
     resultReference: string,
-    context: MeteredActionContext,
+    context: MeteredActionContext
   ) => Promise<TResult>;
   isUsableProviderResult?: (value: TProvider) => boolean;
 }
@@ -83,7 +83,7 @@ export class MeteringError extends Error {
   constructor(
     public readonly code: string,
     public readonly status: number,
-    public readonly retryAfterSeconds: number | null = null,
+    public readonly retryAfterSeconds: number | null = null
   ) {
     super(code);
     this.name = "MeteringError";
@@ -93,8 +93,11 @@ export class MeteringError extends Error {
 /** A provider wrapper may throw this to select a privacy-safe outcome. */
 export class MeteredProviderFailure extends Error {
   constructor(
-    public readonly outcome: Exclude<MeteringOutcome, "succeeded" | "persistence_error">,
-    public readonly usage?: Partial<MeteredProviderUsage>,
+    public readonly outcome: Exclude<
+      MeteringOutcome,
+      "succeeded" | "persistence_error"
+    >,
+    public readonly usage?: Partial<MeteredProviderUsage>
   ) {
     super(outcome);
     this.name = "MeteredProviderFailure";
@@ -106,7 +109,7 @@ export interface MeteringDependencies {
   now?: () => Date;
   authenticate?: () => Promise<MeteringAuthenticatedUser | null>;
   resolveEntitlement?: (
-    userId: string,
+    userId: string
   ) => Promise<MembershipEntitlementResolution>;
   store?: MeteringStore;
 }
@@ -138,7 +141,8 @@ function canonicalJson(value: unknown, seen = new Set<object>()): string {
     return JSON.stringify(value);
   }
   if (typeof value === "number") {
-    if (!Number.isFinite(value)) throw new MeteringError("METERING_INVALID_INPUT", 400);
+    if (!Number.isFinite(value))
+      throw new MeteringError("METERING_INVALID_INPUT", 400);
     return JSON.stringify(value);
   }
   if (Array.isArray(value)) {
@@ -150,7 +154,8 @@ function canonicalJson(value: unknown, seen = new Set<object>()): string {
   }
   if (typeof value === "object") {
     const object = value as Record<string, unknown>;
-    if (seen.has(object)) throw new MeteringError("METERING_INVALID_INPUT", 400);
+    if (seen.has(object))
+      throw new MeteringError("METERING_INVALID_INPUT", 400);
     seen.add(object);
     const entries = Object.keys(object)
       .sort()
@@ -183,7 +188,7 @@ function validateProviderDescriptor(provider: string, model: string): void {
 
 function validateUsage(
   usage: Partial<MeteredProviderUsage> | undefined,
-  fallbackCost: number,
+  fallbackCost: number
 ): MeteredProviderUsage {
   const inputUnits = usage?.inputUnits ?? 0;
   const outputUnits = usage?.outputUnits ?? 0;
@@ -215,12 +220,20 @@ function defaultUsable(value: unknown): boolean {
   return typeof value !== "string" || value.trim().length > 0;
 }
 
-function outcomeForError(error: unknown): Exclude<MeteringOutcome, "succeeded"> {
+function outcomeForError(
+  error: unknown
+): Exclude<MeteringOutcome, "succeeded"> {
   if (error instanceof MeteredProviderFailure) return error.outcome;
-  if (error instanceof MeteringError && error.code === "METERING_EMPTY_RESULT") {
+  if (
+    error instanceof MeteringError &&
+    error.code === "METERING_EMPTY_RESULT"
+  ) {
     return "empty";
   }
-  if (error instanceof MeteringError && error.code === "METERING_PERSISTENCE_FAILED") {
+  if (
+    error instanceof MeteringError &&
+    error.code === "METERING_PERSISTENCE_FAILED"
+  ) {
     return "persistence_error";
   }
   if (error instanceof Error && error.name === "AbortError") return "aborted";
@@ -239,7 +252,9 @@ function releaseReason(outcome: Exclude<MeteringOutcome, "succeeded">): string {
   }[outcome];
 }
 
-function safeErrorClass(outcome: Exclude<MeteringOutcome, "succeeded">): string {
+function safeErrorClass(
+  outcome: Exclude<MeteringOutcome, "succeeded">
+): string {
   const value = outcome.toUpperCase();
   return ERROR_CLASS_PATTERN.test(value) ? value : "PROVIDER_ERROR";
 }
@@ -308,7 +323,7 @@ async function compensateBeforeProvider(input: {
  */
 export async function executeMeteredAction<TInput, TProvider, TResult>(
   request: MeteredActionRequest<TInput, TProvider, TResult>,
-  dependencies: MeteringDependencies = {},
+  dependencies: MeteringDependencies = {}
 ): Promise<MeteredActionSuccess<TResult>> {
   const now = dependencies.now ?? (() => new Date());
   const store = dependencies.store ?? databaseMeteringStore;
@@ -332,9 +347,15 @@ export async function executeMeteredAction<TInput, TProvider, TResult>(
   if (entitlement.failClosed) {
     throw new MeteringError("METERING_ENTITLEMENT_UNAVAILABLE", 503);
   }
+  if (
+    !entitlement.paidEntitlementsActive ||
+    entitlement.planCode === "reader"
+  ) {
+    throw new MeteringError("METERING_PAID_MEMBERSHIP_REQUIRED", 402);
+  }
   const policy = resolveMeteringActionPolicy(
     request.actionCode,
-    dependencies.environment,
+    dependencies.environment
   );
   if (!policy) throw new MeteringError("METERING_UNKNOWN_ACTION", 400);
   if (!policy.configurationValid || policy.killed) {
@@ -362,7 +383,7 @@ export async function executeMeteredAction<TInput, TProvider, TResult>(
         actionCode: policy.quote.actionCode,
         input: JSON.parse(normalizedInput) as unknown,
         quoteVersion: policy.quote.quoteVersion,
-      }),
+      })
     )
     .digest("hex");
   const started = now();
@@ -496,7 +517,7 @@ export async function executeMeteredAction<TInput, TProvider, TResult>(
     });
     providerUsage = validateUsage(
       providerResult.usage,
-      policy.quote.estimatedProviderCostUsd,
+      policy.quote.estimatedProviderCostUsd
     );
     const usable = request.isUsableProviderResult ?? defaultUsable;
     if (!usable(providerResult.value)) {
@@ -536,7 +557,10 @@ export async function executeMeteredAction<TInput, TProvider, TResult>(
           resultReference: persisted.resultReference,
           effectiveAt: completedAt,
         });
-        if (committed.code !== "committed" && committed.code !== "duplicate_committed") {
+        if (
+          committed.code !== "committed" &&
+          committed.code !== "duplicate_committed"
+        ) {
           throw new Error("credit commit rejected");
         }
       }
@@ -574,13 +598,16 @@ export async function executeMeteredAction<TInput, TProvider, TResult>(
       replayed: false,
     };
   } catch (error) {
-    if (error instanceof MeteringError && error.code === "METERING_SETTLEMENT_FAILED") {
+    if (
+      error instanceof MeteringError &&
+      error.code === "METERING_SETTLEMENT_FAILED"
+    ) {
       throw error;
     }
     const outcome = outcomeForError(error);
     const failureUsage = validateUsage(
       error instanceof MeteredProviderFailure ? error.usage : providerUsage,
-      providerStarted ? policy.quote.estimatedProviderCostUsd : 0,
+      providerStarted ? policy.quote.estimatedProviderCostUsd : 0
     );
     const completed = now();
     const completedAt = Number.isFinite(completed.getTime())
@@ -645,8 +672,8 @@ export async function executeMeteredAction<TInput, TProvider, TResult>(
             ? "METERING_MODERATION_BLOCKED"
             : outcome === "empty"
               ? "METERING_EMPTY_RESULT"
-            : "METERING_PROVIDER_FAILED",
-      outcome === "moderated" ? 422 : 502,
+              : "METERING_PROVIDER_FAILED",
+      outcome === "moderated" ? 422 : 502
     );
   }
 }

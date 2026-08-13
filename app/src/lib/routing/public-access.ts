@@ -10,14 +10,12 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/graph",
   "/knowledge-graph",
   "/workings",
-  "/explore/workings",
   "/blog",
   "/api/courses",
   "/api/proxy-image",
   "/api/concepts",
   "/api/course-graph",
   "/api/graph",
-  "/api/working/community",
   "/api/stripe/webhook",
   "/api/blog",
 ] as const;
@@ -31,7 +29,9 @@ const PUBLIC_EXACT_ROUTES = [
   "/",
   "/library",
   "/explore",
+  "/explore/workings",
   "/pricing",
+  "/seven-lenses",
   "/api/library/catalog",
 ] as const;
 

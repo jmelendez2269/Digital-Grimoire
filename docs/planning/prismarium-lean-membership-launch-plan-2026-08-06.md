@@ -1,7 +1,7 @@
 # Prismarium lean membership launch plan
 
 **Date:** August 6, 2026  
-**Last updated:** August 12, 2026<br>
+**Last updated:** August 13, 2026<br>
 **Status:** Minimal membership launch active; 72-hour monitoring in progress<br>
 **Forecast:** 25–35 focused engineering days  
 **Execution tracker:** [Prismarium membership implementation tracker](prismarium-membership-implementation-tracker.md)  
@@ -35,25 +35,26 @@ Those facts do not mean the product lacks value. They mean the next investment s
 | Capability | Reader | Student | Scholar | Adept |
 |---|---:|---:|---:|---:|
 | Monthly price | $0 | **$15 founding** | **$39** | **$69, launch-gated** |
-| Monthly Prism Credits | **10** | **30** | **100** | **300** |
-| Course access | Public/free course paths | One explicitly configured launch course | All explicitly released courses | All explicitly released courses |
+| Monthly Prism Credits | **0** | **30** | **100** | **300** |
+| Course access | Public/free course paths | One member course at a time | All explicitly released courses | All explicitly released courses |
 | Library and non-generative research tools | Included | Included | Included | Included |
 | Active Journal pages | **50** | Unlimited | Unlimited | Unlimited |
 | Saved course work and progress | Public/free paths | Included for accessible course | Included | Included |
-| Generative tools | Credit-metered | Credit-metered | Credit-metered | Credit-metered |
+| Generative tools | Paid membership required | Credit-metered | Credit-metered | Credit-metered |
+| New member-course availability | Public releases | One selected course at a time | Early access when explicitly released | Early access when explicitly released |
 
 “Launch-gated” means Adept is built into the catalog and entitlement model but is not sold until a later explicit owner decision. The minimal August 12 launch holds Adept even though the shadow economics passed.
 
 ### 2.2 Positioning
 
-- Courses are optional. The product must present courses and independent research tools as parallel ways to use Prismarium.
-- Public videos and course resources are an accessibility path, not a promise that every future video or creator format will always be free.
+- Guided courses and independent research are equally central paths through Prismarium. Customers can move between structured study and self-directed exploration whenever they like.
+- Public course previews and selected YouTube learning resources remain open to everyone. Paid membership adds included member-course access, saved progress, and the connected study environment.
 - Membership value comes from the durable environment: organized sources, guided learning, saved work, progress, the Library and Graph, and carefully metered generative tools.
-- The offer must remain valuable during months when no new YouTube video is published. No tier promises a content cadence.
-- Reader is a real free account, not a disabled demo. It receives 10 monthly credits and access to the free/public learning path.
+- Reader is a real free account, not a disabled demo. It receives no Prism Credits; generative tools require paid membership. Reader retains the free/public learning path and non-generative research environment.
 - Student is the low-cost paid entry. Its founding price is $15 monthly. The later $19 standard offer is represented in the server catalog but stays inactive until a separate evidence-based decision.
 - “Founding” attaches to the uninterrupted `student_founding_monthly` subscription, not permanently to an account. It renews at $15 while continuous; `cancel_at_period_end` keeps it through period end, reactivation before terminal end retains it, and terminal cancellation/lapse loses it once the founding offer is closed to new Checkout. Plan switching is disabled, so no cross-tier founding-preservation engine is promised at launch.
 - Scholar is the complete default membership: meaningfully more tool capacity and all released courses without artificial concurrency rules.
+- Scholar receives early access to each newly released member course. “Early access” begins only when the course enters the explicit member-release allowlist; it does not expose drafts or infer release from database `published` state.
 - Adept is a high-volume option, never described as unlimited. All plans remain subject to transparent safety and abuse protections.
 
 ### 2.3 Monthly credits
@@ -74,16 +75,16 @@ The 1/1/2/3 weights are launch hypotheses, not claims that the economics are alr
 
 ### 2.4 Reset and access rules
 
-- Reader credits use UTC calendar months: grant once on the first wallet access in that month and expire at 00:00 UTC on the first day of the next month.
-- Paid credits use the verified Stripe monthly subscription period: grant once per paid period and expire at that period end. On a terminal return to Reader, the account may receive the current UTC Reader grant once if it has not already received it for that calendar month.
-- On verified paid activation, expire any remaining Reader grant and issue the full paid-period allowance. `cancel_at_period_end` leaves the paid allowance active through the verified period end. At terminal paid-access end, expire the paid grant and issue the current Reader grant only if that UTC-month Reader source key has never been issued.
+- Reader receives no monthly grant. A Reader cannot begin a generative provider request even if a legacy balance is temporarily present while the paid-only migration retires it.
+- Paid credits use the verified Stripe monthly subscription period: grant once per paid period and expire at that period end.
+- On verified paid activation, expire any remaining legacy Reader grant and issue the full paid-period allowance. `cancel_at_period_end` leaves the paid allowance active through the verified period end. At terminal paid-access end, expire the paid grant and return the account to Reader with zero credits.
 - Included credits do not roll over at launch.
 - There are no add-on credit packs at launch.
 - There is no annual billing at launch.
 - A database course row marked `published` is content state, not membership-release authority.
 - A server-owned release allowlist defines free/public courses and member-released paid courses. A separate `student_launch_course_slug` must name exactly one member-released paid course before Student sales open.
-- Student receives only `student_launch_course_slug` during the single-course launch. Jen approved `c01-how-humans-know-what-they-know` as the exact initial slug on August 11, 2026; it is not inferred from database order or the first `published` row. Approval alone does not release the course or enable paid sales.
-- Before a second paid course opens, Prismarium must add an explicit Student course-selection and switching flow that preserves prior work.
+- Student includes access to one member course at a time. During the current single-course launch, that course is `student_launch_course_slug`. Jen approved `c01-how-humans-know-what-they-know` as the exact initial slug on August 11, 2026; it is not inferred from database order or the first `published` row.
+- Before a second paid course opens, Prismarium must add an explicit Student course-selection and switching flow that enforces the one-at-a-time rule and preserves prior work.
 - Scholar and Adept receive every paid course on the explicit member-release allowlist.
 - Reader may keep at most 50 active Journal pages; paid tiers are unlimited. Archiving remains the zero-cost way to make room.
 - A paid-to-Reader transition never deletes or auto-archives Journal work. An over-limit Reader can read and edit every existing page but cannot create or restore another active page until archiving brings the active count below 50; unsaved course input must be preserved when this limit blocks a save.
@@ -94,7 +95,7 @@ The 1/1/2/3 weights are launch hypotheses, not claims that the economics are alr
 
 | Area | Current behavior observed | Lean launch target |
 |---|---|---|
-| Reader allowance | Marketing and enforcement disagree; one path is effectively 1 lifetime query | 10 credits every month from one server-owned source |
+| Reader allowance | Marketing and enforcement disagreed and the first lean launch shipped 10 monthly credits | 0 credits; generative tools require a paid membership |
 | Student | $15, 5-query language, broad paid-course access | $15 founding, 30 credits, one explicitly configured launch course |
 | Scholar | $29, 25-query language, little course distinction | $39, 100 credits, all released courses |
 | Adept | $49, 50-query language | $69, 300 credits, public sale gated by cost evidence |
@@ -176,14 +177,12 @@ Initial go/no-go thresholds are:
 
 | Plan | Full included-credit use | Maximum AI-provider COGS target | Implied average provider cost/credit |
 |---|---:|---:|---:|
-| Reader | 10 credits | **$0.50 per monthly-active Reader account** plus a global Reader spend breaker | **$0.0500** |
+| Reader | 0 credits | **$0 provider-credit allowance** | n/a |
 | Student | 30 credits at $15 | **$2.25/month (15% of plan revenue)** | **$0.0750** |
 | Scholar | 100 credits at $39 | **$5.85/month (15%)** | **$0.0585** |
 | Adept | 300 credits at $69 | **$10.35/month (15%)** | **$0.0345** |
 
-These are provider-cost budgets, not promises of profit. The same study must estimate payment processing and marginal infrastructure and target at least 70% contribution margin before founder labor and content-production cost. Jen records an explicit global monthly Reader subsidy budget before canary; until changed, the protective default is **$50 per UTC calendar month**.
-
-The Reader breaker atomically counts committed Reader provider spend plus estimated provider cost reserved by in-flight Reader actions for the current UTC month. If a new Reader action would exceed $50, Reader generative actions fail closed until the next UTC month with clear “free AI capacity is paused” messaging and preserved input. Paid generative actions and all non-generative Library, Search, Graph, Journal, and course access remain unaffected. Any override is server-only and records actor, reason, amount, effective period, and expiry.
+These are provider-cost budgets, not promises of profit. The same study must estimate payment processing and marginal infrastructure and target at least 70% contribution margin before founder labor and content-production cost. The historical $50 Reader breaker remains inert defense-in-depth for existing audit records and rollback compatibility; the paid-membership gate stops Reader requests before that control or any provider call.
 
 If Student or Scholar fails its conservative threshold, its public offer also pauses or its allowance/action costs are revised before launch. Adept defaults to **hold** when there is not enough heavy-use evidence; lack of data is not a pass.
 
@@ -194,7 +193,7 @@ If Student or Scholar fails its conservative threshold, its public offer also pa
 | L0 — Safety and stale-sales closure | Establish production truth, close customer-writable authority, and disable unsafe old purchase/unmetered paths | 2–4 days |
 | L1 — Durable course beta | Make V2 progress and Journal saves reliable; prove PRE end to end | 3–5 days |
 | L2 — Monthly billing and catalog | Implement exact monthly offers, trustworthy membership projection, Checkout, webhook, portal, and reconciliation | 4–6 days |
-| L3 — Monthly credit core | Implement 10/30/100/300 monthly grants and atomic reserve/commit/release | 5–7 days |
+| L3 — Monthly credit core | Implement paid-only 30/100/300 monthly grants and atomic reserve/commit/release | 5–7 days |
 | L4 — Initial tool metering | Meter The Working and Seven Lenses; add telemetry, abuse controls, and fail-closed bypasses | 5–7 days |
 | L5 — Customer UI and launch readiness | Update pricing/account/wallet/tool states, shadow costs, closed production readiness, and post-enable monitoring if separately authorized | 3–5 days |
 | Integration allowance | Cross-phase fixes and verification | Included in forecast |
@@ -213,9 +212,9 @@ Public paid sales stay off until all of these are true:
 - pricing, account, and tool UIs consume the same server-owned catalog and balance truth;
 - the PRE preview-to-enrollment-to-save-to-reload story passes in a real browser;
 - the release catalog distinguishes database `published` state from customer release, contains exactly one initial paid course, and names that same course as `student_launch_course_slug`;
-- observed and conservative full-use cost scenarios support each published paid allowance and the Reader subsidy guardrails;
+- observed and conservative full-use cost scenarios support each published paid allowance;
 - every paid tier has an explicit `enable`, `hold`, or `revise` result; Adept is held by default if heavy-use evidence is insufficient;
-- Reader, Student, and Scholar must record `enable` before public sales. Adept may record `enable` or `hold`. A `revise` result reopens every affected catalog, grant, metering, wallet, pricing, and evidence gate before canary;
+- Student and Scholar must record `enable` before public sales. Adept may record `enable` or `hold`. Reader remains free without generative credits. A `revise` result reopens every affected catalog, grant, metering, wallet, pricing, and evidence gate before deployment;
 - kill switches, rollback steps, and initial monitoring have been rehearsed.
 
 Rollback prioritizes safety and saved work: turn off public offer flags and AI enforcement, preserve the secure permissions and append-only evidence, keep existing course work, and reconcile affected billing/credits before reopening.
@@ -264,7 +263,8 @@ The following are not hidden obligations inside this launch:
 - Production, Stripe, pricing, or public-sales changes require explicit evidence and the appropriate launch gate; planning approval alone does not authorize a risky production mutation.
 - On August 12, 2026, Jen revised `LEAN-L5-05` from a live canary/public-launch exercise to a no-charge production-readiness gate. The existing closed production application/database release, backup/rehearsal, safe Portal, and disabled staged webhook satisfy that packet. This does not claim or authorize a canary, payment/refund, webhook activation/cutover, billing operation, sale, Checkout, course release, credit or metered action, public flag, further deployment/migration, or public launch. `LEAN-L5-06` remains unstarted until a future, separately approved public enablement actually begins its 72-hour monitoring window.
 - Later on August 12, Jen separately authorized that minimal public enablement: PRE stays free/public; C01 is the sole member course; Student founding and Scholar, Checkout, billing operations, monthly credits, The Working, Seven Lenses, the staged webhook, required Vercel configuration/deployments, smoke verification, and 72-hour monitoring are active. Adept remains held. No canary or synthetic charge/refund was created, and the legacy webhook secret was not overwritten. This later decision starts `LEAN-L5-06`; it does not rewrite the historical no-charge completion of L5-05.
+- On August 13, Jen clarified that Prism Credits are paid-only. Reader is revised from 10 to 0 credits; Student 30, Scholar 100, and held Adept 300 are unchanged. This supersedes the Reader allowance and free-generation portions of the earlier frozen contract without rewriting the dated cost study or launch baseline. The local correction is not production authorization: deployment, migration, live balance retirement, or any other production mutation still requires a separate explicit gate.
 
 ## 10. Immediate next move
 
-Phases L2, L3, and L4 are complete at 22/22, 21/21, and 21/21. `LEAN-L5-01` through the owner-revised `LEAN-L5-05` are complete. The [minimal launch baseline](../audits/lean-l5-06-minimal-membership-launch-monitoring-2026-08-12.md) records the later separately authorized public enablement and starts `LEAN-L5-06`. Combined progress remains 112/114 verified points (98.2%), with Phase L5 at 19/21, until the full 72-hour monitoring gate ends August 15, 2026 at 23:08 EDT. Run the 24/48/72-hour checks; keep Adept, canary/synthetic payments, additional member courses, Deep Search, image/generic generation, annual plans, packs, rollover, and every deferred expansion closed.
+Phases L2, L3, and L4 are complete at 22/22, 21/21, and 21/21. `LEAN-L5-01` through the owner-revised `LEAN-L5-05` are complete. The [minimal launch baseline](../audits/lean-l5-06-minimal-membership-launch-monitoring-2026-08-12.md) records the later separately authorized public enablement and starts `LEAN-L5-06`. Combined progress remains 112/114 verified points (98.2%), with Phase L5 at 19/21, until the full 72-hour monitoring gate ends August 15, 2026 at 23:08 EDT. The Reader paid-only correction is implemented and verified locally but remains unapplied to Production pending separate authorization; monitoring must record the live 10-credit mismatch until that gate is resolved. Run the 24/48/72-hour checks; keep Adept, canary/synthetic payments, additional member courses, Deep Search, image/generic generation, annual plans, packs, rollover, and every deferred expansion closed.

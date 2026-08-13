@@ -28,9 +28,9 @@ export default function PricingPage() {
             Learn with a course. Research on your own. Keep both paths open.
           </h1>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-zinc-300">
-            Every plan includes the core research environment. Membership adds a
-            clear monthly credit allowance and, where offered, access to guided
-            courses and saved progress.
+            Every plan includes the core research environment. Paid membership
+            adds a clear monthly credit allowance and, where offered, access to
+            guided courses and saved progress.
           </p>
         </section>
 

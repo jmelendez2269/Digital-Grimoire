@@ -13,6 +13,8 @@ const CUSTOMER_MESSAGES: Record<string, string> = {
   METERING_UNAUTHORIZED: "Sign in to use Seven Lenses.",
   METERING_VERIFIED_EMAIL_REQUIRED:
     "Verify your email before using Seven Lenses.",
+  METERING_PAID_MEMBERSHIP_REQUIRED:
+    "Seven Lenses requires a paid membership. Your reading and saved analyses remain available.",
   METERING_INSUFFICIENT_CREDITS:
     "You do not have enough Prism Credits for this analysis.",
   METERING_REQUEST_TOO_LARGE:
@@ -60,10 +62,7 @@ function noStoreHeaders(): HeadersInit {
 }
 
 function jsonError(error: string, code: string, status: number): Response {
-  return Response.json(
-    { error, code },
-    { status, headers: noStoreHeaders() },
-  );
+  return Response.json({ error, code }, { status, headers: noStoreHeaders() });
 }
 
 function parseLensWeights(value: unknown): LensWeights | null {
@@ -74,13 +73,13 @@ function parseLensWeights(value: unknown): LensWeights | null {
     (key) =>
       Number.isSafeInteger(candidate[key]) &&
       (candidate[key] as number) >= 0 &&
-      (candidate[key] as number) <= 100,
+      (candidate[key] as number) <= 100
   );
   if (!valid || !LENS_KEYS.some((key) => (candidate[key] as number) > 0)) {
     return null;
   }
   return Object.fromEntries(
-    LENS_KEYS.map((key) => [key, candidate[key]]),
+    LENS_KEYS.map((key) => [key, candidate[key]])
   ) as unknown as LensWeights;
 }
 
@@ -96,7 +95,7 @@ function sse(value: unknown): Uint8Array {
 
 function safeEnqueue(
   controller: ReadableStreamDefaultController<Uint8Array>,
-  value: unknown,
+  value: unknown
 ): boolean {
   try {
     controller.enqueue(sse(value));
@@ -113,7 +112,7 @@ function emitDurableResult(
     replayed: boolean;
     chargedCredits: number;
     quoteVersion: string;
-  },
+  }
 ): void {
   safeEnqueue(controller, {
     type: "synthesis",
@@ -127,9 +126,7 @@ function emitDurableResult(
     response: result,
     resultUrl: result.resultUrl,
     ...metering,
-    message: metering.replayed
-      ? "Saved analysis reopened"
-      : "Analysis saved",
+    message: metering.replayed ? "Saved analysis reopened" : "Analysis saved",
   });
 }
 
@@ -147,27 +144,33 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonError("A valid request body is required.", "INVALID_REQUEST", 400);
+    return jsonError(
+      "A valid request body is required.",
+      "INVALID_REQUEST",
+      400
+    );
   }
   const candidate = body as Record<string, unknown>;
-  const query = typeof candidate.query === "string" ? candidate.query.trim() : "";
+  const query =
+    typeof candidate.query === "string" ? candidate.query.trim() : "";
   const requestId =
     typeof candidate.requestId === "string" ? candidate.requestId.trim() : "";
   const lensWeights = parseLensWeights(candidate.lensWeights);
   const responseLength = parseResponseLength(candidate.responseLength);
-  if (!query) return jsonError("A question is required.", "QUERY_REQUIRED", 400);
+  if (!query)
+    return jsonError("A question is required.", "QUERY_REQUIRED", 400);
   if (!lensWeights) {
     return jsonError(
       "Choose at least one valid lens.",
       "LENS_WEIGHTS_INVALID",
-      400,
+      400
     );
   }
   if (!responseLength) {
     return jsonError(
       "Choose a valid response length.",
       "RESPONSE_LENGTH_INVALID",
-      400,
+      400
     );
   }
   if (!requestId) {

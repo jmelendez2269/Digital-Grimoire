@@ -711,7 +711,160 @@ function ParallaxEngineContent() {
   );
 }
 
+function PublicSevenLensesPreview() {
+  const lenses = getAllLenses();
+
+  return (
+    <div className="flex min-h-screen flex-col bg-black selection:bg-amber-500/30">
+      <Header />
+      <DocumentationLink href="/wiki/parallax-engine" className="container mx-auto px-4 py-2" />
+      <main className="mx-auto w-full max-w-7xl flex-1 space-y-8 p-4 md:p-8">
+        <div className="mb-8">
+          <div className="mb-4 flex items-center gap-3">
+            <Sparkles className="h-8 w-8 text-cyan-400" />
+            <h1 className="text-4xl font-bold text-amber-100">Seven Lenses</h1>
+            <div className="ml-auto flex items-center gap-3">
+              <Link
+                href="/ai-disclaimer"
+                className="flex items-center gap-1 text-sm text-amber-400/70 transition-colors hover:text-amber-400"
+                title="Learn about AI and discernment"
+              >
+                <Info className="h-4 w-4" />
+                <span className="hidden sm:inline">About AI &amp; Discernment</span>
+              </Link>
+            </div>
+          </div>
+          <p className="text-lg text-amber-100/70">
+            Explore questions through seven unique analytical lenses, synthesizing insights from multiple perspectives with Prismarium.
+          </p>
+          <div className="mt-4 rounded-lg border border-amber-900/30 bg-amber-900/10 p-3">
+            <p className="text-sm text-amber-200/80">
+              <strong className="text-amber-200">Important:</strong> AI is a tool, not a source of absolute truth.
+              Please use discernment and verify important information.{' '}
+              <Link href="/ai-disclaimer" className="text-amber-400 underline hover:text-amber-300">
+                Learn more about AI safety and discernment
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        <div
+          role="note"
+          className="rounded-xl border border-cyan-300/20 bg-cyan-300/[0.05] px-4 py-3"
+        >
+          <p className="font-mono text-[0.68rem] font-semibold tracking-[0.18em] text-cyan-200 uppercase">
+            Public preview
+          </p>
+          <p className="mt-1 text-sm leading-6 text-zinc-300">
+            Explore how Seven Lenses works below. Join Prismarium to tune the lenses and analyze your own question.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-1">
+            <ResponseLengthSlider value="short" onChange={() => undefined} disabled />
+
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-amber-100/80">Lens Intensity</h2>
+                <button
+                  type="button"
+                  disabled
+                  className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-1.5 text-xs font-medium text-amber-100/70 opacity-50"
+                  title="Join Prismarium to save defaults"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Set as Default</span>
+                </button>
+              </div>
+              <div className="space-y-4">
+                {lenses.map((lens) => (
+                  <LensIntensitySelector
+                    key={lens.id}
+                    lensId={lens.id}
+                    lensName={lens.name}
+                    value={DEFAULT_WEIGHTS[lens.id as keyof LensWeights]}
+                    onChange={() => undefined}
+                    disabled
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6 lg:col-span-2">
+            <div>
+              <h2 className="mb-3 text-sm font-semibold text-amber-100/80">Quick Presets</h2>
+              <LensPresets onSelect={() => undefined} disabled />
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="public-query-preview" className="mb-2 block text-sm font-medium text-amber-100/80">
+                  Your Question
+                </label>
+                <textarea
+                  id="public-query-preview"
+                  disabled
+                  rows={4}
+                  className="w-full resize-none rounded-lg border border-amber-900/20 bg-zinc-900/50 px-4 py-3 text-amber-100 opacity-60 placeholder:text-amber-100/40 disabled:cursor-not-allowed"
+                  placeholder="Ask a question about any topic... The Seven Lenses will analyze it through multiple perspectives."
+                />
+              </div>
+              <button
+                type="button"
+                disabled
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 px-6 py-3 font-semibold text-zinc-500 disabled:cursor-not-allowed"
+              >
+                <Send className="h-5 w-5" />
+                Join to analyze
+              </button>
+            </div>
+
+            <section className="rounded-2xl border border-cyan-300/20 bg-[linear-gradient(120deg,rgba(8,47,73,0.35),rgba(24,24,27,0.72))] p-6 sm:p-7">
+              <p className="font-mono text-[0.68rem] font-semibold tracking-[0.18em] text-cyan-200 uppercase">
+                Continue with your question
+              </p>
+              <h2 className="mt-3 font-serif text-2xl text-zinc-50">
+                See your question from seven perspectives.
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">
+                Join Prismarium to tune each lens, run the analysis, and keep your discoveries connected to the Library.
+              </p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/register"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-cyan-200 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-cyan-100 focus-visible:ring-2 focus-visible:ring-cyan-200 focus-visible:ring-offset-4 focus-visible:ring-offset-zinc-950 focus-visible:outline-none"
+                >
+                  Join Prismarium
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-zinc-100 transition-colors hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-zinc-200 focus-visible:outline-none"
+                >
+                  View membership
+                </Link>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
 export default function ParallaxEnginePage() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <AppLoader fullScreen />;
+  }
+
+  if (!user) {
+    return <PublicSevenLensesPreview />;
+  }
+
   return (
     <CreditWalletProvider>
       <Suspense fallback={<AppLoader fullScreen />}>

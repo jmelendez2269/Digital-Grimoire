@@ -31,17 +31,29 @@ export interface ToolCreditState {
   requiredCredits: number | null;
   resetAt: string | null;
   loading: boolean;
-  status: "loading" | "unavailable" | "disabled" | "insufficient" | "ready";
+  status:
+    | "loading"
+    | "unavailable"
+    | "disabled"
+    | "paid_required"
+    | "insufficient"
+    | "ready";
   canSubmit: boolean;
 }
 
-const CreditWalletContext = createContext<CreditWalletContextValue | null>(null);
+const CreditWalletContext = createContext<CreditWalletContextValue | null>(
+  null
+);
 
 async function readJson(response: Response): Promise<unknown> {
   return response.json().catch(() => null);
 }
 
-export function CreditWalletProvider({ children }: { children: React.ReactNode }) {
+export function CreditWalletProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [wallet, setWallet] = useState<SafeCreditWallet | null>(null);
   const [toolCosts, setToolCosts] = useState<SafeToolCosts | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,7 +102,7 @@ export function CreditWalletProvider({ children }: { children: React.ReactNode }
       error,
       refresh: () => load(),
     }),
-    [error, load, loading, toolCosts, wallet],
+    [error, load, loading, toolCosts, wallet]
   );
 
   return (
@@ -108,11 +120,14 @@ export function useCreditWallet(): CreditWalletContextValue {
   return value;
 }
 
-export function useToolCreditState(actionCode: ToolActionCode): ToolCreditState {
+export function useToolCreditState(
+  actionCode: ToolActionCode
+): ToolCreditState {
   const { wallet, toolCosts, loading, error } = useCreditWallet();
   const action =
-    toolCosts?.actions.find((candidate) => candidate.actionCode === actionCode) ??
-    null;
+    toolCosts?.actions.find(
+      (candidate) => candidate.actionCode === actionCode
+    ) ?? null;
   const requiredCredits = action?.creditCost ?? null;
   const availableCredits = wallet?.availableCredits ?? null;
   const resetAt = wallet?.grant?.resetsAt ?? null;
@@ -153,6 +168,17 @@ export function useToolCreditState(actionCode: ToolActionCode): ToolCreditState 
       resetAt,
       loading: false,
       status: "disabled",
+      canSubmit: false,
+    };
+  }
+  if (!wallet.paidCreditsActive) {
+    return {
+      action,
+      availableCredits,
+      requiredCredits,
+      resetAt,
+      loading: false,
+      status: "paid_required",
       canSubmit: false,
     };
   }

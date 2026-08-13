@@ -13,6 +13,8 @@ import {
 
 function wallet() {
   return {
+    planCode: "student",
+    paidCreditsActive: true,
     status: "current",
     availableCredits: 6,
     reservedCredits: 2,
@@ -59,18 +61,23 @@ test("browser wallet parser accepts only the exact safe projection", () => {
   assert.deepEqual(parseSafeCreditWallet(wallet()), wallet());
   assert.equal(
     parseSafeCreditWallet({ ...wallet(), stripeCustomerId: "must-not-cross" }),
-    null,
+    null
   );
+  assert.equal(parseSafeCreditWallet({ ...wallet(), totalCredits: 999 }), null);
   assert.equal(
-    parseSafeCreditWallet({ ...wallet(), totalCredits: 999 }),
-    null,
+    parseSafeCreditWallet({
+      ...wallet(),
+      planCode: "reader",
+      paidCreditsActive: true,
+    }),
+    null
   );
   assert.equal(
     parseSafeCreditWallet({
       ...wallet(),
       pending: [{ ...wallet().pending[0], requestFingerprint: "secret" }],
     }),
-    null,
+    null
   );
 });
 
@@ -86,32 +93,42 @@ test("tool-cost parser rejects missing, duplicate, extra, and malformed actions"
   };
   assert.deepEqual(parseSafeToolCosts(value), value);
   assert.equal(parseSafeToolCosts({ ...value, internalMode: "enforce" }), null);
-  assert.equal(parseSafeToolCosts({ ...value, actions: value.actions.slice(1) }), null);
+  assert.equal(
+    parseSafeToolCosts({ ...value, actions: value.actions.slice(1) }),
+    null
+  );
   assert.equal(
     parseSafeToolCosts({
       ...value,
       actions: [...value.actions.slice(0, -1), value.actions[0]],
     }),
-    null,
+    null
   );
 });
 
-test("customer lifecycle mapping distinguishes return, retry, reconcile, capacity, and disabled states", () => {
+test("customer lifecycle mapping distinguishes paid, return, retry, reconcile, capacity, and disabled states", () => {
+  assert.equal(
+    toolRunStateForCode("METERING_PAID_MEMBERSHIP_REQUIRED"),
+    "paid_required"
+  );
   assert.equal(toolRunStateForCode("METERING_PROVIDER_TIMEOUT"), "returned");
   assert.equal(toolRunStateForCode("METERING_REQUEST_IN_PROGRESS"), "retry");
   assert.equal(toolRunStateForCode("METERING_SETTLEMENT_FAILED"), "reconcile");
-  assert.equal(toolRunStateForCode("READER_AI_CAPACITY_PAUSED"), "capacity_paused");
+  assert.equal(
+    toolRunStateForCode("READER_AI_CAPACITY_PAUSED"),
+    "capacity_paused"
+  );
   assert.equal(toolRunStateForCode("METERING_ACTION_OFF"), "disabled");
   assert.equal(toolRunStateForCode("METERING_INSUFFICIENT_CREDITS"), "idle");
 });
 
-test("Reader capacity and displayed wallet dates use the next UTC boundary", () => {
+test("displayed wallet dates use the next UTC boundary", () => {
   assert.equal(
     nextUtcMonthBoundary(new Date("2026-08-31T23:59:59.999Z")),
-    "2026-09-01T00:00:00.000Z",
+    "2026-09-01T00:00:00.000Z"
   );
   assert.match(
     formatUtcDateTime("2026-09-01T00:00:00.000Z"),
-    /September 1, 2026.*12:00 AM UTC/,
+    /September 1, 2026.*12:00 AM UTC/
   );
 });

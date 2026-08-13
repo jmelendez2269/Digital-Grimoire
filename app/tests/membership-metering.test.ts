@@ -33,10 +33,25 @@ function environment(mode: "off" | "shadow" | "enforce" = "shadow") {
 function readerEntitlement() {
   return {
     planCode: "reader" as const,
-    monthlyCredits: 10,
+    monthlyCredits: 0,
     paidEntitlementsActive: false,
     failClosed: false,
     reason: "reader_default" as const,
+    course: {
+      slug: null,
+      entitled: false,
+      source: "not_allowlisted" as const,
+    },
+  };
+}
+
+function paidEntitlement() {
+  return {
+    planCode: "student" as const,
+    monthlyCredits: 30,
+    paidEntitlementsActive: true,
+    failClosed: false,
+    reason: "active_membership" as const,
     course: {
       slug: null,
       entitled: false,
@@ -52,7 +67,7 @@ function clock() {
 
 function mockStore(
   calls: Array<{ operation: string; input?: unknown }>,
-  overrides: Partial<MeteringStore> = {},
+  overrides: Partial<MeteringStore> = {}
 ): MeteringStore {
   const store: MeteringStore = {
     async beginRequest(input) {
@@ -146,7 +161,10 @@ function request(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function dependencies(store: MeteringStore, mode: "off" | "shadow" | "enforce") {
+function dependencies(
+  store: MeteringStore,
+  mode: "off" | "shadow" | "enforce"
+) {
   return {
     environment: environment(mode),
     now: clock(),
@@ -154,7 +172,7 @@ function dependencies(store: MeteringStore, mode: "off" | "shadow" | "enforce") 
       id: USER_ID,
       emailConfirmedAt: "2026-08-01T00:00:00.000Z",
     }),
-    resolveEntitlement: async () => readerEntitlement(),
+    resolveEntitlement: async () => paidEntitlement(),
     store,
   };
 }
@@ -182,7 +200,7 @@ test("fixed quote catalog uses versioned launch weights and fails closed by defa
       ["seven_lenses.standard", 2, 0.1, "lean-launch-v1"],
       ["seven_lenses.long", 3, 0.15, "lean-launch-v1"],
       ["deep_search.fresh", 3, 0.15, "lean-launch-v1"],
-    ],
+    ]
   );
   assert.equal(getMeteringActionQuote("deep_search.fresh")?.offered, false);
   assert.equal(getMeteringActionQuote("image.generate")?.offered, false);
@@ -191,13 +209,16 @@ test("fixed quote catalog uses versioned launch weights and fails closed by defa
       PRISMARIUM_METERING_MODE: "enforce",
       PRISMARIUM_METERING_ACTION_MODES: "deep_search.fresh=enforce",
     })?.mode,
-    "off",
+    "off"
   );
-  assert.equal(resolveMeteringActionPolicy("working.generate", {})?.mode, "off");
+  assert.equal(
+    resolveMeteringActionPolicy("working.generate", {})?.mode,
+    "off"
+  );
   assert.equal(
     resolveMeteringActionPolicy("working.generate", {})
       ?.readerMonthlyProviderBudgetUsd,
-    DEFAULT_READER_MONTHLY_PROVIDER_BUDGET_USD,
+    DEFAULT_READER_MONTHLY_PROVIDER_BUDGET_USD
   );
 });
 
@@ -243,7 +264,7 @@ test("shadow mode executes the shared lifecycle without reserving or charging cr
         };
       },
     }),
-    dependencies(store, "shadow"),
+    dependencies(store, "shadow")
   );
 
   assert.deepEqual(
@@ -255,14 +276,14 @@ test("shadow mode executes the shared lifecycle without reserving or charging cr
       "persist",
       "complete_request",
       "complete_usage",
-    ],
+    ]
   );
   assert.equal(result.mode, "shadow");
   assert.equal(result.chargedCredits, 0);
   assert.equal(result.replayed, false);
   assert.doesNotMatch(
     JSON.stringify(calls.filter((call) => call.input)),
-    /private intention|generated working/i,
+    /private intention|generated working/i
   );
 });
 
@@ -287,7 +308,7 @@ test("enforce mode reserves before provider and commits only after durable persi
         };
       },
     }),
-    dependencies(store, "enforce"),
+    dependencies(store, "enforce")
   );
 
   assert.deepEqual(
@@ -302,7 +323,7 @@ test("enforce mode reserves before provider and commits only after durable persi
       "commit_credits",
       "complete_request",
       "complete_usage",
-    ],
+    ]
   );
   assert.equal(result.chargedCredits, 1);
   assert.equal(result.mode, "enforce");
@@ -339,7 +360,7 @@ test("completed request replay loads the exact persisted result without provider
         return { id: "working-123" };
       },
     }),
-    dependencies(store, "enforce"),
+    dependencies(store, "enforce")
   );
 
   assert.equal(providerCalls, 0);
@@ -347,7 +368,7 @@ test("completed request replay loads the exact persisted result without provider
   assert.equal(result.chargedCredits, 0);
   assert.deepEqual(
     calls.map((call) => call.operation),
-    ["begin_request", "get_completed_result", "replay"],
+    ["begin_request", "get_completed_result", "replay"]
   );
 });
 
@@ -384,17 +405,17 @@ test("provider and persistence failures release once and record privacy-safe out
         error.code ===
           (failure === "provider"
             ? "METERING_PROVIDER_FAILED"
-            : "METERING_PERSISTENCE_FAILED"),
+            : "METERING_PERSISTENCE_FAILED")
     );
     assert.equal(
       calls.filter((call) => call.operation === "release_credits").length,
-      1,
+      1
     );
     const usage = calls.find((call) => call.operation === "complete_usage")
       ?.input as { outcome?: string };
     assert.equal(
       usage.outcome,
-      failure === "provider" ? "provider_error" : "persistence_error",
+      failure === "provider" ? "provider_error" : "persistence_error"
     );
     const control = calls.find((call) => call.operation === "complete_request")
       ?.input as { outcome?: string };
@@ -463,22 +484,23 @@ test("moderation, timeout, abort, and empty results release once with stable out
             execute: scenario.execute,
           },
         }),
-        dependencies(store, "enforce"),
+        dependencies(store, "enforce")
       ),
       (error: unknown) =>
         error instanceof MeteringError && error.code === scenario.expectedCode,
-      scenario.name,
+      scenario.name
     );
     assert.equal(
       calls.filter((call) => call.operation === "release_credits").length,
-      1,
+      1
     );
     assert.equal(
       (
-        calls.find((call) => call.operation === "complete_request")
-          ?.input as { outcome?: string }
+        calls.find((call) => call.operation === "complete_request")?.input as {
+          outcome?: string;
+        }
       ).outcome,
-      scenario.expectedOutcome,
+      scenario.expectedOutcome
     );
   }
 });
@@ -506,6 +528,12 @@ test("auth, verified-email, entitlement, flags, and request size stop before pro
       },
     },
     {
+      expected: "METERING_PAID_MEMBERSHIP_REQUIRED",
+      dependencies: {
+        resolveEntitlement: async () => readerEntitlement(),
+      },
+    },
+    {
       expected: "METERING_ACTION_KILLED",
       dependencies: {
         environment: {
@@ -525,7 +553,9 @@ test("auth, verified-email, entitlement, flags, and request size stop before pro
     const calls: Array<{ operation: string; input?: unknown }> = [];
     const store = mockStore(calls);
     const base = dependencies(store, "enforce");
-    const candidate = (scenario.request ?? request()) as ReturnType<typeof request>;
+    const candidate = (scenario.request ?? request()) as ReturnType<
+      typeof request
+    >;
     candidate.provider.execute = async () => {
       providerCalls += 1;
       return request().provider.execute();
@@ -536,9 +566,12 @@ test("auth, verified-email, entitlement, flags, and request size stop before pro
         ...scenario.dependencies,
       }),
       (error: unknown) =>
-        error instanceof MeteringError && error.code === scenario.expected,
+        error instanceof MeteringError && error.code === scenario.expected
     );
     assert.equal(providerCalls, 0);
+    if (scenario.expected === "METERING_PAID_MEMBERSHIP_REQUIRED") {
+      assert.deepEqual(calls, []);
+    }
   }
 });
 
@@ -566,9 +599,12 @@ test("atomic control denials map to stable customer-safe errors", async () => {
     await assert.rejects(
       executeMeteredAction(request(), dependencies(store, "enforce")),
       (error: unknown) =>
-        error instanceof MeteringError && error.code === expected,
+        error instanceof MeteringError && error.code === expected
     );
-    assert.deepEqual(calls.map((call) => call.operation), ["begin_request"]);
+    assert.deepEqual(
+      calls.map((call) => call.operation),
+      ["begin_request"]
+    );
   }
 });
 
@@ -576,23 +612,23 @@ test("L4-04 connects The Working, Seven Lenses synthesis, and lens expansion to 
   assert.match(
     readFileSync(
       resolve(appRoot, "src/app/api/working/generate/route.ts"),
-      "utf8",
+      "utf8"
     ),
-    /executeMeteredWorking|metered-working/,
+    /executeMeteredWorking|metered-working/
   );
   assert.match(
     readFileSync(
       resolve(appRoot, "src/app/api/parallax/query/route.ts"),
-      "utf8",
+      "utf8"
     ),
-    /executeMeteredSevenLenses|metered-seven-lenses/,
+    /executeMeteredSevenLenses|metered-seven-lenses/
   );
   assert.match(
     readFileSync(
       resolve(appRoot, "src/app/api/parallax/lens/[lensId]/route.ts"),
-      "utf8",
+      "utf8"
     ),
-    /executeMeteredLensExpansion|metered-lens-expansion/,
+    /executeMeteredLensExpansion|metered-lens-expansion/
   );
   const routes = [
     "src/app/api/parallax/ai-search/route.ts",
@@ -605,7 +641,7 @@ test("L4-04 connects The Working, Seven Lenses synthesis, and lens expansion to 
   for (const route of routes) {
     assert.doesNotMatch(
       readFileSync(resolve(appRoot, route), "utf8"),
-      /executeMeteredAction|metering-adapter/,
+      /executeMeteredAction|metering-adapter/
     );
   }
 });

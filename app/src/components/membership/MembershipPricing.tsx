@@ -7,7 +7,6 @@ import {
   Library,
   NotebookPen,
   Search,
-  Sparkles,
   Youtube,
 } from "lucide-react";
 
@@ -48,15 +47,13 @@ function formatPrice(entry: PublicPricingEntry) {
   };
 }
 
-function courseAccessCopy(plan: PricingPlan, catalog: SafeMembershipCatalog) {
+function courseAccessCopy(plan: PricingPlan) {
   if (plan.courseAccess === "free-path") return "Public and free course paths";
   if (plan.courseAccess === "all-member-released") {
     return "All currently released member courses";
   }
 
-  return catalog.courses.studentLaunchCourseTitle
-    ? `Launch course: ${catalog.courses.studentLaunchCourseTitle}`
-    : "One explicitly selected launch course";
+  return "Access to one member course at a time";
 }
 
 function journalCopy(plan: PricingPlan) {
@@ -65,13 +62,7 @@ function journalCopy(plan: PricingPlan) {
     : `Up to ${plan.journalActivePageLimit} active Journal pages`;
 }
 
-function PlanCard({
-  entry,
-  catalog,
-}: {
-  entry: PublicPricingEntry;
-  catalog: SafeMembershipCatalog;
-}) {
+function PlanCard({ entry }: { entry: PublicPricingEntry }) {
   const { plan } = entry;
   const price = formatPrice(entry);
   const featured = plan.code === "scholar";
@@ -116,20 +107,33 @@ function PlanCard({
             className="mt-1 h-4 w-4 shrink-0 text-amber-300"
             aria-hidden="true"
           />
-          <span>
-            <strong className="font-semibold text-zinc-100">
-              {plan.monthlyCredits} Prism Credits
-            </strong>{" "}
-            each month
-          </span>
+          {plan.code === "reader" ? (
+            <span>Generative credits require a paid membership</span>
+          ) : (
+            <span>
+              <strong className="font-semibold text-zinc-100">
+                {plan.monthlyCredits} Prism Credits
+              </strong>{" "}
+              each month
+            </span>
+          )}
         </li>
         <li className="flex gap-3">
           <Check
             className="mt-1 h-4 w-4 shrink-0 text-amber-300"
             aria-hidden="true"
           />
-          <span>{courseAccessCopy(plan, catalog)}</span>
+          <span>{courseAccessCopy(plan)}</span>
         </li>
+        {plan.code === "scholar" ? (
+          <li className="flex gap-3">
+            <Check
+              className="mt-1 h-4 w-4 shrink-0 text-amber-300"
+              aria-hidden="true"
+            />
+            <span>Early access to newly released member courses</span>
+          </li>
+        ) : null}
         <li className="flex gap-3">
           <Check
             className="mt-1 h-4 w-4 shrink-0 text-amber-300"
@@ -149,7 +153,11 @@ function PlanCard({
             className="mt-1 h-4 w-4 shrink-0 text-amber-300"
             aria-hidden="true"
           />
-          <span>Credit-metered generative tools when available</span>
+          <span>
+            {plan.code === "reader"
+              ? "Reading and saved work remain free"
+              : "Credit-metered generative tools when available"}
+          </span>
         </li>
       </ul>
 
@@ -213,7 +221,7 @@ export default function MembershipPricing({
           }`}
         >
           {entries.map((entry) => (
-            <PlanCard key={entry.plan.code} entry={entry} catalog={catalog} />
+            <PlanCard key={entry.plan.code} entry={entry} />
           ))}
         </div>
 
@@ -228,22 +236,23 @@ export default function MembershipPricing({
         <div className="mx-auto grid max-w-6xl gap-8 px-6 py-16 md:grid-cols-2 lg:px-8 lg:py-20">
           <div className="rounded-2xl border border-white/10 bg-zinc-950/45 p-6 sm:p-8">
             <div className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
-              <Search className="h-5 w-5" aria-hidden="true" />
+              <BookOpen className="h-5 w-5" aria-hidden="true" />
             </div>
             <h2 className="mt-6 font-serif text-3xl text-zinc-50">
-              Courses are optional.
+              Choose how you learn.
             </h2>
             <p className="mt-4 text-base leading-7 text-zinc-300">
-              Follow a course when structure helps, or build your own path
-              through the Library, Concept Search, Knowledge Graph, Journal, and
-              research tools. Both are complete ways to use Prismarium.
+              Follow a guided course from start to finish, or explore ideas
+              through the Library, Concept Search, Knowledge Graph, and Journal.
+              Move between structured study and independent research whenever
+              you like.
             </p>
             <div className="mt-6 flex flex-wrap gap-3 text-xs text-zinc-300">
               {[
+                [BookOpen, "Guided courses"],
                 [Library, "Library"],
-                [Search, "Search"],
+                [Search, "Concept Search"],
                 [NotebookPen, "Journal"],
-                [Sparkles, "Generative tools"],
               ].map(([Icon, label]) => (
                 <span
                   key={label as string}
@@ -264,12 +273,12 @@ export default function MembershipPricing({
               <Youtube className="h-5 w-5" aria-hidden="true" />
             </div>
             <h2 className="mt-6 font-serif text-3xl text-zinc-50">
-              Public learning stays public.
+              Public learning stays open.
             </h2>
             <p className="mt-4 text-base leading-7 text-zinc-300">
-              Public course previews and available YouTube resources do not
-              require a paid membership. Membership supports the durable study
-              environment; it does not promise a new-video schedule.
+              Explore public course previews and selected YouTube lessons
+              freely. Paid membership adds full access to your included member
+              courses, saved progress, and a connected study environment.
             </p>
             <Link
               href="/courses"
@@ -347,8 +356,9 @@ export default function MembershipPricing({
             Begin free. Choose more structure when it serves your work.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-zinc-400">
-            Reader includes the core research environment, 10 monthly credits,
-            public learning paths, and space for 50 active Journal pages.
+            Reader includes the core research environment, public learning
+            paths, and space for 50 active Journal pages. Generative credits
+            begin with paid membership.
           </p>
           <Link
             href="/register"

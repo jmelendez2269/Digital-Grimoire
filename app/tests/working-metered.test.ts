@@ -38,7 +38,9 @@ const palette: AssembledPalette = {
   },
 };
 
-function mockStore(calls: Array<{ operation: string; input?: unknown }>): MeteringStore {
+function mockStore(
+  calls: Array<{ operation: string; input?: unknown }>
+): MeteringStore {
   return {
     async beginRequest(input) {
       calls.push({ operation: "begin_request", input });
@@ -116,11 +118,11 @@ function metering(store: MeteringStore) {
       emailConfirmedAt: "2026-08-01T00:00:00.000Z",
     }),
     resolveEntitlement: async () => ({
-      planCode: "reader" as const,
-      monthlyCredits: 10,
-      paidEntitlementsActive: false,
+      planCode: "student" as const,
+      monthlyCredits: 30,
+      paidEntitlementsActive: true,
       failClosed: false,
-      reason: "reader_default" as const,
+      reason: "active_membership" as const,
       course: {
         slug: null,
         entitled: false,
@@ -143,16 +145,19 @@ test("Haiku 4.5 usage uses the fixed standard $1/$5 per-million rate", () => {
       inputTokens: 3_000,
       outputTokens: 700,
       estimatedCostUsd: 0.0065,
-    },
+    }
   );
 });
 
 test("Anthropic request options omit an absent timeout instead of passing undefined", () => {
   const controller = new AbortController();
   assert.deepEqual(workingProviderRequestOptions({}), {});
-  assert.deepEqual(workingProviderRequestOptions({ signal: controller.signal }), {
-    signal: controller.signal,
-  });
+  assert.deepEqual(
+    workingProviderRequestOptions({ signal: controller.signal }),
+    {
+      signal: controller.signal,
+    }
+  );
   assert.deepEqual(workingProviderRequestOptions({ timeoutMs: 55_000 }), {
     timeout: 55_000,
   });
@@ -161,12 +166,15 @@ test("Anthropic request options omit an absent timeout instead of passing undefi
 test("The Working client consumes server-owned wallet cost, sends an idempotency UUID, preserves input, and never calls the old save route", () => {
   const source = readFileSync(
     resolve(appRoot, "src/app/workbench/the-working/page.tsx"),
-    "utf8",
+    "utf8"
   );
   assert.match(source, /useToolCreditState\("working\.generate"\)/);
   assert.match(source, /actionCode="working\.generate"/);
   assert.match(source, /crypto\.randomUUID\(\)/);
-  assert.match(source, /JSON\.stringify\(\{ intention: intention\.trim\(\), requestId \}\)/);
+  assert.match(
+    source,
+    /JSON\.stringify\(\{ intention: intention\.trim\(\), requestId \}\)/
+  );
   assert.doesNotMatch(source, /setIntention\(""\)/);
   assert.doesNotMatch(source, /api\/working\/save/);
 });
@@ -180,7 +188,7 @@ test("controlled full story aggregates semantic and synthesis usage, persists, t
       requestId: REQUEST_ID,
     },
     {
-      createServiceClient: () => ({} as SupabaseClient),
+      createServiceClient: () => ({}) as SupabaseClient,
       assemblePalette: async () => null,
       resolveIntent: async () => {
         calls.push({ operation: "semantic_provider" });
@@ -227,7 +235,7 @@ test("controlled full story aggregates semantic and synthesis usage, persists, t
         };
       },
       metering: metering(store),
-    },
+    }
   );
 
   assert.equal(result.value.id, WORKING_ID);
@@ -246,7 +254,7 @@ test("controlled full story aggregates semantic and synthesis usage, persists, t
       "commit_credits",
       "complete_request",
       "complete_usage",
-    ],
+    ]
   );
   const usage = calls.find((call) => call.operation === "complete_usage")
     ?.input as {
@@ -265,11 +273,11 @@ test("controlled full story aggregates semantic and synthesis usage, persists, t
         resultReference: string;
       }
     ).resultReference,
-    `working:${WORKING_ID}`,
+    `working:${WORKING_ID}`
   );
   assert.doesNotMatch(
     JSON.stringify(calls.filter((call) => call.input)),
-    /clarity before a decision|A ritual for clarity/,
+    /clarity before a decision|A ritual for clarity/
   );
 });
 
@@ -293,7 +301,7 @@ test("completed retry reopens the exact working and never invokes either provide
   const result = await executeMeteredWorking(
     { intention: "clarity before a decision", requestId: REQUEST_ID },
     {
-      createServiceClient: () => ({} as SupabaseClient),
+      createServiceClient: () => ({}) as SupabaseClient,
       assemblePalette: async () => {
         throw new Error("provider must not run on replay");
       },
@@ -309,7 +317,7 @@ test("completed retry reopens the exact working and never invokes either provide
         };
       },
       metering: metering(store),
-    },
+    }
   );
 
   assert.equal(result.replayed, true);
@@ -317,6 +325,6 @@ test("completed retry reopens the exact working and never invokes either provide
   assert.equal(result.value.id, WORKING_ID);
   assert.deepEqual(
     calls.map((call) => call.operation),
-    ["begin_request", "get_completed_result", "replay_working"],
+    ["begin_request", "get_completed_result", "replay_working"]
   );
 });

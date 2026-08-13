@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, ArrowRight, Github, Mail, Check } from "lucide-react";
@@ -130,10 +131,27 @@ export default function RegisterPage() {
 
         {/* Header */}
         <div className="mb-12 text-center">
-          <Link href="/" className="inline-block mb-8 group">
-            <h1 className="text-4xl font-bold tracking-tight text-white group-hover:text-amber-500 transition-colors">
-              Prismarium
-            </h1>
+          <Link
+            href="/"
+            className="group mb-8 inline-flex items-center gap-3"
+            aria-label="Prismarium home"
+          >
+            <Image
+              src="/icon.svg"
+              alt=""
+              width={40}
+              height={40}
+              aria-hidden="true"
+              className="h-10 w-10 shrink-0 transition-transform duration-300 group-hover:scale-105"
+            />
+            <span className="flex flex-col text-left font-sans leading-none">
+              <span className="text-3xl font-bold uppercase tracking-widest text-white transition-colors group-hover:text-amber-500">
+                Prismarium
+              </span>
+              <span className="mt-1.5 whitespace-nowrap text-[9px] font-medium uppercase tracking-[0.3em] text-zinc-500 transition-colors group-hover:text-zinc-400">
+                By Project Parallax
+              </span>
+            </span>
           </Link>
           <h2 className="text-2xl font-semibold text-zinc-200">
             Create your account

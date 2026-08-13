@@ -121,7 +121,7 @@ const PLAN_DEFINITIONS = Object.freeze<readonly PlanDefinition[]>([
   {
     code: "reader",
     name: "Reader",
-    monthlyCredits: 10,
+    monthlyCredits: 0,
     journalActivePageLimit: 50,
     courseAccess: "free-path",
   },
@@ -445,7 +445,7 @@ export function resolveMembershipOfferByStripePriceId(
  */
 export function resolveMembershipCheckoutOffer(
   offerCode: unknown,
-  environment: CatalogEnvironment = process.env,
+  environment: CatalogEnvironment = process.env
 ): ResolvedMembershipCheckoutOffer | null {
   if (
     typeof offerCode !== "string" ||
@@ -455,10 +455,10 @@ export function resolveMembershipCheckoutOffer(
   }
 
   const definition = OFFER_DEFINITIONS.find(
-    (offer) => offer.code === offerCode,
+    (offer) => offer.code === offerCode
   );
   const safeOffer = getSafeMembershipCatalog(environment).offers.find(
-    (offer) => offer.code === offerCode,
+    (offer) => offer.code === offerCode
   );
   if (!definition || safeOffer?.publiclyAvailable !== true) return null;
 
@@ -467,7 +467,7 @@ export function resolveMembershipCheckoutOffer(
 
   const reverse = resolveMembershipOfferByStripePriceId(
     stripePriceId,
-    environment,
+    environment
   );
   if (!reverse || reverse.code !== definition.code) return null;
 
@@ -485,7 +485,7 @@ export function resolveMembershipCanaryCheckoutOfferForUser(
   offerCode: unknown,
   userId: unknown,
   userRole: unknown,
-  environment: CatalogEnvironment = process.env,
+  environment: CatalogEnvironment = process.env
 ): ResolvedMembershipCheckoutOffer | null {
   if (
     !exactEnabled(environment[ENV.canaryEnabled]) ||
@@ -512,7 +512,7 @@ export function resolveMembershipCanaryCheckoutOfferForUser(
   }
 
   const definition = OFFER_DEFINITIONS.find(
-    (offer) => offer.code === "student_founding_monthly",
+    (offer) => offer.code === "student_founding_monthly"
   );
   if (!definition?.acceptsNewCheckout) return null;
 
@@ -521,7 +521,7 @@ export function resolveMembershipCanaryCheckoutOfferForUser(
 
   const reverse = resolveMembershipOfferByStripePriceId(
     stripePriceId,
-    environment,
+    environment
   );
   if (!reverse || reverse.code !== definition.code) return null;
 
