@@ -1,6 +1,6 @@
 "use client";
 
-import { Info, Loader2 } from "lucide-react";
+import { ArrowRight, Info, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface MembershipCatalogPlan {
@@ -86,6 +86,8 @@ export default function MembershipAvailability() {
   const [catalog, setCatalog] = useState<SafeMembershipCatalog | null>(null);
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
+  const [checkoutOffer, setCheckoutOffer] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -118,6 +120,46 @@ export default function MembershipAvailability() {
     void fetchMembershipCatalog();
     return () => controller.abort();
   }, []);
+
+  const startCheckout = async (offerCode: string) => {
+    if (checkoutOffer) return;
+    setCheckoutOffer(offerCode);
+    setCheckoutError(null);
+
+    try {
+      const response = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offerCode,
+          requestId: crypto.randomUUID(),
+        }),
+      });
+      const body: unknown = await response.json();
+      const url = isRecord(body) ? body.url : null;
+      if (!response.ok || typeof url !== "string") {
+        throw new Error("CHECKOUT_UNAVAILABLE");
+      }
+
+      const checkoutUrl = new URL(url);
+      const host = checkoutUrl.hostname.toLowerCase();
+      if (
+        checkoutUrl.protocol !== "https:" ||
+        (host !== "checkout.stripe.com" && !host.endsWith(".stripe.com"))
+      ) {
+        throw new Error("CHECKOUT_UNAVAILABLE");
+      }
+      window.location.assign(checkoutUrl.toString());
+    } catch {
+      setCheckoutOffer(null);
+      setCheckoutError(
+        "Secure Checkout is temporarily unavailable. No charge was created. Please try again.",
+      );
+    }
+  };
 
   const readerPlan = catalog?.plans.find(
     (plan) => plan.code === "reader" && plan.publiclyAvailable,
@@ -211,13 +253,29 @@ export default function MembershipAvailability() {
                       Launch course: {catalog.courses.studentLaunchCourseSlug}
                     </p>
                   )}
-                <p className="mt-4 text-xs text-zinc-500">
-                  Checkout remains unavailable until the later billing packet is
-                  verified.
-                </p>
+                <button
+                  type="button"
+                  onClick={() => void startCheckout(offer.code)}
+                  disabled={checkoutOffer !== null}
+                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-zinc-950 transition-colors hover:bg-amber-400 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-55"
+                >
+                  {checkoutOffer === offer.code ? (
+                    <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" />
+                  )}
+                  {checkoutOffer === offer.code
+                    ? "Opening secure Checkout…"
+                    : `Choose ${plan.name}`}
+                </button>
               </article>
             );
           })}
+          {checkoutError ? (
+            <p className="md:col-span-2 text-sm leading-6 text-red-300" role="alert">
+              {checkoutError}
+            </p>
+          ) : null}
         </div>
       )}
     </section>

@@ -11,6 +11,7 @@ import {
   stripeLivemodeFromSecretKey,
   stripeWebhookPayloadSha256,
 } from "../src/lib/membership/membership-webhook.server";
+import { configuredMembershipWebhookSecrets } from "../src/lib/membership/membership-webhook-secret.server";
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const userId = "11111111-1111-4111-8111-111111111111";
@@ -20,6 +21,29 @@ const environment = {
   PRISMARIUM_STRIPE_PRICE_SCHOLAR_MONTHLY: "price_scholar39",
   PRISMARIUM_STRIPE_PRICE_ADEPT_MONTHLY: "price_adept69",
 };
+
+test("staged webhook cutover prefers the staged secret and retains legacy overlap", () => {
+  assert.deepEqual(
+    configuredMembershipWebhookSecrets({
+      PRISMARIUM_STRIPE_WEBHOOK_SECRET_STAGED: "whsec_staged123",
+      STRIPE_WEBHOOK_SECRET: "whsec_legacy123",
+    }),
+    ["whsec_staged123", "whsec_legacy123"],
+  );
+  assert.deepEqual(
+    configuredMembershipWebhookSecrets({
+      PRISMARIUM_STRIPE_WEBHOOK_SECRET_STAGED: "whsec_same123",
+      STRIPE_WEBHOOK_SECRET: "whsec_same123",
+    }),
+    ["whsec_same123"],
+  );
+  assert.deepEqual(
+    configuredMembershipWebhookSecrets({
+      PRISMARIUM_STRIPE_WEBHOOK_SECRET_STAGED: "invalid",
+    }),
+    [],
+  );
+});
 
 function makeEvent(overrides: {
   type?: string;
@@ -175,7 +199,7 @@ test("route verifies raw signature before creating database authority", () => {
     resolve(appRoot, "src/app/api/stripe/webhook/route.ts"),
     "utf8",
   );
-  const verifyAt = source.indexOf("webhooks.constructEvent(");
+  const verifyAt = source.indexOf("constructMembershipWebhookEvent(");
   const databaseAt = source.indexOf("createServiceClient()");
   assert.match(source, /const rawBody = await request\.text\(\)/);
   assert.match(source, /request\.headers\.get\("stripe-signature"\)/);
@@ -183,6 +207,16 @@ test("route verifies raw signature before creating database authority", () => {
   assert.doesNotMatch(source, /request\.json\(/);
   assert.doesNotMatch(source, /stripe\.(?:subscriptions|customers)\./);
   assert.doesNotMatch(source, /\.from\(["']users["']\)/);
+
+  const secretSource = readFileSync(
+    resolve(
+      appRoot,
+      "src/lib/membership/membership-webhook-secret.server.ts",
+    ),
+    "utf8",
+  );
+  assert.match(secretSource, /webhooks\.constructEvent\(rawBody, signature, secret\)/);
+  assert.match(secretSource, /PRISMARIUM_STRIPE_WEBHOOK_SECRET_STAGED/);
 });
 
 test("route has one atomic projector RPC and retries database failures", () => {

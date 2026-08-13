@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getSubscriptionTier } from '@/lib/parallax/rate-limit';
+import { resolveMembershipEntitlement } from '@/lib/membership/membership-entitlement-resolver.server';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Enforce 50-entry cap for free-tier users
-    const tier = await getSubscriptionTier(user.id);
-    if (tier === 'free') {
+    const membership = await resolveMembershipEntitlement({ userId: user.id });
+    if (membership.planCode === 'reader' || membership.failClosed) {
       const JOURNAL_CAP = 50;
       const { count, error: countError } = await supabase
         .from('journal_pages')

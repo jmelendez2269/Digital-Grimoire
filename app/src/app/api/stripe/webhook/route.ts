@@ -6,6 +6,10 @@ import {
   stripeLivemodeFromSecretKey,
   stripeWebhookPayloadSha256,
 } from "@/lib/membership/membership-webhook.server";
+import {
+  configuredMembershipWebhookSecrets,
+  constructMembershipWebhookEvent,
+} from "@/lib/membership/membership-webhook-secret.server";
 import { createServiceClient } from "@/lib/supabase/service";
 
 function jsonResponse(
@@ -27,8 +31,7 @@ function jsonResponse(
  */
 export async function POST(request: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!secretKey || !webhookSecret) {
+  if (!secretKey || configuredMembershipWebhookSecrets().length === 0) {
     return jsonResponse(
       { error: "Webhook is temporarily unavailable", code: "WEBHOOK_UNAVAILABLE" },
       503,
@@ -52,14 +55,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let event: Stripe.Event;
-  try {
-    event = new Stripe(secretKey, { maxNetworkRetries: 1 }).webhooks.constructEvent(
-      rawBody,
-      signature,
-      webhookSecret,
-    );
-  } catch {
+  const event = constructMembershipWebhookEvent(
+    new Stripe(secretKey, { maxNetworkRetries: 1 }),
+    rawBody,
+    signature,
+  );
+  if (!event) {
     console.error("Webhook signature verification failed.");
     return jsonResponse(
       { error: "Invalid signature", code: "INVALID_WEBHOOK_SIGNATURE" },

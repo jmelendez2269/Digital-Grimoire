@@ -200,4 +200,8 @@ test("ordinary Journal create and restore routes expose the database cap safely"
     assert.match(source, /code: 'JOURNAL_LIMIT_REACHED'/);
     assert.match(source, /status: 403/);
   }
+
+  assert.match(collectionRoute, /resolveMembershipEntitlement/);
+  assert.match(collectionRoute, /membership\.planCode === 'reader'/);
+  assert.doesNotMatch(collectionRoute, /getSubscriptionTier/);
 });

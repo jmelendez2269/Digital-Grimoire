@@ -287,7 +287,7 @@ test("the browser projection omits raw Price IDs and configuration keys", async 
   );
 });
 
-test("the customer subscription UI consumes the safe catalog and keeps Checkout unwired", () => {
+test("the customer subscription UI creates Checkout only from a public offer code", () => {
   const subscriptionUi = readSource("src/components/SubscriptionTab.tsx");
   const availabilityUi = readSource(
     "src/components/membership/MembershipAvailability.tsx",
@@ -299,10 +299,12 @@ test("the customer subscription UI consumes the safe catalog and keeps Checkout 
   assert.match(availabilityUi, /offer\.publiclyAvailable/);
   assert.match(availabilityUi, /catalog\?\.launch\.paidSalesEnabled/);
   assert.match(availabilityUi, /Paid memberships are not open yet/);
-  for (const source of [subscriptionUi, availabilityUi]) {
-    assert.doesNotMatch(source, /create-checkout-session|handleUpgrade/);
-    assert.doesNotMatch(source, /NEXT_PUBLIC_STRIPE_PRICE_ID_/);
-  }
+  assert.match(availabilityUi, /fetch\("\/api\/stripe\/create-checkout-session"/);
+  assert.match(availabilityUi, /offerCode,/);
+  assert.match(availabilityUi, /requestId: crypto\.randomUUID\(\)/);
+  assert.match(availabilityUi, /No charge was created/);
+  assert.doesNotMatch(availabilityUi, /priceId|NEXT_PUBLIC_STRIPE_PRICE_ID_/);
+  assert.doesNotMatch(subscriptionUi, /NEXT_PUBLIC_STRIPE_PRICE_ID_/);
 });
 
 test("the public pricing surface renders only catalog-public launch offers", () => {

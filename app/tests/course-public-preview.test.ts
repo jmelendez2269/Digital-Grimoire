@@ -104,5 +104,19 @@ test("anonymous course requests receive only the sanitized published preview", (
     sourceName,
   );
   assertContains(route, "matchCourseTextsFromContent", sourceName);
+  assertContains(route, "resolveMembershipEntitlement", sourceName);
+  assertContains(route, "entitlement?.course.entitled === true", sourceName);
+  assertOmits(route, "subscription_status", sourceName);
+  assertOmits(route, "hasPaidCourseAccess", sourceName);
   assertOmits(route, "matchAndPersistCourseTexts", sourceName);
+});
+
+test("course enrollment uses the service-owned membership projection", () => {
+  const sourceName = "src/app/api/courses/[id]/enroll/route.ts";
+  const route = readSource(sourceName);
+
+  assertContains(route, "resolveMembershipEntitlement", sourceName);
+  assertContains(route, "courseSlug: String(course.slug)", sourceName);
+  assertOmits(route, "subscription_status", sourceName);
+  assertOmits(route, "hasPaidCourseAccess", sourceName);
 });
