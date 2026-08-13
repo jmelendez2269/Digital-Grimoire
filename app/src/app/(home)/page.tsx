@@ -26,7 +26,7 @@ export default async function Home() {
   ] = await Promise.all([
     supabase.auth.getUser(),
     getPlatformTotals(serviceSupabase),
-    getSharedCoursePreviews(supabase),
+    getSharedCoursePreviews(serviceSupabase),
     loadPublicCoursePathPoll(),
   ]);
 

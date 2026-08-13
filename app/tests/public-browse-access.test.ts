@@ -20,17 +20,34 @@ test("public browse routes do not expose protected Library routes", () => {
   assert.equal(isPublicPath("/library"), true);
   assert.equal(isPublicPath("/library/"), true);
   assert.equal(isPublicPath("/explore"), true);
+  assert.equal(isPublicPath("/pricing"), true);
+  assert.equal(isPublicPath("/pricing/"), true);
+  assert.equal(isPublicPath("/seven-lenses"), true);
+  assert.equal(isPublicPath("/seven-lenses/"), true);
   assert.equal(isPublicPath("/explore/workings"), true);
-  assert.equal(isPublicPath("/explore/workings/shared-id"), true);
+  assert.equal(isPublicPath("/explore/workings/shared-id"), false);
   assert.equal(isPublicPath("/api/library/catalog"), true);
-  assert.equal(isPublicPath("/api/working/community/shared-id"), true);
+  assert.equal(isPublicPath("/api/working/community/shared-id"), false);
 
   assert.equal(isPublicPath("/library/private-text-id"), false);
   assert.equal(isPublicPath("/library/my-library"), false);
   assert.equal(isPublicPath("/library/media"), false);
   assert.equal(isPublicPath("/api/texts"), false);
   assert.equal(isPublicPath("/api/texts/private-text-id"), false);
-  assert.equal(isPublicPath("/seven-lenses"), false);
+  assert.equal(isPublicPath("/seven-lenses/private"), false);
+  assert.equal(isPublicPath("/api/parallax/query"), false);
+});
+
+test("anonymous visitors see a non-interactive Seven Lenses preview", () => {
+  const page = readSource("src/app/seven-lenses/page.tsx");
+
+  assert.match(page, /if \(!user\) \{\s+return <PublicSevenLensesPreview \/>;/);
+  assert.match(page, /Public preview/);
+  assert.match(page, /Join Prismarium to tune the lenses/);
+  assert.match(page, /<ResponseLengthSlider value="short" onChange=\{\(\) => undefined\} disabled \/>/);
+  assert.match(page, /<LensPresets onSelect=\{\(\) => undefined\} disabled \/>/);
+  assert.match(page, /id="public-query-preview"\s+disabled/);
+  assert.match(page, /Join to analyze/);
 });
 
 test("public Library metadata strips reader-only values", () => {

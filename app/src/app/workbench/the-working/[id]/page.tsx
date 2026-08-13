@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, CalendarCheck, BookOpen,
-  Pencil, Check, X, Globe, EyeOff,
+  Pencil, Check, X, LockKeyhole,
 } from "lucide-react";
 import RitualMarkdown from "@/components/working/RitualMarkdown";
 import PalettePanel from "@/components/working/PalettePanel";
@@ -52,9 +52,6 @@ export default function WorkingDetailPage() {
   const [casting, setCasting] = useState(false);
   const [castError, setCastError] = useState<string | null>(null);
 
-  const [sharing, setSharing] = useState(false);
-  const [shareError, setShareError] = useState<string | null>(null);
-
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
   const [saving, setSaving] = useState(false);
@@ -81,29 +78,10 @@ export default function WorkingDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Cast failed");
       setWorking((w) => w ? { ...w, ...data.working } : w);
-    } catch (err: any) {
-      setCastError(err.message);
+    } catch (err: unknown) {
+      setCastError(err instanceof Error ? err.message : "Cast failed");
     } finally {
       setCasting(false);
-    }
-  }
-
-  async function handleShare() {
-    if (!working || sharing) return;
-    setSharing(true);
-    setShareError(null);
-    const isShared = working.status === "shared";
-    try {
-      const res = await fetch(`/api/working/${working.id}/share`, {
-        method: isShared ? "DELETE" : "POST",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      setWorking((w) => w ? { ...w, ...data.working } : w);
-    } catch (err: any) {
-      setShareError(err.message);
-    } finally {
-      setSharing(false);
     }
   }
 
@@ -146,7 +124,6 @@ export default function WorkingDetailPage() {
   }
 
   const isCast = !!working.cast_at;
-  const isShared = working.status === "shared";
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-3xl">
@@ -163,14 +140,12 @@ export default function WorkingDetailPage() {
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <span
           className={`text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded border ${
-            isShared
-              ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/5"
-              : isCast
+            isCast
               ? "text-amber-400 border-amber-500/20 bg-amber-500/5"
               : "text-zinc-500 border-zinc-700 bg-zinc-900"
           }`}
         >
-          {working.status}
+          {isCast ? "cast" : "draft"}
         </span>
         {isCast && working.conditions && (
           <ConditionsBadge conditions={working.conditions} />
@@ -247,27 +222,6 @@ export default function WorkingDetailPage() {
             </button>
           )}
 
-          {isCast && (
-            <button
-              onClick={handleShare}
-              disabled={sharing}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                isShared
-                  ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
-                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
-              }`}
-            >
-              {sharing ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : isShared ? (
-                <EyeOff size={14} />
-              ) : (
-                <Globe size={14} />
-              )}
-              {isShared ? "Unshare" : "Share to community"}
-            </button>
-          )}
-
           <Link
             href="/journal/new"
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-sm transition-colors"
@@ -278,16 +232,10 @@ export default function WorkingDetailPage() {
         </div>
 
         {castError && <p className="text-sm text-red-400">{castError}</p>}
-        {shareError && <p className="text-sm text-red-400">{shareError}</p>}
-
-        {isShared && (
-          <p className="text-xs text-zinc-500 font-mono">
-            Visible in{" "}
-            <Link href="/explore/workings" className="text-emerald-400/70 hover:text-emerald-400 transition-colors">
-              community workings
-            </Link>
-          </p>
-        )}
+        <p className="flex items-center gap-2 text-xs text-zinc-500">
+          <LockKeyhole size={13} className="text-emerald-400" aria-hidden="true" />
+          This working stays private to your account.
+        </p>
       </div>
 
       <div className="mt-10 pt-6 border-t border-zinc-900 text-xs text-zinc-700 font-mono">

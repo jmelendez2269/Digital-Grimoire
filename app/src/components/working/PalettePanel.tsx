@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import type { AssembledPalette, PaletteItem } from "@/lib/working/assemble";
 
@@ -34,6 +34,7 @@ function PaletteItemCard({ item }: { item: PaletteItem }) {
 
 export default function PalettePanel({ palette }: { palette: AssembledPalette }) {
   const [open, setOpen] = useState(false);
+  const contentId = useId();
 
   const allGroups: Array<{ key: string; title: string; items: PaletteItem[] }> = [
     ...palette.groups,
@@ -45,7 +46,10 @@ export default function PalettePanel({ palette }: { palette: AssembledPalette })
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={contentId}
         className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
       >
         <span className="flex items-center gap-2">
@@ -58,11 +62,13 @@ export default function PalettePanel({ palette }: { palette: AssembledPalette })
       </button>
 
       {open && (
-        <div className="border-t border-zinc-800 p-5 space-y-6">
+        <div id={contentId} className="border-t border-zinc-800 p-5 space-y-6">
           {palette.intention.matchedFrom !== "slug" && (
             <p className="text-xs text-zinc-600 font-mono">
               Resolved as{" "}
-              <span className="text-amber-400/60">"{palette.intention.label}"</span>
+              <span className="text-amber-400/60">
+                &ldquo;{palette.intention.label}&rdquo;
+              </span>
               {palette.intention.aliases.length > 0 && (
                 <> + {palette.intention.aliases.join(", ")}</>
               )}

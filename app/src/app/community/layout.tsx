@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   title: "Community | Prismarium",
-  description: "Videos, blog, shared workings, and chat with other Prismarium practitioners.",
+  description: "Videos, blog, and conversation with other Prismarium practitioners.",
 };
 
 export default function CommunityLayout({ children }: { children: React.ReactNode }) {

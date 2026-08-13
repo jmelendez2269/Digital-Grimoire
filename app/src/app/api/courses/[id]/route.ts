@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { getCourseAccessTier, hasPaidCourseAccess, sanitizeCourseForPreview } from '@/lib/courses/access';
+import { getCourseAccessTier, sanitizeCourseForPreview } from '@/lib/courses/access';
 import { attachTextIdsToReadings, matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
 import { attachReadingDigests, type ReadingBlurbRow } from '@/lib/courses/attach-reading-digests';
 import {
   getCourseReleaseStatus,
   isCourseAvailable,
 } from '@/lib/courses/presentation';
+import { resolveMembershipEntitlement } from '@/lib/membership/membership-entitlement-resolver.server';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,14 +42,13 @@ async function getViewer(supabase: Awaited<ReturnType<typeof createClient>>) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role, subscription_status')
+    .select('role')
     .eq('id', user.id)
     .maybeSingle();
 
   return {
     user,
     isAdmin: profile?.role === 'admin',
-    hasPaidAccess: hasPaidCourseAccess(profile),
   };
 }
 
@@ -157,16 +157,22 @@ export async function GET(request: NextRequest, { params }: Params) {
   };
 
   const accessTier = getCourseAccessTier(course);
-  const paidCourseUnlocked = accessTier === 'free' || viewer.hasPaidAccess;
+  const entitlement = viewer.user && !viewer.isAdmin
+    ? await resolveMembershipEntitlement({
+        userId: viewer.user.id,
+        courseSlug: String(course.slug),
+      })
+    : null;
 
   const enrolled = viewer.user
     ? await isEnrolled(serviceSupabase, viewer.user.id, String(course.id))
     : false;
   const canViewFullCourse =
-    viewer.isAdmin || (courseAvailable && enrolled && paidCourseUnlocked);
+    viewer.isAdmin ||
+    (courseAvailable && enrolled && entitlement?.course.entitled === true);
 
   if (wantsFullAccess && !canViewFullCourse) {
-    if (viewer.user && enrolled && !paidCourseUnlocked) {
+    if (viewer.user && enrolled && entitlement?.course.entitled !== true) {
       return NextResponse.json(
         {
           success: false,
@@ -202,7 +208,8 @@ export async function GET(request: NextRequest, { params }: Params) {
         tier: accessTier,
         available: courseAvailable,
         releaseStatus,
-        upgradeRequired: accessTier === 'paid' && !viewer.hasPaidAccess,
+        upgradeRequired:
+          accessTier === 'paid' && entitlement?.course.entitled !== true,
       },
     },
     {
@@ -215,7 +222,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
 export async function PATCH(request: NextRequest, { params }: Params) {
     const { id: paramId } = await params;
-    const { supabase, forbidden } = await getAdminUser();
+    const { forbidden } = await getAdminUser();
 
     if (forbidden) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -321,7 +328,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
 export async function DELETE(_request: NextRequest, { params }: Params) {
     const { id: paramId } = await params;
-    const { supabase, forbidden } = await getAdminUser();
+    const { forbidden } = await getAdminUser();
 
     if (forbidden) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

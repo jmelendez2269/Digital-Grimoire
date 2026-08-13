@@ -47,7 +47,7 @@ const guestPrimaryNav: NavItem[] = [
   { name: "Courses", path: "/courses" },
   { name: "Library", path: "/library" },
   { name: "Explore", path: "/explore" },
-  { name: "About", path: "/#origin" },
+  { name: "Membership", path: "/pricing" },
 ];
 
 const memberPrimaryNav: NavItem[] = [
@@ -78,12 +78,11 @@ const memberPrimaryNav: NavItem[] = [
   {
     name: "Community",
     path: "/community/forum",
-    matchPaths: ["/community", "/explore/workings", "/blog"],
+    matchPaths: ["/community", "/blog"],
     dropdownItems: [
       { name: "Forum", path: "/community/forum", description: "Discuss, ask, share" },
       { name: "Videos", path: "/community/videos", description: "Watch and search" },
       { name: "Blog", path: "/blog", description: "Essays and updates" },
-      { name: "Shared Workings", path: "/explore/workings", description: "Community ritual experiments" },
     ],
   },
   { name: "Wiki", path: "/wiki" },
@@ -146,23 +145,22 @@ function Header({ librarySearch }: HeaderProps = {}) {
       <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center justify-between px-6 py-4 glass-panel rounded-full relative">
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent opacity-50"></div>
 
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-cyan-500/30 bg-black/50 group-hover:border-cyan-500/70 transition-colors">
-            <div className="w-4 h-4 rounded-full bg-cyan-500/10 group-hover:bg-cyan-500/30 blur-[1px]"></div>
-            <svg
-              viewBox="0 0 100 100"
-              className="absolute h-6 w-6 text-cyan-500 group-hover:text-cyan-400 transition-colors"
-              fill="currentColor"
-            >
-              <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" className="opacity-50" />
-              <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="1" fill="none" />
-              <circle cx="50" cy="50" r="4" fill="currentColor" />
-            </svg>
-          </div>
+        <Link href="/" className="group flex items-center gap-3" aria-label="Prismarium home">
+          <Image
+            src="/icon.svg"
+            alt=""
+            width={32}
+            height={32}
+            aria-hidden="true"
+            className="h-8 w-8 shrink-0 transition-transform duration-300 group-hover:scale-105"
+          />
 
-          <div className="flex flex-col leading-none font-sans">
+          <div className="flex flex-col font-sans leading-none">
             <span className="text-xl font-bold tracking-widest text-zinc-100 group-hover:text-cyan-400 transition-colors uppercase">
               Prismarium
+            </span>
+            <span className="mt-1 whitespace-nowrap text-[8px] font-medium uppercase tracking-[0.28em] text-zinc-500 transition-colors group-hover:text-zinc-400 sm:text-[9px]">
+              By Project Parallax
             </span>
           </div>
         </Link>

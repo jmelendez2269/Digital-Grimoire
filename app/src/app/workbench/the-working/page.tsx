@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   FlaskConical, Loader2, Sparkles, CalendarCheck,
@@ -8,13 +8,28 @@ import {
 } from "lucide-react";
 import RitualMarkdown from "@/components/working/RitualMarkdown";
 import PalettePanel from "@/components/working/PalettePanel";
+import {
+  CreditWalletProvider,
+  useCreditWallet,
+  useToolCreditState,
+} from "@/components/membership/CreditWalletProvider";
+import ToolCreditStatus from "@/components/membership/ToolCreditStatus";
+import {
+  toolRunStateForCode,
+  type ToolRunState,
+} from "@/lib/membership/metering-customer-presentation";
 import type { AssembledPalette } from "@/lib/working/assemble";
 import type { WorkingConditions } from "@/lib/working/conditions";
 
 type GenerateResult = {
+  id: string;
+  createdAt: string;
   palette: AssembledPalette;
   ritual: string;
+  modelUsed: string;
   interpretation?: string;
+  replayed: boolean;
+  chargedCredits: number;
 };
 
 type WorkingListItem = {
@@ -27,11 +42,14 @@ type WorkingListItem = {
   created_at: string;
 };
 
-type Stage = "idle" | "loading" | "result" | "saving" | "saved";
+type Stage = "idle" | "loading" | "result" | "casting" | "saved";
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 function WorkingRow({ w }: { w: WorkingListItem }) {
   const hasCast = !!w.cast_at;
-  const isShared = w.status === "shared";
   return (
     <Link
       href={`/workbench/the-working/${w.id}`}
@@ -58,14 +76,12 @@ function WorkingRow({ w }: { w: WorkingListItem }) {
       <div className="shrink-0 flex items-center gap-2 mt-0.5">
         <span
           className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${
-            isShared
-              ? "text-emerald-400 border-emerald-500/20 bg-emerald-500/5"
-              : hasCast
+            hasCast
               ? "text-amber-400 border-amber-500/20 bg-amber-500/5"
               : "text-zinc-500 border-zinc-700 bg-zinc-900"
           }`}
         >
-          {w.status}
+          {hasCast ? "cast" : "draft"}
         </span>
         <ArrowRight size={12} className="text-zinc-700 group-hover:text-zinc-400 transition-colors" />
       </div>
@@ -73,7 +89,7 @@ function WorkingRow({ w }: { w: WorkingListItem }) {
   );
 }
 
-export default function TheWorkingPage() {
+function TheWorkingPageContent() {
   const [stage, setStage] = useState<Stage>("idle");
   const [intention, setIntention] = useState("");
   const [result, setResult] = useState<GenerateResult | null>(null);
@@ -81,6 +97,12 @@ export default function TheWorkingPage() {
   const [error, setError] = useState<string | null>(null);
   const [workings, setWorkings] = useState<WorkingListItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
+  const requestIdRef = useRef<string | null>(null);
+  const [hasRetry, setHasRetry] = useState(false);
+  const [runState, setRunState] = useState<ToolRunState>("idle");
+  const [capacityResetAt, setCapacityResetAt] = useState<string | null>(null);
+  const toolCreditState = useToolCreditState("working.generate");
+  const { refresh: refreshWallet } = useCreditWallet();
 
   const loadWorkings = useCallback(async () => {
     try {
@@ -103,53 +125,75 @@ export default function TheWorkingPage() {
     setError(null);
     setResult(null);
     setSavedId(null);
+    setRunState("reserved");
+    setCapacityResetAt(null);
+    let structuredFailure = false;
     try {
+      const requestId = requestIdRef.current ?? crypto.randomUUID();
+      requestIdRef.current = requestId;
       const res = await fetch("/api/working/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ intention: intention.trim() }),
+        body: JSON.stringify({ intention: intention.trim(), requestId }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Generation failed");
-      setResult(data);
+      const data = await res.json() as {
+        error?: string;
+        code?: string;
+        resetAt?: string;
+        id?: string;
+      } & Partial<GenerateResult>;
+      if (!res.ok) {
+        structuredFailure = true;
+        if (data.code === "METERING_SETTLEMENT_FAILED") {
+          loadWorkings();
+        }
+        const nextRunState = toolRunStateForCode(data.code);
+        setRunState(nextRunState);
+        setCapacityResetAt(
+          typeof data.resetAt === "string" ? data.resetAt : null,
+        );
+        const retryable = nextRunState === "retry";
+        setHasRetry(retryable);
+        if (!retryable && nextRunState !== "reconcile") {
+          requestIdRef.current = null;
+        }
+        await refreshWallet();
+        throw new Error(data.error || "Generation failed");
+      }
+      requestIdRef.current = null;
+      setHasRetry(false);
+      setRunState("committed");
+      setResult(data as GenerateResult);
+      setSavedId(data.id ?? null);
       setStage("result");
-    } catch (err: any) {
-      setError(err.message);
+      loadWorkings();
+      await refreshWallet();
+    } catch (err: unknown) {
+      if (!structuredFailure) {
+        setRunState("retry");
+        setHasRetry(true);
+      }
+      setError(errorMessage(err, "Generation failed"));
       setStage("idle");
     }
   }
 
-  async function handleSave(andCast: boolean) {
-    if (!result || stage === "saving") return;
-    setStage("saving");
+  async function handleCast() {
+    if (!result || !savedId || stage === "casting") return;
+    setStage("casting");
     setError(null);
     try {
-      const saveRes = await fetch("/api/working/save", {
+      const castRes = await fetch(`/api/working/${savedId}/cast`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intent_text: intention,
-          palette: result.palette,
-          ritual: result.ritual,
-          model_used: "claude-haiku-4-5",
-        }),
       });
-      const saveData = await saveRes.json();
-      if (!saveRes.ok) throw new Error(saveData.error || "Save failed");
-
-      if (andCast) {
-        const castRes = await fetch(`/api/working/${saveData.id}/cast`, { method: "POST" });
-        if (!castRes.ok) {
-          const castData = await castRes.json();
-          throw new Error(castData.error || "Cast failed");
-        }
+      if (!castRes.ok) {
+        const castData = await castRes.json();
+        throw new Error(castData.error || "Cast failed");
       }
-
-      setSavedId(saveData.id);
       setStage("saved");
       loadWorkings();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(errorMessage(err, "Cast failed"));
       setStage("result");
     }
   }
@@ -159,6 +203,10 @@ export default function TheWorkingPage() {
     setResult(null);
     setSavedId(null);
     setError(null);
+    requestIdRef.current = null;
+    setHasRetry(false);
+    setRunState("idle");
+    setCapacityResetAt(null);
   }
 
   return (
@@ -189,7 +237,12 @@ export default function TheWorkingPage() {
               <textarea
                 id="intention"
                 value={intention}
-                onChange={(e) => setIntention(e.target.value)}
+                onChange={(e) => {
+                  requestIdRef.current = null;
+                  setHasRetry(false);
+                  setRunState("idle");
+                  setIntention(e.target.value);
+                }}
                 placeholder="e.g. attract prosperity · open to love · clarity before a decision"
                 rows={3}
                 disabled={stage === "loading"}
@@ -197,8 +250,16 @@ export default function TheWorkingPage() {
               />
             </div>
 
+            <div id="working-credit-status">
+              <ToolCreditStatus
+                actionCode="working.generate"
+                runState={runState}
+                capacityResetAt={capacityResetAt}
+              />
+            </div>
+
             {error && (
-              <p className="text-sm text-red-400 bg-red-900/10 border border-red-800/30 rounded-lg px-4 py-2.5">
+              <p role="alert" className="text-sm text-red-400 bg-red-900/10 border border-red-800/30 rounded-lg px-4 py-2.5">
                 {error}
               </p>
             )}
@@ -211,17 +272,23 @@ export default function TheWorkingPage() {
             ) : (
               <button
                 type="submit"
-                disabled={!intention.trim()}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
+                disabled={
+                  !intention.trim() ||
+                  runState === "capacity_paused" ||
+                  runState === "reconcile" ||
+                  (!toolCreditState.canSubmit && !hasRetry)
+                }
+                aria-describedby="working-credit-status"
+                className="flex min-h-11 cursor-pointer items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
               >
                 <Sparkles size={14} />
-                Begin the working
+                {hasRetry ? "Retry the same working" : "Begin the working"}
               </button>
             )}
           </form>
         )}
 
-        {(stage === "result" || stage === "saving") && result && (
+        {(stage === "result" || stage === "casting") && result && (
           <div className="space-y-5">
             {result.interpretation && (
               <div className="text-xs text-zinc-500 font-mono bg-zinc-900/50 border border-zinc-800 rounded-lg px-4 py-2.5 leading-relaxed">
@@ -240,13 +307,17 @@ export default function TheWorkingPage() {
 
             <PalettePanel palette={result.palette} />
 
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              Saved automatically as a private draft before the credit was settled.
+            </p>
+
             <div className="flex items-center gap-3 flex-wrap pt-1">
               <button
-                onClick={() => handleSave(true)}
-                disabled={stage === "saving"}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
+                onClick={handleCast}
+                disabled={stage === "casting"}
+                className="flex min-h-11 cursor-pointer items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm transition-colors"
               >
-                {stage === "saving" ? (
+                {stage === "casting" ? (
                   <Loader2 size={14} className="animate-spin" />
                 ) : (
                   <CalendarCheck size={14} />
@@ -254,30 +325,25 @@ export default function TheWorkingPage() {
                 I cast this
               </button>
 
-              <button
-                onClick={() => handleSave(false)}
-                disabled={stage === "saving"}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-200 font-medium text-sm transition-colors"
+              <Link
+                href={`/workbench/the-working/${savedId}`}
+                className="flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-sm transition-colors"
               >
-                {stage === "saving" ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <BookMarked size={14} />
-                )}
-                Save as draft
-              </button>
+                <BookMarked size={14} />
+                View saved draft
+              </Link>
 
               <button
                 onClick={handleReset}
-                disabled={stage === "saving"}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-zinc-500 hover:text-zinc-300 font-medium text-sm transition-colors"
+                disabled={stage === "casting"}
+                className="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg text-zinc-500 hover:text-zinc-300 font-medium text-sm transition-colors"
               >
                 <RotateCcw size={13} />
                 New working
               </button>
 
               {error && (
-                <p className="text-sm text-red-400 w-full">{error}</p>
+                <p role="alert" className="text-sm text-red-400 w-full">{error}</p>
               )}
             </div>
           </div>
@@ -305,7 +371,7 @@ export default function TheWorkingPage() {
 
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-sm transition-colors"
+              className="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium text-sm transition-colors"
             >
               <RotateCcw size={13} />
               New working
@@ -336,5 +402,13 @@ export default function TheWorkingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TheWorkingPage() {
+  return (
+    <CreditWalletProvider>
+      <TheWorkingPageContent />
+    </CreditWalletProvider>
   );
 }

@@ -19,6 +19,36 @@ export const COMMERCIAL_ACTIONS = [
 export type CommercialAction = (typeof COMMERCIAL_ACTIONS)[number];
 export type AvailabilityEnvironment = Record<string, string | undefined>;
 
+/**
+ * Only launch-owned actions may be reopened through configuration. Every
+ * unmetered generation action stays structurally closed until its owning
+ * packet changes code as well as configuration.
+ */
+export const CONFIGURABLE_COMMERCIAL_ACTIONS = [
+  "checkout",
+  "working_generation",
+  "seven_lenses_generation",
+  "seven_lenses_expansion",
+] as const satisfies readonly CommercialAction[];
+
+export const HARD_CLOSED_GENERATION_ACTIONS = [
+  "deep_search_generation",
+  "gpt_proxy",
+  "claude_proxy",
+  "gemini_proxy",
+  "tarot_image_generation",
+  "cover_image_generation",
+  "chapter_name_generation",
+  "metadata_extraction",
+  "document_processing",
+  "media_processing",
+  "sacred_text_ai_metadata",
+] as const satisfies readonly CommercialAction[];
+
+const configurableCommercialActionSet = new Set<CommercialAction>(
+  CONFIGURABLE_COMMERCIAL_ACTIONS,
+);
+
 export const ENABLED_COMMERCIAL_ACTIONS_ENV =
   "PRISMARIUM_ENABLED_COMMERCIAL_ACTIONS";
 export const CHECKOUT_ALLOWED_PRICE_IDS_ENV =
@@ -42,6 +72,7 @@ export function isCommercialActionEnabled(
   action: CommercialAction,
   environment: AvailabilityEnvironment = process.env,
 ): boolean {
+  if (!configurableCommercialActionSet.has(action)) return false;
   return parseCsv(environment[ENABLED_COMMERCIAL_ACTIONS_ENV]).has(action);
 }
 

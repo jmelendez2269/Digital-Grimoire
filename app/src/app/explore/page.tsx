@@ -37,17 +37,17 @@ const tools = [
     href: "/seven-lenses",
     icon: Sparkles,
     accent: "amber",
-    access: "Sign in to use",
-    isPublic: false,
+    access: "Public preview",
+    isPublic: true,
   },
   {
-    name: "Shared Workings",
+    name: "The Working",
     description:
-      "Workings cast and shared by practitioners — intentions stated, rituals synthesized, conditions stamped at the moment of casting. A living record of practice.",
+      "Replay an editorial example to see an intention become a correspondence palette, a ritual, and a private record of practice.",
     href: "/explore/workings",
     icon: FlaskConical,
     accent: "emerald",
-    access: "Open to everyone",
+    access: "Public preview",
     isPublic: true,
   },
 ];

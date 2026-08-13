@@ -11,6 +11,8 @@ test("public discovery routes do not expose protected Library descendants", () =
   assert.equal(isPublicPath("/library"), true);
   assert.equal(isPublicPath("/library/"), true);
   assert.equal(isPublicPath("/explore"), true);
+  assert.equal(isPublicPath("/pricing"), true);
+  assert.equal(isPublicPath("/pricing/"), true);
   assert.equal(isPublicPath("/api/library/catalog"), true);
 
   assert.equal(isPublicPath("/library/book-id"), false);
@@ -19,12 +21,14 @@ test("public discovery routes do not expose protected Library descendants", () =
   assert.equal(isPublicPath("/api/library/catalog/internal"), false);
 });
 
-test("intentionally shared Explore spaces remain public", () => {
+test("privacy-safe Explore previews remain public without exposing member routes", () => {
   assert.equal(isPublicPath("/explore/workings"), true);
-  assert.equal(isPublicPath("/explore/workings/shared-id"), true);
-  assert.equal(isPublicPath("/api/working/community"), true);
-  assert.equal(isPublicPath("/api/working/community/shared-id"), true);
-  assert.equal(isPublicPath("/seven-lenses"), false);
+  assert.equal(isPublicPath("/explore/workings/shared-id"), false);
+  assert.equal(isPublicPath("/api/working/community"), false);
+  assert.equal(isPublicPath("/api/working/community/shared-id"), false);
+  assert.equal(isPublicPath("/seven-lenses"), true);
+  assert.equal(isPublicPath("/seven-lenses/private"), false);
+  assert.equal(isPublicPath("/api/parallax/query"), false);
   assert.equal(isPublicPath("/journal"), false);
 });
 

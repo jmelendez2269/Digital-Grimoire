@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { getCourseAccessTier, hasPaidCourseAccess } from '@/lib/courses/access';
 import {
   getCourseReleaseStatus,
   isCourseAvailable,
 } from '@/lib/courses/presentation';
+import { resolveMembershipEntitlement } from '@/lib/membership/membership-entitlement-resolver.server';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,11 +110,20 @@ export async function POST(
 
     const { data: profile } = await serviceSupabase
       .from('users')
-      .select('role, subscription_status')
+      .select('role')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (getCourseAccessTier(course) === 'paid' && !hasPaidCourseAccess(profile)) {
+    const entitled = profile?.role === 'admin'
+      ? true
+      : (
+          await resolveMembershipEntitlement({
+            userId: user.id,
+            courseSlug: String(course.slug),
+          })
+        ).course.entitled;
+
+    if (!entitled) {
       return NextResponse.json(
         {
           error: 'Upgrade required',

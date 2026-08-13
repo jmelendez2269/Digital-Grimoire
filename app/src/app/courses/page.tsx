@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Search, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,7 +75,7 @@ interface EnrolledCourse extends Course {
   enrollment: Enrollment;
 }
 
-type ViewMode = 'arcs' | 'map' | 'catalog';
+type ViewMode = 'arcs' | 'catalog';
 
 // ─── Constants / helpers ──────────────────────────────────────────────────────
 
@@ -89,6 +90,8 @@ const ARC_PALETTE = [
   '#FF3A5C', // ruby
   '#B48F4A', // brass
 ];
+
+const DEFAULT_ARC_NAME = 'Foundation Doors';
 
 function formatPlatformTotal(value: number | null): string {
   return value === null ? '—' : value.toLocaleString();
@@ -255,32 +258,134 @@ function courseStatus(course: Course, enrollment: Enrollment | undefined): {
 
 // ─── Book cover stack (used by both concepts) ────────────────────────────────
 
-function CoverStack({ texts, compact = false }: { texts?: CourseText[]; compact?: boolean }) {
-  const limit = compact ? 3 : 5;
-  if (!texts || texts.length === 0) return null;
-  const visible = texts.slice(0, limit);
+const COURSE_COVER_THEMES = [
+  {
+    shell: 'from-amber-950 via-amber-800 to-zinc-950',
+    line: 'border-amber-200/35',
+    accent: 'text-amber-100/80',
+  },
+  {
+    shell: 'from-cyan-950 via-cyan-800 to-zinc-950',
+    line: 'border-cyan-100/30',
+    accent: 'text-cyan-100/80',
+  },
+  {
+    shell: 'from-rose-950 via-rose-800 to-zinc-950',
+    line: 'border-rose-100/30',
+    accent: 'text-rose-100/80',
+  },
+  {
+    shell: 'from-emerald-950 via-emerald-800 to-zinc-950',
+    line: 'border-emerald-100/30',
+    accent: 'text-emerald-100/80',
+  },
+] as const;
+
+function CourseCover({
+  text,
+  index,
+  sizes,
+}: {
+  text: Text | null;
+  index: number;
+  sizes: string;
+}) {
+  if (text?.cover_image_url) {
+    return (
+      <Image
+        src={text.cover_image_url}
+        alt=""
+        fill
+        sizes={sizes}
+        className="object-cover"
+      />
+    );
+  }
+
+  const theme = COURSE_COVER_THEMES[index % COURSE_COVER_THEMES.length];
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex -space-x-1.5">
-        {visible.map((ct, idx) => (
+    <div
+      className={`relative h-full w-full overflow-hidden bg-gradient-to-br ${theme.shell} text-white`}
+    >
+      <div className={`absolute inset-[10%] border ${theme.line}`} />
+      <div className={`absolute inset-x-[18%] top-[18%] border-t ${theme.line}`} />
+      <div className="relative flex h-full flex-col items-center justify-center px-[12%] text-center">
+        <BookOpen
+          className={`mb-[10%] h-[18%] w-[18%] ${theme.accent}`}
+          aria-hidden="true"
+        />
+        <span className="line-clamp-4 font-serif text-[clamp(0.38rem,10cqw,1rem)] leading-tight font-semibold text-balance">
+          {text?.title ?? 'Course reading'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CoverStack({ texts, compact = false }: { texts?: CourseText[]; compact?: boolean }) {
+  const limit = compact ? 4 : 6;
+  if (!texts || texts.length === 0) return null;
+
+  // Lead with available artwork so real covers never disappear behind the
+  // overflow count, while retaining source order within each group.
+  const ordered = texts
+    .map((courseText, index) => ({ courseText, index }))
+    .sort((a, b) => {
+      const aHasCover = Boolean(a.courseText.texts?.cover_image_url);
+      const bHasCover = Boolean(b.courseText.texts?.cover_image_url);
+      return Number(bHasCover) - Number(aHasCover) || a.index - b.index;
+    });
+  const visible = ordered.slice(0, limit);
+  const hiddenCount = Math.max(0, texts.length - visible.length);
+
+  return (
+    <div className="min-w-0">
+      <span className="sr-only">
+        {texts.length} course reading{texts.length === 1 ? '' : 's'}
+      </span>
+      <div className="flex items-end gap-1 sm:gap-1.5" aria-hidden="true">
+        {visible.map(({ courseText: ct }, idx) => (
           <div
             key={ct.id}
-            className={`${compact ? 'w-6 h-9' : 'w-8 h-11'} rounded-[2px] bg-zinc-800 border border-white/10 overflow-hidden shadow-md`}
-            style={{ zIndex: 10 - idx }}
+            className="group/book relative"
             title={ct.texts?.title}
           >
-            {ct.texts?.cover_image_url ? (
-              <img src={ct.texts.cover_image_url} alt={ct.texts?.title ?? ''} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-950">
-                <BookOpen className="w-3 h-3 text-zinc-600" />
+            <div
+              className={`[container-type:inline-size] relative ${compact ? 'h-12 w-8 sm:h-[54px] sm:w-9' : 'h-[66px] w-11'} overflow-hidden rounded-[3px] border border-white/15 bg-zinc-800 shadow-md transition duration-200 ease-out group-hover/book:-translate-y-1.5 group-hover/book:scale-105 group-hover/book:border-amber-200/50 group-hover/book:shadow-[0_12px_28px_-10px_rgba(245,158,11,0.55)] motion-reduce:transform-none motion-reduce:transition-none`}
+            >
+              <CourseCover
+                text={ct.texts}
+                index={idx}
+                sizes={compact ? '(max-width: 639px) 32px, 36px' : '44px'}
+              />
+            </div>
+
+            <div
+              className={`pointer-events-none absolute bottom-[calc(100%+0.75rem)] z-40 hidden w-40 translate-y-2 rounded-xl border border-amber-300/25 bg-zinc-950/98 p-2.5 text-left opacity-0 shadow-[0_24px_70px_-18px_rgba(245,158,11,0.55)] backdrop-blur-xl transition duration-200 group-hover/book:translate-y-0 group-hover/book:opacity-100 motion-reduce:transform-none motion-reduce:transition-none md:block ${idx < 2 ? 'left-0' : 'right-0'}`}
+            >
+              <div className="[container-type:inline-size] relative aspect-[2/3] w-full overflow-hidden rounded-lg border border-white/10 bg-zinc-900">
+                <CourseCover text={ct.texts} index={idx} sizes="160px" />
               </div>
-            )}
+              <p className="mt-2.5 line-clamp-2 text-sm leading-snug font-semibold text-zinc-100">
+                {ct.texts?.title ?? 'Course reading'}
+              </p>
+              {ct.texts?.author ? (
+                <p className="mt-1 line-clamp-1 text-xs text-zinc-400">
+                  {ct.texts.author}
+                </p>
+              ) : null}
+            </div>
           </div>
         ))}
-        {texts.length > limit && (
-          <div className={`${compact ? 'w-6 h-9 text-[11px]' : 'w-8 h-11 text-xs'} rounded-[2px] bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-500 font-mono`}>
-            +{texts.length - limit}
+
+        {hiddenCount > 0 && (
+          <div
+            className={`${compact ? 'h-12 w-7 text-[10px] sm:h-[54px] sm:w-8 sm:text-[11px]' : 'h-[66px] w-10 text-xs'} flex flex-col items-center justify-center rounded-[3px] border border-dashed border-white/15 bg-zinc-900/80 font-mono text-zinc-400 shadow-md`}
+            title={`${hiddenCount} more reading${hiddenCount === 1 ? '' : 's'}`}
+          >
+            <BookOpen className="mb-1 h-3 w-3 text-zinc-500" aria-hidden="true" />
+            +{hiddenCount}
           </div>
         )}
       </div>
@@ -543,7 +648,7 @@ function ArcCourseRow({
 
 const ARC_BAND_ORDER = [
   'Standalone Entry Point',
-  'Foundation Doors',
+  DEFAULT_ARC_NAME,
   'Foundational Synthesis',
   'Traditions Across Time',
   'Esoteric Practice',
@@ -836,7 +941,7 @@ function MapView({ courses }: { courses: Course[] }) {
             </div>
           ) : (
             <p className="text-sm text-zinc-500 leading-relaxed">
-              Hover or focus a node to see how that course's questions connect onward.
+              Hover or focus a node to see how that course&apos;s questions connect onward.
             </p>
           )}
         </div>
@@ -1255,7 +1360,7 @@ function CatalogCard({
         </p>
       )}
 
-      <div className="flex justify-between items-center pt-3.5 border-t border-dashed border-white/8">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-t border-dashed border-white/8 pt-3.5">
         <CoverStack texts={course.course_texts} compact />
         <div className="font-mono text-xs tracking-[0.18em] uppercase text-zinc-400 flex items-center gap-3">
           {!isOpen ? (
@@ -1298,31 +1403,31 @@ function ReleaseOverview({
   enrollmentMap: Record<string, Enrollment>;
 }) {
   const groups = groupCoursesByRelease(courses);
+  const activeCourse = courses.find((course) => {
+    const enrollment = enrollmentMap[course.id];
+    return enrollment && courseStatus(course, enrollment).state === 'current';
+  });
   const getArcColor = (course: Course) =>
     arcs.find((arc) => arc.key === (course.content?.arc?.trim() ?? 'Open Paths'))?.color;
 
   return (
     <div className="space-y-12">
-      <section aria-labelledby="studying-together-now">
-        <div className="mb-5">
-          <h2
-            id="studying-together-now"
-            className="font-display text-2xl font-semibold tracking-tight text-zinc-100"
-          >
-            What I’m working through right now
-          </h2>
-        </div>
-        {groups.current ? (
+      {activeCourse ? (
+        <section aria-labelledby="studying-together-now">
+          <div className="mb-5">
+            <h2
+              id="studying-together-now"
+              className="font-display text-2xl font-semibold tracking-tight text-zinc-100"
+            >
+              What I’m working through right now
+            </h2>
+          </div>
           <ReleaseSpotlight
-            course={groups.current}
-            enrollment={enrollmentMap[groups.current.id]}
+            course={activeCourse}
+            enrollment={enrollmentMap[activeCourse.id]}
           />
-        ) : (
-          <ReleaseSlotPlaceholder>
-            The course I’m currently working through will appear here once it’s announced.
-          </ReleaseSlotPlaceholder>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       <section aria-labelledby="open-paths">
         <div className="mb-5 max-w-2xl">
@@ -1371,6 +1476,7 @@ function CoursesPageContent() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [enrollmentsLoading, setEnrollmentsLoading] = useState(true);
   const [totals, setTotals] = useState<PlatformTotals>(EMPTY_PLATFORM_TOTALS);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1379,7 +1485,7 @@ function CoursesPageContent() {
   const [viewMode, setViewMode] = useState<ViewMode>('arcs');
 
   // Concept A state
-  const [activeArcKey, setActiveArcKey] = useState<string | null>(null);
+  const [activeArcKey, setActiveArcKey] = useState<string | null>(DEFAULT_ARC_NAME);
 
   // Concept B state
   const [filterArc, setFilterArc] = useState<string>('all');
@@ -1437,35 +1543,55 @@ function CoursesPageContent() {
 
   // Fetch enrolled courses
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (authLoading) return;
+
+    if (!user) {
+      setEnrolledCourses([]);
+      setEnrollmentsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
 
     const fetchEnrolled = async () => {
+      setEnrolledCourses([]);
+      setEnrollmentsLoading(true);
       try {
         const res = await fetch('/api/courses/my-courses');
         const data = await res.json();
-        if (data.success && data.courses) {
+        if (!cancelled && data.success && data.courses) {
           setEnrolledCourses(data.courses.filter((c: EnrolledCourse) => c.enrollment));
         }
       } catch (err) {
         console.error('Error fetching enrolled courses:', err);
+      } finally {
+        if (!cancelled) setEnrollmentsLoading(false);
       }
     };
 
     fetchEnrolled();
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, user]);
 
   // Build arc buckets (client-side, filtered by search but not by chip filters,
   // so the rail shows the full landscape).
   const arcs = useMemo(() => buildArcs(courses), [courses]);
 
-  // Pick a default active arc when arcs first arrive
+  // Fall back gracefully if Foundation Doors is absent from a filtered result.
   useEffect(() => {
-    if (!activeArcKey && arcs.length > 0) {
-      // Prefer the arc containing an enrolled course
+    if (arcs.length > 0 && !arcs.some((arc) => arc.key === activeArcKey)) {
       const enrolledArc = arcs.find((a) => a.courses.some((c) => enrollmentMap[c.id]));
       setActiveArcKey((enrolledArc ?? arcs[0]).key);
     }
   }, [arcs, activeArcKey, enrollmentMap]);
+
+  // Course destinations depend on enrollment. Keep the loading affordance in
+  // place until that state is known so a slow local request cannot briefly
+  // expose a preview link for a course the viewer has already started.
+  const presentationLoading = loading || authLoading || enrollmentsLoading;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-200 font-sans">
@@ -1526,7 +1652,7 @@ function CoursesPageContent() {
         </div>
 
         <div className="max-w-screen-2xl mx-auto px-6 py-8">
-          {!loading && courses.length > 0 && (
+          {!presentationLoading && courses.length > 0 && (
             <ReleaseOverview
               courses={courses}
               arcs={arcs}
@@ -1534,27 +1660,27 @@ function CoursesPageContent() {
             />
           )}
 
-          {/* The larger curriculum map remains available below the release view. */}
-          {!loading && courses.length > 0 && (
-            <section aria-labelledby="larger-map" className="mt-16 border-t border-white/8 pt-10">
+          {/* Switch between the two collection-browsing views. */}
+          {!presentationLoading && courses.length > 0 && (
+            <section aria-labelledby="course-collection" className="mt-16 border-t border-white/8 pt-10">
               <div className="mb-7">
                 <h2
-                  id="larger-map"
+                  id="course-collection"
                   className="font-display text-3xl font-semibold tracking-tight text-zinc-100"
                 >
-                  The larger map
+                  Explore every path
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
-                  Explore how the questions connect across the full course map.
+                  Browse the collection by course arc or scan the complete catalog.
                 </p>
               </div>
 
               <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
                 <div
                   className="inline-flex max-w-full gap-[2px] overflow-x-auto rounded-lg border border-white/8 bg-black/40 p-[3px]"
-                  aria-label="Course map view"
+                  aria-label="Course collection view"
                 >
-                  {(['arcs', 'map', 'catalog'] as const).map((m) => (
+                  {(['arcs', 'catalog'] as const).map((m) => (
                     <button
                       key={m}
                       type="button"
@@ -1579,7 +1705,7 @@ function CoursesPageContent() {
           )}
 
           {/* Loading / Empty / View */}
-          {loading ? (
+          {presentationLoading ? (
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
                 <div
@@ -1602,8 +1728,6 @@ function CoursesPageContent() {
               setActiveArcKey={setActiveArcKey}
               enrollmentMap={enrollmentMap}
             />
-          ) : viewMode === 'map' ? (
-            <MapView courses={courses} />
           ) : (
             <CatalogView
               courses={courses}
@@ -1624,6 +1748,23 @@ function CoursesPageContent() {
                 setFilterLens(null);
               }}
             />
+          )}
+
+          {!presentationLoading && courses.length > 0 && (
+            <section aria-labelledby="larger-map" className="mt-16 border-t border-white/8 pt-10">
+              <div className="mb-7">
+                <h2
+                  id="larger-map"
+                  className="font-display text-3xl font-semibold tracking-tight text-zinc-100"
+                >
+                  The larger map
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                  See how questions and possible pathways connect across the full curriculum.
+                </p>
+              </div>
+              <MapView courses={courses} />
+            </section>
           )}
         </div>
       </main>
