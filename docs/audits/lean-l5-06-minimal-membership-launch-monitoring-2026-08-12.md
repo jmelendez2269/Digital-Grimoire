@@ -89,6 +89,12 @@ Jen also explicitly set the product rule that Prism Credits are paid-only. Reade
 
 No Production deployment, migration, live balance change, Checkout/billing/Stripe/webhook action, or sales/configuration mutation was authorized or performed by this correction. Production therefore still advertises and can issue Reader 10 until a separate explicit production gate is approved. That live mismatch is an open monitoring anomaly and cannot be recorded as resolved merely because the local correction passes.
 
+#### August 13 production correction
+
+Jen later authorized the `main` merge/build and both committed forward migrations. Migration `20260813000000` was executed as one linked SQL file, verified before ledger repair, and now exposes the paid-only wrapper plus preserved legacy implementation with `anon` and `authenticated` execution denied and `service_role` execution retained. Migration `20260813150000` was then executed independently and removed the single legacy `workings: public select shared` policy. Each version has exactly one production ledger row; known older migration-history drift was not changed and broad `db push` was not used.
+
+The migrations did not create a subscription, grant credits, charge or refund money, invoke a metered route, release another course, or change Stripe/Vercel configuration. The first Git-triggered Vercel build of merge commit `bb21351` failed because the new cover-audit script imported transitive `sharp` without declaring it directly. The existing `prismarium.xyz` aliases remained on prior Ready deployment `dpl_9FELW8KUwzbTbrvkqR5dF6ziVRbJ`. Declaring `sharp@0.34.4` directly then passed a frozen pnpm install, TypeScript, and a clean 139/139-page production build locally; remote deployment verification remains required after the fix is pushed.
+
 ## Scheduled-checkpoint evidence contract
 
 | Requirement | Privacy-safe evidence at 24h, 48h, and 72h | Interpretation boundary |
