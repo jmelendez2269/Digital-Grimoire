@@ -30,6 +30,10 @@ import TableOfContents, { TOCItem } from '@/components/TableOfContents';
 import { formatFileSize, formatDate, cleanHtmlText, formatLensName } from '@/lib/utils/formatting';
 import { getLensColorClasses } from '@/lib/utils/lens-colors';
 import { extractPDFText } from '@/lib/utils/pdf-text-extractor';
+import {
+  BASIC_READ_ALOUD_PUBLICLY_AVAILABLE,
+  PREMIUM_READ_ALOUD_PUBLICLY_AVAILABLE,
+} from '@/lib/features/public-feature-flags';
 import { useAuth } from '@/contexts/AuthContext';
 import * as pdfjsLib from 'pdfjs-dist';
 
@@ -493,6 +497,13 @@ export default function DocumentDetailPage() {
 
   // Memoize full text and chapter offsets for TTS synchronization
   const { fullText, chapterOffsets } = useMemo(() => {
+    if (!BASIC_READ_ALOUD_PUBLICLY_AVAILABLE) {
+      return {
+        fullText: '',
+        chapterOffsets: {} as Record<string, number>,
+      };
+    }
+
     if (!document?.metadata?.chapters || !document.metadata.isStructuredText) {
       // For HTML documents, use extracted full text if available, otherwise fallback to document.content
       // Check both source_format and htmlUrl to detect HTML documents
@@ -1226,6 +1237,8 @@ export default function DocumentDetailPage() {
     console.log('[DocumentDetailPage] PDF loaded with', totalPages, 'pages');
     setNumPages(totalPages);
 
+    if (!BASIC_READ_ALOUD_PUBLICLY_AVAILABLE) return;
+
     // Extract full text from PDF for TTS matching
     if (pdfUrl) {
       try {
@@ -1749,7 +1762,7 @@ export default function DocumentDetailPage() {
                         onChapterChange={(chapterId) => {
                           setActiveChapterId(chapterId);
                         }}
-                        onParagraphClick={handleParagraphClick}
+                        onParagraphClick={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleParagraphClick : undefined}
                       />
                     ) : htmlUrl && document.status === 'ready' ? (
                       <HTMLViewer
@@ -1757,8 +1770,8 @@ export default function DocumentDetailPage() {
                         fileName={document.title}
                         onDocumentLoad={handleHTMLDocumentLoad}
                         onTextSelected={handleTextSelected}
-                        onBlockClick={handleBlockClick}
-                        onFullTextExtracted={handleHtmlFullTextExtracted}
+                        onBlockClick={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleBlockClick : undefined}
+                        onFullTextExtracted={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleHtmlFullTextExtracted : undefined}
                       />
                     ) : pdfUrl && document.status === 'ready' ? (
                       <PDFViewer
@@ -1768,7 +1781,7 @@ export default function DocumentDetailPage() {
                         onTextSelected={handleTextSelected}
                         annotations={annotations}
                         onAnnotationClick={handleAnnotationClick}
-                        onTextClick={handleBlockClick}
+                        onTextClick={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleBlockClick : undefined}
                       />
                     ) : (
                       <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">
@@ -1990,12 +2003,13 @@ export default function DocumentDetailPage() {
           </div>
 
           {/* Floating Audio Player for TTS */}
-          {document && document.status === 'ready' && !document.metadata?.isCorpusCollection && (
+          {BASIC_READ_ALOUD_PUBLICLY_AVAILABLE && document && document.status === 'ready' && !document.metadata?.isCorpusCollection && (
             <AudioPlayer
               documentId={documentId}
               ocrText={fullText || (document.content ? cleanHtmlText(document.content) : '')}
               pdfUrl={pdfUrl}
               defaultCollapsed={true}
+              premiumEnginesAvailable={PREMIUM_READ_ALOUD_PUBLICLY_AVAILABLE}
               onReady={handleAudioPlayerReady}
             />
           )}

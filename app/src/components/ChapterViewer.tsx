@@ -445,14 +445,14 @@ export default function ChapterViewer({
         return (
           <blockquote
             key={index}
-            className="my-6 pl-6 border-l-4 border-amber-600/50 italic text-amber-200/90 text-lg leading-relaxed cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded pr-2"
-            onClick={(e) => {
+            className={`my-6 pl-6 border-l-4 border-amber-600/50 italic text-amber-200/90 text-lg leading-relaxed rounded pr-2 ${onParagraphClick ? 'cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors' : ''}`}
+            onClick={onParagraphClick ? (e) => {
               e.stopPropagation();
               e.preventDefault();
               console.log('[ChapterViewer] Blockquote clicked:', textContent.substring(0, 50));
-              onParagraphClick?.(textContent);
-            }}
-            title="Click to read aloud"
+              onParagraphClick(textContent);
+            } : undefined}
+            title={onParagraphClick ? 'Click to read aloud' : undefined}
           >
             {textContent}
             <cite className="block mt-2 text-sm not-italic text-amber-400/70">—The Kybalion</cite>
@@ -465,14 +465,14 @@ export default function ChapterViewer({
         return (
           <p
             key={index}
-            className="my-4 text-amber-100/80 leading-relaxed pl-4 whitespace-pre-line cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded px-2"
-            onClick={(e) => {
+            className={`my-4 text-amber-100/80 leading-relaxed pl-4 whitespace-pre-line rounded px-2 ${onParagraphClick ? 'cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors' : ''}`}
+            onClick={onParagraphClick ? (e) => {
               e.stopPropagation();
               e.preventDefault();
               console.log('[ChapterViewer] Paragraph clicked:', trimmed.substring(0, 50));
-              onParagraphClick?.(trimmed);
-            }}
-            title="Click to read aloud"
+              onParagraphClick(trimmed);
+            } : undefined}
+            title={onParagraphClick ? 'Click to read aloud' : undefined}
           >
             {trimmed}
           </p>
@@ -486,9 +486,9 @@ export default function ChapterViewer({
       return (
         <p
           key={index}
-          className="my-4 text-amber-100/80 leading-relaxed text-justify cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded px-2"
-          onClick={() => onParagraphClick?.(trimmed)}
-          title="Click to read aloud"
+          className={`my-4 text-amber-100/80 leading-relaxed text-justify rounded px-2 ${onParagraphClick ? 'cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors' : ''}`}
+          onClick={onParagraphClick ? () => onParagraphClick(trimmed) : undefined}
+          title={onParagraphClick ? 'Click to read aloud' : undefined}
         >
           {lines.map((line, lineIndex) => (
             <span key={lineIndex}>
@@ -747,9 +747,9 @@ export default function ChapterViewer({
 
                 return (
                   <p 
-                    className="my-4 text-amber-100/80 leading-relaxed text-justify cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors rounded px-2"
-                    onClick={handleClick}
-                    title="Click to read aloud"
+                    className={`my-4 text-amber-100/80 leading-relaxed text-justify rounded px-2 ${onParagraphClick ? 'cursor-pointer hover:bg-amber-900/20 hover:text-amber-100 transition-colors' : ''}`}
+                    onClick={onParagraphClick ? handleClick : undefined}
+                    title={onParagraphClick ? 'Click to read aloud' : undefined}
                   >
                     {children}
                   </p>

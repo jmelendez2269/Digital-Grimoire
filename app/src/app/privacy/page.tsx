@@ -248,7 +248,7 @@ export default function PrivacyPolicyPage() {
 
             <h3 className="text-xl font-semibold text-amber-300 mt-6 mb-3">5.3 Local Storage</h3>
             <p className="text-zinc-300">
-              We use browser local storage for text-to-speech preferences, wiki link activation history,
+              We use browser local storage for read-aloud preferences, wiki link activation history,
               and reading position bookmarks. Local storage is stored on your device and can be cleared via browser settings.
             </p>
           </section>

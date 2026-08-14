@@ -12,13 +12,12 @@ import {
   Square, 
   Volume2, 
   ChevronDown, 
-  ChevronUp,
   Settings,
   Sparkles,
   Volume
 } from 'lucide-react';
 import { useTTS } from '@/hooks/useTTS';
-import { TTSEngine, TTSVoice } from '@/lib/services/tts-service';
+import { TTSEngine } from '@/lib/services/tts-service';
 import { extractPDFText } from '@/lib/utils/pdf-text-extractor';
 import { cleanHtmlText } from '@/lib/utils/formatting';
 import TTSSettings from './TTSSettings';
@@ -34,6 +33,7 @@ export interface AudioPlayerProps {
   onHighlight?: (charIndex: number, charLength: number) => void;
   onReady?: (controls: AudioPlayerControls) => void;
   defaultCollapsed?: boolean;
+  premiumEnginesAvailable?: boolean;
 }
 
 type TextSource = 'ocr' | 'pdf';
@@ -45,6 +45,7 @@ export default function AudioPlayer({
   onHighlight,
   onReady,
   defaultCollapsed = false,
+  premiumEnginesAvailable = false,
 }: AudioPlayerProps) {
   // UI State
   const [isExpanded, setIsExpanded] = useState(!defaultCollapsed);
@@ -62,7 +63,7 @@ export default function AudioPlayer({
 
   // Check TTS cap when azure engine is active; fall back to web-speech if exceeded
   useEffect(() => {
-    if (engine !== 'azure') return;
+    if (!premiumEnginesAvailable || engine !== 'azure') return;
     fetch('/api/tts/check')
       .then((r) => r.json())
       .then((data) => {
@@ -73,7 +74,7 @@ export default function AudioPlayer({
         }
       })
       .catch(() => {});
-  }, [engine]);
+  }, [engine, premiumEnginesAvailable]);
 
   // Load preferences from localStorage
   useEffect(() => {
@@ -81,17 +82,22 @@ export default function AudioPlayer({
     if (prefs) {
       try {
         const parsed = JSON.parse(prefs);
-        setEngine(parsed.engine || 'web-speech');
+        const savedEngine: TTSEngine = parsed.engine === 'azure' ? 'azure' : 'web-speech';
+        setEngine(premiumEnginesAvailable ? savedEngine : 'web-speech');
         setRate(parsed.rate || 1.0);
         setVolume(parsed.volume || 1.0);
-        setSelectedVoice(parsed.voice);
+        setSelectedVoice(
+          !premiumEnginesAvailable && savedEngine === 'azure'
+            ? undefined
+            : parsed.voice,
+        );
         setTextSource(parsed.textSource || 'ocr');
       } catch (err) {
         console.error('Error loading TTS preferences:', err);
       }
     }
 
-  }, [documentId]);
+  }, [documentId, premiumEnginesAvailable]);
 
   // Save preferences to localStorage
   const savePreferences = useCallback(() => {
@@ -115,7 +121,6 @@ export default function AudioPlayer({
     pause,
     resume,
     stop,
-    togglePlayPause,
     voices,
     isPlaying,
     isPaused,
@@ -398,7 +403,7 @@ export default function AudioPlayer({
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               {/* Play/Pause/Stop Controls */}
               <div className="flex items-center gap-2">
                 <button
@@ -489,7 +494,7 @@ export default function AudioPlayer({
                 value={selectedVoice || ''}
                 onChange={(e) => setSelectedVoice(e.target.value)}
                 disabled={isPlaying}
-                className="px-3 py-2 bg-zinc-800 text-amber-100 text-sm rounded-lg border border-zinc-700 focus:border-amber-600 focus:outline-none disabled:opacity-50"
+                className="min-h-11 max-w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-amber-100 focus:border-amber-600 focus:outline-none disabled:opacity-50 sm:w-auto"
                 aria-label="Select voice"
               >
                 <option value="">Default Voice</option>
@@ -500,16 +505,23 @@ export default function AudioPlayer({
                 ))}
               </select>
 
-              {/* Settings Button */}
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-3 bg-zinc-800 hover:bg-zinc-700 text-amber-100 rounded-lg transition-colors flex items-center gap-2"
-                aria-label="TTS Settings"
-              >
-                {engine === 'azure' && <Sparkles className="w-4 h-4 text-amber-400" />}
-                <Settings className="w-5 h-5" />
-              </button>
+              {premiumEnginesAvailable && (
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg bg-zinc-800 p-3 text-amber-100 transition-colors hover:bg-zinc-700"
+                  aria-label="Premium voice settings"
+                >
+                  {engine === 'azure' && <Sparkles className="w-4 h-4 text-amber-400" />}
+                  <Settings className="w-5 h-5" />
+                </button>
+              )}
             </div>
+
+            {!premiumEnginesAvailable && (
+              <div className="mt-2 text-center text-xs text-amber-100/60">
+                Free browser voice · no Prism Credits
+              </div>
+            )}
 
             {/* Status Messages */}
             {(isInitializing || extractingPdf) && (
@@ -519,7 +531,7 @@ export default function AudioPlayer({
               </div>
             )}
 
-            {ttsCapExceeded && (
+            {premiumEnginesAvailable && ttsCapExceeded && (
               <div className="mt-2 text-xs text-amber-400/80 text-center">
                 Monthly premium TTS limit reached — switched to free voices.
               </div>
@@ -543,7 +555,7 @@ export default function AudioPlayer({
       )}
 
       {/* Settings Modal */}
-      {showSettings && (
+      {premiumEnginesAvailable && showSettings && (
         <TTSSettings
           currentEngine={engine}
           onEngineChange={setEngine}

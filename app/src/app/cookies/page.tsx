@@ -117,7 +117,7 @@ export default function CookiePolicyPage() {
               We also use browser local storage (similar to cookies) to store preferences:
             </p>
             <ul className="list-disc pl-6 text-zinc-300 space-y-1">
-              <li><strong>Text-to-Speech Preferences:</strong> Your TTS settings for each document</li>
+              <li><strong>Read-Aloud Preferences:</strong> Your browser voice, speed, volume, and reading position</li>
               <li><strong>Wiki Link History:</strong> Recently activated wiki links for navigation</li>
               <li><strong>Reading Position:</strong> Temporary bookmarks for audio playback</li>
             </ul>
