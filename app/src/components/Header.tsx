@@ -3,11 +3,15 @@
 import { memo, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRouter, usePathname } from "next/navigation";
 import { Network, Sparkles } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
-import FeedbackModal from "./FeedbackModal";
+
+const FeedbackModal = dynamic(() => import("./FeedbackModal"), {
+  ssr: false,
+});
 
 interface LibrarySearchProps {
   searchQuery: string;
@@ -56,23 +60,48 @@ const memberPrimaryNav: NavItem[] = [
   {
     name: "Tools",
     path: "/explore",
-    icon: <Network className="w-3.5 h-3.5" />,
+    icon: <Network className="h-3.5 w-3.5" />,
     matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
     dropdownItems: [
-      { name: "Knowledge Graph", path: "/graph", description: "Traverse correspondence connections" },
-      { name: "Concept Search", path: "/search", description: "Semantic search across the corpus" },
-      { name: "Seven Lenses", path: "/seven-lenses", description: "Compare seven perspectives" },
+      {
+        name: "Knowledge Graph",
+        path: "/graph",
+        description: "Traverse correspondence connections",
+      },
+      {
+        name: "Concept Search",
+        path: "/search",
+        description: "Semantic search across the corpus",
+      },
+      {
+        name: "Seven Lenses",
+        path: "/seven-lenses",
+        description: "Compare seven perspectives",
+      },
     ],
   },
   {
     name: "Workbench",
     path: "/workbench",
-    icon: <Sparkles className="w-3.5 h-3.5" />,
+    icon: <Sparkles className="h-3.5 w-3.5" />,
     matchPaths: ["/workbench", "/journal"],
     dropdownItems: [
-      { name: "Study Journal", path: "/journal", description: "Your private notes and connections" },
-      { name: "The Working", path: "/workbench/the-working", description: "Intent-driven ritual generator" },
-      { name: "Tarot", path: "/workbench/tarot", description: "Deck Forge", comingSoon: true },
+      {
+        name: "Study Journal",
+        path: "/journal",
+        description: "Your private notes and connections",
+      },
+      {
+        name: "The Working",
+        path: "/workbench/the-working",
+        description: "Intent-driven ritual generator",
+      },
+      {
+        name: "Tarot",
+        path: "/workbench/tarot",
+        description: "Deck Forge",
+        comingSoon: true,
+      },
     ],
   },
   {
@@ -80,8 +109,16 @@ const memberPrimaryNav: NavItem[] = [
     path: "/community/forum",
     matchPaths: ["/community", "/blog"],
     dropdownItems: [
-      { name: "Forum", path: "/community/forum", description: "Discuss, ask, share" },
-      { name: "Videos", path: "/community/videos", description: "Watch and search" },
+      {
+        name: "Forum",
+        path: "/community/forum",
+        description: "Discuss, ask, share",
+      },
+      {
+        name: "Videos",
+        path: "/community/videos",
+        description: "Watch and search",
+      },
       { name: "Blog", path: "/blog", description: "Essays and updates" },
     ],
   },
@@ -91,9 +128,24 @@ const memberPrimaryNav: NavItem[] = [
 const memberMobileNav: NavItem[] = [
   { name: "Library", path: "/library", icon: "📚" },
   { name: "Courses", path: "/courses", icon: "🎓" },
-  { name: "Tools", path: "/explore", icon: "🕸️", matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"] },
-  { name: "Workbench", path: "/workbench", icon: "✨", matchPaths: ["/workbench", "/journal"] },
-  { name: "Community", path: "/community/forum", icon: "💬", matchPaths: ["/community"] },
+  {
+    name: "Tools",
+    path: "/explore",
+    icon: "🕸️",
+    matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
+  },
+  {
+    name: "Workbench",
+    path: "/workbench",
+    icon: "✨",
+    matchPaths: ["/workbench", "/journal"],
+  },
+  {
+    name: "Community",
+    path: "/community/forum",
+    icon: "💬",
+    matchPaths: ["/community"],
+  },
   { name: "Wiki", path: "/wiki", icon: "📖" },
 ];
 
@@ -130,7 +182,11 @@ function Header({ librarySearch }: HeaderProps = {}) {
   const adminLinks = [
     { label: "Admin Panel", icon: "🔐", href: "/admin" },
     { label: "Admin Upload", icon: "📤", href: "/admin/upload" },
-    { label: "Import Sacred Text", icon: "🌐", href: "/admin/import-sacred-text" },
+    {
+      label: "Import Sacred Text",
+      icon: "🌐",
+      href: "/admin/import-sacred-text",
+    },
     { label: "Courses", icon: "📚", href: "/admin/courses" },
     { label: "Knowledge Graph", icon: "🕸️", href: "/admin/knowledge-graph" },
     { label: "Embeddings", icon: "🔮", href: "/admin/embeddings" },
@@ -141,11 +197,15 @@ function Header({ librarySearch }: HeaderProps = {}) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 pt-4 px-4 pb-2 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-      <nav className="pointer-events-auto mx-auto flex max-w-7xl items-center justify-between px-6 py-4 glass-panel rounded-full relative">
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent opacity-50"></div>
+    <header className="pointer-events-none sticky top-0 z-50 bg-gradient-to-b from-black/80 to-transparent px-4 pt-4 pb-2">
+      <nav className="glass-panel pointer-events-auto relative mx-auto flex max-w-7xl items-center justify-between rounded-full px-6 py-4">
+        <div className="absolute top-0 left-0 h-[1px] w-full bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent opacity-50"></div>
 
-        <Link href="/" className="group flex items-center gap-3" aria-label="Prismarium home">
+        <Link
+          href="/"
+          className="group flex items-center gap-3"
+          aria-label="Prismarium home"
+        >
           <Image
             src="/icon.svg"
             alt=""
@@ -156,52 +216,64 @@ function Header({ librarySearch }: HeaderProps = {}) {
           />
 
           <div className="flex flex-col font-sans leading-none">
-            <span className="text-xl font-bold tracking-widest text-zinc-100 group-hover:text-cyan-400 transition-colors uppercase">
+            <span className="text-xl font-bold tracking-widest text-zinc-100 uppercase transition-colors group-hover:text-cyan-400">
               Prismarium
             </span>
-            <span className="mt-1 whitespace-nowrap text-[8px] font-medium uppercase tracking-[0.28em] text-zinc-500 transition-colors group-hover:text-zinc-400 sm:text-[9px]">
+            <span className="mt-1 text-[8px] font-medium tracking-[0.28em] whitespace-nowrap text-zinc-500 uppercase transition-colors group-hover:text-zinc-400 sm:text-[9px]">
               By Project Parallax
             </span>
           </div>
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex ml-8">
+        <div className="ml-8 hidden items-center gap-1 md:flex">
           {(user ? memberPrimaryNav : guestPrimaryNav).map((item) => (
             <div
               key={item.path}
               className="relative"
-              onMouseEnter={() => setHoveredNav(item.name)}
+              onMouseEnter={() => {
+                setHoveredNav(item.name);
+                router.prefetch(item.path);
+              }}
               onMouseLeave={() => setHoveredNav(null)}
             >
               <Link
                 href={item.path}
-                className={`relative flex items-center gap-2 px-5 py-2 text-lg font-medium transition-all duration-300 rounded-md border border-transparent ${
+                prefetch={false}
+                className={`relative flex items-center gap-2 rounded-md border border-transparent px-5 py-2 text-lg font-medium transition-all duration-300 ${
                   isActive(item)
-                    ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
-                    : "text-zinc-400 hover:text-cyan-200 hover:bg-white/5"
+                    ? "border-cyan-500/20 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+                    : "text-zinc-400 hover:bg-white/5 hover:text-cyan-200"
                 }`}
               >
                 {item.icon}
                 {item.name}
                 {isActive(item) && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]" />
+                  <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]" />
                 )}
               </Link>
 
               {item.dropdownItems && hoveredNav === item.name && (
-                <div className="absolute top-full left-0 pt-3 w-64 z-[9999]">
-                  <div className="bg-zinc-950 border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.9)] overflow-hidden">
+                <div className="absolute top-full left-0 z-[9999] w-64 pt-3">
+                  <div className="overflow-hidden rounded-xl border border-white/10 bg-zinc-950 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.9)]">
                     {item.dropdownItems.map((sub) =>
                       sub.comingSoon ? (
                         <div
                           key={sub.path}
-                          className="flex items-center justify-between px-4 py-3.5 opacity-40 cursor-default select-none"
+                          className="flex cursor-default items-center justify-between px-4 py-3.5 opacity-40 select-none"
                         >
                           <div>
-                            <div className="text-base font-medium text-zinc-300">{sub.name}</div>
-                            {sub.description && <div className="text-xs text-zinc-500 mt-0.5">{sub.description}</div>}
+                            <div className="text-base font-medium text-zinc-300">
+                              {sub.name}
+                            </div>
+                            {sub.description && (
+                              <div className="mt-0.5 text-xs text-zinc-500">
+                                {sub.description}
+                              </div>
+                            )}
                           </div>
-                          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Soon</span>
+                          <span className="font-mono text-[10px] tracking-widest text-zinc-500 uppercase">
+                            Soon
+                          </span>
                         </div>
                       ) : sub.external ? (
                         <a
@@ -210,20 +282,32 @@ function Header({ librarySearch }: HeaderProps = {}) {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setHoveredNav(null)}
-                          className="flex flex-col px-4 py-3.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                          className="flex flex-col border-b border-white/5 px-4 py-3.5 transition-colors last:border-0 hover:bg-white/5"
                         >
-                          <span className="text-base font-medium text-zinc-100">{sub.name}</span>
-                          {sub.description && <span className="text-xs text-zinc-500 mt-0.5">{sub.description}</span>}
+                          <span className="text-base font-medium text-zinc-100">
+                            {sub.name}
+                          </span>
+                          {sub.description && (
+                            <span className="mt-0.5 text-xs text-zinc-500">
+                              {sub.description}
+                            </span>
+                          )}
                         </a>
                       ) : (
                         <Link
                           key={sub.path}
                           href={sub.path}
                           onClick={() => setHoveredNav(null)}
-                          className="flex flex-col px-4 py-3.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                          className="flex flex-col border-b border-white/5 px-4 py-3.5 transition-colors last:border-0 hover:bg-white/5"
                         >
-                          <span className="text-base font-medium text-zinc-100">{sub.name}</span>
-                          {sub.description && <span className="text-xs text-zinc-500 mt-0.5">{sub.description}</span>}
+                          <span className="text-base font-medium text-zinc-100">
+                            {sub.name}
+                          </span>
+                          {sub.description && (
+                            <span className="mt-0.5 text-xs text-zinc-500">
+                              {sub.description}
+                            </span>
+                          )}
                         </Link>
                       )
                     )}
@@ -235,34 +319,54 @@ function Header({ librarySearch }: HeaderProps = {}) {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="md:hidden flex items-center">
+          <div className="flex items-center md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-zinc-400 hover:text-cyan-400 focus:outline-none bg-black/30 rounded-full border border-white/10"
+              className="rounded-full border border-white/10 bg-black/30 p-2 text-zinc-400 hover:text-cyan-400 focus:outline-none"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               )}
             </button>
           </div>
 
-          <div className="flex items-center justify-end min-w-[32px] sm:min-w-[140px]">
+          <div className="flex min-w-[32px] items-center justify-end sm:min-w-[140px]">
             {!mounted || loading ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-white/10" />
             ) : user ? (
               <div className="relative hidden md:block">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full border border-white/10 hover:border-cyan-500/30 bg-black/30 transition-all group"
+                  className="group flex items-center gap-2 rounded-full border border-white/10 bg-black/30 py-1 pr-1 pl-2 transition-all hover:border-cyan-500/30"
                 >
-                  <span className="hidden sm:block text-sm font-mono font-bold text-zinc-400 group-hover:text-cyan-200 px-2 text-right">
+                  <span className="hidden px-2 text-right font-mono text-sm font-bold text-zinc-400 group-hover:text-cyan-200 sm:block">
                     {user.user_metadata?.username || user.email?.split("@")[0]}
                   </span>
 
@@ -275,50 +379,78 @@ function Header({ librarySearch }: HeaderProps = {}) {
                       className="rounded-full object-cover ring-1 ring-white/10 group-hover:ring-cyan-500/50"
                     />
                   ) : (
-                    <div className="h-7 w-7 rounded-full bg-cyan-900/40 flex items-center justify-center text-[10px] font-bold text-cyan-500 ring-1 ring-cyan-500/30">
-                      {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-900/40 text-[10px] font-bold text-cyan-500 ring-1 ring-cyan-500/30">
+                      {(user.user_metadata?.username ||
+                        user.email ||
+                        "U")[0].toUpperCase()}
                     </div>
                   )}
                 </button>
 
                 {menuOpen && (
                   <>
-                    <div className="fixed inset-0 z-[9998]" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 z-[9999] mt-3 w-64 bg-zinc-950 border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden">
-                      <div className="bg-gradient-to-r from-cyan-500/10 to-transparent px-4 py-3 border-b border-white/5">
-                        <div className="text-[10px] font-mono text-cyan-500 uppercase tracking-widest mb-1">Identity</div>
-                        <div className="text-sm font-bold text-zinc-100 truncate">{user.email}</div>
-                        {isAdmin && <div className="text-[10px] text-cyan-400 mt-1 font-mono">[ ADMIN ACCESS GRANTED ]</div>}
+                    <div
+                      className="fixed inset-0 z-[9998]"
+                      onClick={() => setMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 z-[9999] mt-3 w-64 overflow-hidden rounded-xl border border-white/10 bg-zinc-950 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)]">
+                      <div className="border-b border-white/5 bg-gradient-to-r from-cyan-500/10 to-transparent px-4 py-3">
+                        <div className="mb-1 font-mono text-[10px] tracking-widest text-cyan-500 uppercase">
+                          Identity
+                        </div>
+                        <div className="truncate text-sm font-bold text-zinc-100">
+                          {user.email}
+                        </div>
+                        {isAdmin && (
+                          <div className="mt-1 font-mono text-[10px] text-cyan-400">
+                            [ ADMIN ACCESS GRANTED ]
+                          </div>
+                        )}
                       </div>
 
-                      <div className="p-2 space-y-1">
+                      <div className="space-y-1 p-2">
                         {[
                           { href: "/profile", icon: "👤", label: "Profile" },
-                          { href: "/dashboard", icon: "📊", label: "Dashboard" },
-                          { href: "/library/my-library", icon: "📖", label: "My Library" },
-                          { href: "/journal", icon: "📝", label: "Study Journal" },
+                          {
+                            href: "/dashboard",
+                            icon: "📊",
+                            label: "Dashboard",
+                          },
+                          {
+                            href: "/library/my-library",
+                            icon: "📖",
+                            label: "My Library",
+                          },
+                          {
+                            href: "/journal",
+                            icon: "📝",
+                            label: "Study Journal",
+                          },
                           { href: "/settings", icon: "⚙️", label: "Settings" },
                         ].map((item) => (
                           <Link
                             key={item.href}
                             href={item.href}
                             onClick={() => setMenuOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-400 hover:text-cyan-300 hover:bg-white/5 rounded-md transition-all font-medium"
+                            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-zinc-400 transition-all hover:bg-white/5 hover:text-cyan-300"
                           >
-                            <span className="opacity-70">{item.icon}</span> {item.label}
+                            <span className="opacity-70">{item.icon}</span>{" "}
+                            {item.label}
                           </Link>
                         ))}
 
                         {isAdmin && (
                           <>
                             <div className="my-2 h-[1px] bg-white/5"></div>
-                            <div className="px-3 py-1 text-[10px] font-mono text-cyan-500/70 uppercase">Admin Utilities</div>
+                            <div className="px-3 py-1 font-mono text-[10px] text-cyan-500/70 uppercase">
+                              Admin Utilities
+                            </div>
                             {adminLinks.map((link) => (
                               <Link
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setMenuOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2 text-xs text-cyan-400 hover:text-cyan-200 hover:bg-cyan-900/10 rounded-md transition-all font-mono"
+                                className="flex items-center gap-3 rounded-md px-3 py-2 font-mono text-xs text-cyan-400 transition-all hover:bg-cyan-900/10 hover:text-cyan-200"
                               >
                                 <span>{link.icon}</span> {link.label}
                               </Link>
@@ -332,7 +464,7 @@ function Header({ librarySearch }: HeaderProps = {}) {
                             setMenuOpen(false);
                             handleSignOut();
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/10 rounded-md transition-all text-left"
+                          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-red-400 transition-all hover:bg-red-900/10 hover:text-red-300"
                         >
                           🚪 Disconnect
                         </button>
@@ -342,13 +474,20 @@ function Header({ librarySearch }: HeaderProps = {}) {
                 )}
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <Link href="/login" className="px-3 py-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
+              <div className="hidden items-center gap-2 md:flex">
+                <Link
+                  href="/login"
+                  prefetch={false}
+                  onMouseEnter={() => router.prefetch("/login")}
+                  className="px-3 py-1.5 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+                >
                   Log in
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-1.5 text-sm font-bold text-black bg-cyan-500 hover:bg-cyan-400 rounded transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                  prefetch={false}
+                  onMouseEnter={() => router.prefetch("/register")}
+                  className="rounded bg-cyan-500 px-4 py-1.5 text-sm font-bold text-black shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-colors hover:bg-cyan-400"
                 >
                   Join Prismarium
                 </Link>
@@ -358,35 +497,47 @@ function Header({ librarySearch }: HeaderProps = {}) {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-zinc-950/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-4 mx-4 flex flex-col z-50 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
+          <div className="absolute top-full right-0 left-0 z-50 mx-4 mt-2 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5"></div>
 
             {user ? (
               <div className="relative z-10 space-y-4">
-                <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3 border-b border-white/10 pb-4">
                   {user.user_metadata?.avatar_url ? (
-                    <Image src={user.user_metadata.avatar_url} alt="User" width={36} height={36} className="rounded-full" />
+                    <Image
+                      src={user.user_metadata.avatar_url}
+                      alt="User"
+                      width={36}
+                      height={36}
+                      className="rounded-full"
+                    />
                   ) : (
-                    <div className="h-9 w-9 rounded-full bg-cyan-900/40 flex items-center justify-center font-bold text-cyan-500">
-                      {(user.user_metadata?.username || user.email || "U")[0].toUpperCase()}
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-900/40 font-bold text-cyan-500">
+                      {(user.user_metadata?.username ||
+                        user.email ||
+                        "U")[0].toUpperCase()}
                     </div>
                   )}
                   <div>
-                    <div className="font-bold text-zinc-100">{user.user_metadata?.username || user.email?.split("@")[0]}</div>
+                    <div className="font-bold text-zinc-100">
+                      {user.user_metadata?.username ||
+                        user.email?.split("@")[0]}
+                    </div>
                     <div className="text-xs text-zinc-500">{user.email}</div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pb-4 border-b border-white/10">
+                <div className="grid grid-cols-2 gap-2 border-b border-white/10 pb-4">
                   {memberMobileNav.map((item) => (
                     <Link
                       key={item.path}
                       href={item.path}
+                      prefetch={false}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`p-3 rounded-lg flex flex-col items-center justify-center text-center gap-1 ${
+                      className={`flex flex-col items-center justify-center gap-1 rounded-lg p-3 text-center ${
                         isActive(item)
-                          ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
-                          : "bg-black/30 border border-white/5 text-zinc-300 hover:bg-white/5"
+                          ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
+                          : "border border-white/5 bg-black/30 text-zinc-300 hover:bg-white/5"
                       }`}
                     >
                       <span className="text-xl">{item.icon}</span>
@@ -395,22 +546,40 @@ function Header({ librarySearch }: HeaderProps = {}) {
                   ))}
                 </div>
 
-                <div className="space-y-1 pb-4 border-b border-white/10">
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">
+                <div className="space-y-1 border-b border-white/10 pb-4">
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center rounded-md px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
+                  >
                     📊 Dashboard
                   </Link>
-                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center rounded-md px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
+                  >
                     👤 Profile Tools
                   </Link>
-                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">
+                  <Link
+                    href="/settings"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center rounded-md px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
+                  >
                     ⚙️ Settings
                   </Link>
                 </div>
 
                 {isAdmin && (
-                  <div className="space-y-1 pb-4 border-b border-white/10">
-                    <div className="px-2 text-[10px] font-mono text-red-400/70 uppercase tracking-widest mb-2">Admin</div>
-                    <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center px-4 py-2 text-sm text-zinc-300 hover:bg-white/5 rounded-md">
+                  <div className="space-y-1 border-b border-white/10 pb-4">
+                    <div className="mb-2 px-2 font-mono text-[10px] tracking-widest text-red-400/70 uppercase">
+                      Admin
+                    </div>
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center rounded-md px-4 py-2 text-sm text-zinc-300 hover:bg-white/5"
+                    >
                       🔐 Admin Panel
                     </Link>
                   </div>
@@ -421,36 +590,43 @@ function Header({ librarySearch }: HeaderProps = {}) {
                     setMobileMenuOpen(false);
                     handleSignOut();
                   }}
-                  className="w-full py-3 text-sm font-bold text-red-400 bg-red-900/10 hover:bg-red-900/20 rounded-lg transition-colors border border-red-900/30"
+                  className="w-full rounded-lg border border-red-900/30 bg-red-900/10 py-3 text-sm font-bold text-red-400 transition-colors hover:bg-red-900/20"
                 >
                   Disconnect
                 </button>
               </div>
             ) : (
               <div className="relative z-10 flex flex-col gap-3 py-4">
-                <div className="grid grid-cols-2 gap-2 pb-4 border-b border-white/10">
+                <div className="grid grid-cols-2 gap-2 border-b border-white/10 pb-4">
                   {guestPrimaryNav.map((item) => (
                     <Link
                       key={item.path}
                       href={item.path}
+                      prefetch={false}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`p-3 rounded-lg text-center text-sm font-semibold ${
+                      className={`rounded-lg p-3 text-center text-sm font-semibold ${
                         isActive(item)
-                          ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
-                          : "bg-black/30 border border-white/5 text-zinc-300 hover:bg-white/5"
+                          ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
+                          : "border border-white/5 bg-black/30 text-zinc-300 hover:bg-white/5"
                       }`}
                     >
                       {item.name}
                     </Link>
                   ))}
                 </div>
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center text-sm font-bold text-zinc-300 border border-white/20 rounded-lg hover:bg-white/5">
+                <Link
+                  href="/login"
+                  prefetch={false}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full rounded-lg border border-white/20 py-3 text-center text-sm font-bold text-zinc-300 hover:bg-white/5"
+                >
                   Log in
                 </Link>
                 <Link
                   href="/register"
+                  prefetch={false}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-3 text-center text-sm font-bold text-black bg-cyan-500 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400"
+                  className="w-full rounded-lg bg-cyan-500 py-3 text-center text-sm font-bold text-black shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:bg-cyan-400"
                 >
                   Join Prismarium
                 </Link>
@@ -459,7 +635,10 @@ function Header({ librarySearch }: HeaderProps = {}) {
           </div>
         )}
       </nav>
-      <FeedbackModal isOpen={feedbackModalOpen} onClose={() => setFeedbackModalOpen(false)} />
+      <FeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+      />
     </header>
   );
 }

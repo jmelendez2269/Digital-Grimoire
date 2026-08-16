@@ -48,3 +48,19 @@ export function isPublicPath(pathname: string): boolean {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 }
+
+/**
+ * Public pages do not need a server-side session refresh before they render.
+ * The home route is the one exception when an auth cookie exists because it
+ * renders the signed-in member home on the server.
+ */
+export function shouldBypassPublicSessionRefresh(
+  pathname: string,
+  hasAuthCookie: boolean
+): boolean {
+  if (!isPublicPath(pathname)) return false;
+
+  const normalizedPath =
+    pathname !== "/" ? pathname.replace(/\/$/, "") : pathname;
+  return normalizedPath !== "/" || !hasAuthCookie;
+}

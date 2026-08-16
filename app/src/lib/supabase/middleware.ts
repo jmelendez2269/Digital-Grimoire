@@ -3,9 +3,28 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   getLegacySupabaseCookiePrefixes,
   getSupabaseCookieOptions,
+  hasSupabaseAuthCookie,
 } from "./auth-config";
 import { isFreeLibraryText } from "@/lib/library/access";
-import { isPublicPath } from "@/lib/routing/public-access";
+import {
+  isPublicPath,
+  shouldBypassPublicSessionRefresh,
+} from "@/lib/routing/public-access";
+import { VERIFIED_USER_HEADERS } from "@/lib/supabase/identity";
+
+function createForwardedHeaders(request: NextRequest) {
+  const forwardedHeaders = new Headers(request.headers);
+  Object.values(VERIFIED_USER_HEADERS).forEach((header) =>
+    forwardedHeaders.delete(header)
+  );
+  return forwardedHeaders;
+}
+
+function encodeIdentityHeader(value: unknown) {
+  return typeof value === "string" && value
+    ? encodeURIComponent(value.slice(0, 512))
+    : "";
+}
 
 function getErrorCauseMessage(error: unknown) {
   if (
@@ -108,16 +127,16 @@ export async function updateSession(request: NextRequest) {
       }
     );
 
-    const {
-      data: { user },
-    } = await maintenanceSupabase.auth.getUser();
+    const { data: maintenanceClaimsData } =
+      await maintenanceSupabase.auth.getClaims();
+    const maintenanceClaims = maintenanceClaimsData?.claims;
 
     // If user exists, check if they're admin
-    if (user) {
+    if (maintenanceClaims?.sub) {
       const { data: profile } = await maintenanceSupabase
         .from("users")
         .select("role")
-        .eq("id", user.id)
+        .eq("id", maintenanceClaims.sub)
         .single();
 
       // Allow admins to bypass maintenance mode
@@ -137,8 +156,26 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  const isPublicRoute = isPublicPath(request.nextUrl.pathname);
+  const authCookiePresent = hasSupabaseAuthCookie(
+    request.cookies.getAll().map(({ name }) => name),
+    process.env.NEXT_PUBLIC_SUPABASE_URL
+  );
+
+  if (
+    shouldBypassPublicSessionRefresh(
+      request.nextUrl.pathname,
+      authCookiePresent
+    )
+  ) {
+    return NextResponse.next({
+      request: { headers: createForwardedHeaders(request) },
+    });
+  }
+
+  const forwardedHeaders = createForwardedHeaders(request);
   let supabaseResponse = NextResponse.next({
-    request,
+    request: { headers: forwardedHeaders },
   });
 
   const supabase = createServerClient(
@@ -155,7 +192,7 @@ export async function updateSession(request: NextRequest) {
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
-            request,
+            request: { headers: forwardedHeaders },
           });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -165,17 +202,14 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // Keep identity verification immediately after client creation so refreshed
+  // cookies are propagated to both the request and browser response.
 
   // Get user with error handling for invalid refresh tokens
-  let user = null;
+  let userClaims = null;
   try {
-    const {
-      data: { user: fetchedUser },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: claimsData, error: authError } =
+      await supabase.auth.getClaims();
 
     // If there's an auth error (like invalid refresh token), clear the session
     if (authError) {
@@ -213,7 +247,7 @@ export async function updateSession(request: NextRequest) {
         );
       }
     } else {
-      user = fetchedUser;
+      userClaims = claimsData?.claims ?? null;
     }
   } catch (error) {
     // Catch any unexpected errors during auth check
@@ -224,11 +258,40 @@ export async function updateSession(request: NextRequest) {
     // Continue without user - will redirect to login if needed
   }
 
+  if (userClaims?.sub) {
+    const metadata =
+      typeof userClaims.user_metadata === "object" &&
+      userClaims.user_metadata !== null
+        ? (userClaims.user_metadata as Record<string, unknown>)
+        : {};
+    forwardedHeaders.set(VERIFIED_USER_HEADERS.id, userClaims.sub);
+    forwardedHeaders.set(
+      VERIFIED_USER_HEADERS.email,
+      encodeIdentityHeader(userClaims.email)
+    );
+    forwardedHeaders.set(
+      VERIFIED_USER_HEADERS.displayName,
+      encodeIdentityHeader(
+        metadata.display_name ?? metadata.username ?? metadata.full_name
+      )
+    );
+    forwardedHeaders.set(
+      VERIFIED_USER_HEADERS.journalName,
+      encodeIdentityHeader(metadata.journal_name)
+    );
+
+    const verifiedResponse = NextResponse.next({
+      request: { headers: forwardedHeaders },
+    });
+    supabaseResponse.cookies
+      .getAll()
+      .forEach((cookie) => verifiedResponse.cookies.set(cookie));
+    supabaseResponse = verifiedResponse;
+  }
+
   // Course-graph access is enforced inside its route: local development may
   // read a local Supabase import, while deployed candidate reads require an
   // authenticated curator. It must reach that route before this generic gate.
-  const isPublicRoute = isPublicPath(request.nextUrl.pathname);
-
   // Check if this is an API route
   const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
 
@@ -248,7 +311,7 @@ export async function updateSession(request: NextRequest) {
     apiTextMatch !== null && apiTextMatch[1] !== "by-source-urls";
 
   let isFreeLibraryTextRoute = false;
-  if (!user && (isLibraryTextCandidate || isApiTextCandidate)) {
+  if (!userClaims && (isLibraryTextCandidate || isApiTextCandidate)) {
     const textId = (libraryTextMatch ?? apiTextMatch)![1];
     try {
       isFreeLibraryTextRoute = await isFreeLibraryText(supabase, textId);
@@ -261,7 +324,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Protect routes that require authentication
-  if (!user && !isPublicRoute && !isFreeLibraryTextRoute) {
+  if (!userClaims && !isPublicRoute && !isFreeLibraryTextRoute) {
     // For API routes, return JSON error instead of redirecting
     if (isApiRoute) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

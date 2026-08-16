@@ -31,3 +31,13 @@ export function getLegacySupabaseCookiePrefixes(supabaseUrl?: string) {
 
   return [...prefixes];
 }
+
+export function hasSupabaseAuthCookie(
+  cookieNames: Iterable<string>,
+  supabaseUrl?: string
+) {
+  const prefixes = getLegacySupabaseCookiePrefixes(supabaseUrl);
+  return Array.from(cookieNames).some((name) =>
+    prefixes.some((prefix) => name === prefix || name.startsWith(`${prefix}.`))
+  );
+}
