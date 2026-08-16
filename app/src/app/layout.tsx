@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Cormorant_Garamond, Fira_Code, DM_Sans, Playfair_Display, JetBrains_Mono, Cinzel } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  DM_Sans,
+  Playfair_Display,
+  JetBrains_Mono,
+  Cinzel,
+} from "next/font/google";
 import { Toaster } from "sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
@@ -9,26 +15,12 @@ import { getAbsoluteUrl, getAppUrl } from "@/lib/utils";
 import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-  preload: true,
-});
-
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-cormorant",
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
-  preload: true,
-});
-
-const firaCode = Fira_Code({
-  subsets: ["latin"],
-  variable: "--font-fira-mono",
-  display: "swap",
-  preload: true,
+  preload: false,
 });
 
 // Prismarium brand fonts
@@ -55,6 +47,7 @@ const cinzel = Cinzel({
   variable: "--font-cinzel",
   weight: ["400", "600"],
   display: "swap",
+  preload: false,
 });
 
 const appUrl = getAppUrl();
@@ -150,26 +143,24 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cormorant.variable} ${firaCode.variable} ${dmSans.variable} ${playfair.variable} ${jetbrainsMono.variable} ${cinzel.variable} antialiased bg-background text-foreground`}
+        className={`${cormorant.variable} ${dmSans.variable} ${playfair.variable} ${jetbrainsMono.variable} ${cinzel.variable} bg-background text-foreground antialiased`}
       >
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <ReactQueryProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </ReactQueryProvider>
         <Toaster theme="dark" position="bottom-right" richColors />
         <SpeedInsights />
         <Analytics />
         <CookieConsent />
         {/* Cloudflare Web Analytics */}
-        {process.env.NODE_ENV === 'production' && (
+        {process.env.NODE_ENV === "production" && (
           <script
             defer
-            src='https://static.cloudflareinsights.com/beacon.min.js'
+            src="https://static.cloudflareinsights.com/beacon.min.js"
             data-cf-beacon='{"token": "86053cf09b4a4aea94dfc87aa44ff19c"}'
           />
         )}

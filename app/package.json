@@ -43,6 +43,7 @@
     "perf": "npx @unlighthouse/cli --no-cache",
     "perf:ci": "npx @unlighthouse/cli ci --build-static",
     "perf:debug": "npx @unlighthouse/cli --debug --no-cache",
+    "perf:catalog": "tsx scripts/verify-public-catalog-projection.ts",
     "seed:kybalion": "tsx scripts/seed-kybalion.ts",
     "seed:library": "node scripts/seed-library-csv.js",
     "backfill:course-texts": "node scripts/backfill-course-texts.js",

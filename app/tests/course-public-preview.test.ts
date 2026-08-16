@@ -10,7 +10,7 @@ const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 function readSource(relativePath: string): string {
   return readFileSync(resolve(appRoot, relativePath), "utf8").replace(
     /\r\n/g,
-    "\n",
+    "\n"
   );
 }
 
@@ -23,27 +23,27 @@ function normalizeWhitespace(value: string): string {
 function assertContains(
   source: string,
   expected: string,
-  sourceName: string,
+  sourceName: string
 ): void {
   assert.ok(
     normalizeWhitespace(source).includes(normalizeWhitespace(expected)),
-    `${sourceName} is missing: ${expected}`,
+    `${sourceName} is missing: ${expected}`
   );
 }
 
 function assertOmits(
   source: string,
   forbidden: string,
-  sourceName: string,
+  sourceName: string
 ): void {
   assert.ok(
     !normalizeWhitespace(source).includes(normalizeWhitespace(forbidden)),
-    `${sourceName} should no longer contain: ${forbidden}`,
+    `${sourceName} should no longer contain: ${forbidden}`
   );
 }
 
 test("published course cards always open a public preview", () => {
-  const sourceName = "src/app/courses/page.tsx";
+  const sourceName = "src/components/courses/CoursesCatalogClient.tsx";
   const catalog = readSource(sourceName);
 
   assertContains(catalog, "Public preview", sourceName);
@@ -56,31 +56,28 @@ test("published course cards always open a public preview", () => {
   assertContains(
     catalog,
     "isOpen && enrollment ? `/courses/${course.slug}/learn` : `/courses/${course.slug}`",
-    sourceName,
+    sourceName
   );
 
   // The whole card is the link, so there is no separate gated action.
   assertContains(
     catalog,
     "<Link href={href} className={cardClassName}>",
-    sourceName,
+    sourceName
   );
 });
 
-test("course cards wait for enrollment before choosing their destination", () => {
-  const sourceName = "src/app/courses/page.tsx";
-  const catalog = readSource(sourceName);
+test("the catalog renders server data before enrollment enhancement finishes", () => {
+  const clientSourceName = "src/components/courses/CoursesCatalogClient.tsx";
+  const pageSourceName = "src/app/courses/page.tsx";
+  const catalog = readSource(clientSourceName);
+  const page = readSource(pageSourceName);
 
-  assertContains(
-    catalog,
-    "const presentationLoading = loading || authLoading || enrollmentsLoading",
-    sourceName,
-  );
-  assertContains(
-    catalog,
-    "!presentationLoading && courses.length > 0",
-    sourceName,
-  );
+  assertContains(catalog, "const courses = initialCourses", clientSourceName);
+  assertContains(catalog, 'fetch("/api/courses/my-courses")', clientSourceName);
+  assertOmits(catalog, "fetch(`/api/courses?${params}`", clientSourceName);
+  assertOmits(catalog, "presentationLoading", clientSourceName);
+  assertContains(page, "getPublicCourseCatalog()", pageSourceName);
 });
 
 test("anonymous course requests receive only the sanitized published preview", () => {
@@ -90,18 +87,18 @@ test("anonymous course requests receive only the sanitized published preview", (
   assertContains(
     route,
     "if (!course.is_published && !viewer.isAdmin)",
-    sourceName,
+    sourceName
   );
   assertContains(route, "sanitizeCourseForPreview(enrichedCourse)", sourceName);
   assertContains(
     route,
     "viewer.isAdmin || (wantsFullAccess && canViewFullCourse)",
-    sourceName,
+    sourceName
   );
   assertContains(
     route,
     "wantsFullAccess && !courseAvailable && !viewer.isAdmin",
-    sourceName,
+    sourceName
   );
   assertContains(route, "matchCourseTextsFromContent", sourceName);
   assertContains(route, "resolveMembershipEntitlement", sourceName);

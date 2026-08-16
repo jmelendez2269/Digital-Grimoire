@@ -8,7 +8,10 @@ import {
   sanitizePublicCatalogSearch,
   sanitizePublicLibraryMetadata,
 } from "../src/lib/library/public-catalog";
-import { isPublicPath } from "../src/lib/routing/public-access";
+import {
+  isPublicPath,
+  shouldBypassPublicSessionRefresh,
+} from "../src/lib/routing/public-access";
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -38,14 +41,29 @@ test("public browse routes do not expose protected Library routes", () => {
   assert.equal(isPublicPath("/api/parallax/query"), false);
 });
 
+test("public routes bypass middleware auth while signed-in home remains personalized", () => {
+  assert.equal(shouldBypassPublicSessionRefresh("/explore", true), true);
+  assert.equal(shouldBypassPublicSessionRefresh("/courses", true), true);
+  assert.equal(shouldBypassPublicSessionRefresh("/api/courses", false), true);
+  assert.equal(shouldBypassPublicSessionRefresh("/", false), true);
+  assert.equal(shouldBypassPublicSessionRefresh("/", true), false);
+  assert.equal(shouldBypassPublicSessionRefresh("/dashboard", true), false);
+});
+
 test("anonymous visitors see a non-interactive Seven Lenses preview", () => {
   const page = readSource("src/app/seven-lenses/page.tsx");
 
   assert.match(page, /if \(!user\) \{\s+return <PublicSevenLensesPreview \/>;/);
   assert.match(page, /Public preview/);
   assert.match(page, /Join Prismarium to tune the lenses/);
-  assert.match(page, /<ResponseLengthSlider value="short" onChange=\{\(\) => undefined\} disabled \/>/);
-  assert.match(page, /<LensPresets onSelect=\{\(\) => undefined\} disabled \/>/);
+  assert.match(
+    page,
+    /<ResponseLengthSlider value="short" onChange=\{\(\) => undefined\} disabled \/>/
+  );
+  assert.match(
+    page,
+    /<LensPresets onSelect=\{\(\) => undefined\} disabled \/>/
+  );
   assert.match(page, /id="public-query-preview"\s+disabled/);
   assert.match(page, /Join to analyze/);
 });

@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   COURSE_RELEASE_CONFIGURATION,
@@ -12,6 +12,7 @@ import {
 import type { PlatformTotals } from "@/lib/platform/catalog";
 import { getPlatformTotals } from "@/lib/platform/totals.server";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { VerifiedUserIdentity } from "@/lib/supabase/identity";
 
 export interface HomeCoursePreview {
   id: string;
@@ -62,7 +63,7 @@ export interface MemberHomeData {
   graphConnection: GraphConnection | null;
 }
 
-interface CourseRow {
+export interface PublicCoursePreviewSource {
   id: string;
   slug: string;
   title: string;
@@ -109,7 +110,7 @@ function cleanString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
-function getMemberName(user: User): string {
+function getMemberName(user: VerifiedUserIdentity): string {
   const metadata = user.user_metadata ?? {};
   return (
     cleanString(metadata.display_name) ??
@@ -120,13 +121,13 @@ function getMemberName(user: User): string {
   );
 }
 
-function getJournalName(user: User): string {
+function getJournalName(user: VerifiedUserIdentity): string {
   return cleanString(user.user_metadata?.journal_name) ?? "Study Journal";
 }
 
 function isEnrollmentComplete(
   enrollment: EnrollmentRow,
-  durationWeeks: number,
+  durationWeeks: number
 ): boolean {
   const progress = enrollment.progress ?? {};
   return (
@@ -137,8 +138,8 @@ function isEnrollmentComplete(
 }
 
 function toCoursePreview(
-  course: CourseRow,
-  releaseStatus: HomeCoursePreview["releaseStatus"],
+  course: PublicCoursePreviewSource,
+  releaseStatus: HomeCoursePreview["releaseStatus"]
 ): HomeCoursePreview {
   return {
     id: course.id,
@@ -161,7 +162,7 @@ function getConfiguredSlugs(): string[] {
 }
 
 async function getFeaturedGraphConnection(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient
 ): Promise<GraphConnection | null> {
   const { data: relationshipData, error: relationshipError } = await supabase
     .from("correspondence_relationships")
@@ -173,7 +174,7 @@ async function getFeaturedGraphConnection(
   if (relationshipError) {
     console.error(
       "[home] Failed to load a Knowledge Graph connection:",
-      relationshipError,
+      relationshipError
     );
     return null;
   }
@@ -184,7 +185,7 @@ async function getFeaturedGraphConnection(
     (candidate) =>
       Boolean(candidate.source_id) &&
       Boolean(candidate.target_id) &&
-      candidate.source_id !== candidate.target_id,
+      candidate.source_id !== candidate.target_id
   );
 
   if (!relationship) {
@@ -199,17 +200,17 @@ async function getFeaturedGraphConnection(
   if (entityError) {
     console.error(
       "[home] Failed to load Knowledge Graph connection labels:",
-      entityError,
+      entityError
     );
     return null;
   }
 
   const entities = (entityData ?? []) as GraphEntityRow[];
   const source = entities.find(
-    (entity) => entity.id === relationship.source_id,
+    (entity) => entity.id === relationship.source_id
   );
   const target = entities.find(
-    (entity) => entity.id === relationship.target_id,
+    (entity) => entity.id === relationship.target_id
   );
   const sourceName = cleanString(source?.name);
   const targetName = cleanString(target?.name);
@@ -228,7 +229,7 @@ async function getFeaturedGraphConnection(
 }
 
 export async function getSharedCoursePreviews(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient
 ): Promise<SharedCoursePreviews> {
   const slugs = getConfiguredSlugs();
   if (slugs.length === 0) {
@@ -246,37 +247,42 @@ export async function getSharedCoursePreviews(
     return { currentPath: null, nextPath: null };
   }
 
-  const courses = (data ?? []) as CourseRow[];
+  return getSharedCoursePreviewsFromCourses(
+    (data ?? []) as PublicCoursePreviewSource[]
+  );
+}
+
+export function getSharedCoursePreviewsFromCourses(
+  courses: readonly PublicCoursePreviewSource[]
+): SharedCoursePreviews {
   // The current path may be the introduction course (PRE), which is not a
   // main course — mirrors groupCoursesByRelease in @/lib/courses/presentation.
   const currentCourse = courses.find(
     (course) =>
       course.slug === COURSE_RELEASE_CONFIGURATION.currentCourseSlug &&
       (isMainCourse(course) || isIntroductionCourse(course)) &&
-      getCourseReleaseStatus(course) === "open-now",
+      getCourseReleaseStatus(course) === "open-now"
   );
   const nextCourse = courses.find(
     (course) =>
       course.slug === COURSE_RELEASE_CONFIGURATION.nextCourseSlug &&
       isMainCourse(course) &&
-      getCourseReleaseStatus(course) === "coming-next",
+      getCourseReleaseStatus(course) === "coming-next"
   );
 
   return {
     currentPath: currentCourse
       ? toCoursePreview(currentCourse, "open-now")
       : null,
-    nextPath: nextCourse
-      ? toCoursePreview(nextCourse, "coming-next")
-      : null,
+    nextPath: nextCourse ? toCoursePreview(nextCourse, "coming-next") : null,
   };
 }
 
 export async function getMemberHomeData(
   supabase: SupabaseClient,
-  user: User,
+  user: VerifiedUserIdentity,
   platformTotalsOverride?: PlatformTotals,
-  coursePreviewsOverride?: SharedCoursePreviews,
+  coursePreviewsOverride?: SharedCoursePreviews
 ): Promise<MemberHomeData> {
   const [
     courseResult,
@@ -285,65 +291,57 @@ export async function getMemberHomeData(
     bookmarkResult,
     graphConnection,
     platformTotals,
-  ] =
-    await Promise.all([
-      coursePreviewsOverride ?? getSharedCoursePreviews(supabase),
-      supabase
-        .from("course_enrollments")
-        .select("course_id, current_week, progress")
-        .eq("user_id", user.id),
-      supabase
-        .from("journal_pages")
-        .select("id, title")
-        .eq("user_id", user.id)
-        .eq("is_archived", false)
-        .order("updated_at", { ascending: false })
-        .limit(1),
-      supabase
-        .from("user_bookmarks")
-        .select("texts(id, title, author)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1),
-      getFeaturedGraphConnection(supabase),
-      platformTotalsOverride ??
-        getPlatformTotals(createServiceClient()),
-    ]);
+  ] = await Promise.all([
+    coursePreviewsOverride ?? getSharedCoursePreviews(supabase),
+    supabase
+      .from("course_enrollments")
+      .select("course_id, current_week, progress")
+      .eq("user_id", user.id),
+    supabase
+      .from("journal_pages")
+      .select("id, title")
+      .eq("user_id", user.id)
+      .eq("is_archived", false)
+      .order("updated_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("user_bookmarks")
+      .select("texts(id, title, author)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    getFeaturedGraphConnection(supabase),
+    platformTotalsOverride ?? getPlatformTotals(createServiceClient()),
+  ]);
 
   if (enrollmentResult.error) {
     console.error(
       "[home] Failed to load course enrollment:",
-      enrollmentResult.error,
+      enrollmentResult.error
     );
   }
   if (journalResult.error) {
     console.error(
       "[home] Failed to load recent journal entry:",
-      journalResult.error,
+      journalResult.error
     );
   }
   if (bookmarkResult.error) {
-    console.error(
-      "[home] Failed to load saved reading:",
-      bookmarkResult.error,
-    );
+    console.error("[home] Failed to load saved reading:", bookmarkResult.error);
   }
 
   const enrollments = (enrollmentResult.data ?? []) as EnrollmentRow[];
   const currentEnrollmentRow = courseResult.currentPath
-    ? enrollments.find(
-        (enrollment) =>
-          enrollment.course_id === courseResult.currentPath?.id,
-      ) ?? null
+    ? (enrollments.find(
+        (enrollment) => enrollment.course_id === courseResult.currentPath?.id
+      ) ?? null)
     : null;
 
-  const recentJournal = (
-    (journalResult.data ?? []) as JournalRow[]
-  )[0] ?? null;
+  const recentJournal = ((journalResult.data ?? []) as JournalRow[])[0] ?? null;
   const bookmark = ((bookmarkResult.data ?? []) as BookmarkRow[])[0] ?? null;
   const bookmarkText = Array.isArray(bookmark?.texts)
-    ? bookmark.texts[0] ?? null
-    : bookmark?.texts ?? null;
+    ? (bookmark.texts[0] ?? null)
+    : (bookmark?.texts ?? null);
 
   return {
     memberName: getMemberName(user),
@@ -357,7 +355,7 @@ export async function getMemberHomeData(
             currentWeek: Math.max(1, currentEnrollmentRow.current_week ?? 1),
             isCompleted: isEnrollmentComplete(
               currentEnrollmentRow,
-              courseResult.currentPath.durationWeeks,
+              courseResult.currentPath.durationWeeks
             ),
           }
         : null,

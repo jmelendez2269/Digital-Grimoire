@@ -4,13 +4,13 @@
   /* Project Parallax Color Palette */
 
   /* Primary Background: Near-black forest */
-  --color-parallax-dark: #0A1212;
+  --color-parallax-dark: #0a1212;
   /* Secondary Background: Deep midnight slate */
-  --color-parallax-midnight: #0D1425;
+  --color-parallax-midnight: #0d1425;
 
-  --color-void-black: #0A1212;
-  --color-abyssal-blue: #0D1425;
-  --color-scanline-black: #0B1616;
+  --color-void-black: #0a1212;
+  --color-abyssal-blue: #0d1425;
+  --color-scanline-black: #0b1616;
 
   /* Tech/Glass Borders */
   --color-glass-border: rgba(180, 143, 74, 0.15);
@@ -18,17 +18,17 @@
   --color-glass-border-hover: rgba(180, 143, 74, 0.4);
 
   /* Neon Accents */
-  --color-amber-500: #B48F4A;
+  --color-amber-500: #b48f4a;
   /* Aged Brass/Gold */
-  --color-amber-400: #C5A05B;
-  --color-cyan-500: #22D3EE;
+  --color-amber-400: #c5a05b;
+  --color-cyan-500: #22d3ee;
   /* Parallax Cyan */
-  --color-cyan-400: #67E8F9;
+  --color-cyan-400: #67e8f9;
 
   /* Font families */
-  --font-sans: var(--font-dm-sans), var(--font-inter), system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
   --font-serif: var(--font-playfair), var(--font-cormorant), Georgia, serif;
-  --font-mono: var(--font-jetbrains), var(--font-fira-mono), monospace;
+  --font-mono: var(--font-jetbrains), monospace;
 
   /* Animations */
   --animate-scanline: scanline 8s linear infinite;
@@ -44,39 +44,39 @@
 
 :root {
   --background: #111318;
-  --foreground: #F0EDE8;
+  --foreground: #f0ede8;
 
   /* Prismarium Brand Colors */
-  --brand: #1D487B;
-  --brand-50: #EBF2FA;
-  --brand-100: #C8DDF2;
-  --brand-200: #9DC1E7;
-  --brand-300: #6DA3D9;
-  --brand-400: #3D82C7;
-  --brand-500: #1D487B;
-  --accent-brand: #F68A23;
-  --accent-brand-50: #FEF3E7;
-  --accent-brand-100: #FCDAB0;
-  --accent-brand-200: #F9BC72;
-  --accent-brand-300: #F79D47;
+  --brand: #1d487b;
+  --brand-50: #ebf2fa;
+  --brand-100: #c8ddf2;
+  --brand-200: #9dc1e7;
+  --brand-300: #6da3d9;
+  --brand-400: #3d82c7;
+  --brand-500: #1d487b;
+  --accent-brand: #f68a23;
+  --accent-brand-50: #fef3e7;
+  --accent-brand-100: #fcdab0;
+  --accent-brand-200: #f9bc72;
+  --accent-brand-300: #f79d47;
 
   /* Seven Lens Colors */
-  --lens-scientific: #4A9EBF;
-  --lens-psychological: #9B6BB5;
-  --lens-philosophical: #5A8A5E;
-  --lens-spiritual: #C4956A;
-  --lens-historical: #B5734A;
-  --lens-symbolic: #4A6E9B;
-  --lens-mathematical: #7A9E6B;
+  --lens-scientific: #4a9ebf;
+  --lens-psychological: #9b6bb5;
+  --lens-philosophical: #5a8a5e;
+  --lens-spiritual: #c4956a;
+  --lens-historical: #b5734a;
+  --lens-symbolic: #4a6e9b;
+  --lens-mathematical: #7a9e6b;
 
   /* Semantic Status */
-  --status-success: #4A9E6B;
+  --status-success: #4a9e6b;
   --status-success-bg: rgba(74, 158, 107, 0.12);
-  --status-warning: #E5A020;
+  --status-warning: #e5a020;
   --status-warning-bg: rgba(229, 160, 32, 0.12);
-  --status-error: #C44B4B;
+  --status-error: #c44b4b;
   --status-error-bg: rgba(196, 75, 75, 0.12);
-  --status-info: #4A7EC4;
+  --status-info: #4a7ec4;
   --status-info-bg: rgba(74, 126, 196, 0.12);
 
   /* Motion */
@@ -86,9 +86,9 @@
   --duration-stagger: 80ms;
 
   /* Legacy Brand Colors (preserved for existing components) */
-  --brand-cyan: #22D3EE;
-  --brand-gold: #B48F4A;
-  --brand-burgundy: #8B2E2E;
+  --brand-cyan: #22d3ee;
+  --brand-gold: #b48f4a;
+  --brand-burgundy: #8b2e2e;
 
   /* Glassmorphism Variables */
   --glass-bg: rgba(17, 19, 24, 0.7);
@@ -110,8 +110,6 @@
   }
 }
 
-
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -121,8 +119,16 @@ body {
   /* subtle starfield/noise texture would be added here via background-image if we had the asset, 
      for now we use a css radial gradient fallback for depth */
   background-image:
-    radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.02) 0%, transparent 50%);
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(6, 182, 212, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 85% 30%,
+      rgba(6, 182, 212, 0.02) 0%,
+      transparent 50%
+    );
   min-height: 100vh;
 }
 
@@ -182,7 +188,9 @@ h6 {
 }
 
 .courses-sigil {
-  transition: transform 4s ease, color 0.5s ease;
+  transition:
+    transform 4s ease,
+    color 0.5s ease;
 }
 
 /* ===== TipTap Editor Styles (Akashic Update) ===== */
@@ -296,34 +304,84 @@ h6 {
    `--ray-*` vars. The wiggly ray paths themselves are animated separately,
    via SMIL <animate> on `d` (see PublicHomeView.tsx) rather than CSS. */
 @keyframes prism-spin {
-  0%   { transform: rotateY(0deg)   rotateZ(0deg); }
-  50%  { transform: rotateY(180deg) rotateZ(6deg); }
-  100% { transform: rotateY(360deg) rotateZ(0deg); }
+  0% {
+    transform: rotateY(0deg) rotateZ(0deg);
+  }
+  50% {
+    transform: rotateY(180deg) rotateZ(6deg);
+  }
+  100% {
+    transform: rotateY(360deg) rotateZ(0deg);
+  }
 }
 
 @keyframes prism-glass-glow {
-  0%, 100% { fill-opacity: 0.55; }
-  50% { fill-opacity: 0.9; }
+  0%,
+  100% {
+    fill-opacity: 0.55;
+  }
+  50% {
+    fill-opacity: 0.9;
+  }
 }
 
 @keyframes prism-beam-photon {
-  0%   { left: 5%;   opacity: 0; }
-  12%  { opacity: 1; }
-  42%  { left: 31%;  opacity: 1; }
-  50%  { opacity: 0; left: 31%; }
-  100% { left: 5%;   opacity: 0; }
+  0% {
+    left: 5%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  42% {
+    left: 31%;
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+    left: 31%;
+  }
+  100% {
+    left: 5%;
+    opacity: 0;
+  }
 }
 
 @keyframes prism-ray-photon {
-  0%   { left: 69%; top: 52%; opacity: 0; }
-  15%  { opacity: 0; }
-  25%  { opacity: 1; }
-  62%  { left: var(--ray-left); top: var(--ray-top); opacity: 1; }
-  75%  { opacity: 0; }
-  100% { left: 69%; top: 52%; opacity: 0; }
+  0% {
+    left: 69%;
+    top: 52%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  62% {
+    left: var(--ray-left);
+    top: var(--ray-top);
+    opacity: 1;
+  }
+  75% {
+    opacity: 0;
+  }
+  100% {
+    left: 69%;
+    top: 52%;
+    opacity: 0;
+  }
 }
 
 @keyframes lens-point-pulse {
-  0%, 100% { opacity: 0.5; transform: scale(0.82); }
-  50% { opacity: 1; transform: scale(1.18); }
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
 }
