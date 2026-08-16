@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import test from "node:test";
 
 import { shapePublicCatalogCourse } from "../src/lib/courses/public-catalog";
@@ -30,4 +32,15 @@ test("public catalog projection contains presentation fields without course bodi
   assert.equal(course.is_published, true);
   assert.equal("weeks" in (course.content ?? {}), false);
   assert.equal("curator_note" in (course.content ?? {}), false);
+});
+
+test("public catalog loading does not require a privileged browser-build secret", () => {
+  const loader = readFileSync(
+    resolve(process.cwd(), "src/lib/courses/public-catalog.server.ts"),
+    "utf8"
+  );
+
+  assert.match(loader, /createPublicServerClient/);
+  assert.match(loader, /PUBLIC_CATALOG_FALLBACK_SELECT/);
+  assert.match(loader, /Privileged projection unavailable/);
 });

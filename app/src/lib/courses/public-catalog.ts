@@ -21,6 +21,20 @@ export const PUBLIC_CATALOG_SELECT = `
   completion_pathways:content->completion_pathways
 `;
 
+export const PUBLIC_CATALOG_FALLBACK_SELECT = `
+  id,
+  title,
+  slug,
+  description,
+  premise,
+  learning_outcomes,
+  course_type,
+  level,
+  duration_weeks,
+  is_published,
+  created_at
+`;
+
 export interface PublicCatalogRow {
   id: string;
   title: string;

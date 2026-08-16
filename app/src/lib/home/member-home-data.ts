@@ -63,7 +63,7 @@ export interface MemberHomeData {
   graphConnection: GraphConnection | null;
 }
 
-interface CourseRow {
+export interface PublicCoursePreviewSource {
   id: string;
   slug: string;
   title: string;
@@ -138,7 +138,7 @@ function isEnrollmentComplete(
 }
 
 function toCoursePreview(
-  course: CourseRow,
+  course: PublicCoursePreviewSource,
   releaseStatus: HomeCoursePreview["releaseStatus"]
 ): HomeCoursePreview {
   return {
@@ -247,7 +247,14 @@ export async function getSharedCoursePreviews(
     return { currentPath: null, nextPath: null };
   }
 
-  const courses = (data ?? []) as CourseRow[];
+  return getSharedCoursePreviewsFromCourses(
+    (data ?? []) as PublicCoursePreviewSource[]
+  );
+}
+
+export function getSharedCoursePreviewsFromCourses(
+  courses: readonly PublicCoursePreviewSource[]
+): SharedCoursePreviews {
   // The current path may be the introduction course (PRE), which is not a
   // main course — mirrors groupCoursesByRelease in @/lib/courses/presentation.
   const currentCourse = courses.find(
