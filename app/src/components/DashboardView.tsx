@@ -91,7 +91,7 @@ const INTRODUCTION_COURSE_SLUG = "pre-how-to-hold-two-things-at-once";
 
 export default function DashboardView({ data }: DashboardViewProps) {
   const { user, loading } = useAuth();
-  const { currentPath, currentEnrollment } = data;
+  const { currentPath, currentEnrollment, resumeCourse } = data;
 
   // Don't point people at the introduction when it's already the path above.
   const showIntroductionNote = currentPath?.slug !== INTRODUCTION_COURSE_SLUG;
@@ -103,6 +103,9 @@ export default function DashboardView({ data }: DashboardViewProps) {
     ? currentEnrollment
       ? `/courses/${currentPath.slug}/learn`
       : `/courses/${currentPath.slug}`
+    : "/courses";
+  const featuredCourseHref = resumeCourse
+    ? `/courses/${resumeCourse.slug}/learn`
     : "/courses";
 
   return (
@@ -121,7 +124,7 @@ export default function DashboardView({ data }: DashboardViewProps) {
 
           <div className="mb-12">
             <Link
-              href="/courses"
+              href={featuredCourseHref}
               onClick={async () => {
                 try {
                   await fetch("/api/track/courses-click", {
@@ -178,7 +181,7 @@ export default function DashboardView({ data }: DashboardViewProps) {
                     <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
                       <div className="absolute -inset-full top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] translate-x-[-150%] group-hover:translate-x-[350%] transition-transform duration-700 ease-in-out" />
                     </div>
-                    Begin Your Path
+                    {resumeCourse ? "Continue Your Path" : "Begin Your Path"}
                     <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>

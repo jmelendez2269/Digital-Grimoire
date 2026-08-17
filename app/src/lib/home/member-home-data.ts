@@ -34,6 +34,11 @@ export interface HomeEnrollment {
   isCompleted: boolean;
 }
 
+export interface HomeResumeCourse extends HomeEnrollment {
+  slug: string;
+  title: string;
+}
+
 export interface RecentJournalEntry {
   id: string;
   title: string;
@@ -58,6 +63,7 @@ export interface MemberHomeData {
   currentPath: HomeCoursePreview | null;
   nextPath: HomeCoursePreview | null;
   currentEnrollment: HomeEnrollment | null;
+  resumeCourse: HomeResumeCourse | null;
   recentJournalEntry: RecentJournalEntry | null;
   savedReading: SavedReading | null;
   graphConnection: GraphConnection | null;
@@ -74,10 +80,25 @@ export interface PublicCoursePreviewSource {
   } | null;
 }
 
-interface EnrollmentRow {
+export interface HomeEnrollmentRow {
   course_id: string;
   current_week: number | null;
   progress: Record<string, unknown> | null;
+  enrolled_at: string | null;
+  courses:
+    | {
+        slug: string;
+        title: string;
+        duration_weeks: number | null;
+        is_published: boolean;
+      }
+    | {
+        slug: string;
+        title: string;
+        duration_weeks: number | null;
+        is_published: boolean;
+      }[]
+    | null;
 }
 
 interface JournalRow {
@@ -126,7 +147,7 @@ function getJournalName(user: VerifiedUserIdentity): string {
 }
 
 function isEnrollmentComplete(
-  enrollment: EnrollmentRow,
+  enrollment: HomeEnrollmentRow,
   durationWeeks: number
 ): boolean {
   const progress = enrollment.progress ?? {};
@@ -135,6 +156,56 @@ function isEnrollmentComplete(
     progress.status === "completed" ||
     (durationWeeks > 0 && (enrollment.current_week ?? 1) >= durationWeeks)
   );
+}
+
+function getEnrollmentActivityTime(enrollment: HomeEnrollmentRow): number {
+  const savedAt = enrollment.progress?.savedAt;
+  const activityDate =
+    typeof savedAt === "string" && Number.isFinite(Date.parse(savedAt))
+      ? savedAt
+      : enrollment.enrolled_at;
+
+  return activityDate && Number.isFinite(Date.parse(activityDate))
+    ? Date.parse(activityDate)
+    : 0;
+}
+
+export function getResumeCourse(
+  enrollments: HomeEnrollmentRow[]
+): HomeResumeCourse | null {
+  const candidates = enrollments
+    .map((enrollment) => {
+      const course = Array.isArray(enrollment.courses)
+        ? enrollment.courses[0] ?? null
+        : enrollment.courses;
+
+      if (!course?.is_published) return null;
+
+      const durationWeeks = course.duration_weeks ?? 8;
+      return {
+        slug: course.slug,
+        title: course.title,
+        currentWeek: Math.max(1, enrollment.current_week ?? 1),
+        isCompleted: isEnrollmentComplete(enrollment, durationWeeks),
+        activityTime: getEnrollmentActivityTime(enrollment),
+      };
+    })
+    .filter((course): course is NonNullable<typeof course> => course !== null)
+    .sort(
+      (left, right) =>
+        Number(left.isCompleted) - Number(right.isCompleted) ||
+        right.activityTime - left.activityTime
+    );
+
+  const course = candidates[0];
+  if (!course) return null;
+
+  return {
+    slug: course.slug,
+    title: course.title,
+    currentWeek: course.currentWeek,
+    isCompleted: course.isCompleted,
+  };
 }
 
 function toCoursePreview(
@@ -295,8 +366,11 @@ export async function getMemberHomeData(
     coursePreviewsOverride ?? getSharedCoursePreviews(supabase),
     supabase
       .from("course_enrollments")
-      .select("course_id, current_week, progress")
-      .eq("user_id", user.id),
+      .select(
+        "course_id, current_week, progress, enrolled_at, courses!course_enrollments_course_id_fkey(slug, title, duration_weeks, is_published)"
+      )
+      .eq("user_id", user.id)
+      .not("course_id", "is", null),
     supabase
       .from("journal_pages")
       .select("id, title")
@@ -330,7 +404,7 @@ export async function getMemberHomeData(
     console.error("[home] Failed to load saved reading:", bookmarkResult.error);
   }
 
-  const enrollments = (enrollmentResult.data ?? []) as EnrollmentRow[];
+  const enrollments = (enrollmentResult.data ?? []) as HomeEnrollmentRow[];
   const currentEnrollmentRow = courseResult.currentPath
     ? (enrollments.find(
         (enrollment) => enrollment.course_id === courseResult.currentPath?.id
@@ -359,6 +433,7 @@ export async function getMemberHomeData(
             ),
           }
         : null,
+    resumeCourse: getResumeCourse(enrollments),
     recentJournalEntry: recentJournal
       ? {
           id: recentJournal.id,
