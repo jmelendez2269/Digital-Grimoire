@@ -763,6 +763,7 @@ function buildConstellation(courses: Course[]): {
   nodes: ConstellationNode[];
   edges: ConstellationEdge[];
   bands: ConstellationBand[];
+  outgoingBySlug: Map<string, string[]>;
   height: number;
 } {
   const included = courses.filter(
@@ -822,6 +823,7 @@ function buildConstellation(courses: Course[]): {
 
   const edgeKeys = new Set<string>();
   const edges: ConstellationEdge[] = [];
+  const outgoingSets = new Map<string, Set<string>>();
   for (const c of included) {
     const sourceTag = (c.content?.course_id_tag || c.slug).toUpperCase();
     const sourceSlug = tagToSlug.get(sourceTag);
@@ -829,6 +831,8 @@ function buildConstellation(courses: Course[]): {
     for (const pathway of c.content?.completion_pathways ?? []) {
       const targetSlug = tagToSlug.get((pathway.code ?? "").toUpperCase());
       if (!targetSlug || targetSlug === sourceSlug) continue;
+      if (!outgoingSets.has(sourceSlug)) outgoingSets.set(sourceSlug, new Set());
+      outgoingSets.get(sourceSlug)!.add(targetSlug);
       const key = [sourceSlug, targetSlug].sort().join("|");
       if (edgeKeys.has(key)) continue;
       edgeKeys.add(key);
@@ -836,13 +840,16 @@ function buildConstellation(courses: Course[]): {
     }
   }
 
+  const outgoingBySlug = new Map(
+    [...outgoingSets].map(([slug, targets]) => [slug, [...targets]])
+  );
   const height = MAP_TOP_MARGIN + bands.length * MAP_BAND_HEIGHT;
-  return { nodes, edges, bands, height };
+  return { nodes, edges, bands, outgoingBySlug, height };
 }
 
 function MapView({ courses }: { courses: Course[] }) {
   const [hoverSlug, setHoverSlug] = useState<string | null>(null);
-  const { nodes, edges, bands, height } = useMemo(
+  const { nodes, edges, bands, outgoingBySlug, height } = useMemo(
     () => buildConstellation(courses),
     [courses]
   );
@@ -892,7 +899,7 @@ function MapView({ courses }: { courses: Course[] }) {
 
   const hoverNode = hoverSlug ? (nodeBySlug.get(hoverSlug) ?? null) : null;
   const hoverLinks = hoverNode
-    ? [...connected]
+    ? (outgoingBySlug.get(hoverNode.slug) ?? [])
         .map((slug) => nodeBySlug.get(slug))
         .filter((n): n is ConstellationNode => !!n)
         .sort((a, b) => a.title.localeCompare(b.title))
@@ -1035,7 +1042,7 @@ function MapView({ courses }: { courses: Course[] }) {
               {hoverLinks.length > 0 && (
                 <div className="mt-4">
                   <p className="mb-2 font-mono text-[10px] tracking-[0.2em] text-zinc-500 uppercase">
-                    Pathways
+                    Next doorways
                   </p>
                   <ul className="space-y-1.5">
                     {hoverLinks.map((n) => (
@@ -1054,8 +1061,8 @@ function MapView({ courses }: { courses: Course[] }) {
             </div>
           ) : (
             <p className="text-sm leading-relaxed text-zinc-500">
-              Hover or focus a node to see how that course&apos;s questions
-              connect onward.
+              Hover or focus a node to see the doorways recommended from that
+              course.
             </p>
           )}
         </div>
