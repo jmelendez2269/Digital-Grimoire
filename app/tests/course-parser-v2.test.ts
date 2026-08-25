@@ -196,6 +196,17 @@ test('FD01 V2 preserves its stable identity and complete learner-facing structur
   assert.equal(result.course.content.production_slug, result.course.slug);
   assert.equal(result.course.duration_weeks, 6);
   assert.deepEqual(
+    result.course.content.weeks.map((week) => week.title),
+    [
+      'THE STORY THAT SOMEHOW KNOWS YOU',
+      'WHAT IS A MYTH ACTUALLY DOING?',
+      'THE PATTERN—AND THE STORIES THAT BREAK IT',
+      'HERE THERE BE MONSTERS',
+      'ARE YOU LIVING A MYTH—OR JUST BORROWING ONE?',
+      'THE STORIES WE CARRY',
+    ]
+  );
+  assert.deepEqual(
     result.course.content.weeks.map((week) => week.readings.length),
     [2, 3, 3, 3, 4, 0]
   );

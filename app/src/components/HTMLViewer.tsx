@@ -13,6 +13,10 @@ interface HTMLViewerProps {
   onTextSelected?: (selection: { text: string; position: TextPosition }) => void;
   onBlockClick?: (text: string) => void;
   onFullTextExtracted?: (fullText: string) => void;
+  courseTarget?: {
+    id: string;
+    matchText: string;
+  } | null;
 }
 
 const MIN_ZOOM = 0.25;
@@ -26,6 +30,7 @@ export default function HTMLViewer({
   onTextSelected,
   onBlockClick,
   onFullTextExtracted,
+  courseTarget,
 }: HTMLViewerProps) {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -34,6 +39,42 @@ export default function HTMLViewer({
   const [zoom, setZoom] = useState(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const courseTargetId = courseTarget?.id ?? null;
+  const courseTargetMatchText = courseTarget?.matchText ?? null;
+
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container || !htmlContent || !courseTargetId || !courseTargetMatchText) {
+      return;
+    }
+
+    const normalizeText = (value: string) =>
+      value
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/gi, ' ')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+    const normalizedMatch = normalizeText(courseTargetMatchText);
+    const blockElements = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        'p, h1, h2, h3, h4, h5, h6, li, blockquote'
+      )
+    );
+    const matchedElement = blockElements.find((element) =>
+      normalizeText(element.textContent ?? '').includes(normalizedMatch)
+    );
+
+    if (!matchedElement) return;
+    matchedElement.dataset.courseReadingTarget = 'true';
+    matchedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    return () => {
+      delete matchedElement.dataset.courseReadingTarget;
+    };
+  }, [courseTargetId, courseTargetMatchText, htmlContent]);
 
   // Add click listeners to block elements
   useEffect(() => {
@@ -616,6 +657,14 @@ export default function HTMLViewer({
           background-color: rgba(245, 158, 11, 0.1); /* amber-500/10 */
           border-radius: 4px;
           transition: background-color 0.2s ease;
+        }
+
+        .html-viewer-content [data-course-reading-target='true'] {
+          background: rgba(34, 211, 238, 0.13);
+          border-left: 3px solid rgba(103, 232, 249, 0.85);
+          border-radius: 4px;
+          padding-left: 0.75rem;
+          scroll-margin-block: 6rem;
         }
       `}</style>
     </div>

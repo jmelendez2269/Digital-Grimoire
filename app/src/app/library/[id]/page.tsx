@@ -35,6 +35,11 @@ import {
   PREMIUM_READ_ALOUD_PUBLICLY_AVAILABLE,
 } from '@/lib/features/public-feature-flags';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  findCourseReadingTocItem,
+  resolveCourseReadingLocator,
+  type CourseReadingLocator,
+} from '@/lib/library/reading-deep-link';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Dynamically import PDFViewer to avoid SSR issues with canvas/pdfjs
@@ -128,6 +133,12 @@ interface TextDocument {
     format?: 'html' | 'markdown' | 'plaintext';
     sourceUrl?: string;
   };
+}
+
+interface CourseDeepLinkResult {
+  matched: boolean;
+  requested: string;
+  destination?: string;
 }
 
 interface CorpusCollectionItem {
@@ -443,6 +454,25 @@ export default function DocumentDetailPage() {
   const [tocItems, setTocItems] = useState<TOCItem[]>([]);
   const [activeTOCItemId, setActiveTOCItemId] = useState<string | undefined>(undefined);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
+  const appliedCourseDeepLinkRef = useRef<string | null>(null);
+  const [courseDeepLinkResult, setCourseDeepLinkResult] = useState<CourseDeepLinkResult | null>(null);
+  const [courseReadingLocator, setCourseReadingLocator] = useState<CourseReadingLocator | null>(null);
+  const [activeCourseTargetIndex, setActiveCourseTargetIndex] = useState(0);
+  const activeCourseTarget =
+    courseReadingLocator?.targets[activeCourseTargetIndex] ?? null;
+
+  const selectCourseReadingTarget = useCallback(
+    (index: number) => {
+      const target = courseReadingLocator?.targets[index];
+      if (!target) return;
+      setActiveCourseTargetIndex(index);
+      if (target.kind === 'chapter') setActiveChapterId(target.chapterId);
+      if (target.kind === 'text' && target.chapterId) {
+        setActiveChapterId(target.chapterId);
+      }
+    },
+    [courseReadingLocator]
+  );
 
   // Chunk navigation state
   const [targetChunkId, setTargetChunkId] = useState<string | null>(null);
@@ -1055,6 +1085,11 @@ export default function DocumentDetailPage() {
       // Reset extracted text when document changes
       setHtmlFullText(null);
       setPdfFullText(null);
+      setTocItems([]);
+      setActiveTOCItemId(undefined);
+      setActiveChapterId(null);
+      setCourseDeepLinkResult(null);
+      appliedCourseDeepLinkRef.current = null;
       fetchDocument();
       fetchAnnotations();
     }
@@ -1560,6 +1595,71 @@ export default function DocumentDetailPage() {
     }
   }, [document, htmlUrl, pdfUrl]);
 
+  // Resolve the course's human-authored assignment against this edition's
+  // stable TOC IDs. If the match is weak or absent, keep the normal opening
+  // position instead of guessing where the learner should land.
+  useEffect(() => {
+    const courseSlug = searchParams.get('course');
+    const location = searchParams.get('courseLocation');
+    const selection = searchParams.get('courseSelection');
+    const locatorId = searchParams.get('courseLocator');
+    if (!courseSlug || (!location && !selection)) {
+      appliedCourseDeepLinkRef.current = null;
+      setCourseDeepLinkResult(null);
+      setCourseReadingLocator(null);
+      setActiveCourseTargetIndex(0);
+      return;
+    }
+
+    const deepLinkKey = `${documentId}:${courseSlug}:${location ?? ''}:${selection ?? ''}:${locatorId ?? ''}`;
+    if (appliedCourseDeepLinkRef.current === deepLinkKey) return;
+
+    const requested = selection || location || 'Assigned reading';
+    const preset = locatorId
+      ? resolveCourseReadingLocator(courseSlug, documentId, locatorId)
+      : null;
+    if (preset) {
+      appliedCourseDeepLinkRef.current = deepLinkKey;
+      setCourseReadingLocator(preset);
+      setActiveCourseTargetIndex(0);
+      const primaryTarget = preset.targets[0];
+      if (primaryTarget?.kind === 'chapter') {
+        setActiveChapterId(primaryTarget.chapterId);
+      }
+      if (primaryTarget?.kind === 'text' && primaryTarget.chapterId) {
+        setActiveChapterId(primaryTarget.chapterId);
+      }
+      setCourseDeepLinkResult({
+        matched: true,
+        requested,
+        destination: preset.targets[0]?.label,
+      });
+      return;
+    }
+
+    setCourseReadingLocator(null);
+    setActiveCourseTargetIndex(0);
+    if (pdfUrl) {
+      appliedCourseDeepLinkRef.current = deepLinkKey;
+      setCourseDeepLinkResult({ matched: false, requested });
+      return;
+    }
+    if (tocItems.length === 0) return;
+
+    const item = findCourseReadingTocItem(tocItems, { location, selection });
+    appliedCourseDeepLinkRef.current = deepLinkKey;
+    if (item) {
+      setCourseDeepLinkResult({
+        matched: true,
+        requested,
+        destination: item.title,
+      });
+      handleTOCItemClick(item);
+    } else {
+      setCourseDeepLinkResult({ matched: false, requested });
+    }
+  }, [documentId, handleTOCItemClick, pdfUrl, searchParams, tocItems]);
+
   // Update active TOC item when chapter changes (for structured text)
   useEffect(() => {
     if (document?.metadata?.isStructuredText && activeChapterId) {
@@ -1711,6 +1811,63 @@ export default function DocumentDetailPage() {
               <div className="lg:col-span-2">
                 {activeTab === 'viewer' && (
                   <div className="h-[calc(100vh-160px)]">
+                    {courseDeepLinkResult && (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        data-course-deep-link-status={courseDeepLinkResult.matched ? 'matched' : 'fallback'}
+                        className={`mb-4 rounded-lg border p-3 ${courseDeepLinkResult.matched
+                          ? 'border-cyan-500/30 bg-cyan-950/20 text-cyan-100'
+                          : 'border-amber-500/30 bg-amber-950/20 text-amber-100'
+                          }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {courseDeepLinkResult.matched ? (
+                            <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                          ) : (
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium">
+                              {courseDeepLinkResult.matched
+                                ? `Opened to ${activeCourseTarget?.label ?? courseDeepLinkResult.destination}`
+                                : 'Opened the book at its normal starting point'}
+                            </p>
+                            {courseDeepLinkResult.matched &&
+                              courseReadingLocator &&
+                              courseReadingLocator.targets.length > 1 && (
+                                <div
+                                  className="mt-2 flex flex-wrap gap-2"
+                                  aria-label="Assigned reading destinations"
+                                >
+                                  {courseReadingLocator.targets.map((target, index) => (
+                                    <button
+                                      key={target.id}
+                                      type="button"
+                                      data-course-reading-destination={target.id}
+                                      aria-pressed={activeCourseTargetIndex === index}
+                                      onClick={() => selectCourseReadingTarget(index)}
+                                      className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                                        activeCourseTargetIndex === index
+                                          ? 'border-cyan-300/60 bg-cyan-300/20 text-cyan-50'
+                                          : 'border-cyan-500/25 bg-cyan-950/30 text-cyan-200 hover:border-cyan-300/45 hover:bg-cyan-900/30'
+                                      }`}
+                                    >
+                                      {target.label}
+                                      {target.kind === 'page' ? ` · page ${target.page}` : ''}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            <p className="mt-1 text-xs leading-5 opacity-70">
+                              {courseDeepLinkResult.matched
+                                ? `Course assignment: ${courseDeepLinkResult.requested}`
+                                : `This edition does not expose a reliable marker for “${courseDeepLinkResult.requested}”.`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {/* Chunk Navigation Indicator */}
                     {(targetChunkId || targetChunkIndex !== null) && (
                       <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
@@ -1763,6 +1920,16 @@ export default function DocumentDetailPage() {
                           setActiveChapterId(chapterId);
                         }}
                         onParagraphClick={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleParagraphClick : undefined}
+                        courseTarget={
+                          activeCourseTarget?.kind === 'text' &&
+                          activeCourseTarget.chapterId
+                            ? {
+                                id: activeCourseTarget.id,
+                                chapterId: activeCourseTarget.chapterId,
+                                matchText: activeCourseTarget.matchText,
+                              }
+                            : null
+                        }
                       />
                     ) : htmlUrl && document.status === 'ready' ? (
                       <HTMLViewer
@@ -1772,6 +1939,11 @@ export default function DocumentDetailPage() {
                         onTextSelected={handleTextSelected}
                         onBlockClick={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleBlockClick : undefined}
                         onFullTextExtracted={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleHtmlFullTextExtracted : undefined}
+                        courseTarget={
+                          activeCourseTarget?.kind === 'text'
+                            ? activeCourseTarget
+                            : null
+                        }
                       />
                     ) : pdfUrl && document.status === 'ready' ? (
                       <PDFViewer
@@ -1782,6 +1954,11 @@ export default function DocumentDetailPage() {
                         annotations={annotations}
                         onAnnotationClick={handleAnnotationClick}
                         onTextClick={BASIC_READ_ALOUD_PUBLICLY_AVAILABLE ? handleBlockClick : undefined}
+                        targetPage={
+                          activeCourseTarget?.kind === 'page'
+                            ? activeCourseTarget.page
+                            : null
+                        }
                       />
                     ) : (
                       <div className="h-full flex items-center justify-center bg-zinc-900/50 border border-amber-900/20 rounded-lg">

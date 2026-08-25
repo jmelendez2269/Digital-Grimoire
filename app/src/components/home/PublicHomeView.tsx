@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -13,76 +13,13 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import PrismAnimation from "@/components/ui/PrismAnimation";
 import type { PublicLaunchPresentation } from "@/lib/courses/launch-presentation";
 import type { PlatformTotals } from "@/lib/platform/catalog";
 import { LENSES } from "@/lib/parallax/lenses";
 import { getLensColorStyle } from "@/lib/utils/lens-colors";
 
 const sevenLenses = Object.values(LENSES);
-
-// 400-unit SVG grid the hero prism is drawn on, matching the upright
-// triangle in app/icon.svg (apex up, centered) rather than a sideways one.
-// Ray endpoints are expressed in both that grid (for the tracks) and
-// parent-relative percent (for the photon/point divs, which move via
-// `left`/`top`, not `transform`).
-const PRISM_APEX = { x: 200, y: 52 };
-const PRISM_BASE_LEFT = { x: 56, y: 348 };
-const PRISM_BASE_RIGHT = { x: 344, y: 348 };
-const PRISM_EXIT = { x: 276, y: 208 };
-const RAY_LENGTH = 110;
-const RAY_SPREAD_DEG = 100;
-
-function getRayGeometry(index: number, total: number) {
-  const angleDeg =
-    -RAY_SPREAD_DEG / 2 + (index * RAY_SPREAD_DEG) / (total - 1);
-  const angleRad = (angleDeg * Math.PI) / 180;
-  const x = PRISM_EXIT.x + RAY_LENGTH * Math.cos(angleRad);
-  const y = PRISM_EXIT.y + RAY_LENGTH * Math.sin(angleRad);
-  return { x, y, leftPct: (x / 400) * 100, topPct: (y / 400) * 100 };
-}
-
-// Wiggly ray track: an S-curve whose two control points swing perpendicular
-// to the ray in opposite phase. Five keyframes (0/90/180/270/360deg) that
-// start and end straight, fed to an SVG SMIL <animate> on `d` — CSS can't
-// animate path data, but SMIL is declarative and needs no client JS.
-function getWigglyRayFrames(x1: number, y1: number, x2: number, y2: number) {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const len = Math.hypot(dx, dy);
-  const ux = dx / len;
-  const uy = dy / len;
-  const perpX = -uy;
-  const perpY = ux;
-  const amplitude = 14;
-  const p1 = { x: x1 + (ux * len) / 3, y: y1 + (uy * len) / 3 };
-  const p2 = { x: x1 + (ux * len * 2) / 3, y: y1 + (uy * len * 2) / 3 };
-
-  return [0, 90, 180, 270, 360]
-    .map((deg) => {
-      const s = Math.sin((deg * Math.PI) / 180);
-      const c1x = p1.x + perpX * amplitude * s;
-      const c1y = p1.y + perpY * amplitude * s;
-      const c2x = p2.x - perpX * amplitude * s;
-      const c2y = p2.y - perpY * amplitude * s;
-      return `M${x1},${y1} C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${x2},${y2}`;
-    })
-    .join(";");
-}
-
-const lensRays = sevenLenses.map((lens, index) => {
-  const geometry = getRayGeometry(index, sevenLenses.length);
-  return {
-    lens,
-    color: getLensColorStyle(lens.id),
-    geometry,
-    wiggleFrames: getWigglyRayFrames(
-      PRISM_EXIT.x,
-      PRISM_EXIT.y,
-      geometry.x,
-      geometry.y,
-    ),
-  };
-});
 
 interface PublicHomeViewProps {
   platformTotals: PlatformTotals;
@@ -152,18 +89,15 @@ function CourseCandidateCard({
     accent === "amber"
       ? {
           border: "hover:border-amber-300/40",
-          badge:
-            "border-amber-300/25 bg-amber-300/[0.08] text-amber-200",
+          badge: "border-amber-300/25 bg-amber-300/[0.08] text-amber-200",
           text: "text-amber-200 group-hover:text-amber-100",
-          glow:
-            "bg-[radial-gradient(circle_at_100%_0%,rgba(245,158,11,0.12),transparent_42%)]",
+          glow: "bg-[radial-gradient(circle_at_100%_0%,rgba(245,158,11,0.12),transparent_42%)]",
         }
       : {
           border: "hover:border-cyan-300/40",
           badge: "border-cyan-300/25 bg-cyan-300/[0.08] text-cyan-200",
           text: "text-cyan-200 group-hover:text-cyan-100",
-          glow:
-            "bg-[radial-gradient(circle_at_100%_0%,rgba(34,211,238,0.11),transparent_42%)]",
+          glow: "bg-[radial-gradient(circle_at_100%_0%,rgba(34,211,238,0.11),transparent_42%)]",
         };
 
   return (
@@ -231,7 +165,7 @@ function VoteFallback({
         ? "Voting is closed. The audience result and editorial decision will appear here when they are recorded."
         : status === "unavailable"
           ? "The ballot is temporarily unavailable. Both public course previews still work, and no vote has been recorded from this page."
-        : `The ballot opens when ${startingCourseTitle} launches. No sign-in will be required.`;
+          : `The ballot opens when ${startingCourseTitle} launches. No sign-in will be required.`;
 
   return (
     <div
@@ -246,7 +180,7 @@ function VoteFallback({
               ? "Ballot closed"
               : status === "unavailable"
                 ? "Ballot unavailable"
-              : "Ballot announced"}
+                : "Ballot announced"}
         </p>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">
           {message}
@@ -322,117 +256,7 @@ export default function PublicHomeView({
           </div>
 
           <div className="mx-auto w-full max-w-[27rem]">
-            <div
-              className="relative aspect-square w-full [perspective:1200px]"
-              aria-hidden="true"
-            >
-              <div
-                className="pointer-events-none absolute inset-[8%] rounded-full"
-                style={{
-                  background:
-                    "radial-gradient(circle at 50% 55%, rgba(34,211,238,0.14), transparent 62%)",
-                }}
-              />
-
-              {/* incoming beam: static track + traveling photon */}
-              <svg
-                viewBox="0 0 400 400"
-                className="absolute inset-0 h-full w-full"
-                fill="none"
-              >
-                <line
-                  x1="20"
-                  y1={PRISM_EXIT.y}
-                  x2="124"
-                  y2={PRISM_EXIT.y}
-                  stroke="rgba(253,230,190,0.35)"
-                  strokeWidth="1.5"
-                />
-              </svg>
-              <div
-                className="absolute h-1.5 w-1.5 -translate-y-1/2 animate-prism-beam-photon rounded-full bg-amber-100"
-                style={{
-                  top: `${(PRISM_EXIT.y / 400) * 100}%`,
-                  boxShadow: "0 0 8px 2px rgba(253,230,190,0.65)",
-                }}
-              />
-
-              {/* the prism: cyan glass, spinning to catch the light —
-                  upright, matching the app icon (app/icon.svg) */}
-              <div className="absolute inset-0 animate-prism-spin">
-                <svg
-                  viewBox="0 0 400 400"
-                  className="absolute inset-0 h-full w-full"
-                  fill="none"
-                >
-                  <polygon
-                    points={`${PRISM_APEX.x},${PRISM_APEX.y} ${PRISM_BASE_RIGHT.x},${PRISM_BASE_RIGHT.y} ${PRISM_BASE_LEFT.x},${PRISM_BASE_LEFT.y}`}
-                    fill="#22D3EE"
-                    className="animate-prism-glass-glow"
-                    fillOpacity="0.55"
-                    stroke="#67E8F9"
-                    strokeWidth="1.75"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-
-              {/* outgoing rays: wiggling tracks + traveling photons, one per lens */}
-              <svg
-                viewBox="0 0 400 400"
-                className="absolute inset-0 h-full w-full"
-                fill="none"
-              >
-                {lensRays.map(({ lens, color, wiggleFrames }, index) => (
-                  <path
-                    key={lens.id}
-                    d={wiggleFrames.split(";")[0]}
-                    fill="none"
-                    stroke={color.hex}
-                    strokeOpacity="0.3"
-                    strokeWidth="1.25"
-                    strokeLinecap="round"
-                  >
-                    <animate
-                      attributeName="d"
-                      values={wiggleFrames}
-                      dur="2.2s"
-                      begin={`${-index * 0.25}s`}
-                      repeatCount="indefinite"
-                    />
-                  </path>
-                ))}
-              </svg>
-              {lensRays.map(({ lens, color, geometry }, index) => (
-                <div
-                  key={`photon-${lens.id}`}
-                  className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 animate-prism-ray-photon rounded-full"
-                  style={
-                    {
-                      backgroundColor: color.hex,
-                      boxShadow: `0 0 8px 2px ${color.glow}`,
-                      animationDelay: `${1.3 + index * 0.08}s`,
-                      "--ray-left": `${geometry.leftPct}%`,
-                      "--ray-top": `${geometry.topPct}%`,
-                    } as CSSProperties
-                  }
-                />
-              ))}
-              {lensRays.map(({ lens, color, geometry }, index) => (
-                <div
-                  key={`point-${lens.id}`}
-                  className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 animate-lens-point-pulse rounded-full"
-                  style={{
-                    left: `${geometry.leftPct}%`,
-                    top: `${geometry.topPct}%`,
-                    backgroundColor: color.hex,
-                    boxShadow: `0 0 10px 2px ${color.glow}`,
-                    animationDelay: `${index * 0.32}s`,
-                  }}
-                />
-              ))}
-            </div>
-
+            <PrismAnimation />
             <p className="mt-7 text-center font-mono text-[0.65rem] tracking-[0.24em] text-zinc-500 uppercase">
               Seven lenses on every question
             </p>
@@ -531,7 +355,10 @@ export default function PublicHomeView({
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 font-mono text-[0.68rem] font-semibold tracking-[0.2em] text-amber-200 uppercase">
-                    <Play className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+                    <Play
+                      className="h-3.5 w-3.5 fill-current"
+                      aria-hidden="true"
+                    />
                     First on YouTube
                   </span>
                   <span className="font-mono text-[0.68rem] tracking-[0.16em] text-zinc-400 uppercase">
@@ -620,7 +447,12 @@ export default function PublicHomeView({
             className="scroll-mt-24 pt-8"
             aria-label="Choose the next Prismarium YouTube series"
           >
-            {pollPanel ?? <VoteFallback status={launch.voteStatus} startingCourseTitle={pre.title} />}
+            {pollPanel ?? (
+              <VoteFallback
+                status={launch.voteStatus}
+                startingCourseTitle={pre.title}
+              />
+            )}
           </div>
         </div>
       </section>
@@ -656,8 +488,8 @@ export default function PublicHomeView({
               </p>
               <p>
                 So I began building that room. I gathered the texts, made the
-                tools, and shaped courses we can investigate together. I’m
-                still a learner here too.
+                tools, and shaped courses we can investigate together. I’m still
+                a learner here too.
               </p>
             </div>
             <p className="mt-8 border-l border-amber-300/30 pl-5 font-serif text-xl leading-8 text-zinc-200">

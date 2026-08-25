@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { highlightPlugin, RenderHighlightContentProps, RenderHighlightTargetProps, RenderHighlightsProps } from '@react-pdf-viewer/highlight';
@@ -54,6 +54,7 @@ interface PDFViewerProps {
   annotations?: Annotation[];
   onAnnotationClick?: (annotation: Annotation) => void;
   onTextClick?: (text: string) => void;
+  targetPage?: number | null;
 }
 
 export default function PDFViewer({
@@ -65,8 +66,11 @@ export default function PDFViewer({
   annotations = [],
   onAnnotationClick,
   onTextClick,
+  targetPage,
 }: PDFViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [documentLoaded, setDocumentLoaded] = useState(false);
+  const [documentPageCount, setDocumentPageCount] = useState<number | null>(null);
 
   // Convert annotations to highlight areas for rendering
   const convertToHighlightAreas = useCallback((): ExtendedHighlightArea[] => {
@@ -199,28 +203,41 @@ export default function PDFViewer({
   const { jumpToHighlightArea } = highlightPluginInstance;
 
   // Configure default layout plugin (toolbar with all features)
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [
-      defaultTabs[0], // Thumbnails
-      defaultTabs[1], // Bookmarks
-    ],
-    toolbarPlugin: {
-      fullScreenPlugin: {
-        onEnterFullScreen: (zoom) => {
-          zoom(1.5);
+  const defaultLayoutPluginInstance = useMemo(
+    () =>
+      defaultLayoutPlugin({
+        sidebarTabs: (defaultTabs) => [
+          defaultTabs[0], // Thumbnails
+          defaultTabs[1], // Bookmarks
+        ],
+        toolbarPlugin: {
+          fullScreenPlugin: {
+            onEnterFullScreen: (zoom) => {
+              zoom(1.5);
+            },
+          },
         },
-      },
-    },
-  });
+      }),
+    []
+  );
+  const { jumpToPage } =
+    defaultLayoutPluginInstance.toolbarPluginInstance.pageNavigationPluginInstance;
 
   const handleDocumentLoad = useCallback((e: any) => {
     const numPages = e.doc.numPages;
     console.log('[PDFViewer] Document loaded with', numPages, 'pages');
+    setDocumentPageCount(numPages);
+    setDocumentLoaded(true);
 
     if (onDocumentLoad) {
       onDocumentLoad(numPages);
     }
   }, [onDocumentLoad]);
+
+  useEffect(() => {
+    if (!documentLoaded || !targetPage || targetPage < 1) return;
+    jumpToPage(Math.min(targetPage, documentPageCount ?? targetPage) - 1);
+  }, [documentLoaded, documentPageCount, jumpToPage, targetPage]);
 
   const handlePageChange = useCallback((e: any) => {
     const newPage = e.currentPage + 1; // Convert from 0-indexed to 1-indexed
@@ -316,6 +333,7 @@ export default function PDFViewer({
         >
           <Viewer
             fileUrl={fileUrl}
+            initialPage={targetPage && targetPage > 0 ? targetPage - 1 : 0}
             plugins={[defaultLayoutPluginInstance, highlightPluginInstance]}
             onDocumentLoad={handleDocumentLoad}
             onPageChange={handlePageChange}

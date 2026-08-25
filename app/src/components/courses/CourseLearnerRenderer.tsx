@@ -52,6 +52,7 @@ import {
   type CourseBookDisplay,
   type CourseBookMetadata,
 } from "@/lib/courses/course-book-presentation";
+import { buildCourseReadingDeepLink } from "@/lib/library/reading-deep-link";
 import type {
   CompanionCard,
   CourseContent,
@@ -889,9 +890,11 @@ function ToolPracticeChooser({
 function CourseOverview({
   course,
   books,
+  expandCuratorNote = false,
 }: {
   course: LearnerRenderableCourse;
   books: ReturnType<typeof buildCourseBookDisplay>;
+  expandCuratorNote?: boolean;
 }) {
   const content = course.content;
   const outcomes = course.learning_outcomes ?? [];
@@ -918,7 +921,7 @@ function CourseOverview({
       icon: Target,
     },
     {
-      title: "Why I chose this path",
+      title: "Curator's note",
       body: content?.curator_note_public,
       icon: Feather,
     },
@@ -1026,6 +1029,9 @@ function CourseOverview({
                 key={item.title}
                 title={item.title}
                 icon={item.icon}
+                defaultOpen={
+                  expandCuratorNote && item.title === "Curator's note"
+                }
                 onExpand={() => setExpandedGuidanceIndex(index)}
               >
                 <Markdown>{item.body}</Markdown>
@@ -1176,9 +1182,11 @@ function SourceLink({ book }: { book: CourseBookDisplay }) {
 function ReadingCard({
   reading,
   book,
+  deepLinkCourseSlug,
 }: {
   reading: CourseReading;
   book?: CourseBookDisplay;
+  deepLinkCourseSlug?: string;
 }) {
   const [tier, setTier] = useState<keyof typeof TIER_LABELS>("keystone");
   const tierKeys = Object.keys(TIER_LABELS) as Array<keyof typeof TIER_LABELS>;
@@ -1189,6 +1197,14 @@ function ReadingCard({
   const tierData = activeTier ? reading.tiers[activeTier] : undefined;
   const verifiedAuthor = book?.author || reading.author || null;
   const location = readingLocation(reading.section, verifiedAuthor);
+  const assignedSelectionHref = deepLinkCourseSlug
+    ? buildCourseReadingDeepLink(book?.href, {
+      courseSlug: deepLinkCourseSlug,
+      location,
+      selection: tierData?.reference,
+      tier: activeTier,
+    })
+    : null;
   const tierExplanation =
     tierData?.description?.trim() ||
     reading.selection_rationale?.trim() ||
@@ -1302,6 +1318,16 @@ function ReadingCard({
                   <div className="mt-1 text-zinc-100">
                     <Markdown>{tierData.reference}</Markdown>
                   </div>
+                  {assignedSelectionHref ? (
+                    <Link
+                      href={assignedSelectionHref}
+                      data-course-reading-deep-link
+                      className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.08] px-3.5 py-2 text-sm font-semibold text-cyan-200 transition hover:border-cyan-200/35 hover:bg-cyan-300/[0.12] hover:text-cyan-100 focus-visible:ring-2 focus-visible:ring-cyan-200"
+                    >
+                      Open this selection
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  ) : null}
                 </div>
               </div>
               {tierExplanation ? (
@@ -1519,6 +1545,7 @@ function WeekView({
   week,
   books,
   courseSlug,
+  deepLinkCourseSlug,
   cases = [],
   workedExample,
   completionPathways = [],
@@ -1530,6 +1557,7 @@ function WeekView({
   week: CourseWeek;
   books: ReturnType<typeof buildCourseBookDisplay>;
   courseSlug?: string;
+  deepLinkCourseSlug?: string;
   cases?: LearnerMarkdownSection[];
   workedExample?: LearnerMarkdownSection;
   completionPathways?: CourseContent["completion_pathways"];
@@ -1721,6 +1749,7 @@ function WeekView({
                   renderItem={(reading, readingOrder) => (
                     <ReadingCard
                       reading={reading}
+                      deepLinkCourseSlug={deepLinkCourseSlug}
                       book={books.find((book) =>
                         book.weekAssignments.some(
                           (assignment) =>
@@ -1969,21 +1998,64 @@ function JourneyNavigation({
   );
 }
 
+function ContinuousPreviewWeek({
+  week,
+  books,
+  courseSlug,
+  deepLinkCourseSlug,
+  cases,
+  workedExample,
+  completionPathways,
+}: {
+  week: CourseWeek;
+  books: ReturnType<typeof buildCourseBookDisplay>;
+  courseSlug?: string;
+  deepLinkCourseSlug?: string;
+  cases: LearnerMarkdownSection[];
+  workedExample?: LearnerMarkdownSection;
+  completionPathways: CourseContent["completion_pathways"];
+}) {
+  const [stage, setStage] = useState<WeekStage>("start");
+
+  return (
+    <section
+      id={`week-${week.week_number}`}
+      className="scroll-mt-40 border-t border-white/10 pt-10"
+    >
+      <WeekView
+        week={week}
+        books={books}
+        courseSlug={courseSlug}
+        deepLinkCourseSlug={deepLinkCourseSlug}
+        cases={cases}
+        workedExample={workedExample}
+        completionPathways={completionPathways}
+        stage={stage}
+        onStageChange={setStage}
+      />
+    </section>
+  );
+}
+
 export function CourseLearnerRenderer({
   course,
   warnings = [],
   preview = false,
+  continuousPreview = false,
   bookMetadata = EMPTY_BOOK_METADATA,
   persistence: persistenceConfig,
+  deepLinkCourseSlug,
 }: {
   course: LearnerRenderableCourse;
   warnings?: string[];
   preview?: boolean;
+  continuousPreview?: boolean;
   bookMetadata?: readonly CourseBookMetadata[];
   persistence?: {
     courseSlug: string;
     journalName: string;
   };
+  deepLinkCourseSlug?: string;
 }) {
   const weeks = useMemo(
     () =>
@@ -2060,28 +2132,34 @@ export function CourseLearnerRenderer({
   const weekIndex = week
     ? weeks.findIndex((item) => item.week_number === week.week_number)
     : -1;
-  const taggedWeekSections = week
-    ? learnerSections.filter(
-        (section) => learnerCaseWeekNumber(section) === week.week_number
-      )
-    : [];
-  const taggedWorkedExample = taggedWeekSections.find((section) =>
-    /completed|worked example/i.test(section.heading)
-  );
-  const weekCases = hasWeekTaggedCases
-    ? taggedWeekSections.filter((section) => section !== taggedWorkedExample)
-    : week?.supplied_cases?.length
-      ? week.supplied_cases
-      : weekIndex === 0
-        ? untaggedCases.slice(0, 1)
-        : weekIndex > 0
-          ? untaggedCases.slice(1)
-          : [];
-  const weekWorkedExample = hasWeekTaggedCases
-    ? taggedWorkedExample
-    : weekIndex === weeks.length - 1
-      ? completedExamples[0] ?? untaggedWorkedExample
-      : undefined;
+  const materialsForWeek = (targetWeek: CourseWeek, targetWeekIndex: number) => {
+    const taggedSections = learnerSections.filter(
+      (section) => learnerCaseWeekNumber(section) === targetWeek.week_number
+    );
+    const taggedExample = taggedSections.find((section) =>
+      /completed|worked example/i.test(section.heading)
+    );
+    const cases = hasWeekTaggedCases
+      ? taggedSections.filter((section) => section !== taggedExample)
+      : targetWeek.supplied_cases?.length
+        ? targetWeek.supplied_cases
+        : targetWeekIndex === 0
+          ? untaggedCases.slice(0, 1)
+          : targetWeekIndex > 0
+            ? untaggedCases.slice(1)
+            : [];
+    const workedExample = hasWeekTaggedCases
+      ? taggedExample
+      : targetWeekIndex === weeks.length - 1
+        ? completedExamples[0] ?? untaggedWorkedExample
+        : undefined;
+    return { cases, workedExample };
+  };
+  const selectedWeekMaterials = week
+    ? materialsForWeek(week, weekIndex)
+    : { cases: [], workedExample: undefined };
+  const weekCases = selectedWeekMaterials.cases;
+  const weekWorkedExample = selectedWeekMaterials.workedExample;
   const select = (next: JourneySelection) => {
     setSelection(next);
     setWeekStage("start");
@@ -2096,6 +2174,82 @@ export function CourseLearnerRenderer({
     if (next) select(next.id);
   };
 
+  if (preview && continuousPreview) {
+    return (
+      <div className="min-h-dvh bg-[#09090b] text-zinc-200 selection:bg-amber-300/30">
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-zinc-950/95 backdrop-blur-xl">
+          <div className="border-b border-amber-300/15 bg-amber-300/[0.06] px-4 py-2 text-center font-mono text-[11px] tracking-[0.16em] text-amber-200 uppercase">
+            Continuous Parser Review — Not Imported
+          </div>
+          <div className="mx-auto max-w-[90rem] px-4 py-3 md:px-6">
+            <p className="truncate text-sm font-semibold text-white">
+              {course.title}
+            </p>
+            <nav
+              aria-label="Continuous parser review sections"
+              className="mt-2 flex gap-2 overflow-x-auto pb-1"
+            >
+              <a
+                href="#course-overview"
+                className="shrink-0 rounded-lg border border-amber-300/25 bg-amber-300/[0.08] px-3 py-2 text-xs font-medium text-amber-100 hover:bg-amber-300/[0.14]"
+              >
+                Welcome + curator&apos;s note
+              </a>
+              {weeks.map((reviewWeek) => (
+                <a
+                  key={reviewWeek.week_number}
+                  href={`#week-${reviewWeek.week_number}`}
+                  className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-white/20 hover:bg-white/5"
+                >
+                  Week {reviewWeek.week_number}
+                </a>
+              ))}
+            </nav>
+          </div>
+        </header>
+
+        <main className="relative z-10 mx-auto max-w-6xl space-y-14 px-4 py-8 md:px-8 md:py-12">
+          <section id="course-overview" className="scroll-mt-40">
+            <CourseOverview
+              course={course}
+              books={books}
+              expandCuratorNote
+            />
+          </section>
+
+          {weeks.map((reviewWeek, reviewWeekIndex) => {
+            const materials = materialsForWeek(reviewWeek, reviewWeekIndex);
+            return (
+              <ContinuousPreviewWeek
+                key={reviewWeek.week_number}
+                week={reviewWeek}
+                books={books}
+                courseSlug={course.content?.production_slug}
+                deepLinkCourseSlug={deepLinkCourseSlug}
+                cases={materials.cases}
+                workedExample={materials.workedExample}
+                completionPathways={
+                  reviewWeekIndex === weeks.length - 1
+                    ? (course.content?.completion_pathways ?? [])
+                    : []
+                }
+              />
+            );
+          })}
+
+          <details className="rounded-2xl border border-white/10 bg-black/20 p-5">
+            <summary className="cursor-pointer font-mono text-xs tracking-wider text-zinc-400 uppercase">
+              Parsed course JSON
+            </summary>
+            <pre className="mt-4 max-h-[70vh] overflow-auto text-xs text-emerald-300">
+              {JSON.stringify(course, null, 2)}
+            </pre>
+          </details>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-[#09090b] text-zinc-200 selection:bg-amber-300/30">
       <div
@@ -2109,7 +2263,7 @@ export function CourseLearnerRenderer({
       <header className="sticky top-0 z-40 border-b border-white/10 bg-zinc-950/90 backdrop-blur-xl">
         {preview ? (
           <div className="border-b border-amber-300/15 bg-amber-300/[0.06] px-4 py-2 text-center font-mono text-[11px] tracking-[0.16em] text-amber-200 uppercase">
-            Local Parser Preview — Not Imported
+            Local Parser Preview — Not Imported · Choose any section below
           </div>
         ) : null}
         <div className="mx-auto flex min-h-16 max-w-[90rem] items-center gap-3 px-4 md:px-6">
@@ -2129,6 +2283,27 @@ export function CourseLearnerRenderer({
               {currentStop?.eyebrow} · {currentStop?.label}
             </p>
           </div>
+          {preview ? (
+            <label className="hidden min-w-48 sm:block">
+              <span className="mb-1 block font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
+                Preview section
+              </span>
+              <select
+                value={String(selection)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  select(value === "overview" ? "overview" : Number(value));
+                }}
+                className="h-10 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 text-sm text-zinc-200 focus-visible:ring-2 focus-visible:ring-amber-300/70"
+              >
+                {stops.map((stop) => (
+                  <option key={String(stop.id)} value={String(stop.id)}>
+                    {stop.eyebrow} · {stop.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <div className="hidden w-40 sm:block">
             <div className="mb-1 flex justify-between font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
               <span>Journey</span>
@@ -2228,6 +2403,7 @@ export function CourseLearnerRenderer({
                 week={week}
                 books={books}
                 courseSlug={course.content?.production_slug}
+                deepLinkCourseSlug={deepLinkCourseSlug}
                 cases={weekCases}
                 workedExample={weekWorkedExample}
                 completionPathways={

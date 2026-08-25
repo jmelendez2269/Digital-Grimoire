@@ -359,3 +359,18 @@ test("enrollment API returns the approved PRE and taster explanation", () => {
     sourceName
   );
 });
+
+test("member mobile navigation links directly to the Study Journal", () => {
+  const header = readSource("src/components/Header.tsx");
+  const mobileNav = header.match(
+    /const memberMobileNav: NavItem\[\] = \[(.*?)\n\];/s
+  )?.[1];
+
+  assert.ok(mobileNav, "Header.tsx is missing the member mobile navigation");
+  assert.match(
+    normalizeWhitespace(mobileNav),
+    /name: "Study Journal", path: "\/journal"/
+  );
+  assert.doesNotMatch(mobileNav, /name: "Workbench"/);
+  assert.doesNotMatch(mobileNav, /path: "\/workbench"/);
+});

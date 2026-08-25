@@ -1116,7 +1116,7 @@ function parseV2CompletionPathways(section: string): CompletionPathway[] {
 
 function parseV2Week(heading: string, body: string): { week: CourseWeek; warnings: string[] } {
   const warnings: string[] = [];
-  const match = normalizeDashes(heading).match(/^WEEK\s+(\d+)\s*-\s*(.+)$/i);
+  const match = heading.match(/^WEEK\s+(\d+)\s*[—–-]\s*(.+)$/i);
   if (!match) throw new Error(`Invalid V2 week heading: ${heading}`);
   const weekNumber = Number(match[1]);
   const title = match[2].trim();

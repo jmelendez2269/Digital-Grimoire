@@ -67,8 +67,9 @@ Use **Confirm Import** to create the course record.
 
 Optional:
 
-- enable **Publish immediately** to make the course public on creation
-- leave it unchecked to save the course as a draft
+- enable **Publish immediately** to make a new course public on creation
+- leave it unchecked to save a new course as a draft
+- for an existing-course update, the current publication state is preserved regardless of this checkbox
 
 ### 5. Open the result
 
@@ -207,7 +208,7 @@ Example:
 
 ### Slug collision handling
 
-If a course with the same slug already exists, the import API returns a `409` conflict and the UI surfaces a slug conflict error instead of overwriting the existing record.
+If a course with the same slug already exists, the import API returns a `409` conflict instead of overwriting it automatically. The UI then offers an explicit **Update existing course instead** action. An update replaces course content and matched-reading links while preserving the existing course's publication state; publishing or unpublishing remains a separate decision.
 
 ### Warning behavior
 

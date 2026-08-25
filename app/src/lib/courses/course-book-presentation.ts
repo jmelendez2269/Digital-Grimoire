@@ -62,21 +62,25 @@ export function normalizeBookTitle(title: string): string {
 const KNOWN_TITLE_ALIASES: Record<string, string> = {
   // Edwin Arnold's verse translation of the Bhagavad Gita was published
   // under this title; the catalog holds no record titled "Bhagavad Gita".
-  "bhagavad gita": "song celestial or bhagavad gita from the mahabharata",
+  "bhagavad gita": "Song Celestial; Or, Bhagavad-Gita (from the Mahabharata)",
   // The catalog's 1650 Everard translation of the Corpus Hermeticum is
   // catalogued under its historical English title.
-  "poemandres corpus hermeticum i": "divine pymander",
+  "poemandres corpus hermeticum i": "The Divine Pymander",
   // Jung's early book-length study of symbols and libido transformation;
   // the syllabus intentionally left this generic pending a named edition.
-  "selected early work on symbols": "psychology of the unconscious",
+  "selected early work on symbols": "Psychology of the Unconscious",
   // These are individual myths/chapters selected from Berens's anthology,
   // not standalone catalog works.
-  "prometheus and demeter persephone": "myths and legends of ancient greece and rome",
-  perseus: "myths and legends of ancient greece and rome",
-  "perseus and medusa": "myths and legends of ancient greece and rome",
+  "prometheus and demeter persephone": "Myths and Legends of Ancient Greece and Rome",
+  perseus: "Myths and Legends of Ancient Greece and Rome",
+  "perseus and medusa": "Myths and Legends of Ancient Greece and Rome",
   // Selected from Bulfinch's anthology under its "Age of Fable" volume title.
-  "perseus and the gorgon": "bulfinch s mythology the age of fable",
+  "perseus and the gorgon": "Bulfinch's Mythology: The Age of Fable",
 };
+
+export function resolveKnownCourseBookTitleAlias(title: string): string | null {
+  return KNOWN_TITLE_ALIASES[normalizeBookTitle(title)] || null;
+}
 
 function readingKey(reading: Pick<CourseReading, "title">): string {
   return normalizeBookTitle(reading.title);
@@ -127,10 +131,10 @@ function findLenientMetadataMatch(
   key: string,
   metadata: readonly CourseBookMetadata[]
 ): CourseBookMetadata | undefined {
-  const aliasTarget = KNOWN_TITLE_ALIASES[key];
+  const aliasTarget = resolveKnownCourseBookTitleAlias(key);
   if (aliasTarget) {
     const aliasMatch = metadata.find(
-      (item) => normalizeBookTitle(item.title) === aliasTarget
+      (item) => normalizeBookTitle(item.title) === normalizeBookTitle(aliasTarget)
     );
     if (aliasMatch) return aliasMatch;
   }

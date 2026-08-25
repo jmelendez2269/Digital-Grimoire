@@ -45,6 +45,21 @@ interface ChapterViewerProps {
   externalChapterId?: string | null;
   onChapterChange?: (chapterId: string) => void;
   onParagraphClick?: (text: string) => void;
+  courseTarget?: {
+    id: string;
+    chapterId: string;
+    matchText: string;
+  } | null;
+}
+
+function normalizeCourseTargetText(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // Highlight color mapping
@@ -68,6 +83,7 @@ export default function ChapterViewer({
   externalChapterId,
   onChapterChange,
   onParagraphClick,
+  courseTarget,
 }: ChapterViewerProps) {
   const [activeChapterId, setActiveChapterId] = useState<string>(
     chapters[0]?.id || ''
@@ -236,6 +252,51 @@ export default function ChapterViewer({
     }
     return '';
   }, [format, activeChapter]);
+  const courseTargetId = courseTarget?.id ?? null;
+  const courseTargetChapterId = courseTarget?.chapterId ?? null;
+  const courseTargetMatchText = courseTarget?.matchText ?? null;
+
+  // Course links can point into a paragraph even when an imported essay has a
+  // single chapter. Match normalized rendered text so harmless punctuation or
+  // emphasis changes do not invalidate the editorial locator.
+  useEffect(() => {
+    if (
+      !courseTargetId ||
+      !courseTargetMatchText ||
+      courseTargetChapterId !== activeChapterId
+    ) {
+      return;
+    }
+
+    let matchedElement: HTMLElement | null = null;
+    const timeout = window.setTimeout(() => {
+      const normalizedMatch = normalizeCourseTargetText(courseTargetMatchText);
+      const candidates = contentRef.current?.querySelectorAll<HTMLElement>(
+        'h1, h2, h3, h4, h5, h6, p, li, blockquote'
+      );
+      matchedElement =
+        Array.from(candidates ?? []).find((element) =>
+          normalizeCourseTargetText(element.textContent ?? '').includes(
+            normalizedMatch
+          )
+        ) ?? null;
+
+      if (!matchedElement) return;
+      matchedElement.dataset.courseReadingTarget = 'true';
+      matchedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 150);
+
+    return () => {
+      window.clearTimeout(timeout);
+      if (matchedElement) delete matchedElement.dataset.courseReadingTarget;
+    };
+  }, [
+    activeChapterId,
+    courseTargetChapterId,
+    courseTargetId,
+    courseTargetMatchText,
+    sanitizedHtml,
+  ]);
 
   // Add click listeners to HTML content for read-aloud functionality
   useEffect(() => {
@@ -599,6 +660,16 @@ export default function ChapterViewer({
             
             .chapter-html-content p:last-child {
               margin-bottom: 0;
+            }
+
+            .chapter-html-content [data-course-reading-target='true'] {
+              margin-left: -0.75rem;
+              border-left: 3px solid rgba(34, 211, 238, 0.8);
+              border-radius: 0.5rem;
+              background: rgba(8, 145, 178, 0.13);
+              padding-left: 0.75rem;
+              scroll-margin-block: 7rem;
+              transition: background-color 180ms ease;
             }
             
             .chapter-html-content a {

@@ -407,6 +407,11 @@ function CourseLearnContent() {
                             ? { courseSlug: PRE_LEARNER_COURSE_SLUG, journalName }
                             : undefined
                     }
+                    deepLinkCourseSlug={
+                        slug === PRE_LEARNER_COURSE_SLUG
+                            ? PRE_LEARNER_COURSE_SLUG
+                            : undefined
+                    }
                 />
             </div>
         );

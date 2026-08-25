@@ -7,8 +7,24 @@ import {
   type PlatformTotals,
 } from "@/lib/platform/catalog";
 
+interface PlatformCountError {
+  code: string;
+  details: string;
+  hint: string;
+  message: string;
+}
+
+function warnAboutCountFailure(label: string, error: PlatformCountError) {
+  console.warn(`[platform totals] Failed to count ${label}:`, {
+    code: error.code,
+    details: error.details,
+    hint: error.hint,
+    message: error.message,
+  });
+}
+
 export async function getPlatformTotals(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient
 ): Promise<PlatformTotals> {
   const [booksResult, coursesResult] = await Promise.all([
     supabase
@@ -23,10 +39,10 @@ export async function getPlatformTotals(
   ]);
 
   if (booksResult.error) {
-    console.error("[platform totals] Failed to count Library books:", booksResult.error);
+    warnAboutCountFailure("Library books", booksResult.error);
   }
   if (coursesResult.error) {
-    console.error("[platform totals] Failed to count published courses:", coursesResult.error);
+    warnAboutCountFailure("published courses", coursesResult.error);
   }
 
   return {

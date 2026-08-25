@@ -1,4 +1,5 @@
 import type { createServiceClient } from '@/lib/supabase/service';
+import { resolveKnownCourseBookTitleAlias } from './course-book-presentation';
 
 interface CourseReadingLike {
   title?: string;
@@ -145,12 +146,14 @@ function buildTitleVariants(title: string, section?: string): string[] {
   const sectionTitle = getTitleCandidateFromSection(section);
   const strippedTitle = stripTrailingQualifier(title);
   const strippedSectionTitle = sectionTitle ? stripTrailingQualifier(sectionTitle) : null;
+  const knownAlias = resolveKnownCourseBookTitleAlias(title);
 
   return dedupeNonEmpty([
     title,
     strippedTitle,
     stripLeadingArticle(title),
     stripLeadingArticle(strippedTitle),
+    knownAlias,
     sectionTitle,
     strippedSectionTitle,
     strippedSectionTitle ? stripLeadingArticle(strippedSectionTitle) : null,

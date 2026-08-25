@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { parseCourseMarkdown } from '@/lib/parsers/course-markdown-parser';
 import { matchCourseTextsFromContent } from '@/lib/courses/match-course-texts';
+import { resolveCourseImportPublicationState } from '@/lib/courses/course-import-publication';
 
 export const maxDuration = 60;
 
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     if (updateExistingId) {
       const { data: target } = await serviceSupabase
         .from('courses')
-        .select('id, slug')
+        .select('id, slug, is_published')
         .eq('id', updateExistingId)
         .maybeSingle();
 
@@ -94,7 +95,10 @@ export async function POST(request: NextRequest) {
           level: course.level,
           duration_weeks: course.duration_weeks,
           content: course.content,
-          is_published: publishImmediately,
+          is_published: resolveCourseImportPublicationState({
+            existingPublished: target.is_published,
+            publishImmediately,
+          }),
         })
         .eq('id', updateExistingId)
         .select('id, slug, title')
@@ -142,7 +146,7 @@ export async function POST(request: NextRequest) {
         weekCount: course.content.weeks.length,
         readingCount: course.content.weeks.reduce((acc, week) => acc + week.readings.length, 0),
         matchedTextCount: matchedCourseTexts.length,
-        isPublished: publishImmediately,
+        isPublished: target.is_published,
         warnings,
       });
     }
@@ -181,7 +185,7 @@ export async function POST(request: NextRequest) {
         level: course.level,
         duration_weeks: course.duration_weeks,
         content: course.content,
-        is_published: publishImmediately,
+        is_published: resolveCourseImportPublicationState({ publishImmediately }),
         sort_order: nextSortOrder,
       })
       .select('id, slug, title')

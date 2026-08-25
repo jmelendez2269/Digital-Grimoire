@@ -5,7 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRouter, usePathname } from "next/navigation";
-import { Network, Sparkles } from "lucide-react";
+import {
+  BookMarked,
+  BookOpen,
+  GraduationCap,
+  MessageCircle,
+  Network,
+  NotebookPen,
+  Sparkles,
+} from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -126,27 +134,38 @@ const memberPrimaryNav: NavItem[] = [
 ];
 
 const memberMobileNav: NavItem[] = [
-  { name: "Library", path: "/library", icon: "📚" },
-  { name: "Courses", path: "/courses", icon: "🎓" },
+  {
+    name: "Library",
+    path: "/library",
+    icon: <BookOpen className="h-5 w-5" aria-hidden="true" />,
+  },
+  {
+    name: "Courses",
+    path: "/courses",
+    icon: <GraduationCap className="h-5 w-5" aria-hidden="true" />,
+  },
   {
     name: "Tools",
     path: "/explore",
-    icon: "🕸️",
+    icon: <Network className="h-5 w-5" aria-hidden="true" />,
     matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
   },
   {
-    name: "Workbench",
-    path: "/workbench",
-    icon: "✨",
-    matchPaths: ["/workbench", "/journal"],
+    name: "Study Journal",
+    path: "/journal",
+    icon: <NotebookPen className="h-5 w-5" aria-hidden="true" />,
   },
   {
     name: "Community",
     path: "/community/forum",
-    icon: "💬",
-    matchPaths: ["/community"],
+    icon: <MessageCircle className="h-5 w-5" aria-hidden="true" />,
+    matchPaths: ["/community", "/blog"],
   },
-  { name: "Wiki", path: "/wiki", icon: "📖" },
+  {
+    name: "Wiki",
+    path: "/wiki",
+    icon: <BookMarked className="h-5 w-5" aria-hidden="true" />,
+  },
 ];
 
 function Header({ librarySearch }: HeaderProps = {}) {
@@ -322,8 +341,10 @@ function Header({ librarySearch }: HeaderProps = {}) {
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-full border border-white/10 bg-black/30 p-2 text-zinc-400 hover:text-cyan-400 focus:outline-none"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/30 text-zinc-400 transition-colors hover:text-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               aria-label="Toggle mobile menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
               {mobileMenuOpen ? (
                 <svg
@@ -497,7 +518,10 @@ function Header({ librarySearch }: HeaderProps = {}) {
         </div>
 
         {mobileMenuOpen && (
-          <div className="absolute top-full right-0 left-0 z-50 mx-4 mt-2 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
+          <div
+            id="mobile-navigation"
+            className="absolute top-full right-0 left-0 z-50 mx-4 mt-2 flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-xl md:hidden"
+          >
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5"></div>
 
             {user ? (
@@ -534,13 +558,14 @@ function Header({ librarySearch }: HeaderProps = {}) {
                       href={item.path}
                       prefetch={false}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex flex-col items-center justify-center gap-1 rounded-lg p-3 text-center ${
+                      aria-current={isActive(item) ? "page" : undefined}
+                      className={`flex min-h-16 flex-col items-center justify-center gap-2 rounded-lg p-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                         isActive(item)
                           ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
                           : "border border-white/5 bg-black/30 text-zinc-300 hover:bg-white/5"
                       }`}
                     >
-                      <span className="text-xl">{item.icon}</span>
+                      <span className="flex h-5 items-center justify-center">{item.icon}</span>
                       <span className="text-xs font-semibold">{item.name}</span>
                     </Link>
                   ))}

@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 const PREVIEW_SOURCES = {
   pre: "pre-how-to-hold-two-things-at-once-hybrid-review-draft.md",
   c01: "courses/c01-how-humans-know-what-they-know-revision-draft.md",
-  fd01: "courses/fd01-recreation-draft.md",
+  fd01: "courses/fd01-accessible-language-review-draft.md",
 } as const;
 
 type PreviewSourceKey = keyof typeof PREVIEW_SOURCES;
@@ -114,6 +114,7 @@ export default async function LocalCourseParserPreviewPage({
       warnings={result.warnings}
       bookMetadata={bookMetadata}
       preview
+      continuousPreview
     />
   );
 }

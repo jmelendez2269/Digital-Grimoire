@@ -44,6 +44,7 @@ export default function ImportCoursePage() {
     weekCount: number;
     readingCount: number;
     updated: boolean;
+    isPublished: boolean;
   } | null>(null);
   const [slugConflict, setSlugConflict] = useState<{
     existingId: string;
@@ -118,6 +119,7 @@ export default function ImportCoursePage() {
         weekCount: data.weekCount,
         readingCount: data.readingCount,
         updated: Boolean(data.updated),
+        isPublished: Boolean(data.isPublished),
       });
       setStatus('success');
     } catch (err) {
@@ -171,7 +173,7 @@ export default function ImportCoursePage() {
                     <div><span className="text-zinc-500">Slug:</span> {importedCourse.slug}</div>
                     <div><span className="text-zinc-500">Weeks:</span> {importedCourse.weekCount}</div>
                     <div><span className="text-zinc-500">Readings:</span> {importedCourse.readingCount}</div>
-                    <div><span className="text-zinc-500">Published:</span> {publishImmediately ? 'Yes' : 'Draft'}</div>
+                    <div><span className="text-zinc-500">Published:</span> {importedCourse.isPublished ? 'Yes' : 'Draft'}</div>
                   </div>
                   <div className="flex gap-3">
                     <Link
@@ -206,13 +208,18 @@ export default function ImportCoursePage() {
                 <div className="flex-1">
                   <p className="text-sm text-red-300">{error}</p>
                   {slugConflict && (
-                    <button
-                      onClick={() => handleImport(slugConflict.existingId)}
-                      className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20"
-                    >
-                      <BookMarked className="h-4 w-4" />
-                      Update existing course instead
-                    </button>
+                    <div className="mt-3">
+                      <p className="mb-2 text-xs text-red-200/80">
+                        Updating replaces the course content and matched readings while preserving its current publication state.
+                      </p>
+                      <button
+                        onClick={() => handleImport(slugConflict.existingId)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/20"
+                      >
+                        <BookMarked className="h-4 w-4" />
+                        Update existing course instead
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -431,7 +438,9 @@ export default function ImportCoursePage() {
                         />
                         <div>
                           <span className="text-sm text-zinc-300">Publish immediately</span>
-                          <span className="block text-xs text-zinc-500">Otherwise saved as draft</span>
+                          <span className="block text-xs text-zinc-500">
+                            Applies to new courses; existing-course updates preserve their current publication state
+                          </span>
                         </div>
                       </label>
 
