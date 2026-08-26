@@ -1568,17 +1568,23 @@ function WeekView({
 }) {
   const studioSections = (week.sections ?? []).filter((section) => {
     const heading = section.heading.toLowerCase();
+    const isFriendlyReading = /^(?:source encounter(?:\s+\d+)?|library encounter(?:\s+\d+)?|new source encounter|direct care-ethics encounter|library return|historical companion|visual encounter(?:\s+\d+)?|visual companion|case file)\s*[—–-]/i.test(
+      section.heading
+    );
     return (
       !heading.startsWith("plain-language doorway") &&
       !heading.startsWith("why this week matters") &&
+      !heading.startsWith("doorway") &&
       !heading.startsWith("core question") &&
+      !heading.startsWith("live question") &&
       !heading.startsWith("capstone purpose") &&
       !heading.startsWith("key tension") &&
       !heading.startsWith("readings") &&
+      !isFriendlyReading &&
       !heading.startsWith("return readings") &&
       !heading.startsWith("supplied case") &&
       !heading.includes("companion") &&
-      !heading.startsWith("synthesis prompt") &&
+      !heading.startsWith("synthesis") &&
       !heading.startsWith("final reflection") &&
       !heading.startsWith("completion pathways")
     );

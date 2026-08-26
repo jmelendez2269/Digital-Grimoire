@@ -19,6 +19,35 @@ const fd01Draft = readFileSync(
   'C:/Projects/Parallax_mission_control/docs/courses/fd01-recreation-draft.md',
   'utf8'
 );
+const friendlyRecreationDrafts = [
+  {
+    code: 'C04',
+    markdown: readFileSync(
+      'C:/Projects/Parallax_mission_control/docs/courses/c04-recreation-draft.md',
+      'utf8'
+    ),
+    readings: [2, 2, 2, 1, 2, 1, 1, 0],
+    pathways: ['C05', 'FD03', 'C17'],
+  },
+  {
+    code: 'C05',
+    markdown: readFileSync(
+      'C:/Projects/Parallax_mission_control/docs/courses/c05-recreation-draft.md',
+      'utf8'
+    ),
+    readings: [2, 1, 2, 3, 2, 2, 3, 0],
+    pathways: ['C06', 'C12', 'C14', 'C15'],
+  },
+  {
+    code: 'C14',
+    markdown: readFileSync(
+      'C:/Projects/Parallax_mission_control/docs/courses/c14-recreation-draft.md',
+      'utf8'
+    ),
+    readings: [2, 2, 2, 2, 2, 2, 2, 0],
+    pathways: ['C15', 'C16'],
+  },
+];
 const liveCourses = JSON.parse(readFileSync(new URL('scripts/courses.json', repoRoot), 'utf8')) as Array<{
   id: string;
   slug: string;
@@ -125,7 +154,10 @@ test('revised C01 retains its complete learner-facing structure', () => {
     label: 'Certainty and confidence',
     description: 'Does knowing require complete certainty? How can our confidence reflect the support we have?',
   });
-  assert.equal(result.course.content.completion_pathways.length, 7);
+  assert.deepEqual(
+    result.course.content.completion_pathways.map((pathway) => pathway.code),
+    ['FD01', 'C02', 'C03', 'C04', 'C05']
+  );
   assert.equal(result.course.content.learner_case_deck?.length, 8);
   assert.deepEqual(
     result.course.content.weeks.map((week) => week.readings.length),
@@ -292,6 +324,34 @@ test('FD01 V2 round trip preserves readings, companions, cases, returns, materia
     second.course.content.completed_examples,
     first.course.content.completed_examples
   );
+});
+
+test('friendly recreation headings remain parser-valid without losing learner structure', () => {
+  for (const draft of friendlyRecreationDrafts) {
+    const result = parseCourseMarkdown(draft.markdown);
+    assert.equal(result.success, true, draft.code);
+    if (!result.success) continue;
+
+    assert.equal(result.course.content.course_id_tag, draft.code);
+    assert.equal(result.course.content.curator_note_public, 'Coming soon.');
+    assert.equal(result.course.content.weeks.length, 8);
+    assert.deepEqual(
+      result.course.content.weeks.map((week) => week.readings.length),
+      draft.readings
+    );
+    assert.deepEqual(
+      result.course.content.completion_pathways.map((pathway) => pathway.code),
+      draft.pathways
+    );
+    assert.ok(result.course.content.weeks.every((week) => Boolean(week.doorway)));
+    assert.ok(result.course.content.weeks.every((week) => Boolean(week.core_question)));
+    assert.ok(
+      result.course.content.weeks
+        .slice(0, 7)
+        .every((week) => Boolean(week.synthesis_prompt?.prompt))
+    );
+    assert.deepEqual(result.warnings, []);
+  }
 });
 
 function minimalV2Course(courseId: string): string {

@@ -917,7 +917,7 @@ function parseV2TierBullets(body: string): {
   trailingNote: string;
 } {
   const tiers: Partial<Record<'keystone' | 'passage' | 'full', ReadingTier>> = {};
-  const regex = /^[-*]\s+\*\*(Keystone|Passage|Full\s+Text):\*\*\s*(.+)$/gim;
+  const regex = /^[-*]\s+\*\*(Keystone|Passage|Full\s+(?:Text|Encounter)):\*\*\s*(.+)$/gim;
   let match: RegExpExecArray | null;
   let lastMatchEnd = -1;
 
@@ -1003,6 +1003,20 @@ function isCompanionHeading(heading: string): boolean {
   );
 }
 
+function friendlyReadingHeading(heading: string): string | null {
+  const normalized = normalizeDashes(heading);
+  const match = normalized.match(
+    /^(?:SOURCE ENCOUNTER(?:\s+\d+)?|LIBRARY ENCOUNTER(?:\s+\d+)?|NEW SOURCE ENCOUNTER|DIRECT CARE-ETHICS ENCOUNTER|LIBRARY RETURN|HISTORICAL COMPANION|VISUAL ENCOUNTER(?:\s+\d+)?|VISUAL COMPANION|CASE FILE)\s*-\s*(.+)$/i
+  );
+  if (!match) return null;
+
+  const remainder = match[1].trim();
+  const authorAndWork = remainder.match(/^([^,]+),\s+(\*[^*]+\*.*)$/);
+  return authorAndWork
+    ? `${authorAndWork[1].trim()} - ${authorAndWork[2].trim()}`
+    : remainder;
+}
+
 function parseCompanionCard(
   heading: string,
   body: string,
@@ -1018,8 +1032,13 @@ function parseCompanionCard(
   const deeper = get('Go Deeper');
   const link = markdownLink(deeper);
   const date = source.match(/\b(?:18|19|20)\d{2}\b/)?.[0];
+  const retainedSections = sections.length
+    ? sections
+    : body.trim()
+      ? [{ heading: 'Companion note', markdown: body.trim() }]
+      : [];
   return {
-    title: normalizeDashes(heading).replace(/^(MODERN|TRADITION-CONNECTED)\s+COMPANION\s*-\s*/i, '').trim(),
+    title: normalizeDashes(heading).replace(/^(?:(MODERN|TRADITION-CONNECTED)\s+)?COMPANION(?:\s+CARD)?\s*-\s*/i, '').trim(),
     companion_type: /^MODERN/i.test(heading)
       ? 'modern'
       : /^TRADITION-CONNECTED/i.test(heading)
@@ -1033,7 +1052,7 @@ function parseCompanionCard(
     argues_or_found: get('What it argues or found', 'What it argues'),
     does_not_settle: get('What it does not settle'),
     supplied_example: get('Try one supplied example', 'Supplied example'),
-    sections,
+    sections: retainedSections,
   };
 }
 
@@ -1126,7 +1145,12 @@ function parseV2Week(heading: string, body: string): { week: CourseWeek; warning
   const find = (...names: string[]) =>
     sections.find((section) => names.some((name) => section.heading.toLowerCase().startsWith(name.toLowerCase())));
   const readingSection = find('READINGS');
-  const readingBlocks = readingSection ? splitHeadingBlocks(readingSection.body, 3) : [];
+  const readingBlocks = readingSection
+    ? splitHeadingBlocks(readingSection.body, 3)
+    : sections.flatMap((section) => {
+        const heading = friendlyReadingHeading(section.heading);
+        return heading ? [{ heading, body: section.body }] : [];
+      });
   const readings = readingBlocks
     .filter((block) => !isCompanionHeading(block.heading))
     .map((block, index) => parseV2Reading(block, index + 1));
@@ -1140,17 +1164,17 @@ function parseV2Week(heading: string, body: string): { week: CourseWeek; warning
       .map((section) => parseCompanionCard(section.heading, section.body)),
   ];
   const getMeta = (label: string) => fieldFromBoldLines(intro, label);
-  const coreQuestionSection = find('CORE QUESTION');
+  const coreQuestionSection = find('CORE QUESTION', 'LIVE QUESTION');
   const keyTensionSection = find('KEY TENSION');
-  const doorwaySection = find('PLAIN-LANGUAGE DOORWAY', 'WHY THIS WEEK MATTERS', 'CAPSTONE PURPOSE');
+  const doorwaySection = find('PLAIN-LANGUAGE DOORWAY', 'WHY THIS WEEK MATTERS', 'CAPSTONE PURPOSE', 'DOORWAY');
   const suppliedCasesSection = find('SUPPLIED CASE DECK', 'SUPPLIED CASES');
   const returnReadingsSection = find('RETURN READINGS');
   const capstoneSection = find('CAPSTONE');
   const finalReflection = find('FINAL REFLECTION');
-  const encounter = find('CENTRAL LENS EXERCISE', 'CENTRAL ENCOUNTER', 'CENTRAL EXERCISE');
-  const practices = find('PRISMARIUM PRACTICE', 'FEATURE EXERCISES', 'OPTIONAL PRODUCT PRACTICE');
-  const synthesis = find('SYNTHESIS PROMPT');
-  const microArtifact = find('MICRO-ARTIFACT', 'CONVERGENCE MICRO-ARTIFACT');
+  const encounter = find('CENTRAL LENS EXERCISE', 'CENTRAL ENCOUNTER', 'CENTRAL EXERCISE', 'MAKE');
+  const practices = find('PRISMARIUM PRACTICE', 'FEATURE EXERCISES', 'OPTIONAL PRODUCT PRACTICE', 'OPTIONAL PRISMARIUM PRACTICE');
+  const synthesis = find('SYNTHESIS PROMPT', 'SYNTHESIS');
+  const microArtifact = find('MICRO-ARTIFACT', 'CONVERGENCE MICRO-ARTIFACT', 'MAP PANEL', 'ATLAS PAGE', 'COMPASS PAGE');
   const weekType = /capstone/i.test(getMeta('Week type')) || Boolean(capstoneSection)
     ? 'capstone'
     : 'standard';
@@ -1158,7 +1182,7 @@ function parseV2Week(heading: string, body: string): { week: CourseWeek; warning
     week_number: weekNumber,
     title,
     week_type: weekType,
-    core_question: getMeta('Core question') || coreQuestionSection?.body || '',
+    core_question: getMeta('Core question') || stripBold(coreQuestionSection?.body || ''),
     key_tension:
       getMeta('Key tension')
       || stripBold(keyTensionSection?.body.split('\n').find((line) => line.trim()) || ''),
@@ -1168,7 +1192,7 @@ function parseV2Week(heading: string, body: string): { week: CourseWeek; warning
     companion_cards: companions,
     sections: rawSections,
   };
-  const knownWeekHeading = /^(CORE QUESTION|KEY TENSION|WHY THIS WEEK MATTERS|PLAIN-LANGUAGE DOORWAY|READINGS|RETURN READINGS|SUPPLIED CASE(?: DECK|S)?|(?:MODERN|TRADITION-CONNECTED)?\s*COMPANION|CENTRAL (?:LENS )?EXERCISE|CENTRAL ENCOUNTER|PRISMARIUM PRACTICE|OPTIONAL PRODUCT PRACTICE|FEATURE EXERCISES|SYNTHESIS PROMPT|MICRO-ARTIFACT|CONVERGENCE MICRO-ARTIFACT|MAP PANEL|CAPSTONE|PART \d+|FINAL REFLECTION|COMPLETION PATHWAYS)/i;
+  const knownWeekHeading = /^(CORE QUESTION|LIVE QUESTION|KEY TENSION|DOORWAY|WHY THIS WEEK MATTERS|PLAIN-LANGUAGE DOORWAY|READINGS|RETURN READINGS|SUPPLIED CASE(?: DECK|S)?|SUPPLIED PRACTICE|(?:MODERN|TRADITION-CONNECTED)?\s*COMPANION|SOURCE ENCOUNTER|LIBRARY ENCOUNTER|NEW SOURCE ENCOUNTER|DIRECT CARE-ETHICS ENCOUNTER|LIBRARY RETURN|HISTORICAL COMPANION|VISUAL ENCOUNTER|VISUAL COMPANION|CASE FILE|ORIGIN CARD|DIAGNOSIS CARD|CENTRAL (?:LENS )?EXERCISE|CENTRAL ENCOUNTER|MAKE|PRISMARIUM PRACTICE|OPTIONAL PRISMARIUM PRACTICE|OPTIONAL PRODUCT PRACTICE|FEATURE EXERCISES|SYNTHESIS(?: PROMPT)?|MICRO-ARTIFACT|CONVERGENCE MICRO-ARTIFACT|MAP PANEL|ATLAS PAGE|COMPASS PAGE|COMPASS TEST|CAPSTONE|PART \d+|FINAL REFLECTION|COMPLETION PATHWAYS)/i;
   for (const section of sections) {
     if (!knownWeekHeading.test(section.heading)) {
       warnings.push(`Week ${weekNumber}: unrecognized heading "## ${section.heading}" is retained in week.sections and shown in preview`);
@@ -1212,6 +1236,7 @@ function parseV2Week(heading: string, body: string): { week: CourseWeek; warning
     }
   }
   for (const card of companions) {
+    if (card.sections.some((section) => section.heading === 'Companion note')) continue;
     const missing = [
       ['Meet the source', card.meet_the_source],
       ['The idea in plain language', card.idea_plain_language],
@@ -1298,8 +1323,12 @@ function parseCourseMarkdownV2(markdown: string): ParseResult {
     'the five distinctions we will keep making',
     'reading guidance', 'source/context notes',
   ]);
+  const knownFriendlyCourseHeading = /^(?:A FIRST ANSWER:|THE SIX LAYERS WE WILL KEEP VISIBLE|SIX WAYS A MAP CAN DIFFER FROM ITS TERRITORY|WHAT DOES .*WITHOUT ABSOLUTES.* MEAN HERE\?|THE SIX QUESTIONS OF A WORKING COMPASS|WHAT THIS COURSE WILL NOT ASK YOU TO DO|CHOOSE YOUR READING DEPTH|BUILD ONE (?:MAP|ATLAS|COMPASS),)/i;
   for (const section of sections) {
-    if (!knownCourseHeadings.has(section.heading.toLowerCase())) {
+    if (
+      !knownCourseHeadings.has(section.heading.toLowerCase())
+      && !knownFriendlyCourseHeading.test(section.heading)
+    ) {
       warnings.push(`Unrecognized course heading "## ${section.heading}" is retained in content.sections and shown in preview`);
     }
   }
