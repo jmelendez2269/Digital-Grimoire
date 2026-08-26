@@ -27,7 +27,7 @@ const friendlyRecreationDrafts = [
       'utf8'
     ),
     readings: [2, 2, 2, 1, 2, 1, 1, 0],
-    pathways: ['C05', 'FD03', 'C17'],
+    pathways: ['FD03', 'C05', 'C17'],
   },
   {
     code: 'C05',
