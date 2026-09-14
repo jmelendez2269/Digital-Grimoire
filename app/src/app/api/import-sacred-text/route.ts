@@ -51,6 +51,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // Curator ingestion tool (admin/import-sacred-text) — require the admin
+    // role for the whole import, AI-assisted or not, now that the
+    // commercial gate no longer blocks every authenticated caller.
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
     // Parse request body
     const body: ImportRequestBody = await request.json();
     const { url, format = 'html', useAI = true, metadata: manualMetadata } = body;

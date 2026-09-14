@@ -4,6 +4,7 @@ import { logApiUsage } from '@/lib/usage-tracker';
 import { aiOrchestrator } from '@/lib/ai/ai-orchestrator';
 import { getDefaultOpenRouterModel } from '@/lib/ai/openrouter-client';
 import { guardCommercialAction } from '@/lib/commercial-availability';
+import { checkAndRecordRateLimit } from '@/lib/api-rate-limit.server';
 
 /**
  * POST /api/ai/claude
@@ -26,6 +27,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    const rateLimit = await checkAndRecordRateLimit(user.id, 'claude_proxy', {
+      limit: 30,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Try again later.', resetAt: rateLimit.resetAt },
+        { status: 429 }
       );
     }
 

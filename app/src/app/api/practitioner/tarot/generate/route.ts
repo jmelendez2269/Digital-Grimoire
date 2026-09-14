@@ -3,6 +3,7 @@ import { OpenAI } from 'openai';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { guardCommercialAction } from '@/lib/commercial-availability';
+import { checkAndRecordRateLimit } from '@/lib/api-rate-limit.server';
 
 export const maxDuration = 60; // Allow 60 seconds for image generation
 
@@ -20,6 +21,19 @@ export async function POST(req: Request) {
 
         if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // DALL-E 3 image generation has a real per-call cost, so cap it
+        // per user rather than leaving it uncapped now that the action is open.
+        const rateLimit = await checkAndRecordRateLimit(user.id, 'tarot_image_generation', {
+            limit: 8,
+            windowMs: 24 * 60 * 60 * 1000,
+        });
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'Daily card generation limit reached. Try again tomorrow.', resetAt: rateLimit.resetAt },
+                { status: 429 }
+            );
         }
 
         const { cardName, prompt, meaning } = await req.json();

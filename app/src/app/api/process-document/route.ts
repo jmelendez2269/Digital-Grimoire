@@ -85,6 +85,30 @@ export async function POST(request: NextRequest) {
   const unavailable = guardCommercialAction('document_processing');
   if (unavailable) return unavailable;
 
+  // This route had no authentication at all — the commercial gate was the
+  // only thing stopping any caller from running OCR/AI extraction and
+  // writing new library entries. Require the admin role (this is a curator
+  // ingestion tool, driven from admin/upload) now that the gate is open.
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'admin') {
+    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  }
+
   // Keep provider client construction behind the default-closed guard.
   const s3Client = getR2Client();
 
@@ -101,7 +125,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { key, userId, skipOCR } = body;
+  const { key, skipOCR } = body;
+  // Trust the authenticated session for attribution, not a client-supplied
+  // userId field (the request body is caller-controlled).
+  const userId = user.id;
 
   if (!key) {
     return NextResponse.json(

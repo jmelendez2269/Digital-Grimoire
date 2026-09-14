@@ -26,6 +26,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Curator ingestion tool (admin/upload) — require the admin role now
+    // that the commercial gate no longer blocks every authenticated caller.
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { chapters, documentTitle } = body;
     

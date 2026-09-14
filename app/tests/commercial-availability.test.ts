@@ -85,21 +85,25 @@ test("only exact action tokens enable a contained path", () => {
   );
 });
 
-test("unmetered generation actions cannot be reopened by configuration", () => {
+test("every commercial action is configurable now its authorization/rate-limit gap is closed", () => {
+  // As of the 2026-09-14 packet, every remaining action either already had
+  // its own metering (checkout, working_generation, seven_lenses_*) or was
+  // given one: admin-role checks on the curator ingestion routes, per-user
+  // rate limits on the customer-reachable AI proxies and Tarot generation.
+  // HARD_CLOSED_GENERATION_ACTIONS stays as the mechanism for the *next*
+  // action that ships without its own guard, not as a permanent list.
+  assert.deepEqual(HARD_CLOSED_GENERATION_ACTIONS, []);
   assert.deepEqual(
-    new Set([
-      ...CONFIGURABLE_COMMERCIAL_ACTIONS,
-      ...HARD_CLOSED_GENERATION_ACTIONS,
-    ]),
+    new Set(CONFIGURABLE_COMMERCIAL_ACTIONS),
     new Set(COMMERCIAL_ACTIONS),
   );
 
-  for (const action of HARD_CLOSED_GENERATION_ACTIONS) {
+  for (const action of COMMERCIAL_ACTIONS) {
     assert.equal(
       isCommercialActionEnabled(action, {
         [ENABLED_COMMERCIAL_ACTIONS_ENV]: action,
       }),
-      false,
+      true,
       action,
     );
   }
@@ -142,11 +146,19 @@ test("disabled guards return one opaque, non-cacheable 503 response", async () =
     null,
   );
 
-  const hardClosed = guardCommercialAction("deep_search_generation", {
-    [ENABLED_COMMERCIAL_ACTIONS_ENV]: "deep_search_generation",
-  });
-  assert.ok(hardClosed);
-  assert.equal(hardClosed.status, 503);
+  assert.equal(
+    guardCommercialAction("deep_search_generation", {
+      [ENABLED_COMMERCIAL_ACTIONS_ENV]: "deep_search_generation",
+    }),
+    null,
+  );
+
+  assert.equal(
+    guardCommercialAction("gpt_proxy", {
+      [ENABLED_COMMERCIAL_ACTIONS_ENV]: "gpt_proxy",
+    }),
+    null,
+  );
 
   assert.ok(
     guardCheckoutOffer("price_unknown000", {
@@ -228,6 +240,34 @@ test("curator-only generation routes prove admin authority before prompts or pro
       "src/app/api/documents/rescan-all-metadata/route.ts",
       ["request.json()", "getR2Client()", "extractMetadata("],
     ],
+    // Added 2026-09-14: these ingestion routes were only stopped from being
+    // called by any authenticated (or, for the R2 ones, unauthenticated)
+    // caller by the commercial gate. Reopening the gate without an admin
+    // check would have left them open to every member.
+    [
+      "src/app/api/covers/generate/route.ts",
+      ["request.json()", "generateWithReplicate("],
+    ],
+    [
+      "src/app/api/chapters/generate-names/route.ts",
+      ["request.json()", "getOpenRouterClient()"],
+    ],
+    [
+      "src/app/api/metadata/extract/route.ts",
+      ["request.json()", "getOpenRouterClient()"],
+    ],
+    [
+      "src/app/api/process-document/route.ts",
+      ["getR2Client()", "extractMetadata("],
+    ],
+    [
+      "src/app/api/process-media/route.ts",
+      ["getR2Client()", "generateTranscript("],
+    ],
+    [
+      "src/app/api/import-sacred-text/route.ts",
+      ["parseWebText(", "extractMetadata("],
+    ],
   ];
 
   for (const [path, markers] of adminRoutes) {
@@ -238,6 +278,51 @@ test("curator-only generation routes prove admin authority before prompts or pro
       const markerIndex = handler.indexOf(marker);
       assert.notEqual(markerIndex, -1, `${path} must contain ${marker}`);
       assert.ok(adminCheck < markerIndex, `${path} must authorize before ${marker}`);
+    }
+  }
+});
+
+test("customer-reachable unmetered AI generation routes rate-limit before the provider call", () => {
+  const rateLimitedRoutes: Array<[string, string, string[]]> = [
+    [
+      "src/app/api/ai/gpt/route.ts",
+      "'gpt_proxy'",
+      ["aiOrchestrator.chatComplete("],
+    ],
+    [
+      "src/app/api/ai/claude/route.ts",
+      "'claude_proxy'",
+      ["aiOrchestrator.chatComplete("],
+    ],
+    [
+      "src/app/api/ai/gemini/route.ts",
+      "'gemini_proxy'",
+      ["aiOrchestrator.chatComplete("],
+    ],
+    [
+      "src/app/api/practitioner/tarot/generate/route.ts",
+      "'tarot_image_generation'",
+      ["openai.images.generate("],
+    ],
+  ];
+
+  for (const [path, action, markers] of rateLimitedRoutes) {
+    const handler = postHandlerSource(path);
+    const rateLimitCall = handler.indexOf(
+      `checkAndRecordRateLimit(user.id, ${action}`,
+    );
+    assert.notEqual(
+      rateLimitCall,
+      -1,
+      `${path} must rate-limit ${action} per user`,
+    );
+    for (const marker of markers) {
+      const markerIndex = handler.indexOf(marker);
+      assert.notEqual(markerIndex, -1, `${path} must contain ${marker}`);
+      assert.ok(
+        rateLimitCall < markerIndex,
+        `${path} must rate-limit before ${marker}`,
+      );
     }
   }
 });

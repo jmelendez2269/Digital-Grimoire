@@ -12,6 +12,31 @@ export async function POST(request: NextRequest) {
   if (unavailable) return unavailable;
 
   try {
+    // Curator ingestion tool (admin/upload, admin/edit) — this route had no
+    // authentication at all, so the commercial gate was the only thing
+    // stopping any caller (not just other members) from spending Replicate/
+    // Nano Banana credits and rewriting a text's cover_image_url. Require
+    // the admin role now that the gate is open.
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { textId, title, author, domain, tags, provider = 'replicate' } = body;
 
@@ -79,7 +104,6 @@ export async function POST(request: NextRequest) {
 
     // Update database with AI-generated cover URL
     console.log(`[API] Updating database with cover URL:`, result.imageUrl);
-    const supabase = await createClient();
     const { error: updateError, data: updateData } = await supabase
       .from('texts')
       .update({

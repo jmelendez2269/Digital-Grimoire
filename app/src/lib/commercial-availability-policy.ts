@@ -20,18 +20,19 @@ export type CommercialAction = (typeof COMMERCIAL_ACTIONS)[number];
 export type AvailabilityEnvironment = Record<string, string | undefined>;
 
 /**
- * Only launch-owned actions may be reopened through configuration. Every
- * unmetered generation action stays structurally closed until its owning
- * packet changes code as well as configuration.
+ * Only launch-owned actions may be reopened through configuration. An action
+ * stays in HARD_CLOSED_GENERATION_ACTIONS below until its owning packet has
+ * both authorization/rate-limiting in code and the env token is set — see
+ * the 2026-09-14 packet that closed the gap for every remaining action
+ * (admin-role checks on the curator ingestion routes; per-user rate limits
+ * on the customer-reachable AI proxies and Tarot generation via
+ * src/lib/api-rate-limit.server.ts).
  */
 export const CONFIGURABLE_COMMERCIAL_ACTIONS = [
   "checkout",
   "working_generation",
   "seven_lenses_generation",
   "seven_lenses_expansion",
-] as const satisfies readonly CommercialAction[];
-
-export const HARD_CLOSED_GENERATION_ACTIONS = [
   "deep_search_generation",
   "gpt_proxy",
   "claude_proxy",
@@ -44,6 +45,8 @@ export const HARD_CLOSED_GENERATION_ACTIONS = [
   "media_processing",
   "sacred_text_ai_metadata",
 ] as const satisfies readonly CommercialAction[];
+
+export const HARD_CLOSED_GENERATION_ACTIONS = [] as const satisfies readonly CommercialAction[];
 
 const configurableCommercialActionSet = new Set<CommercialAction>(
   CONFIGURABLE_COMMERCIAL_ACTIONS,
