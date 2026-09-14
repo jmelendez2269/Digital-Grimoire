@@ -271,6 +271,7 @@ Generate the Deep Search response JSON.`;
         ];
 
         let finalResponse: AiSearchResult;
+        let usedFallback = false;
         try {
             const aiResponse = await aiOrchestrator.chatComplete(messages, {
                 model: 'claude-sonnet-5',
@@ -291,19 +292,27 @@ Generate the Deep Search response JSON.`;
         } catch (aiError) {
             console.error('[Deep Search] AI synthesis failed, returning fallback response:', aiError);
             finalResponse = buildFallbackResponse(query, searchResults);
+            usedFallback = true;
         }
 
         // 6. Save to Cache
-        try {
-            await serviceSupabase
-                .from('search_cache')
-                .upsert({
-                    query: normalizedQuery,
-                    results: finalResponse
-                });
-            console.log(`[Deep Search] Saved new result to cache for: "${normalizedQuery}"`);
-        } catch (cacheWriteError) {
-            console.error('[Deep Search] Failed to write cache:', cacheWriteError);
+        // Never cache the degraded fallback: it has no expiry, so a single
+        // transient AI failure would otherwise serve a synthesis-less result
+        // for that query forever. Only a real AI synthesis is cache-worthy.
+        if (usedFallback) {
+            console.log(`[Deep Search] Skipping cache write for "${normalizedQuery}" — fallback response, not a real synthesis`);
+        } else {
+            try {
+                await serviceSupabase
+                    .from('search_cache')
+                    .upsert({
+                        query: normalizedQuery,
+                        results: finalResponse
+                    });
+                console.log(`[Deep Search] Saved new result to cache for: "${normalizedQuery}"`);
+            } catch (cacheWriteError) {
+                console.error('[Deep Search] Failed to write cache:', cacheWriteError);
+            }
         }
 
         return NextResponse.json(finalResponse);
