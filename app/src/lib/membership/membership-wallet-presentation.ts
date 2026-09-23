@@ -308,6 +308,7 @@ export function actionLabel(actionCode: string | null): string {
       "seven_lenses.expand": "Lens expansion",
       "seven_lenses.standard": "Standard Seven Lenses",
       "seven_lenses.long": "Long Seven Lenses",
+      "deep_search.fresh": "Research investigation",
     }[actionCode ?? ""] ?? "Account credits"
   );
 }

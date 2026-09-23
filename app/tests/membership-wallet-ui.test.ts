@@ -8,13 +8,15 @@ import { createRoot } from "react-dom/client";
 import CreditWalletTab from "../src/components/membership/CreditWalletTab";
 
 const wallet = {
+  planCode: "student",
+  paidCreditsActive: true,
   status: "current",
   availableCredits: 6,
   reservedCredits: 2,
   totalCredits: 8,
   grant: {
-    planCode: "reader",
-    grantedCredits: 10,
+    planCode: "student",
+    grantedCredits: 30,
     validFrom: "2026-08-01T00:00:00.000Z",
     expiresAt: "2026-09-01T00:00:00.000Z",
     resetsAt: "2026-09-01T00:00:00.000Z",
@@ -28,6 +30,14 @@ const wallet = {
     },
   ],
   history: [
+    {
+      kind: "credit_used",
+      credits: 3,
+      availableAfter: 6,
+      reservedAfter: 2,
+      actionCode: "deep_search.fresh",
+      occurredAt: "2026-08-12T12:00:00.000Z",
+    },
     {
       kind: "credit_used",
       credits: 1,
@@ -55,7 +65,7 @@ const toolCosts = {
     { actionCode: "seven_lenses.expand", customerLabel: "Expand one lens", creditCost: 1, enabled: false },
     { actionCode: "seven_lenses.standard", customerLabel: "Standard Seven Lenses synthesis", creditCost: 2, enabled: false },
     { actionCode: "seven_lenses.long", customerLabel: "Long Seven Lenses synthesis", creditCost: 3, enabled: false },
-    { actionCode: "deep_search.fresh", customerLabel: "Fresh Deep Search synthesis", creditCost: 3, enabled: false },
+    { actionCode: "deep_search.fresh", customerLabel: "Research investigation", creditCost: 3, enabled: true },
     { actionCode: "image.generate", customerLabel: "Image generation", creditCost: null, enabled: false },
   ],
 };
@@ -109,6 +119,7 @@ test("Credits tab renders exact balance, UTC reset, reservations, committed use,
     assert.match(text, /Resets September 1, 2026.*12:00 AM UTC/);
     assert.match(text, /Standard Seven Lenses/);
     assert.match(text, /The Working completed/);
+    assert.match(text, /Research investigation completed/);
     assert.match(text, /Standard Seven Lenses returned/);
     assert.match(text, /Reading, ordinary search, Graph, Journal/);
     assert.doesNotMatch(text, /Checkout|Subscribe|Upgrade|stripe/i);

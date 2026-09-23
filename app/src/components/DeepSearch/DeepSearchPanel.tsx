@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import SaveToInquiry from '@/components/inquiries/SaveToInquiry';
 import {
   ArrowRight,
   Search,
@@ -19,11 +20,14 @@ import StatusLoader from "@/components/ui/StatusLoader";
 import StelloquyOrb from "@/components/ui/StelloquyOrb";
 import { RECORDED_CONCEPT_SEARCH_DEMO } from "@/lib/concept-search/recorded-demo";
 import type { ConceptSearchResult } from "@/lib/concept-search/types";
+import { useAuth } from "@/contexts/AuthContext";
+import DiscoveryExplorer from "@/components/discovery/DiscoveryExplorer";
 
 interface ConceptSuggestion {
   id: string;
   name: string;
   slug: string;
+  origin?: string;
 }
 interface DeepSearchPanelProps {
   initialQuery?: string;
@@ -57,7 +61,13 @@ function getPurchaseLink(
     : generateTrackedLink(title, author, source);
 }
 
-export default function DeepSearchPanel({
+export default function DeepSearchPanel(props: DeepSearchPanelProps) {
+  const { user } = useAuth();
+  if (user && !props.demoMode) return <DiscoveryExplorer initialQuery={props.initialQuery} />;
+  return <LibrarySearchPanel {...props} />;
+}
+
+function LibrarySearchPanel({
   initialQuery = "",
   onSearch,
   demoMode = false,
@@ -139,7 +149,7 @@ export default function DeepSearchPanel({
 
       try {
         const res = await fetch(
-          `/api/concepts?q=${encodeURIComponent(searchQuery)}&limit=8`,
+          `/api/knowledge/suggestions?q=${encodeURIComponent(searchQuery)}`,
           {
             credentials: "include",
             signal: abortControllerRef.current.signal,
@@ -157,7 +167,7 @@ export default function DeepSearchPanel({
           typeof item.id === "string" &&
           typeof item.name === "string" &&
           typeof item.slug === "string"
-            ? [{ id: item.id, name: item.name, slug: item.slug }]
+            ? [{ id: item.id, name: item.name, slug: item.slug, origin: item.origin }]
             : []
         );
 
@@ -456,6 +466,7 @@ export default function DeepSearchPanel({
                         onMouseEnter={() => setSelectedIndex(index)}
                       >
                         {suggestion.name}
+                        {suggestion.origin && <span className="ml-3 text-xs text-zinc-400">{suggestion.origin}</span>}
                       </button>
                     );
                   })}
@@ -528,6 +539,9 @@ export default function DeepSearchPanel({
             </div>
           )}
           {/* 1. CONCEPT SUMMARY */}
+          {!demoMode && <div className="flex flex-wrap gap-3"><SaveToInquiry capture={{ title: query.slice(0, 180), source_kind: 'ai', source_title: 'Concept Search research lead', note: aiResults.summary,
+            provenance: { query, sources: aiResults.libraryResults.map(book => ({ text_id: book.book_id, text_title: book.title })) },
+          }} /><Link className="inline-flex min-h-11 items-center rounded-lg border border-zinc-600 px-4 py-2 text-sm text-amber-200" href={`/graph?type=research&q=${encodeURIComponent(query)}`}>Explore published connections</Link></div>}
           <div className="group relative overflow-hidden rounded-xl border border-amber-900/20 bg-zinc-900/40 p-6 shadow-xl">
             <div className="absolute top-0 right-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
               <Lightbulb className="h-24 w-24 text-amber-500" />
@@ -636,9 +650,9 @@ export default function DeepSearchPanel({
 
                       <div className="space-y-3 border-l border-white/5 pl-2">
                         {book.excerpts.slice(0, 3).map((excerpt, idx) => (
+                          <div key={idx} className="space-y-2">
                           <a
-                            key={idx}
-                            href={`/library/${book.book_id}`}
+                            href={`/library/${book.book_id}${excerpt.chunk_id ? `?chunk=${excerpt.chunk_id}` : ''}`}
                             className="group/excerpt block rounded-md py-1 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none"
                           >
                             <div className="relative line-clamp-2 pl-3 text-sm text-amber-100/60 transition-colors group-hover/excerpt:text-amber-100">
@@ -649,6 +663,11 @@ export default function DeepSearchPanel({
                               </span>
                             </div>
                           </a>
+                          {!demoMode && <SaveToInquiry capture={{ title: `Passage: ${book.title}`.slice(0, 180), source_kind: 'library', text_id: book.book_id,
+                            chunk_id: excerpt.chunk_id || null, source_title: book.title, excerpt: excerpt.text,
+                            source_locator: excerpt.chunk_id ? `Library passage ${excerpt.chunk_id}` : '', provenance: { query },
+                          }} />}
+                          </div>
                         ))}
                       </div>
                     </div>
