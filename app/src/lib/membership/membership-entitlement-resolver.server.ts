@@ -156,12 +156,8 @@ function resolveCourse(
   const memberReleased = catalog.courses.memberReleasedCourseSlugs.includes(
     courseSlug,
   );
-  const planAllowsCourse =
-    (planCode === "student" &&
-      courseSlug === catalog.courses.studentLaunchCourseSlug) ||
-    ((planCode === "scholar" || planCode === "adept") && memberReleased);
 
-  return planAllowsCourse && memberReleased
+  return memberReleased
     ? {
         slug: courseSlug,
         entitled: true,

@@ -171,9 +171,6 @@ test("paid launch needs one exact non-free course and exact known tokens", () =>
 
   for (const environment of [
     launchEnvironment({
-      PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: `${APPROVED_STUDENT_LAUNCH_COURSE_SLUG},c02-another-course`,
-    }),
-    launchEnvironment({
       PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG: "different-course",
     }),
     launchEnvironment({
@@ -188,6 +185,74 @@ test("paid launch needs one exact non-free course and exact known tokens", () =>
     const catalog = getSafeMembershipCatalog(environment);
     assert.ok(catalog.offers.every((offer) => !offer.publiclyAvailable));
   }
+});
+
+test("paid launch accepts multi-course MEMBER_RELEASED when studentLaunch is included", () => {
+  const multiCourse = getSafeMembershipCatalog(
+    launchEnvironment({
+      PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: `${APPROVED_STUDENT_LAUNCH_COURSE_SLUG},c02-symbol-myth-and-psychotechnology,c03-correspondence-analogy-and-hidden-order,fd01-mythic-imagination-from-classical-pattern-to-personal-meaning`,
+    })
+  );
+
+  assert.equal(multiCourse.launch.paidSalesEnabled, true);
+  assert.equal(multiCourse.launch.initialPaidCourseConfigurationValid, true);
+  assert.deepEqual(multiCourse.courses.memberReleasedCourseSlugs, [
+    APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
+    "c02-symbol-myth-and-psychotechnology",
+    "c03-correspondence-analogy-and-hidden-order",
+    "fd01-mythic-imagination-from-classical-pattern-to-personal-meaning",
+  ]);
+  assert.equal(
+    multiCourse.courses.studentLaunchCourseSlug,
+    APPROVED_STUDENT_LAUNCH_COURSE_SLUG
+  );
+  assert.ok(
+    multiCourse.offers.some(
+      (offer) => offer.code === "student_founding_monthly" && offer.publiclyAvailable
+    )
+  );
+  assert.ok(
+    multiCourse.offers.some(
+      (offer) => offer.code === "scholar_monthly" && offer.publiclyAvailable
+    )
+  );
+});
+
+test("multi-course MEMBER_RELEASED missing studentLaunch fails closed", () => {
+  const missingStudentLaunch = getSafeMembershipCatalog(
+    launchEnvironment({
+      PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS:
+        "c02-symbol-myth-and-psychotechnology,c03-correspondence-analogy-and-hidden-order",
+    })
+  );
+
+  assert.equal(missingStudentLaunch.launch.paidSalesEnabled, false);
+  assert.equal(
+    missingStudentLaunch.launch.initialPaidCourseConfigurationValid,
+    false
+  );
+  assert.deepEqual(missingStudentLaunch.courses.memberReleasedCourseSlugs, []);
+  assert.equal(missingStudentLaunch.courses.studentLaunchCourseSlug, null);
+  assert.ok(
+    missingStudentLaunch.offers.every((offer) => !offer.publiclyAvailable)
+  );
+});
+
+test("multi-course MEMBER_RELEASED including free slug fails closed", () => {
+  const [freeCourseSlug] = getSafeMembershipCatalog({}).courses.freeCourseSlugs;
+  const withFreeCourse = getSafeMembershipCatalog(
+    launchEnvironment({
+      PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: `${APPROVED_STUDENT_LAUNCH_COURSE_SLUG},${freeCourseSlug},c02-another-course`,
+    })
+  );
+
+  assert.equal(withFreeCourse.launch.paidSalesEnabled, false);
+  assert.equal(
+    withFreeCourse.launch.initialPaidCourseConfigurationValid,
+    false
+  );
+  assert.deepEqual(withFreeCourse.courses.memberReleasedCourseSlugs, []);
+  assert.ok(withFreeCourse.offers.every((offer) => !offer.publiclyAvailable));
 });
 
 test("Adept needs its exact cost decision while disabled action classes stay disabled", () => {
