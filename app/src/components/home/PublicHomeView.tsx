@@ -251,7 +251,7 @@ export default function PublicHomeView({
             </div>
 
             <p className="mt-8 font-mono text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase tabular-nums">
-              Library, tools, and courses in progress — open now: PRE + C01
+              5 study tools · 154 Library entries · Open now: PRE + C01
             </p>
           </div>
 
@@ -425,7 +425,7 @@ export default function PublicHomeView({
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300">
                 C01 is open now for members. FD01 is a coming-later foundation
-                door—both have public previews if you want to compare.
+                door — both have public previews if you want to compare.
               </p>
             </div>
             <Link
