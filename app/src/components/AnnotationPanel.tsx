@@ -5,6 +5,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Highlighter, MessageSquare, Trash2, Edit3, Save, X, Sparkles, BookOpen, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils/formatting';
 import { TextPosition } from '@/lib/types';
+import SaveToInquiry from '@/components/inquiries/SaveToInquiry';
 
 interface Annotation {
   id: string;
@@ -714,7 +715,13 @@ export default function AnnotationPanel({
               rows={2}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {newQuote.trim() && <SaveToInquiry capture={{
+              title: `Passage: ${documentTitle || 'Library reading'}`.slice(0, 180), source_kind: 'library',
+              text_id: textId, source_title: documentTitle || '', excerpt: newQuote, note: newNote,
+              source_locator: typeof newPosition?.pageIndex === 'number' ? `PDF page ${newPosition.pageIndex + 1}` : newPosition?.chapterId ? `Chapter ${newPosition.chapterId}` : '',
+              provenance: { position: { ...(typeof newPosition?.pageIndex === 'number' ? { pageIndex: newPosition.pageIndex } : {}), ...(newPosition?.chapterId ? { chapterId: String(newPosition.chapterId) } : {}) } },
+            }} />}
             <button
               onClick={addAnnotation}
               disabled={!newQuote.trim() || submitting}

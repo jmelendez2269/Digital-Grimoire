@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Edit, Maximize2 } from "lucide-react";
+import { BookOpen, Maximize2 } from "lucide-react";
 import EntityDetailModal from "@/components/admin/EntityDetailModal";
 import CorrespondenceProfileDossier from "@/components/graph/CorrespondenceProfileDossier";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,7 +56,7 @@ export default function EntityDetails({
   }
 
   const handleEdit = () => {
-    router.push(`/admin/knowledge-graph?editId=${entity.id}&graphType=correspondences`);
+    router.push('/journal?tab=research');
   };
 
   const openEntityModal = (nextEntity: CorrespondenceEntity) => {
@@ -81,9 +81,10 @@ export default function EntityDetails({
             <button
               onClick={handleEdit}
               className="rounded-lg border border-amber-900/30 bg-zinc-800 p-2 text-amber-100/70 transition-colors hover:border-amber-700/50 hover:bg-zinc-700 hover:text-amber-100"
-              title="Edit entity"
+              title="Open research inquiries"
+              aria-label="Open research inquiries"
             >
-              <Edit className="h-4 w-4" />
+              <BookOpen className="h-4 w-4" />
             </button>
           )}
           <button

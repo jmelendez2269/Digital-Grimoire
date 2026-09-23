@@ -2,9 +2,10 @@
 
 ## Overview
 
-The **Knowledge Graph** provides two complementary ways to explore Prismarium:
+The **Knowledge Graph** provides three complementary ways to explore Prismarium:
 
 - **Correspondences** maps the established correspondence archive.
+- **Concept map** shows reviewed findings published from research inquiries, with their sources and context.
 - **Course Knowledge** maps the concepts, works, people, and typed connections extracted from completed courses.
 
 Course Knowledge entries are review-only candidates. Their syntheses, connections, evidence, and epistemic warnings remain visible to curators until they are approved for wider publication.
@@ -16,6 +17,20 @@ Course Knowledge entries are review-only candidates. Their syntheses, connection
 - **Select a Node**: Open its synthesis and connection dossier.
 - **Search**: Find entities by name, alias, kind, role, or synthesis text.
 - **Fit**: Recenter the visible graph.
+
+## Journal Research and the Concept Map
+
+Signed-in researchers can open **Workbench → Study Journal → Research** to follow a question, keep private notes, and collect a discovery trail. “Save to Journal” is available on library selections, discovery results, Seven Lenses responses, and correspondence profiles. Saved discoveries are grouped under their original question.
+
+Each finding begins as a private draft. Add the two entries it connects, describe the relationship, and attach a source title, precise location, passage or image description, and context. Reuse a correspondence entry when it represents the same subject. Different meanings should have qualified names.
+
+Admins can check the source and connection, mark the finding reviewed, then publish it. Regular members keep their findings in their private Journal and cannot publish to the shared map. Only a published finding's claim, connected entries, source, and context appear on the shared Concept map. Journal research notes remain private. AI answers require source evidence before review. Library quotations are checked against the stored text.
+
+Published entries also appear in Concept Search suggestions. “Unpublish and return to draft” removes the finding from the shared map and lets you revise it. Entries with no remaining published findings leave search suggestions too.
+
+Reorder findings to shape an episode, use **Replay discovery trail** to present them without private notes, or **Export notes** for a Markdown research document. Replay includes clearly labeled drafts; it is an authenticated presentation view, not a public sharing link. Markdown exports include your private notes.
+
+For an Alchemy inquiry, the starting-question button and Rosarium source lead help you begin. The lead stays a draft until you inspect the source and write the connection you can support.
 
 ## Course Knowledge
 
