@@ -251,7 +251,7 @@ export default function PublicHomeView({
             </div>
 
             <p className="mt-8 font-mono text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase tabular-nums">
-              5 study tools · 154 Library entries · Open now: PRE + C01
+              5 study tools · 154 Library entries · Open now: PRE (free) · members: C01–C03 + FD01
             </p>
           </div>
 
@@ -421,11 +421,10 @@ export default function PublicHomeView({
                 Help shape what follows
               </p>
               <h2 className="mt-4 font-serif text-4xl leading-tight text-zinc-50 sm:text-5xl">
-                Which question should become the next series?
+                Two open doors — which question are you carrying?
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300">
-                C01 is open now for members. FD01 is a coming-later foundation
-                door — both have public previews if you want to compare.
+                C01 and FD01 are both open now for members — different doors. Public previews if you want to compare.
               </p>
             </div>
             <Link
