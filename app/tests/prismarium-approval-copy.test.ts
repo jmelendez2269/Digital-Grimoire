@@ -363,7 +363,7 @@ test("enrollment API returns the approved PRE and taster explanation", () => {
 test("member mobile navigation links directly to the Study Journal", () => {
   const header = readSource("src/components/Header.tsx");
   const mobileNav = header.match(
-    /const memberMobileNav: NavItem\[\] = \[(.*?)\n\];/s
+    /const memberMobileNav: NavItem\[\] = \[([\s\S]*?)\n\];/
   )?.[1];
 
   assert.ok(mobileNav, "Header.tsx is missing the member mobile navigation");

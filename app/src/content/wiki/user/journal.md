@@ -27,6 +27,9 @@ The **Study Journal** is your dedicated space for documenting your path within P
 
 ### 3. Integration with the Rest of Prismarium
 
+- **Research**: Choose **Save to Journal** on a discovered connection to keep its explanation, supporting sources, and context. Open the **Research** section of your Journal to find these connections grouped under the original question, search saved questions, and add private notes. Existing saved inquiries appear here automatically. Saving, reopening, and editing notes cost no credits.
+- Saved research is private. Only admins can review and explicitly publish a connection to the shared Prismarium map; publishing excludes private notes.
+
 - **[Reading Digests](/wiki/reading-digests) and library texts** can be cited directly from a journal entry.
 - **[Seven Lenses](/wiki/parallax-engine) outputs** are easy to capture into the Study Journal — keep the synthesis you actually want to revisit, drop the rest.
 - **Workbench**: Study Journal entries can be linked to specific rituals in the **Practitioner Workbench** so you can reflect on the outcomes of the work you do in the Ritual Machine.

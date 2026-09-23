@@ -33,6 +33,8 @@ const PUBLIC_EXACT_ROUTES = [
   "/pricing",
   "/seven-lenses",
   "/api/library/catalog",
+  "/api/knowledge/map",
+  "/api/knowledge/suggestions",
 ] as const;
 
 export function isPublicPath(pathname: string): boolean {

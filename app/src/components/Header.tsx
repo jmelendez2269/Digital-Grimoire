@@ -92,7 +92,7 @@ const memberPrimaryNav: NavItem[] = [
     name: "Workbench",
     path: "/workbench",
     icon: <Sparkles className="h-3.5 w-3.5" />,
-    matchPaths: ["/workbench", "/journal"],
+    matchPaths: ["/workbench", "/journal", "/inquiries"],
     dropdownItems: [
       {
         name: "Study Journal",
