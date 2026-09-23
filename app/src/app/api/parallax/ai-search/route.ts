@@ -8,20 +8,12 @@ import { aiOrchestrator, ChatMessage } from '@/lib/ai/ai-orchestrator';
 import { checkRateLimit } from '@/lib/parallax/rate-limit';
 import { parseAiJsonObject } from '@/lib/ai/json';
 import { guardCommercialAction } from '@/lib/commercial-availability';
+import { trustedLibraryResults } from '@/lib/concept-search/trusted-results';
+import type { ConceptSearchLibraryResult } from '@/lib/concept-search/types';
 
 interface AiSearchResult {
     summary: string;
-    libraryResults: Array<{
-        book_id: string;
-        title: string;
-        author: string;
-        relevanceSentence: string;
-        relevanceLabel?: string;
-        excerpts: Array<{
-            text: string;
-            page_number: number;
-        }>;
-    }>;
+    libraryResults: ConceptSearchLibraryResult[];
     externalRecommendations: Array<{
         title: string;
         author: string;
@@ -30,21 +22,7 @@ interface AiSearchResult {
 }
 
 function buildFallbackLibraryResults(searchResults: HybridSearchResult[]): AiSearchResult['libraryResults'] {
-    return searchResults.slice(0, 8).map((result, index) => ({
-        book_id: result.text_id,
-        title: result.text_title || 'Unknown Title',
-        author: result.text_author || 'Unknown Author',
-        relevanceSentence: index === 0
-            ? 'This appears to be the strongest direct match in the library results.'
-            : 'This text surfaced as a relevant supporting source for the search concept.',
-        relevanceLabel: index === 0 ? 'Top Match' : 'Relevant Source',
-        excerpts: [
-            {
-                text: result.content.trim().slice(0, 280),
-                page_number: 1,
-            },
-        ],
-    }));
+    return trustedLibraryResults(searchResults);
 }
 
 function buildFallbackSummary(query: string, searchResults: HybridSearchResult[]): string {
@@ -88,6 +66,7 @@ function normalizeAiResult(
 
     const candidate = rawResult as Partial<AiSearchResult>;
     const validTextIds = new Set(searchResults.map(result => result.text_id));
+    const trustedBooks = new Map(fallback.libraryResults.map(book => [book.book_id, book]));
 
     const libraryResults = Array.isArray(candidate.libraryResults)
         ? candidate.libraryResults
@@ -96,25 +75,15 @@ function normalizeAiResult(
             })
             .map(item => ({
                 book_id: item.book_id,
-                title: typeof item.title === 'string' && item.title.trim() ? item.title : 'Unknown Title',
-                author: typeof item.author === 'string' && item.author.trim() ? item.author : 'Unknown Author',
+                title: trustedBooks.get(item.book_id)!.title,
+                author: trustedBooks.get(item.book_id)!.author,
                 relevanceSentence: typeof item.relevanceSentence === 'string' && item.relevanceSentence.trim()
                     ? item.relevanceSentence
                     : 'This text appears relevant to the search concept.',
                 relevanceLabel: typeof item.relevanceLabel === 'string' && item.relevanceLabel.trim()
                     ? item.relevanceLabel
                     : undefined,
-                excerpts: Array.isArray(item.excerpts)
-                    ? item.excerpts
-                        .filter((excerpt): excerpt is { text: string; page_number: number } => {
-                            return !!excerpt && typeof excerpt.text === 'string';
-                        })
-                        .slice(0, 2)
-                        .map(excerpt => ({
-                            text: excerpt.text.trim(),
-                            page_number: Number.isFinite(excerpt.page_number) ? excerpt.page_number : 1,
-                        }))
-                    : [],
+                excerpts: trustedBooks.get(item.book_id)!.excerpts,
             }))
         : [];
 
@@ -164,6 +133,12 @@ export async function POST(request: NextRequest) {
         }
 
         const serviceSupabase = createServiceClient();
+        // Member generation now uses the credit-metered discovery endpoint.
+        // Keep this legacy route available only for curator maintenance.
+        const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle();
+        if (profile?.role !== 'admin') {
+            return NextResponse.json({ error: 'Start a research investigation in Concept Search.', code: 'USE_RESEARCH_DISCOVERY' }, { status: 410 });
+        }
 
         // Check rate limit
         const rateLimit = await checkRateLimit(user.id);
@@ -188,7 +163,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const normalizedQuery = query.trim().toLowerCase();
+        const normalizedQuery = `verified-passages-v1:${query.trim().toLowerCase()}`;
 
         // 0. Check Cache
         try {

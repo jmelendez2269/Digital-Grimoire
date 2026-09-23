@@ -199,17 +199,17 @@ test("fixed quote catalog uses versioned launch weights and fails closed by defa
       ["seven_lenses.expand", 1, 0.05, "lean-launch-v1"],
       ["seven_lenses.standard", 2, 0.1, "lean-launch-v1"],
       ["seven_lenses.long", 3, 0.15, "lean-launch-v1"],
-      ["deep_search.fresh", 3, 0.15, "lean-launch-v1"],
+      ["deep_search.fresh", 3, 0.30, "lean-launch-v1"],
     ]
   );
-  assert.equal(getMeteringActionQuote("deep_search.fresh")?.offered, false);
+  assert.equal(getMeteringActionQuote("deep_search.fresh")?.offered, true);
   assert.equal(getMeteringActionQuote("image.generate")?.offered, false);
   assert.equal(
     resolveMeteringActionPolicy("deep_search.fresh", {
       PRISMARIUM_METERING_MODE: "enforce",
       PRISMARIUM_METERING_ACTION_MODES: "deep_search.fresh=enforce",
     })?.mode,
-    "off"
+    "enforce"
   );
   assert.equal(
     resolveMeteringActionPolicy("working.generate", {})?.mode,

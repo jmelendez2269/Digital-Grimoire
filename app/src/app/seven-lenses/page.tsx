@@ -8,6 +8,8 @@ import Link from 'next/link';
 
 import DocumentationLink from "@/components/DocumentationLink";
 import Header from '@/components/Header';
+import SaveToInquiry from '@/components/inquiries/SaveToInquiry';
+import DiscoveryExplorer from '@/components/discovery/DiscoveryExplorer';
 import Footer from '@/components/Footer';
 import AppLoader from '@/components/ui/AppLoader';
 import ParallaxLoader from '@/components/ui/ParallaxLoader';
@@ -84,6 +86,7 @@ function isClientResponse(value: unknown): value is ClientSevenLensesResponse {
 function ParallaxEngineContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
+  const [discoveryOpened, setDiscoveryOpened] = useState(() => searchParams.has('discovery'));
   const [query, setQuery] = useState('');
   const queryInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [lensWeights, setLensWeights] = useState<LensWeights>(DEFAULT_WEIGHTS);
@@ -173,9 +176,9 @@ function ParallaxEngineContent() {
 
   // Read query from URL params on mount
   useEffect(() => {
-    const urlQuery = searchParams.get('query');
+    const urlQuery = searchParams.get('query') || searchParams.get('prompt');
     if (urlQuery) {
-      const decodedQuery = decodeURIComponent(urlQuery);
+      const decodedQuery = urlQuery;
       setQuery(decodedQuery);
       // Auto-focus the textarea after a short delay to ensure it's rendered
       setTimeout(() => {
@@ -686,7 +689,23 @@ function ParallaxEngineContent() {
               </form>
 
               {/* Response */}
+              {user && (
+                <details
+                  className="my-6 rounded-xl border border-amber-800/40 p-5"
+                  open={discoveryOpened}
+                  onToggle={(event) => {
+                    if (event.currentTarget.open) setDiscoveryOpened(true);
+                  }}
+                >
+                  <summary className="cursor-pointer text-amber-200">Investigate sources and discover deeper connections</summary>
+                  {discoveryOpened && <div className="mt-6"><DiscoveryExplorer initialQuery={query || response?.query || ''} /></div>}
+                </details>
+              )}
               <div data-response-area>
+                {response && !isStreaming && <div className="mb-4"><SaveToInquiry capture={{
+                  title: response.query.slice(0, 180), source_kind: 'ai', source_title: 'Seven Lenses research lead',
+                  note: response.synthesis, provenance: { query: response.query, sources: response.sources.map(source => ({ text_id: source.text_id, ...(source.text_title ? { text_title: source.text_title } : {}), ...(source.chunk_id ? { chunk_id: source.chunk_id } : {}) })) },
+                }} /></div>}
                 <ResponseStream
                   response={response}
                   isStreaming={isStreaming}
