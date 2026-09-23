@@ -190,9 +190,6 @@ test("lookup failure and invalid identity fail closed without querying membershi
 test("ambiguous or unapproved course release configuration closes paid course access", async () => {
   for (const environment of [
     releaseEnvironment({
-      PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: `${APPROVED_STUDENT_LAUNCH_COURSE_SLUG},c02-another-course`,
-    }),
-    releaseEnvironment({
       PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: "c01-unapproved-course",
       PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG: "c01-unapproved-course",
     }),
@@ -210,6 +207,43 @@ test("ambiguous or unapproved course release configuration closes paid course ac
     assert.equal(resolution.course.entitled, false);
     assert.equal(resolution.failClosed, true);
   }
+});
+
+test("all paid plans access all member-released courses regardless of plan tier", async () => {
+  const multiCourseEnv = releaseEnvironment({
+    PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS: `${APPROVED_STUDENT_LAUNCH_COURSE_SLUG},c02-symbol-myth-and-psychotechnology,c03-correspondence-analogy-and-hidden-order`,
+  });
+
+  for (const [planCode, courseSlug] of [
+    ["student", "c02-symbol-myth-and-psychotechnology"],
+    ["student", "c03-correspondence-analogy-and-hidden-order"],
+    ["student", APPROVED_STUDENT_LAUNCH_COURSE_SLUG],
+    ["scholar", "c02-symbol-myth-and-psychotechnology"],
+    ["adept", "c03-correspondence-analogy-and-hidden-order"],
+  ] as const) {
+    const resolution = await resolveMembershipEntitlement(
+      { userId: USER_ID, courseSlug },
+      {
+        environment: multiCourseEnv,
+        loadMembership: async () => activeMembership(planCode),
+      }
+    );
+
+    assert.equal(resolution.planCode, planCode);
+    assert.equal(resolution.course.entitled, true);
+    assert.equal(resolution.course.slug, courseSlug);
+    assert.equal(resolution.course.source, "member_release_allowlist");
+  }
+
+  const nonReleasedResolution = await resolveMembershipEntitlement(
+    { userId: USER_ID, courseSlug: "c99-unreleased-course" },
+    {
+      environment: multiCourseEnv,
+      loadMembership: async () => activeMembership("student"),
+    }
+  );
+  assert.equal(nonReleasedResolution.course.entitled, false);
+  assert.equal(nonReleasedResolution.course.source, "not_allowlisted");
 });
 
 test("the resolver and its privileged database dependency remain server-only", () => {

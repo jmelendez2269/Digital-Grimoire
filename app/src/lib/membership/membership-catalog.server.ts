@@ -37,10 +37,7 @@ export type MembershipOfferCode = (typeof MEMBERSHIP_OFFER_CODES)[number];
 export type MeteredActionCode = (typeof METERED_ACTION_CODES)[number];
 export type CatalogEnvironment = Record<string, string | undefined>;
 
-type CourseAccessPolicy =
-  | "free-path"
-  | "student-launch-course"
-  | "all-member-released";
+type CourseAccessPolicy = "free-path" | "all-member-released";
 type OfferLaunchGate = "paid-launch" | "future-decision" | "cost-evidence";
 type ActionLaunchState = "metering-required" | "beta-disabled" | "not-offered";
 
@@ -130,7 +127,7 @@ const PLAN_DEFINITIONS = Object.freeze<readonly PlanDefinition[]>([
     name: "Student",
     monthlyCredits: 30,
     journalActivePageLimit: null,
-    courseAccess: "student-launch-course",
+    courseAccess: "all-member-released",
   },
   {
     code: "scholar",
@@ -277,8 +274,8 @@ function getCourseConfiguration(environment: CatalogEnvironment) {
   const initialPaidCourseConfigurationValid =
     memberSlugsValid &&
     studentSlugValid &&
-    memberConfig.values.length === 1 &&
-    memberConfig.values[0] === studentSlug;
+    memberConfig.values.length >= 1 &&
+    memberConfig.values.includes(studentSlug);
 
   return {
     freeCourseSlugs,
