@@ -35,10 +35,10 @@ test("the public Concept Search recording is complete and versioned", () => {
   }
 });
 
-test("recorded playback exits before either protected request path", () => {
+test("recorded playback exits before either live search request path", () => {
   const panel = readSource("src/components/DeepSearch/DeepSearchPanel.tsx");
   const suggestionGuard = panel.indexOf("if (demoMode) return;");
-  const suggestionFetch = panel.indexOf("`/api/concepts?q=${");
+  const suggestionFetch = panel.indexOf("`/api/knowledge/suggestions?q=${");
   const replayMatch = panel.match(
     /if \(demoMode\) \{\s+startRecordedReplay\(\);\s+return;/
   );

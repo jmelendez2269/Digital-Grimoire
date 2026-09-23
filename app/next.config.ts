@@ -8,6 +8,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.PRISMARIUM_BUILD_DIR || '.next',
   /* config options here */
   // Set workspace root to prevent multiple lockfile warnings
   outputFileTracingRoot: process.cwd(),

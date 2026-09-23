@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { 
-  Plus, Search, Archive, FileText, Calendar, ChevronRight, 
-  Trash2, Pin, Tag, BookOpen, Layers, Award, ChevronDown, Lock
+  Plus, Search, Archive, FileText, Calendar,
+  Trash2, Pin, Tag, BookOpen, Layers, Award, ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
@@ -12,12 +13,15 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import JournalNameSetupModal from '@/components/JournalNameSetupModal';
 
+const ResearchWorkspace = dynamic(() => import('@/components/inquiries/InquiryWorkspace'), {
+  loading: () => <p role="status" className="text-zinc-400">Loading saved research…</p>,
+});
+
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
 interface JournalPage {
   id: string;
   title: string;
-  content: any;
   icon: string;
   is_archived: boolean;
   created_at: string;
@@ -38,12 +42,17 @@ interface Course {
   slug: string;
 }
 
-type TabType = 'journal' | 'workbooks' | 'artifacts';
+type TabType = 'journal' | 'workbooks' | 'artifacts' | 'research';
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export default function JournalHomePage() {
+  return <Suspense fallback={<p role="status" className="p-8">Loading Journal…</p>}><JournalHome /></Suspense>;
+}
+
+function JournalHome() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   
   const [pages, setPages] = useState<JournalPage[]>([]);
@@ -51,7 +60,12 @@ export default function JournalHomePage() {
   const [loading, setLoading] = useState(true);
   
   // State
-  const [activeTab, setActiveTab] = useState<TabType>('journal');
+  const requestedTab = searchParams.get('tab');
+  const activeTab: TabType = requestedTab === 'research' || requestedTab === 'workbooks' || requestedTab === 'artifacts' ? requestedTab : 'journal';
+  function setActiveTab(tab: TabType) {
+    router.push(tab === 'journal' ? '/journal' : `/journal?tab=${tab}`, { scroll: false });
+    setSearchQuery('');
+  }
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [creatingPage, setCreatingPage] = useState(false);
@@ -65,13 +79,7 @@ export default function JournalHomePage() {
     }
   }, [user]);
 
-  // Initial Load
-  useEffect(() => {
-    fetchPages();
-    fetchCourses();
-  }, [showArchived]);
-
-  async function fetchPages() {
+  const fetchPages = useCallback(async () => {
     setLoading(true);
     try {
       const url = `/api/journal?include_archived=${showArchived}`;
@@ -84,7 +92,7 @@ export default function JournalHomePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [showArchived]);
 
   async function fetchCourses() {
     try {
@@ -103,6 +111,13 @@ export default function JournalHomePage() {
       console.error('Error fetching courses:', error);
     }
   }
+
+  useEffect(() => {
+    void fetchPages();
+  }, [fetchPages]);
+  useEffect(() => {
+    void fetchCourses();
+  }, []);
 
   async function createNewPage() {
     setCreatingPage(true);
@@ -225,11 +240,11 @@ export default function JournalHomePage() {
                 {user?.user_metadata?.journal_name || 'Study Journal'}
               </h1>
               <p className="text-zinc-400 max-w-xl text-lg">
-                Your personal collection of thoughts, workbooks, and artifacts.
+                Your personal collection of thoughts, saved research, workbooks, and artifacts.
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
+            {activeTab !== 'research' && <div className="flex items-center gap-4">
               <div className="hidden md:block text-right mr-4 text-zinc-500">
                 <div className="text-xl font-bold font-mono text-zinc-300">{pages.length}</div>
                 <div className="text-[10px] uppercase tracking-widest">Total Entries</div>
@@ -242,16 +257,17 @@ export default function JournalHomePage() {
                 <Plus className="w-4 h-4" />
                 New Entry
               </button>
-            </div>
+            </div>}
           </div>
 
           {/* Navigation & Controls */}
-          <div className="flex flex-col md:flex-row gap-6 mb-10 pb-6 border-b border-white/10">
+          <div className="flex flex-wrap gap-6 mb-10 pb-6 border-b border-white/10">
             
             {/* Tabs */}
-            <div className="flex gap-2 p-1 bg-zinc-900 rounded-lg shrink-0">
+            <div className="flex flex-wrap gap-2 p-1 bg-zinc-900 rounded-lg" aria-label="Journal sections">
               <button
                 onClick={() => setActiveTab('journal')}
+                aria-pressed={activeTab === 'journal'}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeTab === 'journal' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
@@ -260,7 +276,18 @@ export default function JournalHomePage() {
                 Study Journal
               </button>
               <button
+                onClick={() => setActiveTab('research')}
+                aria-pressed={activeTab === 'research'}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'research' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Search className="w-4 h-4" />
+                Research
+              </button>
+              <button
                 onClick={() => setActiveTab('workbooks')}
+                aria-pressed={activeTab === 'workbooks'}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeTab === 'workbooks' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
@@ -270,6 +297,7 @@ export default function JournalHomePage() {
               </button>
               <button
                 onClick={() => setActiveTab('artifacts')}
+                aria-pressed={activeTab === 'artifacts'}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeTab === 'artifacts' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
                 }`}
@@ -280,18 +308,19 @@ export default function JournalHomePage() {
             </div>
 
             {/* Search Tool */}
-            <div className="relative flex-1 max-w-md ml-auto">
+            <div className="relative flex-1 min-w-48 max-w-md ml-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input
                 type="text"
-                placeholder="Search entries or tags..."
+                aria-label={activeTab === 'research' ? 'Search saved research' : 'Search entries or tags'}
+                placeholder={activeTab === 'research' ? 'Search saved questions...' : 'Search entries or tags...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-black/40 border border-white/10 rounded-lg text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 text-sm transition-colors"
               />
             </div>
 
-            <button
+            {activeTab !== 'research' && <button
               onClick={() => setShowArchived(!showArchived)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all shrink-0 ${
                 showArchived
@@ -301,11 +330,13 @@ export default function JournalHomePage() {
             >
               <Archive className="w-4 h-4" />
               {showArchived ? 'Hide Archived' : 'Show Archived'}
-            </button>
+            </button>}
           </div>
 
           {/* Tab Content */}
-          {loading ? (
+          {activeTab === 'research' ? (
+            <ResearchWorkspace embedded searchQuery={searchQuery} />
+          ) : loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-xl bg-zinc-900 animate-pulse border border-white/5" />)}
             </div>
@@ -425,7 +456,6 @@ export default function JournalHomePage() {
         <JournalNameSetupModal
           onComplete={() => {
             setShowSetupModal(false);
-            window.location.reload();
           }}
         />
       )}

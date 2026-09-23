@@ -164,7 +164,7 @@ test("paid launch needs one exact non-free course and exact known tokens", () =>
       ["seven_lenses.expand", true],
       ["seven_lenses.standard", true],
       ["seven_lenses.long", true],
-      ["deep_search.fresh", false],
+      ["deep_search.fresh", true],
       ["image.generate", false],
     ]
   );
@@ -203,7 +203,7 @@ test("Adept needs its exact cost decision while disabled action classes stay dis
   assert.equal(
     catalog.actions.find((action) => action.code === "deep_search.fresh")
       ?.launchEnabled,
-    false
+    true
   );
   assert.equal(
     catalog.actions.find((action) => action.code === "image.generate")

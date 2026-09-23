@@ -66,6 +66,7 @@ export default function Footer() {
               <Link href="/pricing" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Membership</Link>
               <Link href="/library" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Library</Link>
               <Link href="/search" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Concept Search</Link>
+              <Link href="/research" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Research</Link>
               <Link href="/graph" className="text-xs text-zinc-400 hover:text-amber-400 font-mono uppercase transition-colors">Knowledge Graph</Link>
             </div>
           </div>

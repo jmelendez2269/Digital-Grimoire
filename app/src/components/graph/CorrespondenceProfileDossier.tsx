@@ -1,6 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
+import SaveToInquiry from '@/components/inquiries/SaveToInquiry';
 import {
   ArrowUpRight,
   Bird,
@@ -349,6 +350,10 @@ export default function CorrespondenceProfileDossier({
 
   return (
     <div className="space-y-5">
+      <SaveToInquiry capture={{ title: `Explore ${profile.entity.name}`.slice(0, 180), source_kind: 'correspondence',
+        source_title: profile.entity.name, note: profile.hero.description || '',
+        provenance: { correspondence_id: profile.entity.id },
+      }} />
       <section className="relative overflow-hidden rounded-2xl border border-amber-900/30 bg-[radial-gradient(circle_at_top,_rgba(180,120,30,0.18),_rgba(24,18,12,0.9)_45%,_rgba(10,10,10,0.95)_100%)] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,220,160,0.06),transparent_35%,transparent_65%,rgba(180,110,20,0.06))]" />
         <div className="relative z-10 space-y-4">

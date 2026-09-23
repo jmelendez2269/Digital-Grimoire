@@ -91,7 +91,6 @@ function SearchPageContent() {
                   <History className="h-4 w-4 text-amber-500" />
                   Recent Searches
                 </h2>
-                {/* <button className="text-xs text-zinc-500 hover:text-red-400">Clear History</button> */}
               </div>
 
               {historyLoading ? (

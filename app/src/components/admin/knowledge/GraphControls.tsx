@@ -44,7 +44,7 @@ export default function GraphControls({
                         }`}
                 >
                     <Network className="w-3 h-3" />
-                    Concepts
+                    Course Knowledge
                 </button>
             </div>
 

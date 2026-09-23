@@ -8,6 +8,7 @@ import Link from 'next/link';
 
 import DocumentationLink from "@/components/DocumentationLink";
 import Header from '@/components/Header';
+import SaveToInquiry from '@/components/inquiries/SaveToInquiry';
 import Footer from '@/components/Footer';
 import AppLoader from '@/components/ui/AppLoader';
 import ParallaxLoader from '@/components/ui/ParallaxLoader';
@@ -173,9 +174,9 @@ function ParallaxEngineContent() {
 
   // Read query from URL params on mount
   useEffect(() => {
-    const urlQuery = searchParams.get('query');
+    const urlQuery = searchParams.get('query') || searchParams.get('prompt');
     if (urlQuery) {
-      const decodedQuery = decodeURIComponent(urlQuery);
+      const decodedQuery = urlQuery;
       setQuery(decodedQuery);
       // Auto-focus the textarea after a short delay to ensure it's rendered
       setTimeout(() => {
@@ -686,7 +687,25 @@ function ParallaxEngineContent() {
               </form>
 
               {/* Response */}
+              {user && (
+                <div className="my-6 rounded-xl border border-amber-800/40 bg-zinc-900/50 p-5">
+                  <p className="text-amber-200 font-semibold">Investigate sources in Research</p>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    Open a Research inquiry from these lens hits.
+                  </p>
+                  <Link
+                    href={`/research?q=${encodeURIComponent(query || response?.query || '')}`}
+                    className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg border border-amber-600/20 bg-amber-600/20 px-4 py-2 text-sm font-semibold text-amber-200 transition-colors hover:bg-amber-600/30 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none"
+                  >
+                    Open in Research
+                  </Link>
+                </div>
+              )}
               <div data-response-area>
+                {response && !isStreaming && <div className="mb-4"><SaveToInquiry capture={{
+                  title: response.query.slice(0, 180), source_kind: 'ai', source_title: 'Seven Lenses research lead',
+                  note: response.synthesis, provenance: { query: response.query, sources: response.sources.map(source => ({ text_id: source.text_id, ...(source.text_title ? { text_title: source.text_title } : {}), ...(source.chunk_id ? { chunk_id: source.chunk_id } : {}) })) },
+                }} /></div>}
                 <ResponseStream
                   response={response}
                   isStreaming={isStreaming}

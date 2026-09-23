@@ -1,12 +1,12 @@
 import OpenAI from 'openai';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-const DEFAULT_FREE_MODEL = 'deepseek/deepseek-v4-flash:free';
+const DEFAULT_MODEL = 'x-ai/grok-4.20';
 
 let openRouterClient: OpenAI | null = null;
 
 export function getDefaultOpenRouterModel(): string {
-  return process.env.OPENROUTER_MODEL || process.env.AI_TEXT_MODEL || DEFAULT_FREE_MODEL;
+  return process.env.OPENROUTER_MODEL || process.env.AI_TEXT_MODEL || DEFAULT_MODEL;
 }
 
 export function getDefaultOpenRouterMetadataModel(): string {

@@ -19,6 +19,7 @@ interface SigmaGraphProps {
   layoutDensity?: GraphLayoutDensity;
   layoutEngine?: GraphLayoutEngine;
   focusedEntityId?: string | null;
+  showOverviewEdges?: boolean;
 }
 
 type LayoutSnapshot = Record<string, { x: number; y: number }>;
@@ -653,6 +654,7 @@ export default function SigmaGraph({
   layoutDensity = "expanded",
   layoutEngine = "clusters",
   focusedEntityId = null,
+  showOverviewEdges = false,
 }: SigmaGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<Sigma | null>(null);
@@ -867,6 +869,9 @@ export default function SigmaGraph({
     }
 
     const renderer = new Sigma(graph, containerRef.current, {
+      // Route transitions can briefly hide the container before effect cleanup.
+      // ResizeObserver refreshes the canvas when it becomes visible again.
+      allowInvalidContainer: true,
       renderEdgeLabels: false,
       defaultEdgeColor: "#7a5a24",
       defaultNodeColor: "#c8882a",
@@ -1133,7 +1138,7 @@ export default function SigmaGraph({
         if (!activeNode) {
           return {
             ...data,
-            hidden: true,
+            hidden: !showOverviewEdges,
           };
         }
 
@@ -1302,6 +1307,7 @@ export default function SigmaGraph({
     labelSizeThreshold,
     minLayoutSpan,
     minSimilarity,
+    showOverviewEdges,
   ]);
 
   if (entities.length === 0) {

@@ -1,6 +1,7 @@
 export interface ConceptSearchExcerpt {
   text: string;
-  page_number: number;
+  page_number: number | null;
+  chunk_id?: string;
 }
 
 export interface ConceptSearchLibraryResult {

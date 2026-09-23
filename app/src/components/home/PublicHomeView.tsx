@@ -47,6 +47,12 @@ const questionTools = [
     icon: Search,
   },
   {
+    title: "Research",
+    description: "Frame a question and follow the evidence with sources.",
+    href: "/research",
+    icon: Compass,
+  },
+  {
     title: "Knowledge Graph",
     description: "Inspect connections, evidence, and the limits of a claim.",
     href: "/graph",
@@ -291,7 +297,7 @@ export default function PublicHomeView({
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-semibold tracking-[0.28em] text-cyan-300/70 uppercase">
-                Five ways to investigate
+                Six ways to investigate
               </p>
               <h2
                 id="tools-heading"
@@ -306,7 +312,7 @@ export default function PublicHomeView({
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {questionTools.map((tool) => {
               const Icon = tool.icon;
               return (

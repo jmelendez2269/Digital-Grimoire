@@ -5,6 +5,7 @@ import {
   Sparkles,
   ArrowRight,
   FlaskConical,
+  Lightbulb,
   Eye,
   LockKeyhole,
 } from "lucide-react";
@@ -29,6 +30,16 @@ const tools = [
     accent: "violet",
     access: "Public preview",
     isPublic: true,
+  },
+  {
+    name: "Research",
+    description:
+      "Frame a question, gather sources across the library and web, and keep a trail of your discoveries. Question-led inquiry with evidence you can inspect.",
+    href: "/research",
+    icon: Lightbulb,
+    accent: "emerald",
+    access: "Member tool",
+    isPublic: false,
   },
   {
     name: "Seven Lenses",
