@@ -85,7 +85,7 @@ export default function DiscoveryExplorer(props: { initialQuery?: string }) {
 
 function DiscoveryContent({ initialQuery = "" }: { initialQuery?: string }) {
   const { isAdmin } = useAuth();
-  const creditState = useToolCreditState("deep_search.fresh");
+  const creditState = useToolCreditState("research.investigate");
   const { refresh: refreshWallet } = useCreditWallet();
   const canResearch = isAdmin || creditState.canSubmit;
   const costLabel = isAdmin
@@ -306,7 +306,7 @@ function DiscoveryContent({ initialQuery = "" }: { initialQuery?: string }) {
           investigation.
         </p>
       ) : (
-        <ToolCreditStatus actionCode="deep_search.fresh" />
+        <ToolCreditStatus actionCode="research.investigate" />
       )}
       <p className="text-sm text-zinc-400">
         Each new investigation includes source searches, an explanation, and an
