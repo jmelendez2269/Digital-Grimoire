@@ -190,7 +190,7 @@ function VoteFallback({
         href="/courses"
         className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border border-white/15 px-5 py-2.5 text-sm font-semibold text-zinc-100 transition-colors hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none sm:self-auto"
       >
-        Explore every course
+        Explore the course map (open now and coming later)
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </Link>
     </div>
@@ -251,7 +251,7 @@ export default function PublicHomeView({
             </div>
 
             <p className="mt-8 font-mono text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase tabular-nums">
-              {formatPlatformSummary(platformTotals)}
+              5 study tools · 154 Library entries · Open now: PRE + C01
             </p>
           </div>
 
@@ -424,15 +424,15 @@ export default function PublicHomeView({
                 Which question should become the next series?
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300">
-                C01 and FD01 are different doors into Prismarium. Compare both
-                public previews before you vote.
+                C01 is open now for members. FD01 is a coming-later foundation
+                door — both have public previews if you want to compare.
               </p>
             </div>
             <Link
               href="/courses"
               className="inline-flex min-h-11 w-fit shrink-0 items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
             >
-              See the complete course map
+              Explore the course map (open now and coming later)
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
