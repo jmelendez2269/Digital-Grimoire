@@ -133,12 +133,6 @@ export async function POST(request: NextRequest) {
         }
 
         const serviceSupabase = createServiceClient();
-        // Member generation now uses the credit-metered discovery endpoint.
-        // Keep this legacy route available only for curator maintenance.
-        const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).maybeSingle();
-        if (profile?.role !== 'admin') {
-            return NextResponse.json({ error: 'Start a research investigation in Concept Search.', code: 'USE_RESEARCH_DISCOVERY' }, { status: 410 });
-        }
 
         // Check rate limit
         const rateLimit = await checkRateLimit(user.id);

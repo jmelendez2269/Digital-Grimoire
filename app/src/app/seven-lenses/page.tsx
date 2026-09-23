@@ -9,7 +9,6 @@ import Link from 'next/link';
 import DocumentationLink from "@/components/DocumentationLink";
 import Header from '@/components/Header';
 import SaveToInquiry from '@/components/inquiries/SaveToInquiry';
-import DiscoveryExplorer from '@/components/discovery/DiscoveryExplorer';
 import Footer from '@/components/Footer';
 import AppLoader from '@/components/ui/AppLoader';
 import ParallaxLoader from '@/components/ui/ParallaxLoader';
@@ -86,7 +85,6 @@ function isClientResponse(value: unknown): value is ClientSevenLensesResponse {
 function ParallaxEngineContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
-  const [discoveryOpened, setDiscoveryOpened] = useState(() => searchParams.has('discovery'));
   const [query, setQuery] = useState('');
   const queryInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [lensWeights, setLensWeights] = useState<LensWeights>(DEFAULT_WEIGHTS);
@@ -690,16 +688,18 @@ function ParallaxEngineContent() {
 
               {/* Response */}
               {user && (
-                <details
-                  className="my-6 rounded-xl border border-amber-800/40 p-5"
-                  open={discoveryOpened}
-                  onToggle={(event) => {
-                    if (event.currentTarget.open) setDiscoveryOpened(true);
-                  }}
-                >
-                  <summary className="cursor-pointer text-amber-200">Investigate sources and discover deeper connections</summary>
-                  {discoveryOpened && <div className="mt-6"><DiscoveryExplorer initialQuery={query || response?.query || ''} /></div>}
-                </details>
+                <div className="my-6 rounded-xl border border-amber-800/40 bg-zinc-900/50 p-5">
+                  <p className="text-amber-200 font-semibold">Investigate sources in Research</p>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    Open a Research inquiry from these lens hits.
+                  </p>
+                  <Link
+                    href={`/research?q=${encodeURIComponent(query || response?.query || '')}`}
+                    className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg border border-amber-600/20 bg-amber-600/20 px-4 py-2 text-sm font-semibold text-amber-200 transition-colors hover:bg-amber-600/30 focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:outline-none"
+                  >
+                    Open in Research
+                  </Link>
+                </div>
               )}
               <div data-response-area>
                 {response && !isStreaming && <div className="mb-4"><SaveToInquiry capture={{

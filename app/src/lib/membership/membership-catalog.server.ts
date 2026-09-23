@@ -29,6 +29,7 @@ export const METERED_ACTION_CODES = [
   "seven_lenses.standard",
   "seven_lenses.long",
   "deep_search.fresh",
+  "research.investigate",
   "image.generate",
 ] as const;
 

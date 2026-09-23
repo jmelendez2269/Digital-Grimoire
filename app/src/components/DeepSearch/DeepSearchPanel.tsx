@@ -20,8 +20,6 @@ import StatusLoader from "@/components/ui/StatusLoader";
 import StelloquyOrb from "@/components/ui/StelloquyOrb";
 import { RECORDED_CONCEPT_SEARCH_DEMO } from "@/lib/concept-search/recorded-demo";
 import type { ConceptSearchResult } from "@/lib/concept-search/types";
-import { useAuth } from "@/contexts/AuthContext";
-import DiscoveryExplorer from "@/components/discovery/DiscoveryExplorer";
 
 interface ConceptSuggestion {
   id: string;
@@ -62,8 +60,6 @@ function getPurchaseLink(
 }
 
 export default function DeepSearchPanel(props: DeepSearchPanelProps) {
-  const { user } = useAuth();
-  if (user && !props.demoMode) return <DiscoveryExplorer initialQuery={props.initialQuery} />;
   return <LibrarySearchPanel {...props} />;
 }
 
@@ -149,7 +145,7 @@ function LibrarySearchPanel({
 
       try {
         const res = await fetch(
-          `/api/knowledge/suggestions?q=${encodeURIComponent(searchQuery)}`,
+          `/api/concepts?q=${encodeURIComponent(searchQuery)}&limit=8`,
           {
             credentials: "include",
             signal: abortControllerRef.current.signal,
@@ -167,7 +163,7 @@ function LibrarySearchPanel({
           typeof item.id === "string" &&
           typeof item.name === "string" &&
           typeof item.slug === "string"
-            ? [{ id: item.id, name: item.name, slug: item.slug, origin: item.origin }]
+            ? [{ id: item.id, name: item.name, slug: item.slug, origin: item.tradition }]
             : []
         );
 

@@ -69,7 +69,7 @@ const memberPrimaryNav: NavItem[] = [
     name: "Tools",
     path: "/explore",
     icon: <Network className="h-3.5 w-3.5" />,
-    matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
+    matchPaths: ["/explore", "/graph", "/search", "/research", "/seven-lenses"],
     dropdownItems: [
       {
         name: "Knowledge Graph",
@@ -80,6 +80,11 @@ const memberPrimaryNav: NavItem[] = [
         name: "Concept Search",
         path: "/search",
         description: "Semantic search across the corpus",
+      },
+      {
+        name: "Research",
+        path: "/research",
+        description: "Question-led discovery with sources",
       },
       {
         name: "Seven Lenses",
@@ -148,7 +153,7 @@ const memberMobileNav: NavItem[] = [
     name: "Tools",
     path: "/explore",
     icon: <Network className="h-5 w-5" aria-hidden="true" />,
-    matchPaths: ["/explore", "/graph", "/search", "/seven-lenses"],
+    matchPaths: ["/explore", "/graph", "/search", "/research", "/seven-lenses"],
   },
   {
     name: "Study Journal",

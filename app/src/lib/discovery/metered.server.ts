@@ -13,7 +13,7 @@ export function discoveryUsage(
   incomplete = false
 ): MeteredProviderUsage {
   const fallback =
-    getMeteringActionQuote("deep_search.fresh")!.estimatedProviderCostUsd!;
+    getMeteringActionQuote("research.investigate")!.estimatedProviderCostUsd!;
   const reported = usage.reduce((sum, call) => sum + (call.cost ?? 0), 0);
   return {
     // The wallet ledger has one 200-character request reference. The complete
@@ -44,7 +44,7 @@ export function executeMeteredDiscovery(
 ) {
   return executeMeteredAction(
     {
-      actionCode: "deep_search.fresh",
+      actionCode: "research.investigate",
       requestId: input.id,
       input: { question: input.question, parentId: input.parentId || null },
       provider: {
