@@ -15,7 +15,7 @@ test("public launch page presents PRE before two equally visible candidates", ()
 
   const prePosition = source.indexOf("We’re starting together with {pre.title}.");
   const candidatePosition = source.indexOf(
-    "Which question should become the next series?",
+    "Two open doors — which question are you carrying?",
   );
   const votePosition = source.indexOf('id="choose-the-next-show"');
 
@@ -28,7 +28,7 @@ test("public launch page presents PRE before two equally visible candidates", ()
       "{pre.title} is the first Prismarium course series launching on",
     ),
   );
-  assert.ok(source.includes("Compare both"));
+  assert.ok(source.includes("C01 and FD01 are both open now for members — different doors"));
   assert.ok(source.includes("lg:grid-cols-2"));
   assert.ok(!source.toLowerCase().includes("carousel"));
 });
