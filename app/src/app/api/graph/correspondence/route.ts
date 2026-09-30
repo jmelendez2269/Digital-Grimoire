@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 
 import { loadPublicCorrespondenceGraph } from "@/lib/graph/correspondence-graph.server";
 
-function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
-}
+/** Sequential Supabase paging for ~3.4k entities / ~33k edges is typically well under 60s. */
+export const maxDuration = 60;
 
 /**
  * Public symbolism graph payload. Uses the service role and sequential paging so
@@ -26,8 +25,9 @@ export async function GET() {
     );
     return response;
   } catch (err: unknown) {
+    console.error("Failed to load public correspondence graph bundle.", err);
     return NextResponse.json(
-      { error: getErrorMessage(err, "Failed to load correspondence graph") },
+      { error: "Correspondence graph is temporarily unavailable" },
       {
         status: 500,
         headers: { "Cache-Control": "private, no-store" },

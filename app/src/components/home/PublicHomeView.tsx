@@ -15,11 +15,8 @@ import {
 
 import PrismAnimation from "@/components/ui/PrismAnimation";
 import type { PublicLaunchPresentation } from "@/lib/courses/launch-presentation";
-import {
-  CORE_STUDY_TOOL_COUNT,
-  CORE_STUDY_TOOLS,
-  type PlatformTotals,
-} from "@/lib/platform/catalog";
+import type { PlatformTotals } from "@/lib/platform/catalog";
+import { formatInvestigationWaysHeading } from "@/lib/platform/investigation-copy";
 import { LENSES } from "@/lib/parallax/lenses";
 import { getLensColorStyle } from "@/lib/utils/lens-colors";
 
@@ -70,22 +67,8 @@ const questionTools = [
   },
 ] as const;
 
-if (questionTools.length !== CORE_STUDY_TOOL_COUNT) {
-  throw new Error("Homepage study tools are out of sync with platform catalog.");
-}
-
-for (const tool of questionTools) {
-  if (!CORE_STUDY_TOOLS.includes(tool.title as (typeof CORE_STUDY_TOOLS)[number])) {
-    throw new Error(`Unexpected homepage study tool: ${tool.title}`);
-  }
-}
-
 function formatCount(value: number | null): string {
   return value === null ? "—" : value.toLocaleString();
-}
-
-function formatInvestigationWaysHeading(toolCount: number): string {
-  return `${formatCount(toolCount)} ways to investigate`;
 }
 
 function formatPlatformSummary(platformTotals: PlatformTotals): string {
