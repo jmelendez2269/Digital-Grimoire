@@ -18,6 +18,7 @@ export type PublicCorrespondenceEntityWire = {
 };
 
 export type PublicCorrespondenceEdgeWire = {
+  id: string;
   source_id: string;
   target_id: string;
   type: string;
@@ -40,14 +41,6 @@ export type PublicCorrespondenceRelationship = {
   weight?: number;
   similarity?: number;
 };
-
-export function correspondenceEdgeId(
-  sourceId: string,
-  targetId: string,
-  type: string,
-): string {
-  return `${sourceId}:${targetId}:${type}`;
-}
 
 type RawEntityRow = {
   id: string;
@@ -149,12 +142,18 @@ export function projectPublicCorrespondenceGraph(
           }
         : {}),
     })),
-    edges: edges.map((edge) => ({
-      source_id: edge.source_id,
-      target_id: edge.target_id,
-      type: edge.type,
-      ...(edge.weight != null ? { weight: edge.weight } : {}),
-    })),
+    edges: edges.map((edge) => {
+      if (!edge.id) {
+        throw new Error("PUBLIC_CORRESPONDENCE_GRAPH_EDGE_ID_REQUIRED");
+      }
+      return {
+        id: edge.id,
+        source_id: edge.source_id,
+        target_id: edge.target_id,
+        type: edge.type,
+        ...(edge.weight != null ? { weight: edge.weight } : {}),
+      };
+    }),
   };
 }
 
@@ -185,7 +184,7 @@ export function expandPublicCorrespondenceGraph(
     (edge) => {
       const weight = edge.weight ?? 0.5;
       return {
-        id: correspondenceEdgeId(edge.source_id, edge.target_id, edge.type),
+        id: edge.id,
         source_id: edge.source_id,
         target_id: edge.target_id,
         type: edge.type,

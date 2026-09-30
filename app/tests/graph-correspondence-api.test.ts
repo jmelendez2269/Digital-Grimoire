@@ -53,6 +53,47 @@ function scaleToProdCounts<T>(rows: T[], target: number): T[] {
   return out.slice(0, target);
 }
 
+function toDbLikeEntities(rows: Array<Record<string, unknown>>, count: number) {
+  return scaleToProdCounts(rows, count).map((row, index) => ({
+    id:
+      typeof row.id === "string"
+        ? row.id
+        : `e0000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`,
+    slug: row.slug,
+    name: row.name,
+    category: row.category,
+    aliases: row.aliases,
+    description: row.description,
+    lenses: row.lenses,
+    type: row.category
+      ? { slug: row.category, label: row.category as string }
+      : undefined,
+  }));
+}
+
+function toDbLikeRelationships(rows: Array<Record<string, unknown>>, count: number) {
+  return scaleToProdCounts(rows, count).map((row, index) => ({
+    id:
+      typeof row.id === "string"
+        ? row.id
+        : `a0000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`,
+    source_id:
+      typeof row.source_id === "string"
+        ? row.source_id
+        : `b0000000-0000-4000-8000-${(index % 900).toString(16).padStart(12, "0")}`,
+    target_id:
+      typeof row.target_id === "string"
+        ? row.target_id
+        : `c0000000-0000-4000-8000-${((index + 17) % 900).toString(16).padStart(12, "0")}`,
+    type: row.type,
+    weight: row.weight,
+    confidence: row.confidence,
+    source_citation: row.source_citation,
+    notes: row.notes,
+    relationship_type: row.relationship_type,
+  }));
+}
+
 test("public correspondence graph loads through one service-backed bundle route", () => {
   const route = readSource("src/app/api/graph/correspondence/route.ts");
   const loader = readSource("src/lib/graph/correspondence-graph.server.ts");
@@ -98,8 +139,8 @@ test("investigation ways heading uses an English word for the tool count", () =>
 
 test("v2 correspondence bundle is under Vercel CDN cache size at prod scale", () => {
   const { entities, relationships } = loadStagingCorrespondenceFixture();
-  const scaledEntities = scaleToProdCounts(entities, 1980);
-  const scaledRelationships = scaleToProdCounts(relationships, 32_256);
+  const scaledEntities = toDbLikeEntities(entities, 1980);
+  const scaledRelationships = toDbLikeRelationships(relationships, 32_256);
 
   const legacy = projectLegacyPublicCorrespondenceGraph(
     scaledEntities as Parameters<typeof projectLegacyPublicCorrespondenceGraph>[0],
@@ -115,10 +156,7 @@ test("v2 correspondence bundle is under Vercel CDN cache size at prod scale", ()
     "utf8",
   );
 
-  const v2 = projectPublicCorrespondenceGraph(
-    scaledEntities as Parameters<typeof projectPublicCorrespondenceGraph>[0],
-    scaledRelationships as Parameters<typeof projectPublicCorrespondenceGraph>[1],
-  );
+  const v2 = projectPublicCorrespondenceGraph(scaledEntities, scaledRelationships);
   assert.equal(v2.schemaVersion, PUBLIC_CORRESPONDENCE_GRAPH_SCHEMA);
   const v2Bytes = Buffer.byteLength(JSON.stringify(v2), "utf8");
 
@@ -136,5 +174,10 @@ test("v2 correspondence bundle is under Vercel CDN cache size at prod scale", ()
   const expanded = expandPublicCorrespondenceGraph(v2);
   assert.equal(expanded.entities.length, 1980);
   assert.equal(expanded.relationships.length, 32_256);
-  assert.ok(expanded.relationships.every((edge) => edge.id.includes(":")));
+  const relationshipIds = expanded.relationships.map((edge) => edge.id);
+  assert.equal(
+    new Set(relationshipIds).size,
+    relationshipIds.length,
+    "edge ids must be unique for React keys and graph logic",
+  );
 });
