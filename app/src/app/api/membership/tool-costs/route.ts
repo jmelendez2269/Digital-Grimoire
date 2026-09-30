@@ -20,6 +20,7 @@ const COMMERCIAL_ACTIONS: Partial<
   "seven_lenses.standard": "seven_lenses_generation",
   "seven_lenses.long": "seven_lenses_generation",
   "deep_search.fresh": "deep_search_generation",
+  "research.investigate": "research_generation",
 };
 
 /**

@@ -14,6 +14,7 @@ const ACTION_CODES = [
   "seven_lenses.standard",
   "seven_lenses.long",
   "deep_search.fresh",
+  "research.investigate",
   "image.generate",
 ] as const;
 const WALLET_KEYS = new Set([
@@ -308,7 +309,8 @@ export function actionLabel(actionCode: string | null): string {
       "seven_lenses.expand": "Lens expansion",
       "seven_lenses.standard": "Standard Seven Lenses",
       "seven_lenses.long": "Long Seven Lenses",
-      "deep_search.fresh": "Research investigation",
+      "deep_search.fresh": "Fresh Deep Search",
+      "research.investigate": "Research investigation",
     }[actionCode ?? ""] ?? "Account credits"
   );
 }

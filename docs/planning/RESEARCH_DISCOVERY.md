@@ -52,7 +52,7 @@ The browser checks also covered cross-account isolation, blocked member publicat
 
 1. With local Supabase running, start the app from `app` using `pnpm.cmd exec tsx scripts/inquiry-dev.ts --research`.
 2. Open a private browser window at `http://127.0.0.1:3027/login` to keep your admin session separate.
-3. Sign in as `discovery-member@prismarium.local` with password `Prismarium-Member-2026!`. This is a dedicated local test account; it currently has 24 credits after the verified runs.
+3. Sign in as `discovery-member@prismarium.local` with the password from `PRISMARIUM_LOCAL_FIXTURE_PASSWORD` env var (created by `create-discovery-local-members.ts`). This is a dedicated local test account; it currently has 24 credits after the verified runs.
 4. Open `/search`. Every new investigation button should show **3 Prism Credits**. Ask “WTF is Alchemy?” and check that a successful answer costs 3 credits. This makes real provider calls.
 5. Ask a follow-up such as “I've heard Jesus mentioned in relation to alchemy. Can you investigate that?” A successful investigation costs another 3 credits.
 6. Reopen a saved result, view its sources, choose **Save to Journal**, then **Saved · Open in Journal** to edit your notes. You can also find it through **Workbench → Study Journal → Research**, grouped by the original question. These actions should leave the balance unchanged. Review and publication controls are reserved for admins.

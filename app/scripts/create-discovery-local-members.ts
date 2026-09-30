@@ -2,9 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import { inquiryLocalEnv } from "./inquiry-local-env";
 
 const marker = "member-discovery-local-v1";
-const password = "Prismarium-Member-2026!";
 async function main() {
   const env = inquiryLocalEnv();
+  const password = process.env.PRISMARIUM_LOCAL_FIXTURE_PASSWORD || "Prismarium-Member-2026!";
+  if (!process.env.PRISMARIUM_LOCAL_FIXTURE_PASSWORD) {
+    console.warn("PRISMARIUM_LOCAL_FIXTURE_PASSWORD not set; using default password");
+  }
   const db = createClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.SUPABASE_SERVICE_ROLE_KEY,
@@ -69,7 +72,11 @@ async function main() {
     if (grant.error) throw grant.error;
     console.log(JSON.stringify({ email, id: user.id, grant: grant.data }));
   }
-  console.log(`Local-only password: ${password}`);
+  if (process.env.PRISMARIUM_LOCAL_FIXTURE_PASSWORD) {
+    console.log("Using password from PRISMARIUM_LOCAL_FIXTURE_PASSWORD env var");
+  } else {
+    console.log(`Using default password (set PRISMARIUM_LOCAL_FIXTURE_PASSWORD to override)`);
+  }
 }
 main().catch((error) => {
   console.error(error);

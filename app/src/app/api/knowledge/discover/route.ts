@@ -7,6 +7,7 @@ import {
   json,
 } from "@/lib/inquiries/server";
 import { guardCommercialAction } from "@/lib/commercial-availability";
+import { getSafeMembershipCatalog } from "@/lib/membership/membership-catalog.server";
 import { hybridSearch } from "@/lib/parallax/hybrid-retrieval";
 import { discover } from "@/lib/discovery/engine";
 import { discoveryProvider } from "@/lib/discovery/provider";
@@ -70,8 +71,18 @@ export function POST(request: NextRequest) {
         prior.data.status === "running" ? 202 : 200
       );
     }
-    const unavailable = guardCommercialAction("deep_search_generation");
+    const unavailable = guardCommercialAction("research_generation");
     if (unavailable) return unavailable;
+    const catalog = getSafeMembershipCatalog();
+    const action = catalog.actions.find(
+      (a) => a.code === "research.investigate"
+    );
+    if (!action?.launchEnabled) {
+      throw new InquiryError(
+        "Research is not available at this time.",
+        503
+      );
+    }
     if (!process.env.OPENROUTER_API_KEY)
       throw new InquiryError(
         "Live research is not configured on this server yet.",

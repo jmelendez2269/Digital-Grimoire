@@ -218,6 +218,12 @@ const ACTION_DEFINITIONS = Object.freeze<readonly ActionDefinition[]>([
   },
   {
     code: "deep_search.fresh",
+    customerLabel: "Fresh Deep Search synthesis",
+    creditCost: 3,
+    launchState: "beta-disabled",
+  },
+  {
+    code: "research.investigate",
     customerLabel: "Research investigation",
     creditCost: 3,
     launchState: "metering-required",
