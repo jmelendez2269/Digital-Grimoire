@@ -1,14 +1,18 @@
 import "server-only";
 
 import { createServiceClient } from "@/lib/supabase/service";
+import {
+  projectPublicCorrespondenceGraph,
+  type PublicCorrespondenceGraphWire,
+} from "@/lib/graph/correspondence-graph-public";
 
 const PAGE_SIZE = 1000;
 
+/** Pagination only — omitted from the public CDN payload. */
 const ENTITY_SELECT =
-  "id, slug, name, category, aliases, description, lenses, created_at, updated_at, type:correspondence_entity_types(id, slug, label, color, icon)";
+  "id, slug, name, category, aliases, created_at, type:correspondence_entity_types(slug, label, color, icon)";
 
-const EDGE_SELECT =
-  "id, source_id, target_id, type, weight, confidence, source_citation, notes, created_at, relationship_type:correspondence_relationship_types(id, slug, label, color, icon)";
+const EDGE_SELECT = "id, source_id, target_id, type, weight, created_at";
 
 async function fetchCorrespondenceTablePages<T>(
   table: "correspondences" | "correspondence_relationships",
@@ -43,7 +47,7 @@ async function fetchCorrespondenceTablePages<T>(
   return items;
 }
 
-export async function loadPublicCorrespondenceGraph() {
+export async function loadPublicCorrespondenceGraph(): Promise<PublicCorrespondenceGraphWire> {
   const [entities, edges] = await Promise.all([
     fetchCorrespondenceTablePages<Record<string, unknown>>(
       "correspondences",
@@ -55,10 +59,8 @@ export async function loadPublicCorrespondenceGraph() {
     ),
   ]);
 
-  return {
-    entities,
-    edges,
-    entityCount: entities.length,
-    edgeCount: edges.length,
-  };
+  return projectPublicCorrespondenceGraph(
+    entities as Parameters<typeof projectPublicCorrespondenceGraph>[0],
+    edges as Parameters<typeof projectPublicCorrespondenceGraph>[1],
+  );
 }

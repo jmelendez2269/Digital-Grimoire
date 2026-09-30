@@ -20,6 +20,11 @@ import CourseGraphEntityDialog from "@/components/graph/CourseGraphEntityDialog"
 import CourseGraphPublicView from "@/components/graph/CourseGraphPublicView";
 import { isSentenceLikeEntityName } from "@/lib/graph/entity-utils";
 import {
+  expandPublicCorrespondenceGraph,
+  PUBLIC_CORRESPONDENCE_GRAPH_SCHEMA,
+  type PublicCorrespondenceGraphWire,
+} from "@/lib/graph/correspondence-graph-public";
+import {
   FD01_COURSE_SLUG,
   FD01_PATTERN_TEST_FALLBACK,
   FD01_PATTERN_TEST_VIEW,
@@ -65,11 +70,7 @@ type CorrespondenceTraversal = {
   index: number;
 };
 
-type CorrespondenceGraphBundle = {
-  entities?: CorrespondenceEntity[];
-  edges?: CorrespondenceRelationship[];
-  entityCount?: number;
-  edgeCount?: number;
+type CorrespondenceGraphBundle = PublicCorrespondenceGraphWire & {
   error?: string;
 };
 
@@ -153,10 +154,11 @@ async function fetchCorrespondenceGraphBundle() {
     throw new Error(data.error || `Correspondence graph request failed (${response.status})`);
   }
 
-  return {
-    entities: data.entities || [],
-    relationships: data.edges || [],
-  };
+  if (data.schemaVersion !== PUBLIC_CORRESPONDENCE_GRAPH_SCHEMA) {
+    throw new Error("Correspondence graph bundle version is not supported.");
+  }
+
+  return expandPublicCorrespondenceGraph(data);
 }
 
 function pickCorrespondenceSeed(
@@ -530,10 +532,7 @@ function GraphPageContent() {
           if (cancelled) return;
           setCourseGraph(null);
           setEntities(allEntities);
-          setRelationships(allRelationships.map((relationship: CorrespondenceRelationship) => ({
-            ...relationship,
-            similarity: relationship.weight || 0.5,
-          })));
+          setRelationships(allRelationships);
         }
       } catch (error) {
         console.error("Failed to fetch entities", error);
