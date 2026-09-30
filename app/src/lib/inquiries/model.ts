@@ -71,6 +71,7 @@ export const findingInput = z
       .object({
         query: text(4000).optional(),
         correspondence_id: uuid.optional(),
+        published_finding_id: uuid.optional(),
         sources: z
           .array(
             z.object({

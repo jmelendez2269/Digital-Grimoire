@@ -163,7 +163,7 @@ function LibrarySearchPanel({
           typeof item.id === "string" &&
           typeof item.name === "string" &&
           typeof item.slug === "string"
-            ? [{ id: item.id, name: item.name, slug: item.slug, origin: item.tradition }]
+            ? [{ id: item.id, name: item.name, slug: item.slug, origin: (item as any).tradition }]
             : []
         );
 
