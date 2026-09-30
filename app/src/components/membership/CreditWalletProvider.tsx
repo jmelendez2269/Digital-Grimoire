@@ -120,6 +120,10 @@ export function useCreditWallet(): CreditWalletContextValue {
   return value;
 }
 
+export function useOptionalCreditWallet() {
+  return useContext(CreditWalletContext);
+}
+
 export function useToolCreditState(
   actionCode: ToolActionCode
 ): ToolCreditState {

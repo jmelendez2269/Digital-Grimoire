@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, BookOpen, ChevronDown, ChevronRight, ChevronUp, Compass, GraduationCap, Lightbulb, List, Map as MapIcon, Orbit, PanelRightClose, PanelRightOpen, Search, Sparkles, UserRound, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Header from "@/components/Header";
+import Link from "next/link";
+import ResearchMap from "@/components/inquiries/ResearchMap";
+import SaveToInquiry from "@/components/inquiries/SaveToInquiry";
 import Footer from "@/components/Footer";
 import AppLoader from "@/components/ui/AppLoader";
 import ParallaxLoader from "@/components/ui/ParallaxLoader";
@@ -1174,6 +1177,12 @@ function GraphPageContent() {
       <Header />
 
       <main className="container mx-auto px-4 pt-24 pb-12">
+        <nav className="mb-5 flex flex-wrap gap-4 text-sm text-amber-200" aria-label="Knowledge views">
+          <Link href="/graph?type=research">Concept map</Link>
+          <Link href="/graph?type=correspondences">Correspondences</Link>
+          <Link href="/graph?type=parallax&course=pre-how-to-hold-two-things-at-once">Course Knowledge</Link>
+          <Link href="/journal?tab=research">Journal research</Link>
+        </nav>
         {/* Collapsible controls panel */}
         <div
           className={`grid transition-all duration-500 ease-in-out ${controlsCollapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"}`}
@@ -1662,6 +1671,10 @@ function GraphPageContent() {
                           </div>
                         )}
                         <div className="mt-5 grid gap-2">
+                          <SaveToInquiry capture={{ title: `Explore ${inspectedCorrespondenceEntity.name}`.slice(0, 180), source_kind: 'correspondence',
+                            source_title: inspectedCorrespondenceEntity.name, note: inspectedCorrespondenceEntity.description || '',
+                            provenance: { correspondence_id: inspectedCorrespondenceEntity.id },
+                          }} />
                           <button type="button" onClick={() => pullCorrespondenceThread(inspectedCorrespondenceEntity)} className="min-h-11 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 text-xs uppercase tracking-[0.14em] text-amber-100 hover:bg-amber-500/15 focus:outline-none focus:ring-2 focus:ring-amber-400/35">Show this node + direct connections</button>
                           <button type="button" onClick={() => openCorrespondenceDetails(inspectedCorrespondenceEntity)} className="min-h-11 rounded-lg border border-white/10 px-3 text-xs text-zinc-400 hover:bg-white/5 hover:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/35">Open full details</button>
                         </div>
@@ -1770,7 +1783,12 @@ function GraphPageContent() {
 export default function GraphPage() {
   return (
     <Suspense fallback={<AppLoader fullScreen />}>
-      <GraphPageContent />
+      <GraphEntry />
     </Suspense>
   );
+}
+
+function GraphEntry() {
+  const params = useSearchParams();
+  return params.get('type') === 'research' ? <ResearchMap /> : <GraphPageContent />;
 }

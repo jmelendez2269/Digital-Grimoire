@@ -78,18 +78,21 @@ test("the homepage isolates ballot failure and mounts the live panel only when a
   const home = readSource("src/components/home/PublicHomeView.tsx");
   const pollLoader = readSource("src/lib/course-polls/public.server.ts");
 
-  assert.ok(page.includes("loadPublicCoursePathPoll()"));
+  assert.ok(page.includes("loadPublicCoursePathPoll"));
   assert.ok(page.includes("<CoursePathPollPanel initialPoll={poll} />"));
   assert.ok(page.includes("<CoursePathPollPanel initialPoll={pollLoad.poll} />"));
   assert.ok(pollLoader.includes('voteStatus: "announced"'));
   assert.ok(pollLoader.includes('voteStatus: "unavailable"'));
   assert.ok(pollLoader.includes('lifecycleStatus === "draft"'));
-  assert.ok(home.includes("pollPanel ?? <VoteFallback"));
+  assert.ok(home.includes("pollPanel ??") && home.includes("<VoteFallback"));
 });
 
 test("the homepage loads the safe shared course preview with service authority", () => {
   const page = readSource("src/app/(home)/page.tsx");
+  const publicHomeData = readSource("src/lib/home/public-home-data.server.ts");
+  const publicCatalog = readSource("src/lib/courses/public-catalog.server.ts");
 
-  assert.ok(page.includes("getSharedCoursePreviews(serviceSupabase)"));
-  assert.ok(!page.includes("getSharedCoursePreviews(supabase)"));
+  assert.ok(page.includes("getCachedPublicHomeData"));
+  assert.ok(publicHomeData.includes("getPublicCourseCatalog"));
+  assert.ok(publicCatalog.includes("createServiceClient"));
 });

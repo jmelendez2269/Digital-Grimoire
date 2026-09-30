@@ -29,6 +29,7 @@ export const METERED_ACTION_CODES = [
   "seven_lenses.standard",
   "seven_lenses.long",
   "deep_search.fresh",
+  "research.investigate",
   "image.generate",
 ] as const;
 
@@ -220,6 +221,12 @@ const ACTION_DEFINITIONS = Object.freeze<readonly ActionDefinition[]>([
     customerLabel: "Fresh Deep Search synthesis",
     creditCost: 3,
     launchState: "beta-disabled",
+  },
+  {
+    code: "research.investigate",
+    customerLabel: "Research investigation",
+    creditCost: 3,
+    launchState: "metering-required",
   },
   {
     code: "image.generate",

@@ -31,7 +31,7 @@ function launchEnvironment(
     PRISMARIUM_ENABLED_MEMBERSHIP_OFFERS:
       "student_founding_monthly,scholar_monthly,adept_monthly",
     PRISMARIUM_ENABLED_METERED_ACTIONS:
-      "working.generate,seven_lenses.expand,seven_lenses.standard,seven_lenses.long,deep_search.fresh,image.generate",
+      "working.generate,seven_lenses.expand,seven_lenses.standard,seven_lenses.long,deep_search.fresh,research.investigate,image.generate",
     PRISMARIUM_MEMBER_RELEASED_COURSE_SLUGS:
       APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
     PRISMARIUM_STUDENT_LAUNCH_COURSE_SLUG: APPROVED_STUDENT_LAUNCH_COURSE_SLUG,
@@ -89,6 +89,7 @@ test("the frozen launch contract has the intended plans, prices, credits, and ac
       ["seven_lenses.standard", 2],
       ["seven_lenses.long", 3],
       ["deep_search.fresh", 3],
+      ["research.investigate", 3],
       ["image.generate", null],
     ]
   );
@@ -165,6 +166,7 @@ test("paid launch needs one exact non-free course and exact known tokens", () =>
       ["seven_lenses.standard", true],
       ["seven_lenses.long", true],
       ["deep_search.fresh", false],
+      ["research.investigate", true],
       ["image.generate", false],
     ]
   );
@@ -266,9 +268,9 @@ test("Adept needs its exact cost decision while disabled action classes stay dis
     true
   );
   assert.equal(
-    catalog.actions.find((action) => action.code === "deep_search.fresh")
+    catalog.actions.find((action) => action.code === "research.investigate")
       ?.launchEnabled,
-    false
+    true
   );
   assert.equal(
     catalog.actions.find((action) => action.code === "image.generate")
