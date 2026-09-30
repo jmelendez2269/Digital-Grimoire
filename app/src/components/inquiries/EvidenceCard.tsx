@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import SaveToInquiry from "./SaveToInquiry";
 import {
   EVIDENCE_CLASSES,
   PREDICATES,
   sourceHref,
   type KnowledgeEntity,
   type PublicFinding,
+  type Capture,
 } from "@/lib/inquiries/model";
 export default function EvidenceCard({
   finding,
@@ -13,9 +16,23 @@ export default function EvidenceCard({
   finding: PublicFinding;
   entities: KnowledgeEntity[];
 }) {
+  const { user } = useAuth();
   const source = entities.find((e) => e.id === finding.source_entity_id);
   const target = entities.find((e) => e.id === finding.target_entity_id);
   const href = sourceHref(finding);
+  const capture: Capture = {
+    title: `${source?.name || "?"} → ${target?.name || "?"}: ${finding.title}`,
+    claim: finding.claim,
+    source_kind: finding.source_kind,
+    source_title: finding.source_title,
+    source_url: finding.source_url,
+    source_locator: finding.source_locator,
+    excerpt: finding.excerpt,
+    text_id: finding.text_id,
+    chunk_id: finding.chunk_id,
+    context: finding.context,
+    provenance: { published_finding_id: finding.id },
+  };
   return (
     <div className="space-y-4">
       <h3 className="font-serif text-xl text-amber-100">{finding.title}</h3>
@@ -85,6 +102,18 @@ export default function EvidenceCard({
             Explore {e.name} correspondences
           </Link>
         ))}
+      <div className="flex flex-wrap gap-3 pt-2">
+        {user ? (
+          <SaveToInquiry capture={capture} label="Save to my Journal" />
+        ) : (
+          <Link
+            href={`/login?redirect=/graph?type=research&focus=${finding.source_entity_id}`}
+            className="inline-flex h-11 min-w-0 items-center gap-2 rounded-lg border border-zinc-600 bg-zinc-800 px-4 text-sm hover:border-amber-300/50 hover:bg-zinc-700"
+          >
+            Sign in to save
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
