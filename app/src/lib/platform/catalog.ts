@@ -2,6 +2,7 @@ export const CORE_STUDY_TOOLS = [
   "Library",
   "Seven Lenses",
   "Concept Search",
+  "Research",
   "Knowledge Graph",
   "Study Journal",
 ] as const;

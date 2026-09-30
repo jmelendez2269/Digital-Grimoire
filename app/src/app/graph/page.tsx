@@ -65,18 +65,14 @@ type CorrespondenceTraversal = {
   index: number;
 };
 
-type PaginatedGraphResponse<T> = {
-  items?: T[];
-  total?: number;
-  offset?: number;
-  limit?: number;
-  hasMore?: boolean;
+type CorrespondenceGraphBundle = {
+  entities?: CorrespondenceEntity[];
+  edges?: CorrespondenceRelationship[];
+  entityCount?: number;
+  edgeCount?: number;
+  error?: string;
 };
 
-// Supabase/PostgREST caps each response at 1,000 rows in this project. Keep
-// the requested page size at that ceiling so offset pagination never skips
-// rows when the API returns fewer items than requested.
-const CORRESPONDENCE_PAGE_SIZE = 1000;
 const DEFAULT_CANDIDATE_COURSE = "pre-how-to-hold-two-things-at-once";
 const FOCUSED_GRAPH_NODE_LIMIT = 140;
 const FOCUSED_GRAPH_EDGE_LIMIT = 520;
@@ -149,58 +145,18 @@ function getCorrespondenceRelationshipType(relationship: CorrespondenceRelations
   return "corresponds_to";
 }
 
-async function fetchGraphPage<T>(
-  endpoint: string,
-  options: { limit: number; offset: number; cacheBust: number },
-): Promise<PaginatedGraphResponse<T>> {
-  const params = new URLSearchParams({
-    limit: String(options.limit),
-    offset: String(options.offset),
-    _t: String(options.cacheBust),
-  });
-  const response = await fetch(`${endpoint}?${params.toString()}`, { cache: "no-store" });
+async function fetchCorrespondenceGraphBundle() {
+  const response = await fetch("/api/graph/correspondence");
+  const data = (await response.json()) as CorrespondenceGraphBundle;
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${endpoint}: ${response.status}`);
+    throw new Error(data.error || `Correspondence graph request failed (${response.status})`);
   }
 
-  return response.json() as Promise<PaginatedGraphResponse<T>>;
-}
-
-async function fetchAllGraphPages<T>(endpoint: string, pageSize: number) {
-  const cacheBust = Date.now();
-  const firstPage = await fetchGraphPage<T>(endpoint, {
-    limit: pageSize,
-    offset: 0,
-    cacheBust,
-  });
-
-  const firstItems = firstPage.items || [];
-  const total = Math.max(firstPage.total ?? firstItems.length, firstItems.length);
-
-  if (!firstPage.hasMore || total <= firstItems.length) {
-    return firstItems;
-  }
-
-  const offsets: number[] = [];
-  for (let offset = firstItems.length; offset < total; offset += pageSize) {
-    offsets.push(offset);
-  }
-
-  const remainingPages = await Promise.all(
-    offsets.map((offset) =>
-      fetchGraphPage<T>(endpoint, {
-        limit: pageSize,
-        offset,
-        cacheBust,
-      }),
-    ),
-  );
-
-  return [
-    ...firstItems,
-    ...remainingPages.flatMap((page) => page.items || []),
-  ];
+  return {
+    entities: data.entities || [],
+    relationships: data.edges || [],
+  };
 }
 
 function pickCorrespondenceSeed(
@@ -568,10 +524,8 @@ function GraphPageContent() {
           setEntities(data.entities || []);
           setRelationships(data.edges || []);
         } else {
-          const [allEntities, allRelationships] = await Promise.all([
-            fetchAllGraphPages<CorrespondenceEntity>("/api/graph/entities", CORRESPONDENCE_PAGE_SIZE),
-            fetchAllGraphPages<CorrespondenceRelationship>("/api/graph/edges", CORRESPONDENCE_PAGE_SIZE),
-          ]);
+          const { entities: allEntities, relationships: allRelationships } =
+            await fetchCorrespondenceGraphBundle();
 
           if (cancelled) return;
           setCourseGraph(null);
