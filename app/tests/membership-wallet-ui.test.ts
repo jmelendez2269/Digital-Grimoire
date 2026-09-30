@@ -65,7 +65,8 @@ const toolCosts = {
     { actionCode: "seven_lenses.expand", customerLabel: "Expand one lens", creditCost: 1, enabled: false },
     { actionCode: "seven_lenses.standard", customerLabel: "Standard Seven Lenses synthesis", creditCost: 2, enabled: false },
     { actionCode: "seven_lenses.long", customerLabel: "Long Seven Lenses synthesis", creditCost: 3, enabled: false },
-    { actionCode: "deep_search.fresh", customerLabel: "Research investigation", creditCost: 3, enabled: true },
+    { actionCode: "deep_search.fresh", customerLabel: "Fresh Deep Search synthesis", creditCost: 3, enabled: false },
+    { actionCode: "research.investigate", customerLabel: "Research investigation", creditCost: 3, enabled: true },
     { actionCode: "image.generate", customerLabel: "Image generation", creditCost: null, enabled: false },
   ],
 };
@@ -119,7 +120,7 @@ test("Credits tab renders exact balance, UTC reset, reservations, committed use,
     assert.match(text, /Resets September 1, 2026.*12:00 AM UTC/);
     assert.match(text, /Standard Seven Lenses/);
     assert.match(text, /The Working completed/);
-    assert.match(text, /Research investigation completed/);
+    assert.match(text, /Fresh Deep Search completed/);
     assert.match(text, /Standard Seven Lenses returned/);
     assert.match(text, /Reading, ordinary search, Graph, Journal/);
     assert.doesNotMatch(text, /Checkout|Subscribe|Upgrade|stripe/i);
