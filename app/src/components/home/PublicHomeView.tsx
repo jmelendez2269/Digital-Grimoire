@@ -15,7 +15,11 @@ import {
 
 import PrismAnimation from "@/components/ui/PrismAnimation";
 import type { PublicLaunchPresentation } from "@/lib/courses/launch-presentation";
-import type { PlatformTotals } from "@/lib/platform/catalog";
+import {
+  CORE_STUDY_TOOL_COUNT,
+  CORE_STUDY_TOOLS,
+  type PlatformTotals,
+} from "@/lib/platform/catalog";
 import { LENSES } from "@/lib/parallax/lenses";
 import { getLensColorStyle } from "@/lib/utils/lens-colors";
 
@@ -66,8 +70,22 @@ const questionTools = [
   },
 ] as const;
 
+if (questionTools.length !== CORE_STUDY_TOOL_COUNT) {
+  throw new Error("Homepage study tools are out of sync with platform catalog.");
+}
+
+for (const tool of questionTools) {
+  if (!CORE_STUDY_TOOLS.includes(tool.title as (typeof CORE_STUDY_TOOLS)[number])) {
+    throw new Error(`Unexpected homepage study tool: ${tool.title}`);
+  }
+}
+
 function formatCount(value: number | null): string {
   return value === null ? "—" : value.toLocaleString();
+}
+
+function formatInvestigationWaysHeading(toolCount: number): string {
+  return `${formatCount(toolCount)} ways to investigate`;
 }
 
 function formatPlatformSummary(platformTotals: PlatformTotals): string {
@@ -257,7 +275,7 @@ export default function PublicHomeView({
             </div>
 
             <p className="mt-8 font-mono text-[0.68rem] tracking-[0.18em] text-zinc-500 uppercase tabular-nums">
-              5 study tools · 154 Library entries · Open now: PRE (free) · members: C01–C03 + FD01
+              {formatPlatformSummary(platformTotals)} · Open now: PRE (free) · members: C01–C03 + FD01
             </p>
           </div>
 
@@ -297,7 +315,7 @@ export default function PublicHomeView({
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-semibold tracking-[0.28em] text-cyan-300/70 uppercase">
-                Six ways to investigate
+                {formatInvestigationWaysHeading(questionTools.length)}
               </p>
               <h2
                 id="tools-heading"
